@@ -1,0 +1,301 @@
+english_phrase,device_name,service_name
+"Turn on the living room light",light.living_room,turn_on
+"Switch on the kitchen counter light",light.kitchen_counter,turn_on
+"Please activate the master bedroom light",light.master_bedroom_1,turn_on
+"Could you illuminate the bathroom",light.bathroom_1,turn_on
+"Enable the patio light",light.patio,turn_on
+"Turn off the living room light",light.living_room,turn_off
+"Switch off the kitchen counter light",light.kitchen_counter,turn_off
+"Deactivate the master bedroom light",light.master_bedroom_1,turn_off
+"Please extinguish the bathroom light",light.bathroom_1,turn_off
+"Disable the patio light",light.patio,turn_off
+"Start the living room fan",fan.living_room,turn_on
+"Activate the master bedroom fan",fan.bedroom_master,turn_on
+"Turn on the garage fan",fan.garage,turn_on
+"Could you enable the office fan",fan.office,turn_on
+"Please switch on the dining area fan",fan.dining_area,turn_on
+"Turn off the living room fan",fan.living_room,turn_off
+"Deactivate the master bedroom fan",fan.bedroom_master,turn_off
+"Shut down the garage fan",fan.garage,turn_off
+"Could you disable the office fan",fan.office,turn_off
+"Please switch off the dining area fan",fan.dining_area,turn_off
+"Open the main garage door",garage_door.main,open
+"Could you lift the side garage door",garage_door.side,open
+"Activate the bike storage garage",garage_door.bike_storage,open
+"Please raise the basement garage door",garage_door.basement,open
+"Unlock the front door",lock.front_door,unlock
+"Could you disengage the back door lock",lock.back_door,unlock
+"Please unlock the office",lock.office,unlock
+"Activate the media in the living room",media_player.living_room,turn_on
+"Turn on the master bedroom media player",media_player.master_bedroom,turn_on
+"Could you start the media in the kitchen",media_player.kitchen,turn_on
+"Please play the media in the nursery",media_player.nursery,media_play
+"Skip to the next track in the living room",media_player.living_room,media_next_track
+"Turn up the volume in the living room",media_player.living_room,volume_up
+"Can you increase the volume on the master bedroom media player",media_player.master_bedroom,volume_up
+"Please raise the volume in the kitchen",media_player.kitchen,volume_up
+"Turn down the volume in the nursery",media_player.nursery,volume_down
+"Can you decrease the volume in the office",media_player.office,volume_down
+"Mute the media player in the living room",media_player.living_room,volume_mute
+"Pause the media in the master bedroom",media_player.master_bedroom,media_pause
+"Stop the media in the nursery",media_player.nursery,media_stop
+"Play the previous track in the kitchen",media_player.kitchen,media_previous_track
+"Lock the front door",lock.front_door,lock
+"Engage the back door lock",lock.back_door,lock
+"Please lock the office",lock.office,lock
+"Can you secure the nursery door",lock.nursery,lock
+"Could you lock the wine cellar",lock.wine_cellar,lock
+"Unlock the tool shed",lock.tool_shed,unlock
+"Disengage the lock on the bike storage",lock.bike_storage,unlock
+"Open the living room blinds",blinds.living_room,open
+"Could you raise the kitchen blinds",blinds.kitchen,open
+"Lift the master bedroom blinds",blinds.master_bedroom,open
+"Close the living room blinds",blinds.living_room,close
+"Lower the kitchen blinds",blinds.kitchen,close
+"Shut the master bedroom blinds",blinds.master_bedroom,close
+"Stop adjusting the living room blinds",blinds.living_room,stop
+"Stop the kitchen blinds where they are",blinds.kitchen,stop
+"Please halt the master bedroom blinds",blinds.master_bedroom,stop
+"Toggle the living room blinds",blinds.living_room,toggle
+"Switch the state of the kitchen blinds",blinds.kitchen,toggle
+"Reverse the master bedroom blinds",blinds.master_bedroom,toggle
+"Increase the speed of the living room fan",fan.living_room,increase_speed
+"Ramp up the master bedroom fan speed",fan.bedroom_master,increase_speed
+"Decrease the speed of the living room fan",fan.living_room,decrease_speed
+"Slow down the master bedroom fan",fan.bedroom_master,decrease_speed
+"Toggle the fan in the living room",fan.living_room,toggle
+"Switch the state of the master bedroom fan",fan.bedroom_master,toggle
+"Close the main garage door",garage_door.main,close
+"Lower the side garage door",garage_door.side,close
+"Deactivate the bike storage garage",garage_door.bike_storage,close
+"Stop the main garage door",garage_door.main,stop
+"Halt the side garage door",garage_door.side,stop
+"Toggle the main garage door",garage_door.main,toggle
+"Switch the state of the side garage door",garage_door.side,toggle
+"Could you toggle the light in the guest room",light.guest_room,toggle
+"Switch the state of the light in the hallway",light.hallway,toggle
+"Flip the light in the garage",light.garage,toggle
+"Change the light status in the attic",light.attic,toggle
+"Alter the light state in the study",light.study,toggle
+"Toggle the outdoor light",light.outdoor,toggle
+"Switch the shed light on or off",light.shed,toggle
+"Flip the driveway light",light.driveway,toggle
+"Change the status of the pool light",light.pool,toggle
+"Please toggle the light above the dining table",light.dining_table_above,toggle
+"Can you toggle the fan in the guest room",fan.guest_room,toggle
+"Switch the state of the fan in the hallway",fan.hallway,toggle
+"Flip the fan in the garage",fan.garage,toggle
+"Change the fan status in the attic",fan.attic,toggle
+"Alter the fan state in the study",fan.study,toggle
+"Toggle the outdoor fan",fan.outdoor,toggle
+"Switch the shed fan on or off",fan.shed,toggle
+"Flip the driveway fan",fan.driveway,toggle
+"Change the status of the pool fan",fan.pool,toggle
+"Please toggle the fan above the dining table",fan.dining_table_above,toggle
+"Increase the fan speed in the guest room",fan.guest_room,increase_speed
+"Boost the fan speed in the hallway",fan.hallway,increase_speed
+"Turn up the fan in the garage",fan.garage,increase_speed
+"Accelerate the fan in the attic",fan.attic,increase_speed
+"Ramp up the fan speed in the study",fan.study,increase_speed
+"Decrease the fan speed in the guest room",fan.guest_room,decrease_speed
+"Lower the fan speed in the hallway",fan.hallway,decrease_speed
+"Turn down the fan in the garage",fan.garage,decrease_speed
+"Slow down the fan in the attic",fan.attic,decrease_speed
+"Reduce the fan speed in the study",fan.study,decrease_speed
+"Turn on the living room light and off the bedroom light",light.living_room|light.bedroom,turn_on|turn_off
+"Switch on light 1 and light 2 in the kitchen",light.kitchen_1|light.kitchen_2,turn_on|turn_on
+"Toggle the lights in the living room and hallway",light.living_room|light.hallway,toggle|toggle
+"Turn off all three lights in the study",light.study_1|light.study_2|light.study_3,turn_off|turn_off|turn_off
+"Activate the living room fan and the bedroom fan",fan.living_room|fan.bedroom,turn_on|turn_on
+"Turn on the fan in the garage and switch off the light",fan.garage|light.garage,turn_on|turn_off
+"Increase the speed of both fans in the study",fan.study_1|fan.study_2,increase_speed|increase_speed
+"Toggle both the fan and the light in the hallway",fan.hallway|light.hallway,toggle|toggle
+"Turn on light 1, light 2, and light 3 in the dining room",light.dining_room_1|light.dining_room_2|light.dining_room_3,turn_on|turn_on|turn_on
+"Decrease fan speed in the living room and turn off light 2",fan.living_room|light.living_room_2,decrease_speed|turn_off
+"Turn on all three fans in the attic",fan.attic_1|fan.attic_2|fan.attic_3,turn_on|turn_on|turn_on
+"Switch on the kitchen light and toggle both fans",light.kitchen|fan.kitchen_1|fan.kitchen_2,turn_on|toggle|toggle
+"Activate the fans and lights in the living room",fan.living_room_1|fan.living_room_2|light.living_room,turn_on|turn_on|turn_on
+"Toggle light 1 and increase the speed of fan 2 in the study",light.study_1|fan.study_2,toggle|increase_speed
+"Turn off the lights in the living room and speed up the fan",light.living_room_1|light.living_room_2|fan.living_room,turn_off|turn_off|increase_speed
+"Turn on the living room lights while turning off the fan",light.living_room_1|light.living_room_2|fan.living_room,turn_on|turn_on|turn_off
+"Switch on the kitchen lights and fan",light.kitchen_1|light.kitchen_2|fan.kitchen,turn_on|turn_on|turn_on
+"Toggle the lights in the hallway and the living room",light.hallway|light.living_room_1,toggle|toggle
+"Turn off all lights in the study and slow down the fan",light.study_1|light.study_2|light.study_3|fan.study,turn_off|turn_off|turn_off|decrease_speed
+"Activate the living room and bedroom fans",fan.living_room|fan.bedroom,turn_on|turn_on
+"Switch on the bathroom light and turn off the kitchen fan",light.bathroom|fan.kitchen,turn_on|turn_off
+"Ramp up both fans in the attic",fan.attic_1|fan.attic_2,increase_speed|increase_speed
+"Toggle the dining room light and activate the fan",light.dining_room|fan.dining_room,toggle|turn_on
+"Turn on all dining room lights",light.dining_room_1|light.dining_room_2|light.dining_room_3,turn_on|turn_on|turn_on
+"Slow down the living room fan and turn off the adjacent light",fan.living_room|light.living_room_1,decrease_speed|turn_off
+"Illuminate the garage while turning off its fan",light.garage|fan.garage,turn_on|turn_off
+"Switch on the lights in the kitchen and hallway",light.kitchen_1|light.hallway,turn_on|turn_on
+"Turn on both the bathroom and kitchen lights",light.bathroom|light.kitchen_2,turn_on|turn_on
+"Turn off the patio and pool lights",light.patio|light.pool,turn_off|turn_off
+"Toggle the living room and dining room fans",fan.living_room|fan.dining_room,toggle|toggle
+"Activate all lights and fans in the office",light.office_1|light.office_2|fan.office,turn_on|turn_on|turn_on
+"Turn off the fans in the attic and basement",fan.attic_1|fan.basement,turn_off|turn_off
+"Switch off all lights in the bedroom",light.bedroom_1|light.bedroom_2|light.bedroom_3,turn_off|turn_off|turn_off
+"Enable the study and bathroom fans",fan.study|fan.bathroom,turn_on|turn_on
+"Slow down the fans in the kitchen and living room",fan.kitchen|fan.living_room,decrease_speed|decrease_speed
+"Turn on the shed and driveway lights",light.shed|light.driveway,turn_on|turn_on
+"Toggle the garage and hallway lights",light.garage|light.hallway,toggle|toggle
+"Switch on the fans in the hallway and study",fan.hallway|fan.study,turn_on|turn_on
+"Deactivate the bathroom and kitchen lights",light.bathroom|light.kitchen_1,turn_off|turn_off
+"Turn on the garden lights and switch off the patio light",light.garden_1|light.garden_2|light.patio,turn_on|turn_on|turn_off
+"Toggle the kitchen lights and speed up the fan",light.kitchen_1|light.kitchen_2|fan.kitchen,toggle|toggle|increase_speed
+"Dim the living room lights and slow down the fan",light.living_room_1|light.living_room_2|fan.living_room,turn_off|turn_off|decrease_speed
+"Turn off the bedroom lights and the adjacent fan",light.bedroom_1|light.bedroom_2|fan.bedroom,turn_off|turn_off|turn_off
+"Activate the hallway and kitchen fans",fan.hallway|fan.kitchen,turn_on|turn_on
+"Switch on the lights in the dining and living rooms",light.dining_room_1|light.living_room_1,turn_on|turn_on
+"Turn on the living room lights and switch off the fan",light.living_room_1|light.living_room_2|fan.living_room,turn_on|turn_on|turn_off
+"Switch on the kitchen lights",light.kitchen_1,turn_on
+"Toggle both the hallway and guest room lights",light.hallway|light.guest_room,toggle|toggle
+"Turn off the study light",light.study,turn_off
+"Activate both living room and bedroom fans",fan.living_room|fan.bedroom,turn_on|turn_on
+"Slow down the kitchen fan",fan.kitchen,decrease_speed
+"Turn up both fans in the attic",fan.attic_1|fan.attic_2,increase_speed|increase_speed
+"Toggle the office light",light.office,toggle
+"Switch on all dining room lights",light.dining_room_1|light.dining_room_2|light.dining_room_3,turn_on|turn_on|turn_on
+"Turn off the patio fan",fan.patio,turn_off
+"Illuminate the garage while deactivating its fan",light.garage|fan.garage,turn_on|turn_off
+"Toggle the hallway light",light.hallway,toggle
+"Turn on both the bathroom and kitchen lights",light.bathroom|light.kitchen_1,turn_on|turn_on
+"Activate the study fan",fan.study,turn_on
+"Deactivate the patio and pool lights",light.patio|light.pool,turn_off|turn_off
+"Switch off the dining room fan",fan.dining_room,turn_off
+"Enable both the office lights and fans",light.office_1|light.office_2|fan.office,turn_on|turn_on|turn_on
+"Switch off the living room light",light.living_room_1,turn_off
+"Disable the fans in the attic and basement",fan.attic_1|fan.basement,turn_off|turn_off
+"Activate the garage light",light.garage,turn_on
+"Turn off all lights in the bedroom",light.bedroom_1|light.bedroom_2|light.bedroom_3,turn_off|turn_off|turn_off
+"Toggle the bedroom fan",fan.bedroom,toggle
+"Switch on the study and bathroom fans",fan.study|fan.bathroom,turn_on|turn_on
+"Switch off the kitchen light",light.kitchen_2,turn_off
+"Dim the fans in the kitchen and living room",fan.kitchen|fan.living_room,decrease_speed|decrease_speed
+"Activate the shed light",light.shed,turn_on
+"Enable the shed and driveway lights",light.shed|light.driveway,turn_on|turn_on
+"Turn off the bathroom light",light.bathroom,turn_off
+"Toggle both the garage and hallway lights",light.garage|light.hallway,toggle|toggle
+"Switch on the study fan",fan.study,turn_on
+"Activate the fans in the hallway and study",fan.hallway|fan.study,turn_on|turn_on
+"Deactivate the garden light",light.garden_1,turn_off
+"Switch off the bathroom and kitchen lights",light.bathroom|light.kitchen_1,turn_off|turn_off
+"Toggle the kitchen fan",fan.kitchen,toggle
+"Turn on the garden lights while turning off the patio light",light.garden_1|light.garden_2|light.patio,turn_on|turn_on|turn_off
+"Slow down the attic fan",fan.attic_1,decrease_speed
+"Switch the kitchen lights and speed up the fan",light.kitchen_1|light.kitchen_2|fan.kitchen,toggle|toggle|increase_speed
+"Deactivate the office light",light.office,turn_off
+"Turn off the living room lights and reduce the fan speed",light.living_room_1|light.living_room_2|fan.living_room,turn_off|turn_off|decrease_speed
+"Activate the bedroom light",light.bedroom_1,turn_on
+"Switch off the bedroom lights and the adjacent fan",light.bedroom_1|light.bedroom_2|fan.bedroom,turn_off|turn_off|turn_off
+"Toggle the study light",light.study,toggle
+"Enable the hallway and kitchen fans",fan.hallway|fan.kitchen,turn_on|turn_on
+"Deactivate the patio light",light.patio,turn_off
+"Turn on the lights in the dining and living rooms",light.dining_room_1|light.living_room_2,turn_on|turn_on
+"Switch off the guest room fan",fan.guest_room,turn_off
+"Activate the dining room light",light.dining_room,turn_on
+"Turn on the bathroom light and switch off the fan",light.bathroom|fan.bathroom,turn_on|turn_off
+"Toggle the office fan",fan.office,toggle
+"Switch on the garden light",light.garden,turn_on
+"Turn on the kitchen lights and the living room fan",light.kitchen_1|light.kitchen_2|fan.living_room,turn_on|turn_on|turn_on
+"Switch off the dining room light",light.dining_room,turn_off
+"Toggle the bedroom and hallway lights",light.bedroom_1|light.hallway,toggle|toggle
+"Turn off the office fan",fan.office,turn_off
+"Enable both study and bathroom lights",light.study|light.bathroom,turn_on|turn_on
+"Turn down the kitchen fan",fan.kitchen,decrease_speed
+"Increase speed of the attic fans",fan.attic_1|fan.attic_2,increase_speed|increase_speed
+"Toggle the patio light",light.patio,toggle
+"Switch on the dining and kitchen lights",light.dining_room_1|light.kitchen_2,turn_on|turn_on
+"Switch off the garage fan",fan.garage,turn_off
+"Activate the garage light and deactivate its fan",light.garage|fan.garage,turn_on|turn_off
+"Turn off the bathroom light",light.bathroom,turn_off
+"Switch on both the guest room and kitchen lights",light.guest_room|light.kitchen_1,turn_on|turn_on
+"Toggle the basement fan",fan.basement,toggle
+"Turn off the pool and patio lights",light.pool|light.patio,turn_off|turn_off
+"Turn on the living room fan",fan.living_room,turn_on
+"Enable the office lights and fans",light.office_1|light.office_2|fan.office,turn_on|turn_on|turn_on
+"Toggle the study light",light.study,toggle
+"Disable the attic and basement fans",fan.attic_1|fan.basement,turn_off|turn_off
+"Switch on the shed light",light.shed,turn_on
+"Turn off all the bedroom lights",light.bedroom_1|light.bedroom_2|light.bedroom_3,turn_off|turn_off|turn_off
+"Toggle the bedroom fan",fan.bedroom,toggle
+"Activate the study and bathroom fans",fan.study|fan.bathroom,turn_on|turn_on
+"Switch off the kitchen fan",fan.kitchen,turn_off
+"Slow down the fans in the living room and kitchen",fan.living_room|fan.kitchen,decrease_speed|decrease_speed
+"Turn on the garden light",light.garden_1,turn_on
+"Turn on the driveway and shed lights",light.driveway|light.shed,turn_on|turn_on
+"Switch off the guest room light",light.guest_room,turn_off
+"Toggle the garage and bathroom lights",light.garage|light.bathroom,toggle|toggle
+"Turn on the bathroom fan",fan.bathroom,turn_on
+"Enable the fans in the kitchen and study",fan.kitchen|fan.study,turn_on|turn_on
+"Switch off the dining room light",light.dining_room,turn_off
+"Deactivate the bathroom and guest room lights",light.bathroom|light.guest_room,turn_off|turn_off
+"Toggle the office fan",fan.office,toggle
+"Activate the garden lights and deactivate the patio light",light.garden_1|light.garden_2|light.patio,turn_on|turn_on|turn_off
+"Slow down the attic fan",fan.attic_1,decrease_speed
+"Toggle the kitchen lights and speed up the fan",light.kitchen_1|light.kitchen_2|fan.kitchen,toggle|toggle|increase_speed
+"Turn off the hallway light",light.hallway,turn_off
+"Switch off the living room lights and slow down the fan",light.living_room_1|light.living_room_2|fan.living_room,turn_off|turn_off|decrease_speed
+"Switch on the garage light",light.garage,turn_on
+"Deactivate the bedroom lights and the adjacent fan",light.bedroom_1|light.bedroom_2|fan.bedroom,turn_off|turn_off|turn_off
+"Toggle the kitchen light",light.kitchen_1,toggle
+"Turn on the hallway and kitchen fans",fan.hallway|fan.kitchen,turn_on|turn_on
+"Turn off the dining room light",light.dining_room,turn_off
+"Enable the lights in the dining and living rooms",light.dining_room_1|light.living_room_1,turn_on|turn_on
+"Switch off the study fan",fan.study,turn_off
+"Activate the pool light",light.pool,turn_on
+"Switch on the bathroom light and turn off the fan",light.bathroom|fan.bathroom,turn_on|turn_off
+"Toggle the attic fan",fan.attic_2,toggle
+"Turn on the patio light",light.patio,turn_on
+"Turn on the kitchen light",light.kitchen_1,turn_on
+"Switch off the dining room light",light.dining_room,turn_off
+"Toggle the bedroom light",light.bedroom_1,toggle
+"Turn off the office fan",fan.office,turn_off
+"Activate the study light",light.study,turn_on
+"Slow down the kitchen fan",fan.kitchen,decrease_speed
+"Increase speed of the attic fan",fan.attic_1,increase_speed
+"Turn on the patio light",light.patio,turn_on
+"Switch off the garage fan",fan.garage,turn_off
+"Activate the shed light",light.shed,turn_on
+"Turn off the bathroom light",light.bathroom,turn_off
+"Switch on the guest room light",light.guest_room,turn_on
+"Toggle the basement fan",fan.basement,toggle
+"Turn off the pool light",light.pool,turn_off
+"Turn on the living room fan",fan.living_room,turn_on
+"Enable the office light",light.office_1,turn_on
+"Turn off the study light",light.study,turn_off
+"Disable the attic fan",fan.attic_1,turn_off
+"Turn on the hallway light",light.hallway,turn_on
+"Switch off the bedroom light",light.bedroom_2,turn_off
+"Toggle the bedroom fan",fan.bedroom,toggle
+"Activate the bathroom fan",fan.bathroom,turn_on
+"Switch off the kitchen fan",fan.kitchen,turn_off
+"Turn down the living room fan",fan.living_room,decrease_speed
+"Switch on the garden light",light.garden_1,turn_on
+"Turn on the driveway light",light.driveway,turn_on
+"Toggle the guest room light",light.guest_room,toggle
+"Activate the garage light",light.garage,turn_on
+"Turn on the bathroom fan",fan.bathroom,turn_on
+"Enable the kitchen fan",fan.kitchen,turn_on
+"Switch off the dining room light",light.dining_room,turn_off
+"Deactivate the guest room light",light.guest_room,turn_off
+"Toggle the office fan",fan.office,toggle
+"Activate the garden light",light.garden_2,turn_on
+"Turn down the attic fan",fan.attic_1,decrease_speed
+"Toggle the kitchen light",light.kitchen_2,toggle
+"Switch off the hallway light",light.hallway,turn_off
+"Turn off the living room fan",fan.living_room,turn_off
+"Switch on the garage light",light.garage,turn_on
+"Deactivate the bedroom light",light.bedroom_1,turn_off
+"Turn off the study fan",fan.study,turn_off
+"Enable the hallway fan",fan.hallway,turn_on
+"Switch off the bathroom light",light.bathroom,turn_off
+"Activate the lights in the dining room",light.dining_room_1,turn_on
+"Turn off the study fan",fan.study,turn_off
+"Turn on the pool light",light.pool,turn_on
+"Activate the bathroom light",light.bathroom,turn_on
+"Toggle the attic fan",fan.attic_2,toggle
+"Switch on the patio light",light.patio,turn_on
+"Turn off the light in the bedroom",light.master_bedroom_lamp,turn_off
+"Make sure the one car garage is closed",garage_door.one_car,close
+"Open the two car garage",garage_door.two_car,open

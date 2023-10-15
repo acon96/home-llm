@@ -1,0 +1,226 @@
+device_name,description
+light.living_room_ceiling,Bright ceiling light
+fan.kitchen_island,Cooling kitchen fan
+garage_door.main_1,Primary garage door
+blinds.master_bedroom,Master bedroom blinds
+thermostat.downstairs,Nest downstairs thermostat
+lock.front_door_1,Main entry lock
+media_player.samsung_tv,Living room TV
+light.patio_1,Outdoor patio light
+fan.bedroom_right,Right-side bedroom fan
+garage_door.side_2,Side garage door
+blinds.kitchen_window,Kitchen window blinds
+thermostat.upstairs,Honeywell upstairs thermostat
+lock.back_door,Backyard entry lock
+media_player.sonos_kitchen,Kitchen Sonos speaker
+light.hallway_upstairs,Upstairs hallway light
+fan.garage_workshop,Garage workshop fan
+garage_door.bike_shed,Bike shed door
+blinds.office,Office window blinds
+thermostat.guest_room,Guest room Ecobee
+lock.pool_gate,Swimming pool gate
+media_player.roku_bedroom,Bedroom Roku player
+light.front_porch,Front porch light
+fan.bathroom_down,Fan in downstairs bathroom
+garage_door.basement,Basement garage door
+blinds.nursery,Nursery room blinds
+thermostat.garage,Garage thermostat
+lock.wine_cellar,Wine cellar lock
+media_player.apple_tv,Apple TV media player
+light.deck_left,Left deck light
+fan.porch,Porch ceiling fan
+garage_door.golf_cart,Golf cart door
+blinds.living_room_large,Main living room blinds
+thermostat.basement,Basement thermostat
+lock.shed_2,Second shed lock
+media_player.echo_dot,Kitchen Echo Dot
+light.kitchen_counter,Kitchen counter lights
+fan.laundry_room,Laundry room fan
+garage_door.boat,Boat storage door
+blinds.bathroom_1,First bathroom blinds
+thermostat.attic,Attic thermostat
+lock.tool_shed,Tool shed lock
+media_player.ps5_living_room,Living room PS5
+light.bathroom_mirror,Mirror lights
+fan.outdoor_patio,Outdoor patio fan
+garage_door.rv_storage,RV storage door
+blinds.dining_room,Dining room blinds
+thermostat.playroom,Playroom thermostat
+lock.mailbox,Secure mailbox lock
+media_player.chrome_cast_bedroom,Bedroom Chromecast
+light.garden_path,Garden path lighting
+fan.attic_ventilation,Attic ventilation fan
+garage_door.greenhouse,Greenhouse door
+blinds.skylight,Skylight blinds
+thermostat.workshop,Workshop thermostat
+lock.patio_door,Patio sliding door
+media_player.nintendo_switch,Nintendo Switch
+light.driveway_1,First driveway light
+fan.guest_bedroom,Guest room fan
+garage_door.pet_entry,Pet entry door
+blinds.hallway_2,Second hallway blinds
+thermostat.sunroom,Sunroom thermostat
+lock.utility_room,Utility room lock
+media_player.fire_tv_stick,Fire TV Stick
+light.closet_under_stairs,Under-stairs closet light
+fan.kids_room,Kids' room fan
+garage_door.lawn_equipment,Lawn equipment door
+blinds.guest_bathroom,Guest bathroom blinds
+thermostat.mudroom,Mudroom thermostat
+lock.bike_rack,Bike rack lock
+media_player.xbox_den,Den Xbox console
+light.hot_tub,Hot tub lighting
+fan.master_bath,Master bathroom fan
+garage_door.carport,Carport door
+blinds.craft_room,Craft room blinds
+thermostat.home_office,Home office thermostat
+lock.file_cabinet,File cabinet lock
+media_player.soundbar_living_room,Living room soundbar
+light.workbench,Garage workbench light
+fan.living_room_center,Center living room fan
+garage_door.shed_1,First shed door
+blinds.kids_room,Kids' room blinds
+thermostat.home_gym,Home gym thermostat
+lock.gun_safe,Gun safe lock
+media_player.laptop_stream,Streaming laptop
+light.front_yard,Front yard lighting
+fan.outdoor_kitchen,Outdoor kitchen fan
+garage_door.wine_cellar,Wine cellar door
+blinds.theater_room,Home theater blinds
+thermostat.sauna,Sauna thermostat
+lock.safety_deposit,Safety deposit box
+media_player.ipad_kitchen,Kitchen iPad
+light.living_room_ceiling,"Living Room Ceiling Light"
+light.kitchen_counter,"Kitchen Counter Light"
+light.master_bedroom_1,"Master Bedroom Light 1"
+light.master_bedroom_2,"Master Bedroom Light 2"
+light.garage,"Garage Light"
+light.front_porch,"Front Porch Light"
+light.backyard,"Backyard Light"
+light.bathroom_1,"Bathroom Light 1"
+light.bathroom_2,"Bathroom Light 2"
+light.hallway,"Hallway Light"
+light.philips_hue_1,"Philips Hue 1"
+light.philips_hue_2,"Philips Hue 2"
+light.yeelight_smart,"Yeelight Smart Light"
+light.lifx_master,"LIFX Master Light"
+light.nursery,"Nursery Light"
+light.basement,"Basement Light"
+light.office_desk,"Office Desk Light"
+light.kitchen_table,"Kitchen Table Light"
+light.aquarium,"Aquarium Light"
+light.patio,"Patio Light"
+fan.living_room,"Living Room Fan"
+fan.bedroom_master,"Master Bedroom Fan"
+fan.kitchen,"Kitchen Fan"
+fan.bathroom,"Bathroom Fan"
+fan.garage,"Garage Fan"
+fan.office,"Office Fan"
+fan.nursery,"Nursery Fan"
+fan.dyson_pure,"Dyson Pure Fan"
+fan.ceiling_1,"Ceiling Fan 1"
+fan.ceiling_2,"Ceiling Fan 2"
+fan.attic,"Attic Fan"
+fan.back_porch,"Back Porch Fan"
+fan.front_porch,"Front Porch Fan"
+fan.basement,"Basement Fan"
+fan.guest_room,"Guest Room Fan"
+fan.dining_area,"Dining Area Fan"
+fan.honeywell_turbo,"Honeywell Turbo Fan"
+fan.indoor_gym,"Indoor Gym Fan"
+fan.balcony,"Balcony Fan"
+fan.patio,"Patio Fan"
+garage_door.main,"Main Garage Door"
+garage_door.side,"Side Garage Door"
+garage_door.bike_storage,"Bike Storage Garage"
+garage_door.shop,"Workshop Garage Door"
+garage_door.liftmaster_1,"LiftMaster 1"
+garage_door.liftmaster_2,"LiftMaster 2"
+garage_door.carport,"Carport Garage Door"
+garage_door.basement,"Basement Garage Door"
+garage_door.upper_level,"Upper Level Garage"
+garage_door.chamberlain_1,"Chamberlain 1"
+garage_door.chamberlain_2,"Chamberlain 2"
+garage_door.spare,"Spare Garage Door"
+garage_door.guest,"Guest Garage Door"
+garage_door.boat,"Boat Garage Door"
+garage_door.rv,"RV Garage Door"
+garage_door.golf_cart,"Golf Cart Garage"
+garage_door.motorcycle,"Motorcycle Garage"
+garage_door.one_car,"One Car Garage"
+garage_door.two_car,"Two Car Garage"
+blinds.living_room,"Living Room Blinds"
+blinds.kitchen,"Kitchen Blinds"
+blinds.master_bedroom,"Master Bedroom Blinds"
+blinds.nursery,"Nursery Blinds"
+blinds.office,"Office Blinds"
+blinds.bathroom,"Bathroom Blinds"
+blinds.garage,"Garage Blinds"
+blinds.hallway,"Hallway Blinds"
+blinds.front_window,"Front Window Blinds"
+blinds.back_window,"Back Window Blinds"
+blinds.guest_room,"Guest Room Blinds"
+blinds.sunroom,"Sunroom Blinds"
+blinds.ikea_smart,"Ikea Smart Blinds"
+blinds.basement,"Basement Blinds"
+blinds.skylight,"Skylight Blinds"
+blinds.patio,"Patio Blinds"
+blinds.dining_room,"Dining Room Blinds"
+blinds.somfy_living,"Somfy Living Room"
+blinds.somfy_kitchen,"Somfy Kitchen"
+thermostat.main,"Main Thermostat"
+thermostat.upstairs,"Upstairs Thermostat"
+thermostat.basement,"Basement Thermostat"
+thermostat.nest_hall,"Nest Hallway"
+thermostat.honeywell_main,"Honeywell Main"
+thermostat.master_bedroom,"Master Bedroom Thermostat"
+thermostat.guest_room,"Guest Room Thermostat"
+thermostat.garage,"Garage Thermostat"
+thermostat.office,"Office Thermostat"
+thermostat.nursery,"Nursery Thermostat"
+thermostat.ecobee_main,"Ecobee Main"
+thermostat.ecobee_upstairs,"Ecobee Upstairs"
+thermostat.kitchen,"Kitchen Thermostat"
+thermostat.living_room,"Living Room Thermostat"
+thermostat.sunroom,"Sunroom Thermostat"
+thermostat.indoor_pool,"Indoor Pool Thermostat"
+thermostat.workshop,"Workshop Thermostat"
+thermostat.wine_cellar,"Wine Cellar Thermostat"
+thermostat.yoga_room,"Yoga Room Thermostat"
+lock.front_door,"Front Door Lock"
+lock.back_door,"Back Door Lock"
+lock.garage,"Garage Door Lock"
+lock.master_bedroom,"Master Bedroom Lock"
+lock.office,"Office Lock"
+lock.nursery,"Nursery Door Lock"
+lock.schlage_smart,"Schlage Smart Lock"
+lock.yale_living,"Yale Living Room"
+lock.yale_kitchen,"Yale Kitchen"
+lock.august_front,"August Front Door"
+lock.august_back,"August Back Door"
+lock.basement,"Basement Lock"
+lock.guest_room,"Guest Room Lock"
+lock.wine_cellar,"Wine Cellar Lock"
+lock.tool_shed,"Tool Shed Lock"
+lock.pool_gate,"Pool Gate Lock"
+lock.yoga_room,"Yoga Room Lock"
+lock.bike_storage,"Bike Storage Lock"
+media_player.living_room,"Living Room Media"
+media_player.master_bedroom,"Master Bedroom Media"
+media_player.kitchen,"Kitchen Media Player"
+media_player.nursery,"Nursery Media Player"
+media_player.office,"Office Media Player"
+media_player.sonos_living,"Sonos Living Room"
+media_player.sonos_kitchen,"Sonos Kitchen"
+media_player.sonos_bedroom,"Sonos Master Bedroom"
+media_player.bose_living,"Bose Living Room"
+media_player.bose_bedroom,"Bose Bedroom"
+media_player.basement,"Basement Media Player"
+media_player.garage,"Garage Media Player"
+media_player.guest_room,"Guest Room Media"
+media_player.patio,"Patio Media Player"
+media_player.home_theater,"Home Theater Media"
+media_player.roku_living,"Roku Living Room"
+media_player.roku_bedroom,"Roku Master Bedroom"
+media_player.fire_tv,"Fire TV Media"
+media_player.chromecast,"Chromecast Media"

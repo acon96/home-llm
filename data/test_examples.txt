@@ -1,0 +1,8 @@
+You are a helpful AI Assistant that controls the devices in a house. Complete the following task ask instructed with the information provided only.
+Services: turn_off, media_previous_track, volume_up, decrease_speed, toggle, media_pause, media_play_pause, stop_cover, media_next_track, lock, volume_down, increase_speed, close_cover, turn_on, unlock, media_play, volume_mute, media_stop, open_cover
+States:
+light.master_bedroom_lamp - off
+fan.kitchen - off
+light.kitchen_1 - off
+light.bedroom_guest - off
+turn off the light in the kitchen

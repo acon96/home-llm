@@ -1,0 +1,48 @@
+rev1 - original test
+- 1 epoch
+- train ctx 1900
+- I think the learning rate was way too high (2e-4)
+- the service invocation syntax is ambiguous causing repeat code blocks
+- it doesn't get the device name right like ever
+- eval dataset was disabled
+
+rev2 - it kinda works
+- eval dataset at 10%
+- 2 epochs
+- train ctx 1200
+- batch size 1
+- learning rate linear 5e-5
+- gradient accumulation steps 1
++ fixed invocation syntax
++ still repeatedly spits out code blocks but at least it closes them correctly
++ names are MUCH more accurate. will still hallucinate names that don't exist
+
+rev3 - ok it definitely works
+- 4 epochs
+- batch size 2
+- learning rate cosine 5e-5
++ doesn't seem like there's much difference but the loss is lower
++ still halluncinates device names. (need to figure this one out)
++ need more examples for: garage_door, media_player, 
+
+rev4 - got to way lower loss. it tries really hard to stop generating text
+- 4 epochs
+- train ctx 512
+- batch size 2
+- learning rate cosine 1e-4
+- added system prompt and moved services block before states block
+
+rev 4.1 - really doesn't work as well. loss dropped REALLY fast and then never got as low as rev4
+- 4 epochs
+- train ctx 512
+- batch size 3
+- learning rate cosine 1e-4
+- proper pad token
+
+rev 4.2 - yeah nah it's the pad token
+- batch size 2
+
+
+Ideas:
+- get rid of services block. will i just learn it on it's own?
+- figure out how to penalize the wrong device name more?
