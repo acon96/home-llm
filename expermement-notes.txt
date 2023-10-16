@@ -43,18 +43,21 @@ rev 4.2 - yeah nah it's the pad token
 - batch size 2
 
 rev 5 - new dataset
-- 4 epochs
+- 3 epochs (4th epoch was overfit)
 - train cx 512
 - batch size 2
 - learning rate cosize 1e-5
+- actually stops generating text. not at the right... place but still!
+- messing with temperature makes it generate some interesting output.
 
+TODO:
 rev 5.1 - gradient accumulation test
-- 4 epochs
+- 3 epochs
 - train cx 512
 - batch size 8
-- learning rate cosize 1e-5
-
+- learning rate cosize 5e-6
 
 Ideas:
-- get rid of services block. will i just learn it on it's own?
 - figure out how to penalize the wrong device name more?
+- need to make the device name/description and device ID match less in the examples.
+    - it is learning to take the name of the device in the serviec call block from the description, not the states block

@@ -9,7 +9,7 @@ torch.set_default_device("cuda")
 torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
 TRAIN_CTX_SIZE = 512 # The number of tokens to pad + truncate the input examples to
-BATCH_SIZE = 2 # The simulated "batch size" that we will train on. will tweak gradient accumulations steps
+BATCH_SIZE = 8 # The simulated "batch size" that we will train on. will tweak gradient accumulations steps
 MICRO_BATCH_SIZE = 2 # The actual batch size that will fit into VRAM on this machine
 TRAINING_EPOCHS = 4 # The number of times to train the model on each example
 LEARNING_RATE_START = 1e-5 # The starting learning rate (speed at which the model trains)
