@@ -113,21 +113,6 @@ SUPPORTED_DEVICES = {
             "toggle",
         ],
     ),
-    # TODO: needs refinement
-    # "climate": DeviceType(
-    #     name="climate",
-    #     possible_states=[
-    #         (STATE_ON, 0.95),
-    #         (STATE_OFF, 0.05)
-    #     ],
-    #     services=[
-    #         "set_temperature", parameters=[
-    #             ("temperature", RandomValueType.NUMBER)
-    #         ]),
-    #         "turn_on",
-    #         "turn_off",
-    #     ],
-    # ),
     "lock": DeviceType(
         name="lock",
         possible_states=[
@@ -167,9 +152,20 @@ SUPPORTED_DEVICES = {
     ),
 }
 
+stacks_of_device_names = { x: [] for x in SUPPORTED_DEVICES.keys() }
 with open("pile_of_device_names.csv") as f:
     reader = csv.DictReader(f)
     pile_of_device_names = list(reader)
+    for device_dict in pile_of_device_names:
+        try:
+            device_type = device_dict["device_name"].split(".")[0]
+            stacks_of_device_names[device_type].append(device_dict)
+        except KeyError as ex:
+            print(ex)
+
+with open("pile_of_templated_actions.csv") as f:
+    reader = csv.DictReader(f)
+    pile_of_templated_actions = list(reader)
 
 with open("pile_of_device_actions.csv") as f:
     reader = csv.DictReader(f)
@@ -206,7 +202,10 @@ def random_device_list(max_devices: int):
 
     return device_list, list(device_types)
 
-def generate_example(question: str, target_devices: list[str], service_names: list[str]):
+def generate_static_example(action: dict):
+    question = action["english_phrase"]
+    target_devices = action["device_name"].split("|")
+    service_names = action["service_name"].split("|")
 
     device_list, device_types = random_device_list(max_devices=32)
 
@@ -221,7 +220,7 @@ def generate_example(question: str, target_devices: list[str], service_names: li
     # gather a list of all available services
     available_services = set()
     for x in device_types:
-        available_services = available_services.union(set(SUPPORTED_DEVICES[x].services))
+        available_services = available_services.union(set(SUPPORTED_DEVICES[x].services)).union(service_names)
 
     # generate the list of service calls and answers
     service_calls = []
@@ -232,16 +231,63 @@ def generate_example(question: str, target_devices: list[str], service_names: li
         service_calls.append(f"{service}({device})")
         answers.append(random.choice(pile_of_responses[device_type][service]))
 
-    # generate a ton more examples of actions. focus in on other device types besides fans + lights
-    # TODO: add examples for ambiguous requests. asking a clarifying question
-    # TODO: add examples for requests about devices states without making any changes
-    # TODO: better response selection for multiple action situations (make it sound more natural)
-
     return {
         "states": device_list,
         "available_services": list(available_services),
         "question": question,
         "answers": answers,
+        "service_calls": service_calls
+    }
+
+def generate_templated_example(template: dict):
+    template_device_types: list[str] = template["device_type"].split("|")
+    service_names: list[str] = template["service"].split("|")
+    question_template: str = template["english_phrase"]
+    answer_template: str = template["assistant_response"]
+
+    device_list, device_types = random_device_list(max_devices=32)
+
+    # insert our target device somewhere random in the list
+    chosen_devices = []
+    for device_type in template_device_types:
+        device_dict = random.choice(stacks_of_device_names[device_type])
+        device_dict["type"] = device_type
+        chosen_devices.append(device_dict)
+
+        device = device_dict["device_name"]
+
+        index = random.randint(0, len(device_list))
+        state = SUPPORTED_DEVICES[device_type].get_random_state()
+
+        device_list.insert(index, f"{device} - {state}")
+
+    # gather a list of all available services
+    available_services = set()
+    for x in device_types:
+        available_services = available_services.union(set(SUPPORTED_DEVICES[x].services)).union(service_names)
+
+    # generate the question
+    if len(template_device_types) == 1:
+        question = question_template.replace("<device_name>", chosen_devices[0]["description"])
+        answer = answer_template.replace("<device_name>", chosen_devices[0]["description"])
+    else:
+        question = question_template
+        answer = answer_template
+        for i in range(len(template_device_types)):
+            question = question.replace(f"<device_name{(i + 1)}>", chosen_devices[i]["description"])
+            answer = answer.replace(f"<device_name{(i + 1)}>", chosen_devices[i]["description"])
+
+
+    # generate the list of service calls and answers
+    service_calls = []
+    for device_dict, service in zip(chosen_devices, service_names):
+        service_calls.append(f"{service}({device_dict['device_name']})")
+
+    return {
+        "states": device_list,
+        "available_services": list(available_services),
+        "question": question,
+        "answers": [answer],
         "service_calls": service_calls
     }
 
@@ -253,20 +299,27 @@ def format_example(example):
     code_block = "```homeassistant\n" + "\n".join(example["service_calls"]) + "\n```done\n"
     return "\n".join([sys_prompt, services_block, states_block, example["question"], answers, code_block])
 
+
+# TODO: add examples for ambiguous requests. asking a clarifying question
+# TODO: add examples for rooms/groups of devices. i.e. "turn off all the lights in the kitchen"
 def main():
     random.seed(42)
 
+    print("Generating...")
+
+    STATIC_FACTOR = 5
+    TEMPLATE_FACTOR = 40
+
     examples = []
     for action in tqdm(pile_of_device_actions):
-        question = action["english_phrase"]
-        devices = action["device_name"].split("|")
-        services = action["service_name"].split("|")
+        for i in range(STATIC_FACTOR):
+            examples.append({ "text": format_example(generate_static_example(action)) })
 
-        # 3 examples per question
-        examples.append({ "text": format_example(generate_example(question, devices, services)) })
-        examples.append({ "text": format_example(generate_example(question, devices, services)) })
-        examples.append({ "text": format_example(generate_example(question, devices, services)) })
+    for templated_action in tqdm(pile_of_templated_actions):
+        for i in range(TEMPLATE_FACTOR):
+            examples.append({ "text": format_example(generate_templated_example(templated_action)) })
 
+    print(f"Generated {len(examples)} examples. Saving...")
     with open("home_assistant_examples.json", "w") as f:
         json.dump(examples, f, indent=4)
 

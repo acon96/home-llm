@@ -1,226 +1,418 @@
 device_name,description
-light.living_room_ceiling,Bright ceiling light
-fan.kitchen_island,Cooling kitchen fan
-garage_door.main_1,Primary garage door
-blinds.master_bedroom,Master bedroom blinds
-thermostat.downstairs,Nest downstairs thermostat
-lock.front_door_1,Main entry lock
-media_player.samsung_tv,Living room TV
-light.patio_1,Outdoor patio light
-fan.bedroom_right,Right-side bedroom fan
-garage_door.side_2,Side garage door
-blinds.kitchen_window,Kitchen window blinds
-thermostat.upstairs,Honeywell upstairs thermostat
-lock.back_door,Backyard entry lock
-media_player.sonos_kitchen,Kitchen Sonos speaker
-light.hallway_upstairs,Upstairs hallway light
-fan.garage_workshop,Garage workshop fan
-garage_door.bike_shed,Bike shed door
-blinds.office,Office window blinds
-thermostat.guest_room,Guest room Ecobee
-lock.pool_gate,Swimming pool gate
-media_player.roku_bedroom,Bedroom Roku player
-light.front_porch,Front porch light
-fan.bathroom_down,Fan in downstairs bathroom
-garage_door.basement,Basement garage door
-blinds.nursery,Nursery room blinds
-thermostat.garage,Garage thermostat
-lock.wine_cellar,Wine cellar lock
-media_player.apple_tv,Apple TV media player
-light.deck_left,Left deck light
-fan.porch,Porch ceiling fan
-garage_door.golf_cart,Golf cart door
-blinds.living_room_large,Main living room blinds
-thermostat.basement,Basement thermostat
-lock.shed_2,Second shed lock
-media_player.echo_dot,Kitchen Echo Dot
-light.kitchen_counter,Kitchen counter lights
-fan.laundry_room,Laundry room fan
-garage_door.boat,Boat storage door
+blinds.back_window,"Back Window Blinds"
+blinds.basement,"Basement Blinds"
 blinds.bathroom_1,First bathroom blinds
-thermostat.attic,Attic thermostat
-lock.tool_shed,Tool shed lock
-media_player.ps5_living_room,Living room PS5
-light.bathroom_mirror,Mirror lights
-fan.outdoor_patio,Outdoor patio fan
-garage_door.rv_storage,RV storage door
-blinds.dining_room,Dining room blinds
-thermostat.playroom,Playroom thermostat
-lock.mailbox,Secure mailbox lock
-media_player.chrome_cast_bedroom,Bedroom Chromecast
-light.garden_path,Garden path lighting
-fan.attic_ventilation,Attic ventilation fan
-garage_door.greenhouse,Greenhouse door
-blinds.skylight,Skylight blinds
-thermostat.workshop,Workshop thermostat
-lock.patio_door,Patio sliding door
-media_player.nintendo_switch,Nintendo Switch
-light.driveway_1,First driveway light
-fan.guest_bedroom,Guest room fan
-garage_door.pet_entry,Pet entry door
-blinds.hallway_2,Second hallway blinds
-thermostat.sunroom,Sunroom thermostat
-lock.utility_room,Utility room lock
-media_player.fire_tv_stick,Fire TV Stick
-light.closet_under_stairs,Under-stairs closet light
-fan.kids_room,Kids' room fan
-garage_door.lawn_equipment,Lawn equipment door
-blinds.guest_bathroom,Guest bathroom blinds
-thermostat.mudroom,Mudroom thermostat
-lock.bike_rack,Bike rack lock
-media_player.xbox_den,Den Xbox console
-light.hot_tub,Hot tub lighting
-fan.master_bath,Master bathroom fan
-garage_door.carport,Carport door
+blinds.bathroom,"Bathroom Blinds"
 blinds.craft_room,Craft room blinds
-thermostat.home_office,Home office thermostat
-lock.file_cabinet,File cabinet lock
-media_player.soundbar_living_room,Living room soundbar
-light.workbench,Garage workbench light
-fan.living_room_center,Center living room fan
-garage_door.shed_1,First shed door
+blinds.dining_room,"Dining Room Blinds"
+blinds.front_window,"Front Window Blinds"
+blinds.garage,"Garage Blinds"
+blinds.guest_bathroom,Guest bathroom blinds
+blinds.guest_room,"Guest Room Blinds"
+blinds.hallway_1,First hallway blinds
+blinds.hallway_2,Second hallway blinds
+blinds.hallway,"Hallway Blinds"
+blinds.ikea_smart,"Ikea Smart Blinds"
 blinds.kids_room,Kids' room blinds
-thermostat.home_gym,Home gym thermostat
-lock.gun_safe,Gun safe lock
-media_player.laptop_stream,Streaming laptop
-light.front_yard,Front yard lighting
-fan.outdoor_kitchen,Outdoor kitchen fan
-garage_door.wine_cellar,Wine cellar door
-blinds.theater_room,Home theater blinds
-thermostat.sauna,Sauna thermostat
-lock.safety_deposit,Safety deposit box
-media_player.ipad_kitchen,Kitchen iPad
-light.living_room_ceiling,"Living Room Ceiling Light"
-light.kitchen_counter,"Kitchen Counter Light"
-light.master_bedroom_1,"Master Bedroom Light 1"
-light.master_bedroom_2,"Master Bedroom Light 2"
-light.garage,"Garage Light"
-light.front_porch,"Front Porch Light"
-light.backyard,"Backyard Light"
-light.bathroom_1,"Bathroom Light 1"
-light.bathroom_2,"Bathroom Light 2"
-light.hallway,"Hallway Light"
-light.philips_hue_1,"Philips Hue 1"
-light.philips_hue_2,"Philips Hue 2"
-light.yeelight_smart,"Yeelight Smart Light"
-light.lifx_master,"LIFX Master Light"
-light.nursery,"Nursery Light"
-light.basement,"Basement Light"
-light.office_desk,"Office Desk Light"
-light.kitchen_table,"Kitchen Table Light"
-light.aquarium,"Aquarium Light"
-light.patio,"Patio Light"
-fan.living_room,"Living Room Fan"
-fan.bedroom_master,"Master Bedroom Fan"
-fan.kitchen,"Kitchen Fan"
-fan.bathroom,"Bathroom Fan"
-fan.garage,"Garage Fan"
-fan.office,"Office Fan"
-fan.nursery,"Nursery Fan"
-fan.dyson_pure,"Dyson Pure Fan"
-fan.ceiling_1,"Ceiling Fan 1"
-fan.ceiling_2,"Ceiling Fan 2"
-fan.attic,"Attic Fan"
-fan.back_porch,"Back Porch Fan"
-fan.front_porch,"Front Porch Fan"
-fan.basement,"Basement Fan"
-fan.guest_room,"Guest Room Fan"
-fan.dining_area,"Dining Area Fan"
-fan.honeywell_turbo,"Honeywell Turbo Fan"
-fan.indoor_gym,"Indoor Gym Fan"
-fan.balcony,"Balcony Fan"
-fan.patio,"Patio Fan"
-garage_door.main,"Main Garage Door"
-garage_door.side,"Side Garage Door"
-garage_door.bike_storage,"Bike Storage Garage"
-garage_door.shop,"Workshop Garage Door"
-garage_door.liftmaster_1,"LiftMaster 1"
-garage_door.liftmaster_2,"LiftMaster 2"
-garage_door.carport,"Carport Garage Door"
-garage_door.basement,"Basement Garage Door"
-garage_door.upper_level,"Upper Level Garage"
-garage_door.chamberlain_1,"Chamberlain 1"
-garage_door.chamberlain_2,"Chamberlain 2"
-garage_door.spare,"Spare Garage Door"
-garage_door.guest,"Guest Garage Door"
-garage_door.boat,"Boat Garage Door"
-garage_door.rv,"RV Garage Door"
-garage_door.golf_cart,"Golf Cart Garage"
-garage_door.motorcycle,"Motorcycle Garage"
-garage_door.one_car,"One Car Garage"
-garage_door.two_car,"Two Car Garage"
-blinds.living_room,"Living Room Blinds"
+blinds.kitchen_window,Kitchen window blinds
 blinds.kitchen,"Kitchen Blinds"
+blinds.living_room_large,Main living room blinds
+blinds.living_room,"Living Room Blinds"
 blinds.master_bedroom,"Master Bedroom Blinds"
 blinds.nursery,"Nursery Blinds"
 blinds.office,"Office Blinds"
-blinds.bathroom,"Bathroom Blinds"
-blinds.garage,"Garage Blinds"
-blinds.hallway,"Hallway Blinds"
-blinds.front_window,"Front Window Blinds"
-blinds.back_window,"Back Window Blinds"
-blinds.guest_room,"Guest Room Blinds"
-blinds.sunroom,"Sunroom Blinds"
-blinds.ikea_smart,"Ikea Smart Blinds"
-blinds.basement,"Basement Blinds"
-blinds.skylight,"Skylight Blinds"
+blinds.office_window,"Office Window Blinds"
 blinds.patio,"Patio Blinds"
-blinds.dining_room,"Dining Room Blinds"
-blinds.somfy_living,"Somfy Living Room"
-blinds.somfy_kitchen,"Somfy Kitchen"
-thermostat.main,"Main Thermostat"
-thermostat.upstairs,"Upstairs Thermostat"
-thermostat.basement,"Basement Thermostat"
-thermostat.nest_hall,"Nest Hallway"
-thermostat.honeywell_main,"Honeywell Main"
-thermostat.master_bedroom,"Master Bedroom Thermostat"
-thermostat.guest_room,"Guest Room Thermostat"
-thermostat.garage,"Garage Thermostat"
-thermostat.office,"Office Thermostat"
-thermostat.nursery,"Nursery Thermostat"
-thermostat.ecobee_main,"Ecobee Main"
-thermostat.ecobee_upstairs,"Ecobee Upstairs"
-thermostat.kitchen,"Kitchen Thermostat"
-thermostat.living_room,"Living Room Thermostat"
-thermostat.sunroom,"Sunroom Thermostat"
-thermostat.indoor_pool,"Indoor Pool Thermostat"
-thermostat.workshop,"Workshop Thermostat"
-thermostat.wine_cellar,"Wine Cellar Thermostat"
-thermostat.yoga_room,"Yoga Room Thermostat"
-lock.front_door,"Front Door Lock"
+blinds.skylight,"Skylight Blinds"
+blinds.skylight,Skylight blinds
+blinds.somfy_kitchen,"Kitchen Blinds"
+blinds.somfy_living,"Living Room Blinds"
+blinds.sunroom,"Sunroom Blinds"
+blinds.theater_room,Home theater blinds
+fan.attic_1,"Attic Fan one"
+fan.attic_2,"Attic Fan two"
+fan.attic_3,"Attic Fan three"
+fan.attic_ventilation,Attic ventilation fan
+fan.attic,"Attic Fan"
+fan.back_porch,"Back Porch Fan"
+fan.balcony,"Balcony Fan"
+fan.basement,"Basement Fan"
+fan.bathroom_down,Fan in downstairs bathroom
+fan.bathroom,"Bathroom Fan"
+fan.bedroom_master,"Master Bedroom Fan"
+fan.bedroom_right,Right-side bedroom fan
+fan.bedroom,"Bedroom Fan"
+fan.ceiling_1,"Ceiling Fan one"
+fan.ceiling_2,"Ceiling Fan two"
+fan.dining_area,"Dining Area Fan"
+fan.dining_room,"Dining Room Fan"
+fan.dyson_pure,"Dyson Pure Fan"
+fan.front_porch,"Front Porch Fan"
+fan.garage_workshop,Garage workshop fan
+fan.garage,"Garage Fan"
+fan.guest_bedroom,Guest room fan
+fan.guest_room,"Guest Room Fan"
+fan.hallway,"Hallway fan"
+fan.honeywell_turbo,"Honeywell Turbo Fan"
+fan.indoor_gym,"Indoor Gym Fan"
+fan.kids_room,Kids' room fan
+fan.kitchen_1,"Kitchen Fan one"
+fan.kitchen_2,"Kitchen Fan two"
+fan.kitchen_island,Cooling kitchen fan
+fan.kitchen,"Kitchen Fan"
+fan.laundry_room,Laundry room fan
+fan.living_room_1,"Living Room fan one"
+fan.living_room_2,"Living Room fan two"
+fan.living_room_center,Center living room fan
+fan.living_room,"Living Room Fan"
+fan.master_bath,Master bathroom fan
+fan.nursery,"Nursery Fan"
+fan.office,"Office Fan"
+fan.outdoor_kitchen,Outdoor kitchen fan
+fan.outdoor_patio,Outdoor patio fan
+fan.outdoor,"Outdoor fan"
+fan.patio,"Patio Fan"
+fan.porch,Porch ceiling fan
+fan.shed,"Shed fan"
+fan.study_1,"Study fan one"
+fan.study_2,"Study fan two"
+fan.study,"study fan"
+garage_door.basement,"Basement Garage Door"
+garage_door.bike_shed,Bike shed door
+garage_door.bike_storage,"Bike Storage Garage"
+garage_door.boat,"Boat Garage Door"
+garage_door.boat,Boat storage door
+garage_door.carport,"Carport Garage Door"
+garage_door.carport,Carport door
+garage_door.chamberlain_1,"Chamberlain one"
+garage_door.chamberlain_2,"Chamberlain two"
+garage_door.golf_cart,"Golf Cart Garage"
+garage_door.golf_cart,Golf cart door
+garage_door.greenhouse,Greenhouse door
+garage_door.guest,"Guest Garage Door"
+garage_door.lawn_equipment,Lawn equipment door
+garage_door.liftmaster_1,"LiftMaster one"
+garage_door.liftmaster_2,"LiftMaster two"
+garage_door.main_1,Primary garage door
+garage_door.main,"Main Garage Door"
+garage_door.motorcycle,"Motorcycle Garage"
+garage_door.one_car,"One Car Garage"
+garage_door.pet_entry,Pet entry door
+garage_door.rv_storage,RV storage door
+garage_door.rv,"RV Garage Door"
+garage_door.shed_1,First shed door
+garage_door.shed_2,Second shed door
+garage_door.shop,"Workshop Garage Door"
+garage_door.left_door,"Left Garage Door"
+garage_door.side_2,Side garage door
+garage_door.side,"Side Garage Door"
+garage_door.spare,"Spare Garage Door"
+garage_door.two_car,"Two Car Garage"
+garage_door.upper_level,"Upper Level Garage"
+garage_door.wine_cellar,Wine cellar door
+light.above_dining_table,"Dining Table Light"
+light.aquarium,"Aquarium Light"
+light.attic,"Attic Light"
+light.backyard,"Backyard Light"
+light.basement,"Basement Light"
+light.bathroom_1,"Bathroom Light one"
+light.bathroom_2,"Bathroom Light two"
+light.bathroom_mirror,Mirror lights
+light.bathroom,"Bathroom Light"
+light.bedroom_1,"Bedroom Light one"
+light.bedroom_2,"Bedroom Light two"
+light.bedroom_3,"Bedroom Light three"
+light.bedroom,"Bedroom Light"
+light.closet_under_stairs,Under-stairs closet light
+light.deck_left,Left deck light
+light.dining_room_1,"Dining Room Light one"
+light.dining_room_2,"Dining Room Light two"
+light.dining_room_3,"Dining Room Light three"
+light.dining_room,"Dining Room Light"
+light.driveway_1,First driveway light
+light.driveway,"Driveway Light"
+light.front_porch,"Front Porch Light"
+light.front_yard,Front yard lighting
+light.garage,"Garage Light"
+light.garden_1,"Garden Light one"
+light.garden_2,"Garden Light two"
+light.garden_path,Garden path lighting
+light.garden,"Garden Light"
+light.guest_room,"Guest room Lights"
+light.hallway_upstairs,Upstairs hallway light
+light.hallway,"Hallway Lights"
+light.hallway,"Hallway Light"
+light.hot_tub,Hot tub lighting
+light.kitchen_1,"Main Kitchen Light"
+light.kitchen_2,"Second Kitchen Light"
+light.kitchen_counter,"Kitchen Counter Light"
+light.kitchen_counter,Kitchen counter lights
+light.kitchen_table,"Kitchen Table Light"
+light.kitchen,"Kitchen Light"
+light.lifx_master,"Master Light"
+light.living_room_1,"Living Room Light one"
+light.living_room_2,"Living Room Light two"
+light.living_room_ceiling,"Living Room Ceiling Light"
+light.living_room_ceiling,Bright ceiling light
+light.living_room,"Living Room Light"
+light.master_bedroom_1,"Master Bedroom Light one"
+light.master_bedroom_2,"Master Bedroom Light two"
+light.master_bedroom_lamp,"Master Bedroom Lamp"
+light.nursery,"Nursery Light"
+light.office_1,"Office Light one"
+light.office_2,"Office Light two"
+light.office_desk,"Office Desk Light"
+light.office,"Office Light"
+light.outdoor,"Outdoor Lights"
+light.patio_1,Outdoor patio light
+light.patio,"Patio Lights"
+light.patio,"Patio Light"
+light.philips_hue_1,"Philips Hue one"
+light.philips_hue_2,"Philips Hue two"
+light.pool,"Pool Light"
+light.shed,"Shed Light"
+light.study_1,"Study Light one"
+light.study_2,"Study Light two"
+light.study_3,"Study Light three"
+light.study,"Study Light"
+light.workbench,Garage workbench light
+light.yeelight_smart,"Yeelight Smart Light"
+light.upstairs_master_bedroom_hue,Upstairs Master Bedroom Hue
+light.downstairs_guest_bedroom_zigbee,Downstairs Guest Bedroom Light
+light.front_office_mqtt,Front Office Light
+light.back_family_room_warm,Back Family Room Warm Light
+light.kitchen_counter_cool,Kitchen Counter Cool Light
+light.upstairs_bathroom_homekit,Upstairs Bathroom Light
+light.downstairs_livingroom_lifx,Downstairs Living Room Light
+light.front_porch_zwave,Front Porch Light
+light.side_hallway_hue,Side Hallway Hue
+light.garage_osram,Garage Osram
+light.basement_workshop_mqtt,Basement Workshop Light
+light.upstairs_children_bedroom_zigbee,Upstairs Children's Bedroom Light
+light.downstairs_master_bedroom_homekit,Downstairs Master Bedroom Light
+light.front_living_room_ge,Front Living Room Light
+light.back_bedroom_warm,Back Bedroom Warm Light
+light.kitchen_island_cool,Kitchen Island Cool Light
+light.upstairs_hallway_zwave,Upstairs Hallway Light
+light.downstairs_bathroom_warm,Downstairs Bathroom Warm Light
+light.front_yard_osram,Front Yard Osram
+light.back_yard_zwave,Back Yard Light
+light.upstairs_guest_bedroom_zigbee,Upstairs Guest Bedroom Light
+light.downstairs_office_mqtt,Downstairs Office Light
+light.front_bedroom_homekit,Front Bedroom Light
+light.back_office_lifx,Back Office Light
+light.kitchen_table_warm,Kitchen Table Warm Light
+light.upstairs_tv_room_zigbee,Upstairs TV Room Light
+light.downstairs_tv_room_homekit,Downstairs TV Room Light
+light.front_tv_room_ge,Front TV Room Light
+light.back_tv_room_warm,Back TV Room Warm Light
+light.kitchen_sink_cool,Kitchen Sink Cool Light
+light.upstairs_pantry_zwave,Upstairs Pantry Light
+light.downstairs_pantry_mqtt,Downstairs Pantry Light
+light.front_pantry_homekit,Front Pantry Light
+light.back_pantry_lifx,Back Pantry Light
+light.kitchen_cabinet_warm,Kitchen Cabinet Warm Light
+light.upstairs_corridor_zigbee,Upstairs Corridor Light
+light.downstairs_corridor_mqtt,Downstairs Corridor Light
+light.front_corridor_homekit,Front Corridor Light
+light.back_corridor_lifx,Back Corridor Light
+light.garage_workbench_cool,Garage Workbench Cool Light
+light.upstairs_nursery_zwave,Upstairs Nursery Light
+light.downstairs_nursery_mqtt,Downstairs Nursery Light
+light.front_nursery_homekit,Front Nursery Light
+light.back_nursery_warm,Back Nursery Warm Light
+light.kitchen_ceiling_cool,Kitchen Ceiling Cool Light
+light.upstairs_lounge_zigbee,Upstairs Lounge Light
+light.downstairs_lounge_homekit,Downstairs Lounge Light
+light.front_lounge_ge,Front Lounge Light
+light.back_lounge_warm,Back Lounge Warm Light
+light.basement_storage_cool,Basement Storage Cool Light
+light.upstairs_closet_zwave,Upstairs Closet Light
+light.downstairs_closet_mqtt,Downstairs Closet Light
+light.front_closet_homekit,Front Closet Light
+light.back_closet_warm,Back Closet Warm Light
+light.upstairs_den_zigbee,Upstairs Den Light
+light.downstairs_den_homekit,Downstairs Den Light
+light.front_den_ge,Front Den Light
+light.back_den_warm,Back Den Warm Light
+light.kitchen_window_cool,Kitchen Window Cool Light
+light.upstairs_entryway_zwave,Upstairs Entryway Light
+light.downstairs_entryway_mqtt,Downstairs Entryway Light
+light.front_entryway_homekit,Front Entryway Light
+light.back_entryway_lifx,Back Entryway Light
+light.kitchen_desk_warm,Kitchen Desk Warm Light
+light.upstairs_mudroom_zigbee,Upstairs Mudroom Light
+light.downstairs_mudroom_homekit,Downstairs Mudroom Light
+light.front_mudroom_ge,Front Mudroom Light
+light.back_mudroom_warm,Back Mudroom Warm Light
+light.kitchen_floor_cool,Kitchen Floor Cool Light
+light.upstairs_attic_zwave,Upstairs Attic Light
+light.downstairs_attic_mqtt,Downstairs Attic Light
+light.front_attic_homekit,Front Attic Light
+light.back_attic_lifx,Back Attic Light
+light.kitchen_drawer_warm,Kitchen Drawer Warm Light
+light.upstairs_sunroom_zigbee,Upstairs Sunroom Light
+light.downstairs_sunroom_homekit,Downstairs Sunroom Light
+light.front_sunroom_ge,Front Sunroom Light
+light.back_sunroom_warm,Back Sunroom Warm Light
+light.kitchen_rack_cool,Kitchen Rack Cool Light
+light.upstairs_study_zwave,Upstairs Study Light
+light.downstairs_study_mqtt,Downstairs Study Light
+light.front_study_homekit,Front Study Light
+light.back_study_lifx,Back Study Light
+light.kitchen_bar_warm,Kitchen Bar Warm Light
+light.upstairs_dining_zigbee,Upstairs Dining Light
+light.downstairs_dining_homekit,Downstairs Dining Light
+light.front_dining_ge,Front Dining Light
+light.back_dining_warm,Back Dining Warm Light
+light.kitchen_wall_cool,Kitchen Wall Cool Light
+light.upstairs_fireplace_zwave,Upstairs Fireplace Light
+light.downstairs_fireplace_mqtt,Downstairs Fireplace Light
+light.front_fireplace_homekit,Front Fireplace Light
+light.back_fireplace_lifx,Back Fireplace Light
+light.kitchen_bookshelf_warm,Kitchen Bookshelf Warm Light
+light.upstairs_sideyard_zigbee,Upstairs Side Yard Light
+light.downstairs_sideyard_homekit,Downstairs Side Yard Light
+light.front_sideyard_ge,Front Side Yard Light
+light.back_sideyard_warm,Back Side Yard Warm Light
+light.kitchen_cupboard_cool,Kitchen Cupboard Cool Light
+light.upstairs_cinema_zwave,Upstairs Cinema Light
+light.downstairs_cinema_mqtt,Downstairs Cinema Light
+light.front_cinema_homekit,Front Cinema Light
+light.back_cinema_lifx,Back Cinema Light
+light.kitchen_oven_warm,Kitchen Oven Warm Light
+light.upstairs_mancave_zigbee,Upstairs Man Cave Light
+light.downstairs_mancave_homekit,Downstairs Man Cave Light
+light.front_mancave_ge,Front Man Cave Light
+light.back_mancave_warm,Back Man Cave Warm Light
+light.kitchen_shelf_cool,Kitchen Shelf Cool Light
+light.upstairs_balcony_zwave,Upstairs Balcony Light
+light.downstairs_balcony_mqtt,Downstairs Balcony Light
+light.front_balcony_homekit,Front Balcony Light
+light.back_balcony_lifx,Back Balcony Light
+light.kitchen_cornice_warm,Kitchen Cornice Warm Light
+light.upstairs_stairwell_zigbee,Upstairs Stairwell Light
+light.downstairs_stairwell_homekit,Downstairs Stairwell Light
+light.front_stairwell_ge,Front Stairwell Light
+light.back_stairwell_warm,Back Stairwell Warm Light
+light.kitchen_mirror_cool,Kitchen Mirror Cool Light
+light.upstairs_basement_zwave,Upstairs Basement Light
+light.downstairs_basement_mqtt,Downstairs Basement Light
+light.front_basement_homekit,Front Basement Light
+light.back_basement_lifx,Back Basement Light
+light.kitchen_windowseat_warm,Kitchen Window Seat Warm Light
+light.upstairs_recreation_zigbee,Upstairs Recreation Light
+light.downstairs_recreation_homekit,Downstairs Recreation Light
+light.front_recreation_ge,Front Recreation Light
+light.back_recreation_warm,Back Recreation Warm Light
+light.kitchen_sideboard_cool,Kitchen Sideboard Cool Light
+light.upstairs_courtyard_zwave,Upstairs Courtyard Light
+light.downstairs_courtyard_mqtt,Downstairs Courtyard Light
+light.front_courtyard_homekit,Front Courtyard Light
+light.back_courtyard_lifx,Back Courtyard Light
+light.kitchen_winecellar_warm,Kitchen Wine Cellar Warm Light
+light.upstairs_arcade_zigbee,Upstairs Arcade Light
+light.downstairs_arcade_homekit,Downstairs Arcade Light
+light.front_arcade_ge,Front Arcade Light
+light.back_arcade_warm,Back Arcade Warm Light
+light.kitchen_pantry_cool,Kitchen Pantry Cool Light
+light.upstairs_washroom_zwave,Upstairs Washroom Light
+light.downstairs_washroom_mqtt,Downstairs Washroom Light
+light.front_washroom_homekit,Front Washroom Light
+light.back_washroom_lifx,Back Washroom Light
+light.kitchen_fridge_warm,Kitchen Fridge Warm Light
+light.upstairs_library_zigbee,Upstairs Library Light
+light.downstairs_library_homekit,Downstairs Library Light
+light.front_library_ge,Front Library Light
+light.back_library_warm,Back Library Warm Light
+light.kitchen_coffeecorner_cool,Kitchen Coffee Corner Cool Light
+light.upstairs_playroom_zwave,Upstairs Playroom Light
+light.downstairs_playroom_mqtt,Downstairs Playroom Light
+light.front_playroom_homekit,Front Playroom Light
+light.back_playroom_lifx,Back Playroom Light
+light.kitchen_microwave_warm,Kitchen Microwave Warm Light
+light.upstairs_observatory_zigbee,Upstairs Observatory Light
+light.downstairs_observatory_homekit,Downstairs Observatory Light
+light.front_observatory_ge,Front Observatory Light
+light.back_observatory_warm,Back Observatory Warm Light
+light.kitchen_toaster_cool,Kitchen Toaster Cool Light
+light.upstairs_workout_zwave,Upstairs Workout Light
+light.downstairs_workout_mqtt,Downstairs Workout Light
+light.front_workout_homekit,Front Workout Light
+light.back_workout_lifx,Back Workout Light
+light.kitchen_display_warm,Kitchen Display Warm Light
+light.upstairs_utility_zigbee,Upstairs Utility Light
+light.downstairs_utility_homekit,Downstairs Utility Light
+light.front_utility_ge,Front Utility Light
+light.back_utility_warm,Back Utility Warm Light
+light.kitchen_trashbin_cool,Kitchen Trash Bin Cool Light
+light.upstairs_sitting_zwave,Upstairs Sitting Room Light
+light.downstairs_sitting_mqtt,Downstairs Sitting Room Light
+light.front_sitting_homekit,Front Sitting Room Light
+light.back_sitting_lifx,Back Sitting Room Light
+light.kitchen_freezer_warm,Kitchen Freezer Light
+light.upstairs_zen_zigbee,Upstairs Zen Light
+light.downstairs_zen_homekit,Downstairs Zen Light
+light.front_zen_ge,Front Light
+light.back_zen_warm,Back Zen Light
 lock.back_door,"Back Door Lock"
-lock.garage,"Garage Door Lock"
-lock.master_bedroom,"Master Bedroom Lock"
-lock.office,"Office Lock"
-lock.nursery,"Nursery Door Lock"
-lock.schlage_smart,"Schlage Smart Lock"
-lock.yale_living,"Yale Living Room"
-lock.yale_kitchen,"Yale Kitchen"
-lock.august_front,"August Front Door"
-lock.august_back,"August Back Door"
+lock.back_door,Backyard entry lock
 lock.basement,"Basement Lock"
-lock.guest_room,"Guest Room Lock"
-lock.wine_cellar,"Wine Cellar Lock"
-lock.tool_shed,"Tool Shed Lock"
-lock.pool_gate,"Pool Gate Lock"
-lock.yoga_room,"Yoga Room Lock"
+lock.bike_rack,Bike rack lock
 lock.bike_storage,"Bike Storage Lock"
-media_player.living_room,"Living Room Media"
-media_player.master_bedroom,"Master Bedroom Media"
-media_player.kitchen,"Kitchen Media Player"
-media_player.nursery,"Nursery Media Player"
-media_player.office,"Office Media Player"
-media_player.sonos_living,"Sonos Living Room"
-media_player.sonos_kitchen,"Sonos Kitchen"
-media_player.sonos_bedroom,"Sonos Master Bedroom"
-media_player.bose_living,"Bose Living Room"
-media_player.bose_bedroom,"Bose Bedroom"
+lock.file_cabinet,File cabinet lock
+lock.front_door_1,Main entry lock
+lock.front_door,"Front Door Lock"
+lock.garage,"Garage Door Lock"
+lock.guest_room,"Guest Room Lock"
+lock.gun_safe,Gun safe lock
+lock.mailbox,Secure mailbox lock
+lock.master_bedroom,"Master Bedroom Lock"
+lock.nursery,"Nursery Door Lock"
+lock.office,"Office Lock"
+lock.patio_door,Patio sliding door
+lock.pool_gate,"Pool Gate Lock"
+lock.pool_gate,Swimming pool gate
+lock.safety_deposit,Safety deposit box
+lock.schlage_smart,"Schlage Smart Lock"
+lock.shed_2,Second shed lock
+lock.tool_shed,"Tool Shed Lock"
+lock.tool_shed,Tool shed lock
+lock.utility_room,Utility room lock
+lock.wine_cellar,"Wine Cellar Lock"
+lock.wine_cellar,Wine cellar lock
+lock.yale_kitchen,"Yale Kitchen"
+lock.yale_living,"Yale Living Room"
+lock.yoga_room,"Yoga Room Lock"
+media_player.apple_tv,Apple TV media player
 media_player.basement,"Basement Media Player"
+media_player.bose_bedroom,"Bose Bedroom"
+media_player.bose_living,"Bose Living Room"
+media_player.chrome_cast_bedroom,Bedroom Chromecast
+media_player.chromecast,"Chromecast Media"
+media_player.echo_dot,Kitchen Echo Dot
+media_player.fire_tv_stick,Fire TV Stick
+media_player.fire_tv,"Fire TV Media"
 media_player.garage,"Garage Media Player"
 media_player.guest_room,"Guest Room Media"
-media_player.patio,"Patio Media Player"
 media_player.home_theater,"Home Theater Media"
-media_player.roku_living,"Roku Living Room"
+media_player.ipad_kitchen,Kitchen iPad
+media_player.kitchen,"Kitchen Media Player"
+media_player.laptop_stream,Streaming laptop
+media_player.living_room,"Living Room Media"
+media_player.master_bedroom,"Master Bedroom Media"
+media_player.nintendo_switch,Nintendo Switch
+media_player.nursery,"Nursery Media Player"
+media_player.office,"Office Media Player"
+media_player.patio,"Patio Media Player"
+media_player.ps5_living_room,Living room PS5
 media_player.roku_bedroom,"Roku Master Bedroom"
-media_player.fire_tv,"Fire TV Media"
-media_player.chromecast,"Chromecast Media"
+media_player.roku_bedroom,Bedroom Roku player
+media_player.roku_living,"Roku Living Room"
+media_player.samsung_tv,Living room TV
+media_player.sonos_bedroom,"Sonos Master Bedroom"
+media_player.sonos_kitchen,"Sonos Kitchen"
+media_player.sonos_kitchen,Kitchen Sonos speaker
+media_player.sonos_living,"Sonos Living Room"
+media_player.soundbar_living_room,Living room soundbar
+media_player.xbox_den,Den Xbox console

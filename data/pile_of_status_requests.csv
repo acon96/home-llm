@@ -1,0 +1,39 @@
+device_type,english_phrase
+blinds,Is the <device_name> opened or shut
+blinds,Is the <device_name> open
+blinds,Are the <device_name> open
+blinds,Are the <device_name> up or down
+blinds,Is the <device_name> closed
+blinds,Is the <device_name> raised or lowered
+fan,Check if the <device_name> is running
+fan,Is the <device_name> functional
+fan,Is the <device_name> idling or in use
+fan,Is the <device_name> on or off
+fan,Is the <device_name> operating
+fan,Is the <device_name> spinning
+fan,What is the fan speed of the <device_name>
+fan,What's the current speed of the <device_name>
+garage_door,Check the status of the <device_name> door
+garage_door,Find out if the <device_name> is open
+garage_door,Is the <device_name> accessible
+garage_door,Is the <device_name> in an open state
+garage_door,Is the <device_name> open or closed
+garage_door,Is the <device_name> sealed or unsealed
+garage_door,Is the <device_name> shut
+garage_door,What's the position of the <device_name>
+light,Can you tell me if the <device_name> is on
+light,Check if the <device_name> is on
+light,Can you verify if the <device_name> is off
+light,Is the <device_name> currently active
+light,Is the <device_name> turned on
+light,Is the <device_name> illuminated
+light,Is the <device_name> switched on
+light,What is the brightness level of the <device_name>
+light,What's the status of the <device_name>
+lock,Can you confirm the <device_name> is unlocked
+lock,Check the lock status of the <device_name>
+lock,Confirm if the <device_name> is secure
+lock,Is the <device_name> engaged or disengaged
+lock,Is the <device_name> in a locked state
+lock,Is the <device_name> locked or unlocked
+lock,Is the <device_name> safely locked
