@@ -42,6 +42,18 @@ rev 4.1 - really doesn't work as well. loss dropped REALLY fast and then never g
 rev 4.2 - yeah nah it's the pad token
 - batch size 2
 
+rev 5 - new dataset
+- 4 epochs
+- train cx 512
+- batch size 2
+- learning rate cosize 1e-5
+
+rev 5.1 - gradient accumulation test
+- 4 epochs
+- train cx 512
+- batch size 8
+- learning rate cosize 1e-5
+
 
 Ideas:
 - get rid of services block. will i just learn it on it's own?
