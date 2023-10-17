@@ -252,12 +252,12 @@ def generate_static_example(action: dict, max_devices: int = 32):
         device_type = device.split(".")[0]
 
         service_calls.append(f"{service}({device})")
-        answers.append(random.choice(pile_of_responses[device_type][service]))
+        answers.append(random.choice(pile_of_responses[device_type][service]).lower())
 
     return {
         "states": device_list,
         "available_services": list(available_services),
-        "question": question,
+        "question": question.lower(),
         "answers": answers,
         "service_calls": service_calls
     }
@@ -309,8 +309,8 @@ def generate_templated_example(template: dict, max_devices: int = 32):
     return {
         "states": device_list,
         "available_services": list(available_services),
-        "question": question,
-        "answers": [answer],
+        "question": question.lower(),
+        "answers": [ answer.lower() ],
         "service_calls": service_calls
     }
 

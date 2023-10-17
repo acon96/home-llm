@@ -46,16 +46,38 @@ rev 5 - new dataset
 - 3 epochs (4th epoch was overfit)
 - train cx 512
 - batch size 2
-- learning rate cosize 1e-5
+- learning rate cosine 1e-5
 - actually stops generating text. not at the right... place but still!
 - messing with temperature makes it generate some interesting output.
 
-TODO:
 rev 5.1 - gradient accumulation test
 - 3 epochs
 - train cx 512
 - batch size 8
-- learning rate cosize 5e-6
+- learning rate cosine 1e-5
+
+rev 5.2 - learning rate test
+- 3 epochs
+- train cx 512
+- batch size 8
+- learning rate cosine 1e-4
+- higher learning rate really helped with the higher batch size
+- is able to more reliably generate the correct device name again
+- still need more examples for multi-device actions (really need room/group support in dataset)
+- need to have more variance in request format. need more informal + more formal versions
+
+rev 5.3 - learning rate test 2
+- 4 epochs
+- train cx 512
+- batch size 8
+- learning rate cosine 6e-5
+- lower learning rate seemed to not be as effective even though it ran for longer
+
+rev 6 - dataset revamp again
+- 3 epochs
+- train cx 512
+- batch size 8
+- learning rate cosine 1e-4
 
 Ideas:
 - figure out how to penalize the wrong device name more?

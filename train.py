@@ -11,9 +11,10 @@ torch.set_default_tensor_type('torch.cuda.FloatTensor')
 TRAIN_CTX_SIZE = 512 # The number of tokens to pad + truncate the input examples to
 BATCH_SIZE = 8 # The simulated "batch size" that we will train on. will tweak gradient accumulations steps
 MICRO_BATCH_SIZE = 2 # The actual batch size that will fit into VRAM on this machine
-TRAINING_EPOCHS = 4 # The number of times to train the model on each example
-LEARNING_RATE_START = 1e-5 # The starting learning rate (speed at which the model trains)
+TRAINING_EPOCHS = 3 # The number of times to train the model on each example
+LEARNING_RATE_START = 1e-4 # The starting learning rate (speed at which the model trains)
 LEARNING_RATE_SCHEDULE = "cosine" # How fast the learning rate is reduced during training
+RUN_NAME = "home-llm-rev6"
 
 model = AutoModelForCausalLM.from_pretrained("microsoft/phi-1_5", trust_remote_code=True).to(dtype=torch.bfloat16, device="cuda")
 tokenizer = AutoTokenizer.from_pretrained("microsoft/phi-1_5", trust_remote_code=True)
@@ -44,7 +45,7 @@ training_args = TrainingArguments(
     # eval_steps=1000,
     # save_steps=1000,
     logging_steps=10,
-    output_dir="./models/training",
+    output_dir=f"./models/{RUN_NAME}",
     num_train_epochs=TRAINING_EPOCHS,
     save_total_limit=2,
     dataloader_pin_memory=False,
