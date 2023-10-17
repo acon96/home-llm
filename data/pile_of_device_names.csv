@@ -29,9 +29,9 @@ blinds.somfy_kitchen,"Kitchen Blinds"
 blinds.somfy_living,"Living Room Blinds"
 blinds.sunroom,"Sunroom Blinds"
 blinds.theater_room,Home theater blinds
-fan.attic_1,"Attic Fan"
-fan.attic_2,"Attic Fan"
-fan.attic_3,"Attic Fan"
+fan.attic_1,"Attic Fans"
+fan.attic_2,"Attic Fans"
+fan.attic_3,"Attic Fans"
 fan.attic_ventilation,Attic ventilation fan
 fan.attic,"Attic Fan"
 fan.back_porch,"Back Porch Fan"
@@ -42,8 +42,8 @@ fan.bathroom,"Bathroom Fan"
 fan.bedroom_master,"Master Bedroom Fan"
 fan.bedroom_right,Right-side bedroom fan
 fan.bedroom,"Bedroom Fan"
-fan.ceiling_1,"Ceiling Fan"
-fan.ceiling_2,"Ceiling Fan"
+fan.ceiling_1,"Ceiling Fans"
+fan.ceiling_2,"Ceiling Fans"
 fan.dining_area,"Dining Area Fan"
 fan.dining_room,"Dining Room Fan"
 fan.dyson_pure,"Dyson Pure Fan"
@@ -56,8 +56,8 @@ fan.hallway,"Hallway fan"
 fan.honeywell_turbo,"Honeywell Turbo Fan"
 fan.indoor_gym,"Indoor Gym Fan"
 fan.kids_room,Kids' room fan
-fan.kitchen_1,"Kitchen Fan"
-fan.kitchen_2,"Kitchen Fan"
+fan.kitchen_1,"Kitchen Fans"
+fan.kitchen_2,"Kitchen Fans"
 fan.kitchen_island,Cooling kitchen fan
 fan.kitchen,"Kitchen Fan"
 fan.laundry_room,Laundry room fan
@@ -355,6 +355,8 @@ light.upstairs_zen_zigbee,Upstairs Zen Light
 light.downstairs_zen_homekit,Downstairs Zen Light
 light.front_zen_ge,Front Light
 light.back_zen_warm,Back Zen Light
+light.dining_room_chandelier,"Dining Room Chandelier"
+light.chandelier_front_hallway,"Front Hallway Chandelier"
 lock.back_door,"Back Door Lock"
 lock.back_door,Backyard entry lock
 lock.basement,"Basement Lock"

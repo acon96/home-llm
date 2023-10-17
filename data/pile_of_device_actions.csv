@@ -275,6 +275,8 @@ light.study,"Toggle the study light",toggle
 light.study,"Turn off the study light",turn_off
 light.study,"Turn off the study light",turn_off
 light.study|light.bathroom,"Enable both study and bathroom lights",turn_on|turn_on
+light.dining_room_chandelier,"Turn on the dining room light",turn_on
+light.chandelier_front_hallway,"Hey can you turn on the front hallway chandelier",turn_on
 lock.back_door,"Could you disengage the back door lock",unlock
 lock.back_door,"Engage the back door lock",lock
 lock.bike_storage,"Disengage the lock on the bike storage",unlock
