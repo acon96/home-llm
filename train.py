@@ -29,8 +29,7 @@ def tokenize_function(example):
     return result
 
 
-datasets = load_dataset("json", data_files="data/home_assistant_examples.json")
-datasets = datasets["train"].train_test_split(test_size=0.1)
+datasets = load_dataset("json", data_files={ "train": "data/home_assistant_train.json", "test": "data/home_assistant_test.json" })
 tokenized_train_dataset = datasets["train"].map(tokenize_function, remove_columns=datasets["train"].column_names)
 tokenized_test_dataset = datasets["test"].map(tokenize_function, remove_columns=datasets["test"].column_names)
 
