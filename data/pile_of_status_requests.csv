@@ -1,39 +1,202 @@
-device_type,english_phrase
-blinds,Is the <device_name> opened or shut
-blinds,Is the <device_name> open
-blinds,Are the <device_name> open
-blinds,Are the <device_name> up or down
-blinds,Is the <device_name> closed
-blinds,Is the <device_name> raised or lowered
-fan,Check if the <device_name> is running
-fan,Is the <device_name> functional
-fan,Is the <device_name> idling or in use
-fan,Is the <device_name> on or off
-fan,Is the <device_name> operating
-fan,Is the <device_name> spinning
-fan,What is the fan speed of the <device_name>
-fan,What's the current speed of the <device_name>
-garage_door,Check the status of the <device_name> door
-garage_door,Find out if the <device_name> is open
-garage_door,Is the <device_name> accessible
-garage_door,Is the <device_name> in an open state
-garage_door,Is the <device_name> open or closed
-garage_door,Is the <device_name> sealed or unsealed
-garage_door,Is the <device_name> shut
-garage_door,What's the position of the <device_name>
-light,Can you tell me if the <device_name> is on
-light,Check if the <device_name> is on
-light,Can you verify if the <device_name> is off
-light,Is the <device_name> currently active
-light,Is the <device_name> turned on
-light,Is the <device_name> illuminated
-light,Is the <device_name> switched on
-light,What is the brightness level of the <device_name>
-light,What's the status of the <device_name>
-lock,Can you confirm the <device_name> is unlocked
-lock,Check the lock status of the <device_name>
-lock,Confirm if the <device_name> is secure
-lock,Is the <device_name> engaged or disengaged
-lock,Is the <device_name> in a locked state
-lock,Is the <device_name> locked or unlocked
-lock,Is the <device_name> safely locked
+device_type,state,english_phrase,assistant_response
+light,on,Is the <device_name> on,The <device_name> is currently on
+light,on,Can you tell me the status of the <device_name>,The <device_name> is on
+light,off,What is the <device_name> doing,The <device_name> is off
+light,off,Is the <device_name> off,The <device_name> is currently off
+fan,on,Is the <device_name> on,The <device_name> is currently on
+fan,on,Can you check if the <device_name> is working,The <device_name> is on
+fan,off,Is the <device_name> off,The <device_name> is currently off
+fan,off,What is the current status of the <device_name>,The <device_name> is off
+garage_door,open,Is the <device_name> open,The <device_name> is currently open
+garage_door,open,Can you tell me if the <device_name> is open,The <device_name> is open
+garage_door,closed,Is the <device_name> closed,The <device_name> is currently closed
+garage_door,closed,What's the status of the <device_name>,The <device_name> is closed
+garage_door,opening,Is the <device_name> opening,The <device_name> is currently opening
+garage_door,opening,What is the <device_name> doing,The <device_name> is opening
+garage_door,closing,Is the <device_name> closing,The <device_name> is currently closing
+garage_door,closing,Can you tell me if the <device_name> is closing,The <device_name> is closing
+blinds,open,Are the <device_name> open,The <device_name> are currently open
+blinds,open,What's the status of the <device_name>,The <device_name> are open
+blinds,closed,Are the <device_name> closed,The <device_name> are currently closed
+blinds,closed,Can you check if the <device_name> are closed,The <device_name> are closed
+blinds,opening,Are the <device_name> opening,The <device_name> are currently opening
+blinds,opening,What is the <device_name> doing,The <device_name> are opening
+blinds,closing,Are the <device_name> closing,The <device_name> are currently closing
+blinds,closing,What's the status of the <device_name>,The <device_name> are closing
+media_player,on,Is the <device_name> on,The <device_name> is currently on
+media_player,on,What's the current status of the <device_name>,The <device_name> is on
+media_player,off,Is the <device_name> off,The <device_name> is currently off
+media_player,off,Can you tell me if the <device_name> is off,The <device_name> is off
+media_player,idle,What's the <device_name> doing,The <device_name> is idle
+media_player,idle,Is the <device_name> idle,The <device_name> is currently idle
+media_player,playing,Is the <device_name> playing,The <device_name> is currently playing
+media_player,playing,Can you tell me if the <device_name> is playing,The <device_name> is playing
+media_player,paused,What's the status of the <device_name>,The <device_name> is paused
+media_player,paused,Is the <device_name> paused,The <device_name> is currently paused
+media_player,standby,What is the <device_name> doing,The <device_name> is in standby
+media_player,standby,Is the <device_name> in standby,The <device_name> is currently in standby
+lock,unlocked,Is the <device_name> unlocked,The <device_name> is currently unlocked
+lock,unlocked,What's the status of the <device_name>,The <device_name> is unlocked
+lock,locked,Is the <device_name> locked,The <device_name> is currently locked
+lock,locked,Can you tell me if the <device_name> is locked,The <device_name> is locked
+lock,unlocking,What is the <device_name> doing,The <device_name> is unlocking
+lock,unlocking,Is the <device_name> unlocking,The <device_name> is currently unlocking
+lock,locking,Is the <device_name> locking,The <device_name> is currently locking
+lock,locking,What's the status of the <device_name>,The <device_name> is locking
+lock,jammed,What is the <device_name> doing,The <device_name> is jammed
+lock,jammed,Is the <device_name> jammed,The <device_name> is currently jammed
+light,on,Is the <device_name> active,The <device_name> is currently on
+light,on,Is the <device_name> powered,The <device_name> is on
+light,off,Is the <device_name> deactivated,The <device_name> is currently off
+fan,on,Is the <device_name> spinning,The <device_name> is currently on
+fan,on,Is the <device_name> blowing air,The <device_name> is on
+fan,off,Is the <device_name> idle,The <device_name> is currently off
+fan,off,Is the <device_name> still,The <device_name> is off
+lock,unlocked,Is the <device_name> open,The <device_name> is currently unlocked
+lock,unlocked,Is the <device_name> unsecured,The <device_name> is unlocked
+lock,locked,Is the <device_name> secure,The <device_name> is currently locked
+lock,locked,Is the <device_name> sealed,The <device_name> is locked
+garage_door,open,Is the <device_name> unsealed,The <device_name> is currently open
+garage_door,closed,Is the <device_name> shut,The <device_name> is currently closed
+blinds,open,Is the <device_name> pulled up,The <device_name> are currently open
+blinds,closed,Is the <device_name> pulled down,The <device_name> are currently closed
+light,on,Is the <device_name> lit,The <device_name> is currently on
+light,off,Is the <device_name> turned off,Yes <device_name> is off
+light,on,Uh can you check if the <device_name> is on or something,The <device_name> is currently on
+light,off,Hey what's up with the <device_name> is it off,The <device_name> is currently off
+fan,on,So is the <device_name> whirling away,The <device_name> is indeed on
+fan,off,Any idea if the <device_name> is off,The <device_name> is currently off
+lock,unlocked,Hey is the <device_name> unlocked or what,The <device_name> is currently unlocked
+lock,locked,Can you tell me if the <device_name> is all locked up,The <device_name> is indeed locked
+garage_door,open,Hey did we leave the <device_name> open,Yes the <device_name> is currently open
+garage_door,closed,Is the <device_name> actually closed,The <device_name> is indeed closed
+blinds,open,Are the <device_name> up or what,The <device_name> are currently open
+blinds,closed,So did we lower the <device_name>,The <device_name> are indeed closed
+light,on,Hey is the <device_name> shining,The <device_name> is currently on
+light,off,Uh is the <device_name> off,The <device_name> is indeed off
+fan,on,Can you confirm if the <device_name> is running,The <device_name> is currently on
+fan,off,Is the <device_name> taking a break,The <device_name> is off at the moment
+lock,unlocked,So is the <device_name> open,The <device_name> is currently unlocked
+lock,locked,Is the <device_name> bolted,The <device_name> is indeed locked
+light,on,Is the <device_name> off,Actually the <device_name> is currently on
+light,off,Is the <device_name> on,No the <device_name> is off right now
+fan,on,Is the <device_name> off,Actually the <device_name> is on at the moment
+fan,off,Is the <device_name> blowing air,Sorry the <device_name> is currently off
+lock,locked,Is the <device_name> unlocked,No the <device_name> is currently locked
+lock,unlocked,Is the <device_name> locked,No the <device_name> is currently unlocked
+garage_door,open,Is the <device_name> closed,No the <device_name> is currently open
+garage_door,closed,Is the <device_name> open,No the <device_name> is currently closed
+blinds,open,Are the <device_name> closed,No the <device_name> are currently open
+blinds,closed,Are the <device_name> open,No the <device_name> are currently closed
+light,on,Uh can you check if the <device_name> is off,No the <device_name> is actually on
+light,off,Hey is the <device_name> shining,No the <device_name> is currently off
+fan,on,Is the <device_name> taking a break,No the <device_name> is on right now
+fan,off,Is the <device_name> whirling away,No the <device_name> is off at the moment
+lock,unlocked,Is the <device_name> bolted,No the <device_name> is currently unlocked
+lock,locked,Is the <device_name> free and clear,No the <device_name> is actually locked
+garage_door,open,Is the <device_name> shut,No the <device_name> is currently open
+garage_door,closed,Did we leave the <device_name> open,No the <device_name> is closed
+blinds,open,Did we lower the <device_name>,No the <device_name> are actually open
+blinds,closed,Is the <device_name> pulled up,No the <device_name> are currently closed
+media_player,on,Is the <device_name> off,No the <device_name> is currently on
+media_player,off,Is the <device_name> playing,No the <device_name> is off right now
+media_player,idle,Is the <device_name> playing some music,No the <device_name> is idle at the moment
+media_player,playing,Is the <device_name> paused,No the <device_name> is actually playing
+media_player,paused,Is the <device_name> in standby,No the <device_name> is paused right now
+media_player,standby,Is the <device_name> playing,No the <device_name> is in standby
+garage_door,opening,Is the <device_name> closing,No the <device_name> is currently opening
+garage_door,closing,Is the <device_name> opening,No the <device_name> is currently closing
+blinds,opening,Are the <device_name> closing,No the <device_name> are opening
+blinds,closing,Are the <device_name> opening,No the <device_name> are closing
+lock,unlocking,Is the <device_name> locking,No the <device_name> is unlocking
+lock,locking,Is the <device_name> unlocking,No the <device_name> is locking
+lock,jammed,Is the <device_name> unlocked,No the <device_name> is jammed
+light,on,Is the <device_name> dark,No the <device_name> is currently on
+light,off,Is the <device_name> shining,No the <device_name> is off
+fan,on,Is the <device_name> idle,No the <device_name> is actually on
+fan,off,Is the <device_name> blowing air,No the <device_name> is off right now
+lock,unlocked,Is the <device_name> secure,No the <device_name> is currently unlocked
+lock,locked,Is the <device_name> open,No the <device_name> is locked
+lock,jammed,Is the <device_name> locking,No the <device_name> is jammed
+light,on,Is the <device_name> off,No the <device_name> is on
+light,off,Is the <device_name> active,No the <device_name> is off
+light,on,Is the <device_name> on or off,The <device_name> is on
+light,off,Is the <device_name> on or off,The <device_name> is off
+fan,on,Is the <device_name> on or off,The <device_name> is on
+fan,off,Is the <device_name> on or off,The <device_name> is off
+garage_door,open,Is the <device_name> open or closed,The <device_name> is open
+garage_door,closed,Is the <device_name> open or closed,The <device_name> is closed
+blinds,open,Are the <device_name> open or closed,The <device_name> are open
+blinds,closed,Are the <device_name> open or closed,The <device_name> are closed
+media_player,on,Is the <device_name> on or off,The <device_name> is on
+media_player,off,Is the <device_name> on or off,The <device_name> is off
+lock,unlocked,Is the <device_name> locked or unlocked,The <device_name> is unlocked
+lock,locked,Is the <device_name> locked or unlocked,The <device_name> is locked
+media_player,playing,Is the <device_name> playing or paused,The <device_name> is playing
+media_player,paused,Is the <device_name> playing or paused,The <device_name> is paused
+garage_door,opening,Is the <device_name> opening or closing,The <device_name> is opening
+garage_door,closing,Is the <device_name> opening or closing,The <device_name> is closing
+blinds,opening,Are the <device_name> opening or closing,The <device_name> are opening
+blinds,closing,Are the <device_name> opening or closing,The <device_name> are closing
+lock,unlocking,Is the <device_name> locking or unlocking,The <device_name> is unlocking
+lock,locking,Is the <device_name> locking or unlocking,The <device_name> is locking
+lock,jammed,Is the <device_name> locked or jammed,The <device_name> is jammed
+media_player,idle,Is the <device_name> idle or in standby,The <device_name> is idle
+media_player,standby,Is the <device_name> idle or in standby,The <device_name> is in standby
+light,on,Is the <device_name> on or dim,The <device_name> is on
+light,off,Is the <device_name> on or dim,The <device_name> is off
+fan,on,Is the <device_name> spinning or still,The <device_name> is spinning
+fan,off,Is the <device_name> spinning or still,The <device_name> is still
+lock,unlocked,Is the <device_name> secure or unsecure,The <device_name> is unsecure
+lock,locked,Is the <device_name> secure or unsecure,The <device_name> is secure
+lock,jammed,Is the <device_name> secure or jammed,The <device_name> is jammed
+light,on,What's the current condition of the <device_name>,The <device_name> is on
+light,off,How's the <device_name> looking right now,The <device_name> is off
+fan,on,What's happening with the <device_name>,The <device_name> is on
+fan,off,Can you give me an update on the <device_name>,The <device_name> is off
+garage_door,open,Fill me in on the <device_name> would you,The <device_name> is open
+garage_door,closed,What's the situation with the <device_name>,The <device_name> is closed
+blinds,open,What's the latest on the <device_name>,The <device_name> are open
+blinds,closed,Can you update me on the <device_name>,The <device_name> are closed
+media_player,on,What's the status of the <device_name>,The <device_name> is on
+media_player,off,How's the <device_name> doing,The <device_name> is off
+lock,unlocked,What's the word on the <device_name>,The <device_name> is unlocked
+lock,locked,How's it going with the <device_name>,The <device_name> is locked
+media_player,playing,Can you clue me in on the <device_name>,The <device_name> is playing
+media_player,paused,What's going down with the <device_name>,The <device_name> is paused
+garage_door,opening,Any news on the <device_name>,The <device_name> is opening
+garage_door,closing,What's the scoop on the <device_name>,The <device_name> is closing
+blinds,opening,Got any updates on the <device_name>,The <device_name> are opening
+blinds,closing,What's happening with the <device_name> now,The <device_name> are closing
+lock,unlocking,What's the latest update on the <device_name>,The <device_name> is unlocking
+lock,locking,Any changes with the <device_name>,The <device_name> is locking
+light,on,What's up with the <device_name>,The <device_name> is on
+light,off,whats the <device_name> status,The <device_name> is off
+fan,on,Is <device_name> active,The <device_name> is on
+fan,off,Status of <device_name>,The <device_name> is off
+garage_door,open,<device_name> update,The <device_name> is open
+garage_door,closed,<device_name> current state,The <device_name> is closed
+blinds,open,How's the <device_name>,The <device_name> are open
+blinds,closed,Update on <device_name>,The <device_name> are closed
+media_player,on,what is the State of <device_name>,The <device_name> is on
+media_player,off,Any news on <device_name>,The <device_name> is off
+lock,unlocked,How's the <device_name>,The <device_name> is unlocked
+lock,locked,<device_name> okay,The <device_name> is locked
+media_player,playing,Is <device_name> active,The <device_name> is playing
+media_player,paused,<device_name> state,The <device_name> is paused
+garage_door,opening,What's <device_name> doing,The <device_name> is opening
+garage_door,closing,Status of <device_name>,The <device_name> is closing
+blinds,opening,<device_name> update,The <device_name> are opening
+blinds,closing,How's the <device_name>,The <device_name> are closing
+lock,unlocking,State of <device_name>,The <device_name> is unlocking
+lock,locking,Is <device_name> okay,The <device_name> is locking
+light,on,What's <device_name> doing,The <device_name> is on
+light,off,Is <device_name> active,The <device_name> is off
+fan,on,<device_name> status now,The <device_name> is on
+fan,off,Current state of <device_name>,The <device_name> is off
+light,on,Is <device_name> working,The <device_name> is on
+light,off,Update on <device_name>,The <device_name> is off
+fan,on,How's the <device_name>,The <device_name> is on
+fan,off,Status of <device_name>,The <device_name> is off
+light,on,<device_name> condition,The <device_name> is on
+light,off,What's up with <device_name>,The <device_name> is off

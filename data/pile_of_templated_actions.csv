@@ -110,3 +110,24 @@ lock,unlock,Unlock the <device_name>,Unlocking <device_name> now
 lock,unlock,Unsecure the <device_name>,Unsecuring <device_name> for you
 lock|blinds,lock|close,Lock the <device_name1> and lower the <device_name2>,Locking <device_name1> and lowering <device_name2>
 lock|garage_door,lock|close,Secure the <device_name1> and shut the <device_name2>,Securing <device_name1> and shutting <device_name2>
+light,turn_on,Make sure the <device_name> is on,Turning on <device_name>
+fan,turn_on,Make sure the <device_name> is on,Turning on <device_name>
+lock|lock|garage_door,lock|lock|close,Make sure <device_name1> and <device_name2> are locked and the <device_name3> is closed,Sure. Locking <device_name1> and <device_name2> and closing <device_name3>
+light,turn_off,Ensure the <device_name> is off,Turning off <device_name>
+fan,turn_off,Ensure the <device_name> is off,Turning off <device_name>
+garage_door,close,Make certain the <device_name> is closed,Closing <device_name>
+blinds,open,See to it that the <device_name> are open,Raising <device_name>
+lock,lock,Ensure <device_name> is secure,Locking <device_name>
+light,toggle,Can you flip the <device_name>,Toggling <device_name>
+fan,increase_speed,Step up the speed of the <device_name>,Increasing speed of <device_name>
+garage_door,open,Make certain the <device_name> is open,Opening <device_name>
+blinds,close,See to it that the <device_name> are closed,Lowering <device_name>
+lock,unlock,Make sure <device_name> is unlocked,Unlocking <device_name>
+fan,decrease_speed,Slow down the <device_name>,Reducing speed of <device_name>
+light,turn_on,Confirm that the <device_name> is on,Activating <device_name>
+garage_door,stop,Stop the <device_name> right now,Stopping <device_name>
+light,turn_off,Confirm that the <device_name> is off,Deactivating <device_name>
+garage_door,toggle,Toggle the <device_name> position,Toggling <device_name>
+blinds,toggle,Switch the state of the <device_name>,Toggling <device_name>
+lock,lock,Lock down the <device_name>,Securing <device_name>
+fan,turn_on,Make certain the <device_name> is running,Starting <device_name>

@@ -182,6 +182,10 @@ with open("pile_of_responses.csv") as f:
             pile_of_responses[raw["device_type"]] = {}    
         pile_of_responses[raw["device_type"]][raw["service"]] = [ raw["response_1"], raw["response_2"], raw["response_3"] ]
 
+with open("pile_of_status_requests.csv") as f:
+    reader = csv.DictReader(f)
+    pile_of_status_requests = list(reader)
+
 # generate a random list of devices for the context
 def random_device_list(max_devices: int, avoid_device_names: list[str]):
     num_devices = random.randint(2, max_devices)
@@ -227,39 +231,29 @@ def random_device_list(max_devices: int, avoid_device_names: list[str]):
 
 def generate_static_example(action: dict, max_devices: int = 32):
     question = action["english_phrase"]
-    target_devices = action["device_name"].split("|")
-    service_names = action["service_name"].split("|")
+    target_device = action["device_name"]
+    service_name = action["service_name"]
 
-    device_list, device_types = random_device_list(max_devices=max_devices, avoid_device_names=target_devices)
+    device_list, device_types = random_device_list(max_devices=max_devices, avoid_device_names=[target_device])
 
     # insert our target device somewhere random in the list
-    for device in target_devices:
-        device_type = device.split(".")[0]
-        index = random.randint(0, len(device_list))
-        state = SUPPORTED_DEVICES[device_type].get_random_state()
+    device_type = target_device.split(".")[0]
+    index = random.randint(0, len(device_list))
+    state = SUPPORTED_DEVICES[device_type].get_random_state()
 
-        device_list.insert(index, f"{device} = {state}")
+    device_list.insert(index, f"{target_device} = {state}")
 
     # gather a list of all available services
     available_services = set()
     for x in device_types:
-        available_services = available_services.union(set(SUPPORTED_DEVICES[x].services)).union(service_names)
-
-    # generate the list of service calls and answers
-    service_calls = []
-    answers = []
-    for device, service in zip(target_devices, service_names):
-        device_type = device.split(".")[0]
-
-        service_calls.append(f"{service}({device})")
-        answers.append(random.choice(pile_of_responses[device_type][service]).lower())
+        available_services = available_services.union(set(SUPPORTED_DEVICES[x].services))
 
     return {
         "states": device_list,
         "available_services": list(available_services),
         "question": question.lower(),
-        "answers": answers,
-        "service_calls": service_calls
+        "answers": [ random.choice(pile_of_responses[device_type][service_name]).lower() ],
+        "service_calls": [ f"{service_name}({target_device})" ]
     }
 
 def generate_templated_example(template: dict, max_devices: int = 32):
@@ -314,17 +308,57 @@ def generate_templated_example(template: dict, max_devices: int = 32):
         "service_calls": service_calls
     }
 
+def generate_status_request(template: dict, max_devices: int = 32):
+    device_type: str = template["device_type"]
+    state_name: str = template["state"]
+    question_template: str = template["english_phrase"]
+    answer_template: str = template["assistant_response"]
+
+    # choose a random device for this template
+    chosen_device = random.choice(stacks_of_device_names[device_type])
+
+    # build a random list of devices
+    device_list, device_types = random_device_list(max_devices=max_devices, avoid_device_names=[ chosen_device["device_name"] ])
+
+    # insert our target device somewhere random in the list
+    index = random.randint(0, len(device_list))
+    device_list.insert(index, f"{chosen_device['device_name']} = {state_name}")
+
+    # gather a list of all available services
+    available_services = set()
+    for x in device_types:
+        available_services = available_services.union(set(SUPPORTED_DEVICES[x].services))
+
+    # generate the question
+    question = question_template.replace("<device_name>", chosen_device["description"])
+    answer = answer_template.replace("<device_name>", chosen_device["description"])
+
+    return {
+        "states": device_list,
+        "available_services": list(available_services),
+        "question": question.lower(),
+        "answers": [ answer.lower() ],
+        "service_calls": []
+    }
+
 def format_example(example):
     sys_prompt = "You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task ask instructed with the information provided only."
     services_block = "Services: " + ", ".join(sorted(example["available_services"]))
     states_block = "Devices:\n" + "\n".join(example["states"])
     answers = "Response: " + " ".join(example["answers"])
     question = "Request: " + example["question"]
-    code_block = "```homeassistant\n" + "\n".join(example["service_calls"]) + "\n```done"
-    return "\n".join([sys_prompt, services_block, states_block, question, answers, code_block]) + "<<<endresponse"
+    if len(example["service_calls"]) > 0:
+        code_block = "```homeassistant\n" + "\n".join(example["service_calls"]) + "\n```done"
+    else:
+        code_block = ""
+        
+    result = "\n".join([sys_prompt, services_block, states_block, question, answers, code_block]) + "<endresponse>"
+    if "<device_name" in result:
+        print("bad templating")
+    return result
 
 
-def generate_example_file(filename: str, seed: int, *, static_factor: int, template_factor: int):
+def generate_example_file(filename: str, seed: int, *, static_factor: int, template_factor: int, status_request_factor: int):
     random.seed(seed)
 
     print("Generating...")
@@ -332,11 +366,18 @@ def generate_example_file(filename: str, seed: int, *, static_factor: int, templ
     examples = []
     for action in tqdm(pile_of_device_actions):
         for i in range(static_factor):
-            examples.append({ "text": format_example(generate_static_example(action)) })
+            example = generate_static_example(action)
+            if not example: # some don't return a valid example
+                continue
+            examples.append({ "text": format_example(example) })
 
     for templated_action in tqdm(pile_of_templated_actions):
         for i in range(template_factor):
             examples.append({ "text": format_example(generate_templated_example(templated_action)) })
+
+    for status_request in tqdm(pile_of_status_requests):
+        for i in range(status_request_factor):
+            examples.append({ "text": format_example(generate_status_request(status_request))})
 
     print(f"Generated {len(examples)} examples. Saving...")
     with open(f"{filename}.json", "w") as f:
@@ -346,10 +387,11 @@ def generate_example_file(filename: str, seed: int, *, static_factor: int, templ
 
 # TODO: add examples for ambiguous requests. asking a clarifying question
 # TODO: add examples for rooms/groups of devices. i.e. "turn off all the lights in the kitchen"
-# TODO: add "make sure blah" examples
+# TODO: make more randomized names for devices (random words or people's names)
+# TODO: answer questions about more than one thing in the state list at once
 def main():
-    generate_example_file("home_assistant_train", 42, static_factor=3, template_factor=40)
-    generate_example_file("home_assistant_test", 42, static_factor=1, template_factor=3)
+    generate_example_file("home_assistant_train", 42, static_factor=3, template_factor=30, status_request_factor=20)
+    generate_example_file("home_assistant_test", 42, static_factor=1, template_factor=3, status_request_factor=2)
 
 if __name__ == "__main__":
     main()
