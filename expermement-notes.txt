@@ -84,14 +84,47 @@ rev 6 - dataset revamp again
 + definitely a bit overfit
 + maybe not so overfit. able to 0 shot asking to do stuff to a christmas tree
 
-TODO:
 rev 6.1 - lower train rate
 - 3 epochs
 - train cx 512
 - batch size 8
 - learning rate cosine 6e-5
++ also definitely a bit overfit. can't generate names it hasn't seen before
 
-Ideas:
-- figure out how to penalize the wrong device name more?
-- need to make the device name/description and device ID match less in the examples.
-    - it is learning to take the name of the device in the serviec call block from the description, not the states block
+rev 6.2 - fewer epochs
+- 2 epochs
+- train cx 512
+- batch size 8
+- learning rate cosine 6e-5
+
+rev 6.3 - higher batch
+- 2 epochs
+- train cx 512
+- batch size 12
+- learning rate cosine 1e-4
+
+
+rev 7 - tweak dataset again
+- 2 epochs
+- train ctx 512
+- batch size 8
+- learning rate 1e-4
++ when generating results, don't end with a space. it works WAY better
+
+rev 7.1 - failed padding attempt
+
+rev 7.2 - try to overfit less + no newline at end
+- 1 epoch
+- train ctx 512
+- batch size 8
+- learning rate 1e-4
++ it definitly works with only one epoch
+
+rev 7.3 - try adding fake end of sentence token
+- 1 epoch
+- train ctx 512
+- batch size 8
+- learning rate 1e-4
+
+# TODO
+rev 7.4 - dataset tweaks

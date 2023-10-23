@@ -217,7 +217,7 @@ def random_device_list(max_devices: int, avoid_device_names: list[str]):
             device_type = device_name.split(".")[0]
 
             state = SUPPORTED_DEVICES[device_type].get_random_state()
-            device_lines.append(f"{device_name} - {state}")
+            device_lines.append(f"{device_name} = {state}")
             device_list.append(device_name)
             device_types.add(device_type)
         except:
@@ -238,7 +238,7 @@ def generate_static_example(action: dict, max_devices: int = 32):
         index = random.randint(0, len(device_list))
         state = SUPPORTED_DEVICES[device_type].get_random_state()
 
-        device_list.insert(index, f"{device} - {state}")
+        device_list.insert(index, f"{device} = {state}")
 
     # gather a list of all available services
     available_services = set()
@@ -282,7 +282,7 @@ def generate_templated_example(template: dict, max_devices: int = 32):
         index = random.randint(0, len(device_list))
         state = SUPPORTED_DEVICES[device_dict["type"]].get_random_state()
 
-        device_list.insert(index, f"{device_dict['device_name']} - {state}")
+        device_list.insert(index, f"{device_dict['device_name']} = {state}")
 
     # gather a list of all available services
     available_services = set()
@@ -316,11 +316,12 @@ def generate_templated_example(template: dict, max_devices: int = 32):
 
 def format_example(example):
     sys_prompt = "You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task ask instructed with the information provided only."
-    services_block = "Services: " + ", ".join(example["available_services"])
-    states_block = "States:\n" + "\n".join(example["states"])
-    answers = " ".join(example["answers"])
-    code_block = "```homeassistant\n" + "\n".join(example["service_calls"]) + "\n```done\n"
-    return "\n".join([sys_prompt, services_block, states_block, example["question"], answers, code_block])
+    services_block = "Services: " + ", ".join(sorted(example["available_services"]))
+    states_block = "Devices:\n" + "\n".join(example["states"])
+    answers = "Response: " + " ".join(example["answers"])
+    question = "Request: " + example["question"]
+    code_block = "```homeassistant\n" + "\n".join(example["service_calls"]) + "\n```done"
+    return "\n".join([sys_prompt, services_block, states_block, question, answers, code_block]) + "<<<endresponse"
 
 
 def generate_example_file(filename: str, seed: int, *, static_factor: int, template_factor: int):
@@ -345,6 +346,7 @@ def generate_example_file(filename: str, seed: int, *, static_factor: int, templ
 
 # TODO: add examples for ambiguous requests. asking a clarifying question
 # TODO: add examples for rooms/groups of devices. i.e. "turn off all the lights in the kitchen"
+# TODO: add "make sure blah" examples
 def main():
     generate_example_file("home_assistant_train", 42, static_factor=3, template_factor=40)
     generate_example_file("home_assistant_test", 42, static_factor=1, template_factor=3)
