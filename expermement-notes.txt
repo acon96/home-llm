@@ -103,7 +103,6 @@ rev 6.3 - higher batch
 - batch size 12
 - learning rate cosine 1e-4
 
-
 rev 7 - tweak dataset again
 - 2 epochs
 - train ctx 512
@@ -126,5 +125,29 @@ rev 7.3 - try adding fake end of sentence token
 - batch size 8
 - learning rate 1e-4
 
-# TODO
-rev 7.4 - dataset tweaks
+rev 8 - dataset tweaks. add status requests
++ service requests still mostly work but status requests are pretty broken
+
+rev 8.1 - tweak example counts + ratios
+- 1 epoch
+- train ctx 512
+- batch size 8
+- learning rate 1e-4
++ seems to have worked better with lower example counts
+
+rev 8.2 - try to fit learning rate so loss doesn't bottom out till the end of training
+- 1 epoch
+- train ctx 512
+- batch size 8
+- learning rate 8e-5 (didn't change loss at all)
+- learning rate 5e-5 (same)
+- learning rate 1e-5 (wayyyy better)
++ pretty sure i've been overcranking most of these and destroying most of the model
++ oh yuuhhhhh it's overcranked. nails both request types (plus even ending generation)
++ needs ambiguous device name examples because I totally just asked it an ambiguous question and it answered the one I wasn't expecting
+
+rev 8.3 - further reduced training rate
+- 1 epoch
+- train ctx 512
+- batch size 8
+- learning rate 8e-6

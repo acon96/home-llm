@@ -13,10 +13,12 @@ TRAIN_CTX_SIZE = 512 # The number of tokens to pad + truncate the input examples
 BATCH_SIZE = 8 # The simulated "batch size" that we will train on. will tweak gradient accumulations steps
 MICRO_BATCH_SIZE = 2 # The actual batch size that will fit into VRAM on this machine
 TRAINING_EPOCHS = 1 # The number of times to train the model on each example
-LEARNING_RATE_START = 1e-4 # The starting learning rate (speed at which the model trains)
+LEARNING_RATE_START = 8e-6 # The starting learning rate (speed at which the model trains)
 LEARNING_RATE_SCHEDULE = "cosine" # How fast the learning rate is reduced during training
-RUN_NAME = "home-llm-rev7.3"
+RUN_NAME = "home-llm-rev8.3"
 OUTPUT_DIR =f"./models/{RUN_NAME}"
+
+# TODO: write a proper evaluation script
 
 model = AutoModelForCausalLM.from_pretrained("microsoft/phi-1_5", trust_remote_code=True).to(dtype=torch.bfloat16, device="cuda")
 tokenizer = AutoTokenizer.from_pretrained("microsoft/phi-1_5", trust_remote_code=True)

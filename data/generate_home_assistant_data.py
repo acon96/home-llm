@@ -352,7 +352,7 @@ def format_example(example):
     else:
         code_block = ""
         
-    result = "\n".join([sys_prompt, services_block, states_block, question, answers, code_block]) + "<endresponse>"
+    result = "\n".join([sys_prompt, services_block, states_block, question, answers, code_block])
     if "<device_name" in result:
         print("bad templating")
     return result
@@ -390,7 +390,7 @@ def generate_example_file(filename: str, seed: int, *, static_factor: int, templ
 # TODO: make more randomized names for devices (random words or people's names)
 # TODO: answer questions about more than one thing in the state list at once
 def main():
-    generate_example_file("home_assistant_train", 42, static_factor=3, template_factor=30, status_request_factor=20)
+    generate_example_file("home_assistant_train", 42, static_factor=3, template_factor=20, status_request_factor=10)
     generate_example_file("home_assistant_test", 42, static_factor=1, template_factor=3, status_request_factor=2)
 
 if __name__ == "__main__":
