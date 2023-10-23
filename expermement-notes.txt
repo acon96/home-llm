@@ -151,3 +151,57 @@ rev 8.3 - further reduced training rate
 - train ctx 512
 - batch size 8
 - learning rate 8e-6
++ certainly not overfit like < rev7
++ has some creativity with how it repsonds
++ will often get the device name wrong on the first try
+
+rev 8.4 - re-ordered prompt
+- 1 epoch
+- train ctx 512
+- batch size 8
+- learning rate 8e-6
+- put actions before response and also made actions it's own "block"
++ it *works* but is incredibly open ended
++ basically never stops generating text
+
+rev 8.5 - tweaked prompt format again
+- 1 epoch
+- train ctx 512
+- batch size 8
+- learning rate 8e-6
+- re-orderd response before actions again but made actions less like a "block" so it might stop generation
++ that worked rather badly
+
+rev 8.6 - make prompt look more like other examples it has seen before
+- 1 epoch
+- train ctx 512
+- batch size 8
+- learning rate 8e-6
+- change ```done to just ``` and add 3 newlines at the end (idk it keeps doing that for other prompts before stopping)
++ it wants to generate the other prompt types much more with this config
++ only get the correct response about 50% of the time
++ it totally stops correctly when it DOES work
+
+rev 8.7 - try to fit a bit more. the last iteration jumps around on which format it chooses
+- 1 epoch
+- train ctx 512
+- batch size 8
+- learning rate 1e-5
++ similar issues as last model
++ altering the format (with newlines) makes it pick our format more often
++ comparing to 8.6 with modified format shows this one is better at getting device names right
+
+rev 8.8 - train with newlines instead of spaces in requets/response
+- 1 epoch
+- train ctx 512
+- batch size 8
+- learning rate 1e-5
++ definitely worse than the previous one
++ for some reason both 8.7 and 8.8 are horrible when using their actual template but if you deviate slightly it works a lot better on inference
+
+rev 8.9 - actually fix pad token
+- 1 epoch
+- train ctx 512
+- batch size 8
+- learning rate 1e-5
++ properly generates a response (+ terminates) when using the actual template

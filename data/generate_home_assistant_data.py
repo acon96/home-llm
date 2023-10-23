@@ -345,14 +345,18 @@ def format_example(example):
     sys_prompt = "You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task ask instructed with the information provided only."
     services_block = "Services: " + ", ".join(sorted(example["available_services"]))
     states_block = "Devices:\n" + "\n".join(example["states"])
-    answers = "Response: " + " ".join(example["answers"])
-    question = "Request: " + example["question"]
+    question = "Request:\n" + example["question"]
+    answers = "Response:\n" + " ".join(example["answers"])
+
+    example_lines = [sys_prompt, services_block, states_block, question, answers]
     if len(example["service_calls"]) > 0:
-        code_block = "```homeassistant\n" + "\n".join(example["service_calls"]) + "\n```done"
-    else:
-        code_block = ""
+        code_block = "```homeassistant\n" + "\n".join(example["service_calls"]) + "\n```"
+        # code_block = "```homeassistant " + "\n```homeassistant ".join(example["service_calls"])
+        example_lines.append(code_block)
+
+    # code_block = "Actions:\n```homeassistant\n" + "\n".join(example["service_calls"]) + "\n```done"
         
-    result = "\n".join([sys_prompt, services_block, states_block, question, answers, code_block])
+    result = "\n".join(example_lines) + "\n"
     if "<device_name" in result:
         print("bad templating")
     return result
