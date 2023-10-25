@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import logging
-import transformers
+
+# import transformers
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.components.button import ButtonEntity
@@ -29,11 +30,12 @@ async def async_setup_entry(
 class LLMConductor(ButtonEntity):
     """Representation of an Awesome Light."""
 
-    def __init__(self, hass, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize an LLMConductor"""
         self._name = entry.title
         self._state = None
         self._model = None
+        self._hass = hass
 
         self._attr_unique_id = f"{entry.entry_id}-llm-conductor"
 
@@ -45,6 +47,19 @@ class LLMConductor(ButtonEntity):
     def press(self) -> None:
         """Presses the button"""
         _LOGGER.info("Button was pressed")
+
+        for domain_name, services in self._hass.services.services.items():
+            _LOGGER.info(f"{domain_name} - {', '.join(services.keys())}")
+
+        check_domains = [
+            "light",
+            "fan",
+            "cover",
+        ]
+        for domain in check_domains:
+            for entity_id in self._hass.states.entity_ids(domain):
+                state = self._hass.states.get(entity_id)
+                _LOGGER.info(f"{entity_id} = {state.state}")
 
     async def unload_model(self):
         _LOGGER.info("Unloading Model")
