@@ -32,7 +32,7 @@ def main():
             "light.office_desk_lamp = on",
             "light.family_room_overhead = on",
             "fan.family_room = off",
-            "lock.fron_door = locked"
+            "lock.front_door = locked"
         ],
         "available_services": ["turn_on", "turn_off", "toggle", "lock", "unlock" ],
         "question": request,
