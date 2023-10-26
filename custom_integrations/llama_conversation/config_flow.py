@@ -1,4 +1,4 @@
-"""Config flow for OpenAI Conversation integration."""
+"""Config flow for Local LLaMA Conversation integration."""
 from __future__ import annotations
 
 from functools import partial
@@ -7,12 +7,9 @@ import types
 from types import MappingProxyType
 from typing import Any
 
-import openai
-from openai import error
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
@@ -39,7 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_CHAT_MODEL): str,
+        vol.Required(CONF_CHAT_MODEL, default=DEFAULT_CHAT_MODEL): str,
     }
 )
 
@@ -66,7 +63,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict:
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for OpenAI Conversation."""
+    """Handle a config flow for Local LLaMA Conversation."""
 
     VERSION = 1
 
@@ -83,10 +80,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             config = await validate_input(self.hass, user_input)
-        except error.APIConnectionError:
-            errors["base"] = "cannot_connect"
-        except error.AuthenticationError:
-            errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
@@ -110,7 +103,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class OptionsFlow(config_entries.OptionsFlow):
-    """OpenAI config flow options handler."""
+    """Local LLaMA config flow options handler."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
@@ -122,15 +115,15 @@ class OptionsFlow(config_entries.OptionsFlow):
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="LLaMA Conversation", data=user_input)
-        schema = openai_config_option_schema(self.config_entry.options)
+        schema = local_llama_config_option_schema(self.config_entry.options)
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(schema),
         )
 
 
-def openai_config_option_schema(options: MappingProxyType[str, Any]) -> dict:
-    """Return a schema for OpenAI completion options."""
+def local_llama_config_option_schema(options: MappingProxyType[str, Any]) -> dict:
+    """Return a schema for Local LLaMA completion options."""
     if not options:
         options = DEFAULT_OPTIONS
     return {

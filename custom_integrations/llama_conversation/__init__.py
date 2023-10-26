@@ -1,4 +1,4 @@
-"""The OpenAI Conversation integration."""
+"""The Local LLaMA Conversation integration."""
 from __future__ import annotations
 from functools import partial
 
@@ -46,20 +46,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up OpenAI Conversation from a config entry."""
-    # try:
-    #     await hass.async_add_executor_job(
-    #         partial(
-    #             openai.Engine.list,
-    #             api_key=entry.data[CONF_API_KEY],
-    #             request_timeout=10,
-    #         )
-    #     )
-    # except error.AuthenticationError as err:
-    #     _LOGGER.error("Invalid API key: %s", err)
-    #     return False
-    # except error.OpenAIError as err:
-    #     raise ConfigEntryNotReady(err) from err
+    """Set up Local LLaMA Conversation from a config entry."""
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = entry.data[CONF_CHAT_MODEL]
@@ -71,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload OpenAI."""
+    """Unload Local LLaMA."""
     hass.data[DOMAIN].pop(entry.entry_id)
     conversation.async_unset_agent(hass, entry)
     return True
@@ -84,7 +71,7 @@ async def async_create_llama_agent(hass: HomeAssistant, entry: ConfigEntry):
 
 
 class LLaMAAgent(conversation.AbstractConversationAgent):
-    """OpenAI conversation agent."""
+    """Local LLaMA conversation agent."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the agent."""
