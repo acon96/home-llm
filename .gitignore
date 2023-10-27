@@ -1,2 +1,4 @@
 models/
+core/
+config/
 .DS_Store
