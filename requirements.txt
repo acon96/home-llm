@@ -1,3 +1,4 @@
 transformers
 tensorboard
 peft
+bitsandbytes
