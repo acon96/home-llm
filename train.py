@@ -5,7 +5,6 @@ from datasets import load_dataset
 from dataclasses import dataclass, field
 
 torch.set_default_device("cuda")
-# torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
 """
 python3 train.py \

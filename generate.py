@@ -7,8 +7,21 @@ def tokenize(tokenizer, prompt):
     return tokenizer(prompt, return_tensors="pt", return_attention_mask=False)
 
 def generate(model, tokenizer, prompt):
+    eos_token_id = tokenizer(tokenizer.eos_token)["input_ids"][0]
+
     inputs = tokenize(tokenizer, prompt)
-    outputs = model.generate(**inputs, max_length=512)
+    outputs = model.generate(
+        **inputs,
+        max_new_tokens=128,
+        use_cache=True,
+        do_sample=True,
+        temperature=0.7,
+        top_k=50,
+        top_p=1.0,
+        repetition_penalty=1.15,
+        eos_token_id=eos_token_id,
+        pad_token_id=eos_token_id,
+    )
     text = tokenizer.batch_decode(outputs)[0]
     return text
 
@@ -23,7 +36,7 @@ def format_example(example):
 
 def main():
     request = "turn on the office lights"
-    model_folder = "./model/home-llm-rev7.1"
+    model_folder = "./models/home-llm-rev9"
 
     example = {
         "states": [
@@ -41,11 +54,16 @@ def main():
     prompt = format_example(example)
 
     torch.set_default_device("cuda")
-    trained_model = AutoModelForCausalLM.from_pretrained(model_folder, trust_remote_code=True)
+    print(f"Loading model from {model_folder}...")
+    trained_model = AutoModelForCausalLM.from_pretrained(model_folder, trust_remote_code=True, torch_dtype=torch.bfloat16)
     trained_tokenizer = AutoTokenizer.from_pretrained(model_folder, trust_remote_code=True)
 
-    output = generate(trained_model, trained_tokenizer, prompt)
-    print(output)
+    print("Generating output...")
+    for i in range(10):
+        output = generate(trained_model, trained_tokenizer, prompt)
+        print("--------------------------------------------------")
+        print(output)
+        print("--------------------------------------------------")
 
 
 if __name__ == "__main__":
