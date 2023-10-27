@@ -1,2 +1,3 @@
-tqdm
+transformers
 tensorboard
+peft
