@@ -367,25 +367,27 @@ def generate_example_file(filename: str, seed: int, *, static_factor: int, templ
 
     print("Generating...")
 
-    examples = []
+    def run_factor_times(func, examples, data, factor):
+        if factor >= 1:
+            for i in range(factor):
+                examples.append({ "text": format_example(func(data)) })
+        else:
+            if random.random() < factor:
+                examples.append({ "text": format_example(func(data)) })
+    
+    generated_examples = []
     for action in tqdm(pile_of_device_actions):
-        for i in range(static_factor):
-            example = generate_static_example(action)
-            if not example: # some don't return a valid example
-                continue
-            examples.append({ "text": format_example(example) })
+        run_factor_times(generate_static_example, generated_examples, action, static_factor)
 
     for templated_action in tqdm(pile_of_templated_actions):
-        for i in range(template_factor):
-            examples.append({ "text": format_example(generate_templated_example(templated_action)) })
+        run_factor_times(generate_templated_example, generated_examples, templated_action, template_factor)
 
     for status_request in tqdm(pile_of_status_requests):
-        for i in range(status_request_factor):
-            examples.append({ "text": format_example(generate_status_request(status_request))})
+        run_factor_times(generate_status_request, generated_examples, status_request, status_request_factor)
 
-    print(f"Generated {len(examples)} examples. Saving...")
+    print(f"Generated {len(generated_examples)} examples. Saving...")
     with open(f"{filename}.json", "w") as f:
-        json.dump(examples, f, indent=4)
+        json.dump(generated_examples, f, indent=4)
 
     print("Done!")
 
@@ -394,8 +396,8 @@ def generate_example_file(filename: str, seed: int, *, static_factor: int, templ
 # TODO: make more randomized names for devices (random words or people's names)
 # TODO: answer questions about more than one thing in the state list at once
 def main():
-    generate_example_file("home_assistant_train", 42, static_factor=3, template_factor=20, status_request_factor=15)
-    generate_example_file("home_assistant_test", 12345, static_factor=1, template_factor=3, status_request_factor=2)
+    generate_example_file("home_assistant_train", 42, static_factor=2, template_factor=15, status_request_factor=10)
+    generate_example_file("home_assistant_test", 12345, static_factor=0.25, template_factor=3, status_request_factor=2)
 
 if __name__ == "__main__":
     main()
