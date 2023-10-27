@@ -2,27 +2,29 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 SYSTEM_PROMPT = "You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task ask instructed with the information provided only."
+CTX_SIZE = 512
 
 def tokenize(tokenizer, prompt):
-    return tokenizer(prompt, return_tensors="pt", return_attention_mask=False)
+    return tokenizer(prompt, return_tensors="pt", padding=True, truncation=True, max_length=CTX_SIZE)
 
 def generate(model, tokenizer, prompt):
     eos_token_id = tokenizer(tokenizer.eos_token)["input_ids"][0]
 
     inputs = tokenize(tokenizer, prompt)
-    outputs = model.generate(
-        **inputs,
-        max_new_tokens=128,
-        use_cache=True,
-        do_sample=True,
-        temperature=0.7,
-        top_k=50,
-        top_p=1.0,
-        repetition_penalty=1.15,
-        eos_token_id=eos_token_id,
-        pad_token_id=eos_token_id,
-    )
-    text = tokenizer.batch_decode(outputs)[0]
+    with torch.no_grad():
+        outputs = model.generate(
+            **inputs,
+            max_new_tokens=128,
+            use_cache=True,
+            do_sample=True,
+            temperature=0.7,
+            top_k=50,
+            top_p=1.0,
+            repetition_penalty=1.15,
+            eos_token_id=eos_token_id,
+            pad_token_id=eos_token_id,
+        )
+    text = tokenizer.batch_decode(outputs)
     return text
 
 def format_example(example):
@@ -37,6 +39,7 @@ def format_example(example):
 def main():
     request = "turn on the office lights"
     model_folder = "./models/home-llm-rev9"
+    num_examples = 10
 
     example = {
         "states": [
@@ -59,11 +62,11 @@ def main():
     trained_tokenizer = AutoTokenizer.from_pretrained(model_folder, trust_remote_code=True)
 
     print("Generating output...")
-    for i in range(10):
-        output = generate(trained_model, trained_tokenizer, prompt)
+    output = generate(trained_model, trained_tokenizer, [ prompt for x in range(num_examples) ])
+
+    for text in output:
         print("--------------------------------------------------")
-        print(output)
-        print("--------------------------------------------------")
+        print(text.replace(trained_tokenizer.eos_token, ""))
 
 
 if __name__ == "__main__":
