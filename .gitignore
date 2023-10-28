@@ -1,4 +1,5 @@
 models/
+loras/
 core/
 config/
 .DS_Store
