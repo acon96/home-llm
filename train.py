@@ -105,11 +105,11 @@ if training_run_args.add_pad_token:
     tokenizer.add_special_tokens({'pad_token': '<|pad|>'})
 
 # TODO: figure out how to actually use the modified tokenizer when loading the base model + lora
-# embeddings_len = math.ceil(len(tokenizer) / 32) * 32
-# if model.get_input_embeddings().num_embeddings < embeddings_len:
-#     model.resize_token_embeddings(embeddings_len)
-# else:
-#     model.tie_weights()
+embeddings_len = math.ceil(len(tokenizer) / 32) * 32
+if model.get_input_embeddings().num_embeddings < embeddings_len:
+    model.resize_token_embeddings(embeddings_len)
+else:
+    model.tie_weights()
 
 if training_run_args.use_lora:
     from peft import LoraConfig, TaskType, get_peft_model, prepare_model_for_kbit_training
