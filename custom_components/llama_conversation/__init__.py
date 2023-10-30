@@ -1,19 +1,19 @@
 """The Local LLaMA Conversation integration."""
 from __future__ import annotations
-from functools import partial
 
 import logging
 from typing import Literal
 
-from transformers import AutoModelForCausalLM, AutoTokenizer
-import voluptuous as vol
+import requests
+import re
 
 from homeassistant.components import conversation
+from homeassistant.components.conversation.const import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import (
     async_should_expose,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, MATCH_ALL
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, MATCH_ALL
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -36,6 +36,8 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TOP_P,
     DEFAULT_CHAT_MODEL,
+    DEFAULT_HOST,
+    DEFAULT_PORT,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
@@ -52,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Local LLaMA Conversation from a config entry."""
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = entry.data[CONF_CHAT_MODEL]
+    hass.data[DOMAIN][entry.entry_id] = entry
 
     conversation.async_set_agent(hass, entry, LLaMAAgent(hass, entry))
     return True
@@ -76,6 +78,9 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
 
         # TODO: load the model using the api endpoint
         self.model_name = self.entry.data.get(CONF_CHAT_MODEL, DEFAULT_CHAT_MODEL)
+        host = entry.data.get(CONF_HOST, DEFAULT_HOST)
+        port = entry.data.get(CONF_PORT, DEFAULT_PORT)
+        self.api_host = f"http://{host}:{port}"
 
     @property
     def supported_languages(self) -> list[str] | Literal["*"]:
@@ -94,7 +99,7 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
 
         if user_input.conversation_id in self.history:
             conversation_id = user_input.conversation_id
-            prompt = self.history[conversation_id]
+            prompt = self.history[conversation_id] + "\nRequest: " + user_input.text
         else:
             conversation_id = ulid.ulid()
             try:
@@ -135,18 +140,47 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         _LOGGER.debug("Response '%s'", response)
         self.history[conversation_id] = prompt + response
 
+        to_say = response.strip().split("\n")[0]
+
+        pattern = re.compile(r"```homeassistant\n([\S\n]*)```")
+        for block in pattern.findall(response.strip()):
+            services = block.split("\n")
+            _LOGGER.info(f"running services: {' '.join(services)}")
+
+            for line in services:
+                service = line.split("(")[0]
+                entity = line.split("(")[1][:-1]
+                domain = entity.split(".")[0]
+                try:
+                    self.hass.services.async_call(
+                        domain,
+                        service,
+                        service_data={ATTR_ENTITY_ID: entity},
+                        blocking=True,
+                    )
+                except:
+                    to_say += f"\nFailed to run: {line}"
+
         intent_response = intent.IntentResponse(language=user_input.language)
-        intent_response.async_set_speech(response)
+        intent_response.async_set_speech(to_say)
         return conversation.ConversationResult(
             response=intent_response, conversation_id=conversation_id
         )
 
     def _generate(self, generate_params: dict) -> str:
-        return generate_params["prompt"] + "\nSomething was generated!!!"
+        try:
+            result = requests.post(
+                f"{self.api_host}/api/v1/generate", json=generate_params, timeout=30
+            )
+        except requests.RequestException:
+            return "Failed to communicate with the API!"
 
-    async def _async_generate(self, prompt: str, max_new_tokens: int) -> str:
+        return result.json()["results"][0]["text"]
+        # return "\nSomething was generated!!!\n```homeassistant\nturn_on(light.some_bulb)\n```\n"
+
+    async def _async_generate(self, generate_parameters: dict) -> str:
         return await self.hass.async_add_executor_job(
-            self._generate, prompt, max_new_tokens
+            self._generate, generate_parameters
         )
 
     def _async_get_exposed_entities(self) -> tuple[dict[str, str], list[str]]:
@@ -154,7 +188,7 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         entity_states = {}
         domains = set()
         for state in self.hass.states.async_all():
-            if not async_should_expose(self.hass, DOMAIN, state.entity_id):
+            if not async_should_expose(self.hass, CONVERSATION_DOMAIN, state.entity_id):
                 continue
 
             # TODO: also expose the "friendly name"
@@ -184,7 +218,7 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
 
         return template.Template(prompt_template, self.hass).async_render(
             {
-                "states": formatted_states,
+                "devices": formatted_states,
                 "services": formatted_services,
                 "user_input": user_input,
             },

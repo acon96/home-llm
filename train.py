@@ -20,12 +20,12 @@ python3 train.py \
 
 """
 python3 train.py \
-    --run_name home-llama2-13b-rev1 \
-    --base_model TheBloke/Llama-2-13B-GPTQ \
+    --run_name home-llama2-7b-rev2 \
+    --base_model TheBloke/Llama-2-7B-GPTQ \
     --train_dataset data/home_assistant_train.json \
     --test_dataset data/home_assistant_test.json \
-    --load_as_gptq --use_lora --lora_rank 16 --gradient_checkpointing \
-    --add_pad_token --bf16 --micro_batch_size 1 --learning_rate 2e-5
+    --load_as_gptq --use_lora --gradient_checkpointing \
+    --add_pad_token --bf16 --micro_batch_size 4 --learning_rate 2e-5
 """
 
 @dataclass
@@ -61,8 +61,8 @@ class TrainingRunArguments:
 parser = HfArgumentParser([TrainingRunArguments])
 training_run_args, _ = parser.parse_args_into_dataclasses(return_remaining_strings=True)
 
-if sum([training_run_args.load_in_8bit, training_run_args.load_in_4bit]) > 1:
-    raise Exception("Please select exactly one of 'bf16', 'load_in_8bit', 'load_in_4bit', or 'load_as_gptq")
+if sum([training_run_args.load_in_8bit, training_run_args.load_in_4bit, training_run_args.load_as_gptq]) > 1:
+    raise Exception("Please select exactly one of 'load_in_8bit', 'load_in_4bit', or 'load_as_gptq")
 
 # TODO: write a proper evaluation script
 
