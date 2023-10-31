@@ -99,7 +99,7 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
 
         if user_input.conversation_id in self.history:
             conversation_id = user_input.conversation_id
-            prompt = self.history[conversation_id] + "\nRequest: " + user_input.text
+            prompt = self.history[conversation_id] + "\nRequest:\n" + user_input.text
         else:
             conversation_id = ulid.ulid()
             try:
@@ -148,18 +148,22 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
             _LOGGER.info(f"running services: {' '.join(services)}")
 
             for line in services:
+                if len(line) == 0:
+                    break
+
                 service = line.split("(")[0]
                 entity = line.split("(")[1][:-1]
                 domain = entity.split(".")[0]
                 try:
-                    self.hass.services.async_call(
+                    await self.hass.services.async_call(
                         domain,
                         service,
                         service_data={ATTR_ENTITY_ID: entity},
                         blocking=True,
                     )
-                except:
+                except Exception as err:
                     to_say += f"\nFailed to run: {line}"
+                    _LOGGER.debug(f"err: {err}; {repr(err)}")
 
         intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(to_say)
@@ -172,11 +176,12 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
             result = requests.post(
                 f"{self.api_host}/api/v1/generate", json=generate_params, timeout=30
             )
-        except requests.RequestException:
+            result.raise_for_status()
+        except requests.RequestException as err:
+            _LOGGER.debug(f"Err was: {err}")
             return "Failed to communicate with the API!"
 
         return result.json()["results"][0]["text"]
-        # return "\nSomething was generated!!!\n```homeassistant\nturn_on(light.some_bulb)\n```\n"
 
     async def _async_generate(self, generate_parameters: dict) -> str:
         return await self.hass.async_add_executor_job(

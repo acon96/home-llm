@@ -6,7 +6,8 @@ DEFAULT_PROMPT = """You are 'Al', a helpful AI Assistant that controls the devic
 Services: {{ services }}
 Devices:
 {{ devices }}
-Request: {{ user_input }}
+Request:
+{{ user_input }}
 Response:"""
 CONF_CHAT_MODEL = "huggingface_model"
 DEFAULT_CHAT_MODEL = "microsoft/phi-1.5"

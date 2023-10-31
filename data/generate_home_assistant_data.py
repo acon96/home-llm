@@ -395,10 +395,10 @@ def generate_example_file(filename: str, seed: int, *, static_factor: int, templ
 # TODO: add examples for rooms/groups of devices. i.e. "turn off all the lights in the kitchen"
 # TODO: make more randomized names for devices (random words or people's names)
 # TODO: answer questions about more than one thing in the state list at once
-# TODO: add domain name to serivice names
+# TODO: add domain name to serivice names?
 # TODO: add "friendly" name to context
 def main():
-    generate_example_file("home_assistant_train", 42, static_factor=2, template_factor=15, status_request_factor=10)
+    generate_example_file("home_assistant_train", 42, static_factor=3, template_factor=20, status_request_factor=15)
     generate_example_file("home_assistant_test", 12345, static_factor=0.25, template_factor=3, status_request_factor=2)
 
 if __name__ == "__main__":
