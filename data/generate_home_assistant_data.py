@@ -342,7 +342,7 @@ def generate_status_request(template: dict, max_devices: int = 32):
     }
 
 def format_example(example):
-    sys_prompt = "You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task ask instructed with the information provided only."
+    sys_prompt = "You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed with the information provided only."
     services_block = "Services: " + ", ".join(sorted(example["available_services"]))
     states_block = "Devices:\n" + "\n".join(example["states"])
     question = "Request:\n" + example["question"]

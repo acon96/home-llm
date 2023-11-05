@@ -1,7 +1,7 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-SYSTEM_PROMPT = "You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task ask instructed with the information provided only."
+SYSTEM_PROMPT = "You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed with the information provided only."
 CTX_SIZE = 512
 
 def tokenize(tokenizer, prompt):
