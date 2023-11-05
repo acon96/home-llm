@@ -1,0 +1,8 @@
+#!/command/with-contenv bashio
+# ==============================================================================
+# Home Assistant Community Add-on: text-generation-webui
+# Runs the webui
+# ==============================================================================
+bashio::log.info "Starting Text Generation Webui..."
+
+exec python3 /app/server.py --listen --verbose --api

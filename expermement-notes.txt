@@ -205,3 +205,12 @@ rev 8.9 - actually fix pad token
 - batch size 8
 - learning rate 1e-5
 + properly generates a response (+ terminates) when using the actual template
+
+rev 9 - reduced dataset size
+- 1 epoch
+- train ctx 512
+- batch size 8
+- learning rate 1e-5
++ didn't work as well
++ would often not generate a service call
++ went back to 8.9
