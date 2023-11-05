@@ -1,4 +1,9 @@
-ARG BUILD_FROM=atinoda/text-generation-webui:default-snapshot-2023-10-29
+ARG BUILD_FROM=atinoda/text-generation-webui:default
+
+FROM alpine:latest as overlay-downloader
+RUN apk add git && \
+    git clone https://github.com/hassio-addons/addon-ubuntu-base /tmp/addon-ubuntu-base
+
 # hadolint ignore=DL3006
 FROM ${BUILD_FROM}
 
@@ -80,11 +85,14 @@ RUN \
         /var/{cache,log}/* \
         /var/lib/apt/lists/*
 
-# Copy root filesystem
-COPY rootfs /
+# Copy s6-overlay adjustments from cloned git repo
+COPY --from=overlay-downloader /tmp/addon-ubuntu-base/base/s6-overlay /package/admin/s6-overlay-${S6_OVERLAY_VERSION}/
 
-# Copy s6-overlay adjustments
-COPY s6-overlay /package/admin/s6-overlay-${S6_OVERLAY_VERSION}/
+# Copy root filesystem for the base image
+COPY --from=overlay-downloader /tmp/addon-ubuntu-base/base/rootfs /
+
+# Copy root filesystem for our image
+COPY rootfs /
 
 # Entrypoint & CMD
 ENTRYPOINT [ "/init" ]
@@ -94,6 +102,9 @@ ARG BUILD_DATE
 ARG BUILD_REF
 ARG BUILD_VERSION
 ARG BUILD_REPOSITORY
+
+# TODO: figure out what is broken with file permissions
+USER root
 
 # Labels
 LABEL \
@@ -105,12 +116,12 @@ LABEL \
     io.hass.base.version=${BUILD_VERSION} \
     io.hass.base.name="ubuntu" \
     io.hass.base.image="hassioaddons/ubuntu-base" \
-    maintainer="Franck Nijhof <frenck@addons.community>" \
+    maintainer="github.com/acon96" \
     org.opencontainers.image.title="oobabooga text-generation-webui for ${BUILD_ARCH}" \
     org.opencontainers.image.description="Home Assistant Community Add-on: ${BUILD_ARCH} oobabooga text-generation-webui" \
     org.opencontainers.image.vendor="Home Assistant Community Add-ons" \
-    org.opencontainers.image.authors="Franck Nijhof <frenck@addons.community>" \
-    org.opencontainers.image.licenses="MIT" \
+    org.opencontainers.image.authors="github.com/acon96" \
+    org.opencontainers.image.licenses="TBD" \
     org.opencontainers.image.url="https://addons.community" \
     org.opencontainers.image.source="https://github.com/${BUILD_REPOSITORY}" \
     org.opencontainers.image.documentation="https://github.com/${BUILD_REPOSITORY}/blob/main/README.md" \

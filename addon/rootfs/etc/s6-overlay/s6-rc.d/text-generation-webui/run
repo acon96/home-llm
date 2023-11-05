@@ -5,4 +5,5 @@
 # ==============================================================================
 bashio::log.info "Starting Text Generation Webui..."
 
+cd /app
 exec python3 /app/server.py --listen --verbose --api

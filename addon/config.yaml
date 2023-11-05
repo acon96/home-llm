@@ -1,0 +1,15 @@
+---
+name: oobabooga text-generation-webui
+version: dev
+slug: text-generation-webui
+description: ""
+url: ""
+arch:
+- amd64
+ports:
+  7860/tcp: 7860 # ingress
+  5000/tcp: 5000 # api
+ingress: true
+ingress_port: 7860
+# options: {}
+# schema: {}
