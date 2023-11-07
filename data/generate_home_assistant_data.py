@@ -186,6 +186,9 @@ with open("pile_of_status_requests.csv") as f:
     reader = csv.DictReader(f)
     pile_of_status_requests = list(reader)
 
+def format_device_line(*, device_name: str, friendly_name: str, state: str):
+    return (f"{device_name} '{friendly_name}' = {state}")
+
 # generate a random list of devices for the context
 def random_device_list(max_devices: int, avoid_device_names: list[str]):
     num_devices = random.randint(2, max_devices)
@@ -219,9 +222,14 @@ def random_device_list(max_devices: int, avoid_device_names: list[str]):
         try:
             device_name = choice["device_name"]
             device_type = device_name.split(".")[0]
+            friendly_name = choice["description"]
 
             state = SUPPORTED_DEVICES[device_type].get_random_state()
-            device_lines.append(f"{device_name} = {state}")
+            device_lines.append(format_device_line(
+                device_name=device_name,
+                friendly_name=friendly_name,
+                state=state
+            ))
             device_list.append(device_name)
             device_types.add(device_type)
         except:
@@ -232,33 +240,39 @@ def random_device_list(max_devices: int, avoid_device_names: list[str]):
 def generate_static_example(action: dict, max_devices: int = 32):
     question = action["english_phrase"]
     target_device = action["device_name"]
-    service_name = action["service_name"]
+    device_type = target_device.split(".")[0]
+    service_name = f"{device_type}.{action['service_name']}"
+    friendly_name = target_device.split(".")[1].replace("_", " ")
 
     device_list, device_types = random_device_list(max_devices=max_devices, avoid_device_names=[target_device])
 
     # insert our target device somewhere random in the list
-    device_type = target_device.split(".")[0]
+    
     index = random.randint(0, len(device_list))
     state = SUPPORTED_DEVICES[device_type].get_random_state()
 
-    device_list.insert(index, f"{target_device} = {state}")
+    device_list.insert(index, format_device_line(
+        device_name=target_device,
+        friendly_name=friendly_name,
+        state=state
+    ))
 
     # gather a list of all available services
-    available_services = set()
+    available_services = []
     for x in device_types:
-        available_services = available_services.union(set(SUPPORTED_DEVICES[x].services))
+        available_services.extend([ f"{x}.{y}" for y in SUPPORTED_DEVICES[x].services ])
 
     return {
         "states": device_list,
         "available_services": list(available_services),
         "question": question.lower(),
-        "answers": [ random.choice(pile_of_responses[device_type][service_name]).lower() ],
+        "answers": [ random.choice(pile_of_responses[device_type][action["service_name"]]).lower() ],
         "service_calls": [ f"{service_name}({target_device})" ]
     }
 
 def generate_templated_example(template: dict, max_devices: int = 32):
     template_device_types: list[str] = template["device_type"].split("|")
-    service_names: list[str] = template["service"].split("|")
+    service_names: list[str] = [ f"{x}.{y}" for x, y in zip(template_device_types, template["service"].split("|")) ]
     question_template: str = template["english_phrase"]
     answer_template: str = template["assistant_response"]
 
@@ -275,13 +289,21 @@ def generate_templated_example(template: dict, max_devices: int = 32):
     for device_dict in chosen_devices:
         index = random.randint(0, len(device_list))
         state = SUPPORTED_DEVICES[device_dict["type"]].get_random_state()
+        device_name = device_dict["device_name"]
+        friendly_name = device_dict["description"]
 
-        device_list.insert(index, f"{device_dict['device_name']} = {state}")
+        device_list.insert(index, format_device_line(
+            device_name=device_name,
+            friendly_name=friendly_name,
+            state=state
+        ))
 
     # gather a list of all available services
-    available_services = set()
+    available_services = []
     for x in device_types:
-        available_services = available_services.union(set(SUPPORTED_DEVICES[x].services)).union(service_names)
+        available_services.extend([ f"{x}.{y}" for y in SUPPORTED_DEVICES[x].services ])
+
+    available_services.extend(service_names)
 
     # generate the question
     if len(template_device_types) == 1:
@@ -325,9 +347,9 @@ def generate_status_request(template: dict, max_devices: int = 32):
     device_list.insert(index, f"{chosen_device['device_name']} = {state_name}")
 
     # gather a list of all available services
-    available_services = set()
+    available_services = []
     for x in device_types:
-        available_services = available_services.union(set(SUPPORTED_DEVICES[x].services))
+        available_services.extend([ f"{x}.{y}" for y in SUPPORTED_DEVICES[x].services ])
 
     # generate the question
     question = question_template.replace("<device_name>", chosen_device["description"])
@@ -353,12 +375,14 @@ def format_example(example):
         code_block = "```homeassistant\n" + "\n".join(example["service_calls"]) + "\n```"
         # code_block = "```homeassistant " + "\n```homeassistant ".join(example["service_calls"])
         example_lines.append(code_block)
-
-    # code_block = "Actions:\n```homeassistant\n" + "\n".join(example["service_calls"]) + "\n```done"
         
     result = "\n".join(example_lines) + "\n"
     if "<device_name" in result:
         print("bad templating")
+
+    # replace aliases with their actual values
+    result = result.replace("blinds.", "cover.")
+    result = result.replace("garage_door.", "cover.")
     return result
 
 
@@ -392,12 +416,14 @@ def generate_example_file(filename: str, seed: int, *, static_factor: int, templ
     print("Done!")
 
 # TODO: add examples for ambiguous requests. asking a clarifying question
-# TODO: add examples for rooms/groups of devices. i.e. "turn off all the lights in the kitchen"
 # TODO: make more randomized names for devices (random words or people's names)
 # TODO: answer questions about more than one thing in the state list at once
-# TODO: add domain name to serivice names?
-# TODO: add "friendly" name to context
+# TODO: add examples for rooms/groups of devices. i.e. "turn off all the lights in the kitchen"
+# TODO: expose home assistant attributes in the context
+# TODO: add thermostat + switch device types
 def main():
+    generate_example_file("sample", 42, static_factor=1, template_factor=1, status_request_factor=1)
+    exit()
     generate_example_file("home_assistant_train", 42, static_factor=3, template_factor=20, status_request_factor=15)
     generate_example_file("home_assistant_test", 12345, static_factor=0.25, template_factor=3, status_request_factor=2)
 
