@@ -364,18 +364,23 @@ def generate_status_request(template: dict, max_devices: int = 32):
     }
 
 def format_example(example):
-    sys_prompt = "You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed with the information provided only."
+    sys_prompt = "You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed or answer the following question with the information provided only."
     services_block = "Services: " + ", ".join(sorted(example["available_services"]))
     states_block = "Devices:\n" + "\n".join(example["states"])
     question = "Request:\n" + example["question"]
     answers = "Response:\n" + " ".join(example["answers"])
 
-    example_lines = [sys_prompt, services_block, states_block, question, answers]
+    system_block = "\n".join(["<|im_start|>system " + sys_prompt, services_block, states_block, "<|im_end|>" ])
+    user_block = "<|im_start|>user " + question + "<|im_end|>"
+
+    assistant_block = "<|im_start|>assistant " + answers
     if len(example["service_calls"]) > 0:
+        # TODO: make function calling JSON based
         code_block = "```homeassistant\n" + "\n".join(example["service_calls"]) + "\n```"
-        # code_block = "```homeassistant " + "\n```homeassistant ".join(example["service_calls"])
-        example_lines.append(code_block)
+        assistant_block = assistant_block + code_block
+    assistant_block = assistant_block + "<|im_end|>"
         
+    example_lines = [system_block, user_block, assistant_block]
     result = "\n".join(example_lines) + "\n"
     if "<device_name" in result:
         print("bad templating")
@@ -422,8 +427,8 @@ def generate_example_file(filename: str, seed: int, *, static_factor: int, templ
 # TODO: expose home assistant attributes in the context
 # TODO: add thermostat + switch device types
 def main():
-    generate_example_file("sample", 42, static_factor=1, template_factor=1, status_request_factor=1)
-    exit()
+    # generate_example_file("sample", 42, static_factor=1, template_factor=1, status_request_factor=1)
+    # exit()
     generate_example_file("home_assistant_train", 42, static_factor=3, template_factor=20, status_request_factor=15)
     generate_example_file("home_assistant_test", 12345, static_factor=0.25, template_factor=3, status_request_factor=2)
 

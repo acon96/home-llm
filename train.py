@@ -9,6 +9,17 @@ torch.set_default_device("cuda")
 
 """
 python3 train.py \
+    --run_name home-llm-rev10 \
+    --base_model microsoft/phi-2 \
+    --add_pad_token \
+    --add_chatml_tokens \
+    --bf16 \
+    --train_dataset data/home_assistant_train.json \
+    --test_dataset data/home_assistant_test.json
+"""
+
+"""
+python3 train.py \
     --run_name home-llm-rev9.1 \
     --base_model microsoft/phi-1_5 \
     --disable_attention_mask \
@@ -40,7 +51,8 @@ class TrainingRunArguments:
     micro_batch_size: int = field(default=2, metadata={"help": "The actual batch size that will fit into VRAM on this machine"})
     epochs: int = field(default=1, metadata={"help": "The number of times to train the model on each example"})
     learning_rate: float = field(default=1e-5, metadata={"help": "The starting learning rate (speed at which the model trains)"})
-    learning_rate_schedule: str = field(default="cosine", metadata={"help": "How fast the learning rate is reduced during training"})\
+    learning_rate_schedule: str = field(default="cosine", metadata={"help": "How fast the learning rate is reduced during training"})
+    resume_from_checkpoint: str = field(default="", metadata={"help": "The name of the checkpoint to resume training from"})
     
     # Quantization
     load_in_8bit: bool = field(default=False, metadata={"help": "Set to load the base model in 8-bit mode using bitsandbytes"})
@@ -54,6 +66,7 @@ class TrainingRunArguments:
 
     disable_attention_mask: bool = field(default=False, metadata={"help": "If set, disables the attention mask generated to ignore pad tokens."})
     add_pad_token: bool = field(default=False, metadata={"help": "If set, a pad token will be added to the tokenizer's vocabulary"})
+    add_chatml_tokens: bool = field(default=False, metadata={"help": "If set, tokens for the ChatML format will be added specifically"})
     gradient_checkpointing: bool = field(default=False, metadata={"help": "Enables gradient checkpointing which saves quite a lot of VRAM"})
 
     run_tensorboard: bool = field(default=True, metadata={"help": "If set, will tensorboard in the background to monitor training progress"})
@@ -103,6 +116,9 @@ tokenizer = AutoTokenizer.from_pretrained(training_run_args.base_model, trust_re
 
 if training_run_args.add_pad_token:
     tokenizer.add_special_tokens({'pad_token': '<|pad|>'})
+
+if training_run_args.add_chatml_tokens:
+    tokenizer.add_tokens(["<|im_start|>", "<|im_end|>"])
 
 # TODO: figure out how to actually use the modified tokenizer when loading the base model + lora
 embeddings_len = math.ceil(len(tokenizer) / 32) * 32
@@ -224,8 +240,7 @@ if training_run_args.run_tensorboard:
     import subprocess
     tensorboard_process = subprocess.Popen(["tensorboard", "--logdir", model_dir])
 
-checkpoint = None
-
+checkpoint = training_run_args.resume_from_checkpoint
 if checkpoint:
     trainer.train(checkpoint)
 else:
