@@ -17,6 +17,7 @@ python3 train.py \
     --train_dataset data/home_assistant_alpaca_merged_train.json \
     --test_dataset data/home_assistant_alpaca_merged_test.json \ 
     --learning_rate 2e-5
+    --save_steps 2000
 """
 
 """
@@ -54,12 +55,15 @@ class TrainingRunArguments:
     learning_rate: float = field(default=1e-5, metadata={"help": "The starting learning rate (speed at which the model trains)"})
     learning_rate_schedule: str = field(default="cosine", metadata={"help": "How fast the learning rate is reduced during training"})
     resume_from_checkpoint: str = field(default="", metadata={"help": "The name of the checkpoint to resume training from"})
+    eval_steps: int = field(default=100, metadata={"help": "The number of steps in between evaluations of the model"})
+    save_steps: int = field(default=-1, metadata={"help": "The number of steps in between model checkpoints; set to -1 to save every epoch"})
     
     # Quantization
     load_in_8bit: bool = field(default=False, metadata={"help": "Set to load the base model in 8-bit mode using bitsandbytes"})
     load_in_4bit: bool = field(default=False, metadata={"help": "Set to load the base model in 4-bit mode using bitsandbytes"})
     load_as_gptq: bool = field(default=False, metadata={"help": "Set to load the base model as a GPTQ using AutoGPTQ"})
     
+    # lora config
     use_lora: bool = field(default=False, metadata={"help": "If set, then the trained model will be a LoRA"})
     lora_rank: int = field(default=4)
     lora_alpha: int = field(default=32)
@@ -166,12 +170,10 @@ training_args = TrainingArguments(
     per_device_train_batch_size=training_run_args.micro_batch_size,
     per_device_eval_batch_size=training_run_args.micro_batch_size,
     gradient_accumulation_steps=training_run_args.batch_size/training_run_args.micro_batch_size,
-    # evaluation_strategy="epoch",
     evaluation_strategy="steps",
-    eval_steps=100,
-    save_strategy="epoch",
-    # save_strategy="steps",
-    # save_steps=1000,
+    eval_steps=training_run_args.eval_steps,
+    save_strategy=("steps" if training_run_args.save_steps != -1 else "epoch"),
+    save_steps=(training_run_args.save_steps if training_run_args.save_steps != -1 else None),
     logging_steps=5,
     output_dir=model_dir,
     num_train_epochs=training_run_args.epochs,
