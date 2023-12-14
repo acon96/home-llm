@@ -7,12 +7,12 @@ Services: {{ services }}
 Devices:
 {{ devices }}"""
 CONF_CHAT_MODEL = "huggingface_model"
-DEFAULT_CHAT_MODEL = "microsoft/phi-1.5"
+DEFAULT_CHAT_MODEL = "microsoft/phi-2"
 CONF_MAX_TOKENS = "max_new_tokens"
 DEFAULT_MAX_TOKENS = 128
 CONF_TOP_P = "top_p"
 DEFAULT_TOP_P = 1
 CONF_TEMPERATURE = "temperature"
-DEFAULT_TEMPERATURE = 0.7
+DEFAULT_TEMPERATURE = 0.1
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = "5000"
