@@ -367,8 +367,10 @@ def format_example(example):
     sys_prompt = "You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed or answer the following question with the information provided only."
     services_block = "Services: " + ", ".join(sorted(example["available_services"]))
     states_block = "Devices:\n" + "\n".join(example["states"])
-    question = "Request:\n" + example["question"]
-    answers = "Response:\n" + " ".join(example["answers"])
+    # question = "Request:\n" + example["question"]
+    # answers = "Response:\n" + " ".join(example["answers"])
+    question = example["question"]
+    answers = " ".join(example["answers"])
 
     system_block = "\n".join(["<|im_start|>system " + sys_prompt, services_block, states_block, "<|im_end|>" ])
     user_block = "<|im_start|>user " + question + "<|im_end|>"

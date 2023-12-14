@@ -3,3 +3,5 @@ loras/
 core/
 config/
 .DS_Store
+data/*.json
+*.pyc

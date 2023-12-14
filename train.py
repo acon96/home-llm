@@ -14,8 +14,9 @@ python3 train.py \
     --add_pad_token \
     --add_chatml_tokens \
     --bf16 \
-    --train_dataset data/home_assistant_train.json \
-    --test_dataset data/home_assistant_test.json
+    --train_dataset data/home_assistant_alpaca_merged_train.json \
+    --test_dataset data/home_assistant_alpaca_merged_test.json \ 
+    --learning_rate 2e-5
 """
 
 """
