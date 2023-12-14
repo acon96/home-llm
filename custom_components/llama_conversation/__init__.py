@@ -99,11 +99,11 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
 
         if user_input.conversation_id in self.history:
             conversation_id = user_input.conversation_id
-            prompt = self.history[conversation_id] + "\nRequest:\n" + user_input.text
+            prompt = self.history[conversation_id]
         else:
             conversation_id = ulid.ulid()
             try:
-                prompt = self._async_generate_prompt(raw_prompt, user_input.text)
+                prompt = "<|im_start|>system " + self._async_generate_prompt(raw_prompt, user_input.text) + "<|im_end|>"
 
             except TemplateError as err:
                 _LOGGER.error("Error rendering prompt: %s", err)
@@ -115,6 +115,8 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
                 return conversation.ConversationResult(
                     response=intent_response, conversation_id=conversation_id
                 )
+            
+        prompt = prompt + "\n<|im_start|>user " + user_input.text + "<|im_end|>\n<|im_start>assistant"
 
         _LOGGER.debug("Prompt for %s: %s", self.model_name, prompt)
 
@@ -204,7 +206,7 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
 
         return entity_states, list(domains)
 
-    def _async_generate_prompt(self, prompt_template: str, user_input: str) -> str:
+    def _async_generate_prompt(self, prompt_template: str) -> str:
         """Generate a prompt for the user."""
         entities_to_expose, domains = self._async_get_exposed_entities()
 
@@ -225,7 +227,6 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
             {
                 "devices": formatted_states,
                 "services": formatted_services,
-                "user_input": user_input,
             },
             parse_result=False,
         )

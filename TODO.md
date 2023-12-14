@@ -1,6 +1,6 @@
 # TODO
-[~] ChatML format (actually need to add special tokens)
-[~] Vicuna dataset merge (yahma/alpaca-cleaned)
+[x] ChatML format (actually need to add special tokens)
+[x] Vicuna dataset merge (yahma/alpaca-cleaned)
 [ ] Phi-2 fine tuning
 [ ] Function calling as JSON
-[ ] RAG for setting up devices (needs more details)
+[ ] RAG for getting info for setting up new devices (needs more refinement)

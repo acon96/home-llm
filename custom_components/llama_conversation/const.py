@@ -5,10 +5,7 @@ CONF_PROMPT = "prompt"
 DEFAULT_PROMPT = """You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task ask instructed with the information provided only.
 Services: {{ services }}
 Devices:
-{{ devices }}
-Request:
-{{ user_input }}
-Response:"""
+{{ devices }}"""
 CONF_CHAT_MODEL = "huggingface_model"
 DEFAULT_CHAT_MODEL = "microsoft/phi-1.5"
 CONF_MAX_TOKENS = "max_new_tokens"
