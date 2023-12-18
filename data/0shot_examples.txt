@@ -1,34 +1,27 @@
-You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed with the information provided only.
-Services: decrease_speed, volume_up, toggle, increase_speed, volume_mute, media_play, unlock, lock, media_previous_track, media_play_pause, media_stop, media_pause, open_cover, turn_off, stop_cover, media_next_track, close_cover, volume_down, turn_on
-States:
-light.front_zen_ge - on
-light.downstairs_utility_homekit - on
-light.downstairs_master_bedroom_homekit - off
-light.front_porch_zwave - off
-light.front_sideyard_ge - off
-garage_door.liftmaster_1 - closed
-light.hallway - off
-light.christmas_tree_white - off
-light.christmas_tree_colors - off
-light.downstairs_zen_homekit - on
-light.downstairs_nursery_mqtt - off
-media_player.bose_living - playing
-light.front_attic_homekit - on
-light.back_office_lifx - on
-light.kitchen_counter - on
-light.living_room_lamp - on
-light.living_room_chandelier - on
-lock.garage_side - locked
-light.back_library_warm - off
-blinds.kitchen - closed
-light.front_tv_room_ge - off
-light.master_bedroom_lamp - off
-light.back_playroom_hue - on
-media_player.apple_tv - off
-media_player.kitchen - off
-light.kitchen_cabinet_warm - on
-fan.attic_2 - on
-blinds.somfy_kitchen - closed
-make sure all the lights on the christmas tree are off
-
--------------------------------------------------------------------
+<|im_start|>system You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed with the information provided only.
+Services: cover.close_cover, cover.open_cover, cover.stop_cover, cover.toggle, fan.decrease_speed, fan.increase_speed, fan.toggle, fan.turn_off, fan.turn_on, cover.close_cover, cover.open_cover, cover.stop_cover, cover.toggle, light.toggle, light.turn_off, light.turn_on
+Devices:
+light.back_lounge_warm 'Back Lounge Warm Light' = off
+fan.indoor_gym 'Indoor Gym Fan' = on
+fan.dyson_pure 'Dyson Pure Fan' = on
+fan.nursery 'Nursery Fan' = off
+light.office_1 'Office Light' = on
+light.upstairs_lounge_zigbee 'Upstairs Lounge Light' = off
+light.front_mancave_ge 'Front Man Cave Light' = on
+light.front_lounge_ge 'Front Lounge Light' = off
+cover.side_2 'Side garage door' = closed
+fan.study_2 'Study fan' = off
+light.christmas_tree_white 'Tree lights (white)' = off
+light.christmas_tree_colors 'Tree lights (color)' = off
+cover.hallway_1 'First hallway blinds' = open
+cover.nursery 'Nursery Blinds' = open
+light.upstairs_entryway_zwave 'Upstairs Entryway Light' = off
+cover.shop 'Workshop Garage Door' = closed
+light.downstairs_entryway_mqtt 'Downstairs Entryway Light' = off
+cover.somfy_living 'Living Room Blinds' = closed
+light.kitchen_winecellar_warm 'Kitchen Wine Cellar Warm Light' = off
+light.driveway 'driveway' = off
+light.shed 'Shed Light' = on
+<|im_end|>
+<|im_start|>user make sure both the lights on the christmas tree are on<|im_end|>
+<|im_start|>assistant

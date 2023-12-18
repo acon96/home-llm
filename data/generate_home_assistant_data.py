@@ -378,7 +378,7 @@ def format_example(example):
     assistant_block = "<|im_start|>assistant " + answers
     if len(example["service_calls"]) > 0:
         # TODO: make function calling JSON based
-        code_block = "```homeassistant\n" + "\n".join(example["service_calls"]) + "\n```"
+        code_block = "\n```homeassistant\n" + "\n".join(example["service_calls"]) + "\n```\n"
         assistant_block = assistant_block + code_block
     assistant_block = assistant_block + "<|im_end|>"
         

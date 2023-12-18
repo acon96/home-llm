@@ -40,4 +40,4 @@ combined_dataset_train = concatenate_datasets([home_assistant_dataset["train"], 
 combined_dataset_test = concatenate_datasets([home_assistant_dataset["test"], alpaca_dataset["test"]]).shuffle(seed=42)
 
 combined_dataset_train.to_json("home_assistant_alpaca_merged_train.json")
-combined_dataset_train.to_json("home_assistant_alpaca_merged_test.json")
+combined_dataset_test.to_json("home_assistant_alpaca_merged_test.json")

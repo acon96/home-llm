@@ -13,3 +13,4 @@ ingress: true
 ingress_port: 7860
 # options: {}
 # schema: {}
+# TODO: figure out volume mounts so models persist between restarts
