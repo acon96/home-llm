@@ -9,4 +9,4 @@ if [[ ! -d "./models/$MODEL_NAME" ]]; then
 fi
 
 PROMPT=$(cat $PROMPT_SRC)
-$LLAMA_CPP/build/bin/main --model "./models/$MODEL_NAME/$MODEL_NAME.$QUANT_TYPE.gguf" --chatml --prompt "$PROMPT"
+$LLAMA_CPP/build/bin/main --model "./models/$MODEL_NAME/$MODEL_NAME.$QUANT_TYPE.gguf" --temp 0.1 --ctx-size 2048 --prompt "$PROMPT" # --chatml

@@ -5,3 +5,4 @@ config/
 .DS_Store
 data/*.json
 *.pyc
+main.log
