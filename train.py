@@ -15,17 +15,33 @@ Phi Modules: fc1,fc2,Wqkv,out_proj,wte,lm_head.linear
 
 """
 python3 train.py \
-    --run_name home-llm-rev11 \
+    --run_name home-llm-rev11_1 \
     --base_model microsoft/phi-2 \
     --add_pad_token \
     --add_chatml_tokens \
     --bf16 \
     --train_dataset data/home_assistant_alpaca_merged_train.json \
     --test_dataset data/home_assistant_alpaca_merged_test.json \
-    --learning_rate 1e-6 \
+    --learning_rate 1e-5 \
     --save_steps 1000 \
     --micro_batch_size 2 --gradient_checkpointing \
-    --use_lora --lora_rank 16 --lora_modules fc1,fc2,Wqkv,out_proj --lora_modules_to_save wte,lm_head.linear --lora_merge
+    --ctx_size 2048 \
+    --use_lora --lora_rank 32 --lora_alpha 64 --lora_modules fc1,fc2,Wqkv,out_proj --lora_modules_to_save wte,lm_head.linear --lora_merge
+"""
+
+"""
+python3 train.py \
+    --run_name home-llm-rev10_8 \
+    --base_model microsoft/phi-2 \
+    --add_pad_token \
+    --add_chatml_tokens \
+    --bf16 \
+    --train_dataset data/home_assistant_train.json \
+    --test_dataset data/home_assistant_test.json \
+    --learning_rate 5e-6 \
+    --save_steps 1000 \
+    --micro_batch_size 2 --gradient_checkpointing \
+    --use_lora --lora_rank 16 --lora_alpha 32 --lora_modules fc1,fc2,Wqkv,out_proj --lora_modules_to_save wte,lm_head.linear --lora_merge
 """
 
 """
@@ -65,6 +81,7 @@ class TrainingRunArguments:
     resume_from_checkpoint: str = field(default="", metadata={"help": "The name of the checkpoint to resume training from"})
     eval_steps: int = field(default=100, metadata={"help": "The number of steps in between evaluations of the model"})
     save_steps: int = field(default=-1, metadata={"help": "The number of steps in between model checkpoints; set to -1 to save every epoch"})
+    group_by_length: bool = field(default=False, metadata={"help": "If enabled, the training data will be grouped by length to optimize use of padding"})
     
     # Quantization
     load_in_8bit: bool = field(default=False, metadata={"help": "Set to load the base model in 8-bit mode using bitsandbytes"})
@@ -105,10 +122,10 @@ elif training_run_args.load_as_gptq:
     model_kwargs["quantization_config"] = GPTQConfig(bits=4, disable_exllama=True)
 
 
-# if training_run_args.bf16:
-#     model_kwargs["torch_dtype"] = torch.bfloat16
-# else:
-#     model_kwargs["torch_dtype"] = torch.float16
+if training_run_args.bf16:
+    model_kwargs["torch_dtype"] = torch.bfloat16
+else:
+    model_kwargs["torch_dtype"] = torch.float16
 
 def find_max_vram(min_buffer_mib=800):
     total_mem = (torch.cuda.get_device_properties(0).total_memory / (1024 * 1024))
@@ -175,13 +192,14 @@ if training_run_args.use_lora:
 base_dir = "loras" if training_run_args.use_lora else "models"
 model_dir = f"./{base_dir}/{training_run_args.run_name}"
 
+# TODO: eval is broken (returning NaN for loss)
 training_args = TrainingArguments(
     per_device_train_batch_size=training_run_args.micro_batch_size,
-    per_device_eval_batch_size=training_run_args.micro_batch_size,
-    gradient_accumulation_steps=training_run_args.batch_size/training_run_args.micro_batch_size,
+    # per_device_eval_batch_size=training_run_args.micro_batch_size,
+    gradient_accumulation_steps=training_run_args.batch_size//training_run_args.micro_batch_size,
     gradient_checkpointing=training_run_args.gradient_checkpointing,
-    evaluation_strategy="steps",
-    eval_steps=training_run_args.eval_steps,
+    # evaluation_strategy="steps",
+    # eval_steps=training_run_args.eval_steps,
     save_strategy=("steps" if training_run_args.save_steps != -1 else "epoch"),
     save_steps=(training_run_args.save_steps if training_run_args.save_steps != -1 else None),
     logging_steps=5,
@@ -194,7 +212,8 @@ training_args = TrainingArguments(
     lr_scheduler_type=training_run_args.learning_rate_schedule,
     log_level="info",
     bf16=training_run_args.bf16,
-    bf16_full_eval=training_run_args.bf16,
+    # bf16_full_eval=training_run_args.bf16,
+    group_by_length=training_run_args.group_by_length
 )
 
 @dataclass
@@ -268,6 +287,9 @@ class RandomEvalSubsetTrainer(Trainer):
             return SequentialSampler(subset_eval_dataset)
         
     def _get_train_sampler(self):
+        if self.args.group_by_length:
+            return super()._get_train_sampler()
+        
         return RandomSampler(self.train_dataset, generator=torch.Generator(device='cpu'))
 
 trainer = RandomEvalSubsetTrainer(
@@ -276,7 +298,7 @@ trainer = RandomEvalSubsetTrainer(
     # train_dataset=tokenized_train_dataset,
     # eval_dataset=tokenized_test_dataset,
     train_dataset=datasets["train"],
-    eval_dataset=datasets["test"],
+    # eval_dataset=datasets["test"],
     data_collator=data_collator,
 )
 
@@ -296,7 +318,7 @@ try:
     else:
         trainer.train()
 
-    trainer.evaluate_all()
+    # trainer.evaluate_all()
 
     trainer.save_model()
 
