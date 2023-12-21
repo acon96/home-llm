@@ -24,24 +24,32 @@ from .const import (
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_TEMPERATURE,
+    CONF_TOP_K,
     CONF_TOP_P,
+    CONF_USE_LOCAL_BACKEND,
+    CONF_DOWNLOADED_MODEL_FILE,
     DEFAULT_CHAT_MODEL,
     DEFAULT_HOST,
     DEFAULT_PORT,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
+    DEFAULT_TOP_K,
     DEFAULT_TOP_P,
+    DEFAULT_USE_LOCAL_BACKEND,
     DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
+# TODO: quantization options
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CHAT_MODEL, default=DEFAULT_CHAT_MODEL): str,
-        vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): str,
+        vol.Required(CONF_USE_LOCAL_BACKEND, default=DEFAULT_USE_LOCAL_BACKEND): str,
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): str,
+        vol.Optional(CONF_DOWNLOADED_MODEL_FILE): str,
     }
 )
 
@@ -49,17 +57,20 @@ DEFAULT_OPTIONS = types.MappingProxyType(
     {
         CONF_PROMPT: DEFAULT_PROMPT,
         CONF_MAX_TOKENS: DEFAULT_MAX_TOKENS,
+        CONF_TOP_K: DEFAULT_TOP_K,
         CONF_TOP_P: DEFAULT_TOP_P,
         CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
     }
 )
-
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
+
+    # TODO: validate that the model is either available on the specified text-gen-webui instance
+    # or that the file is available to be downloaded from hugging face
 
     return {
         "title": f"LLaMA Model '{data[CONF_CHAT_MODEL]}'",
@@ -85,6 +96,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             config = await validate_input(self.hass, user_input)
+
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
@@ -142,6 +154,11 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any]) -> dic
             description={"suggested_value": options[CONF_MAX_TOKENS]},
             default=DEFAULT_MAX_TOKENS,
         ): int,
+        vol.Optional(
+            CONF_TOP_K,
+            description={"suggested_value": options[CONF_TOP_K]},
+            default=DEFAULT_TOP_K,
+        ): NumberSelector(NumberSelectorConfig(min=1, max=256, step=1)),
         vol.Optional(
             CONF_TOP_P,
             description={"suggested_value": options[CONF_TOP_P]},
