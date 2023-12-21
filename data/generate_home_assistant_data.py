@@ -154,7 +154,7 @@ SUPPORTED_DEVICES = {
 }
 
 stacks_of_device_names = { x: [] for x in SUPPORTED_DEVICES.keys() }
-with open("pile_of_device_names.csv") as f:
+with open("piles/pile_of_device_names.csv") as f:
     reader = csv.DictReader(f)
     pile_of_device_names = list(reader)
     for device_dict in pile_of_device_names:
@@ -164,15 +164,15 @@ with open("pile_of_device_names.csv") as f:
         except KeyError as ex:
             print(ex)
 
-with open("pile_of_templated_actions.csv") as f:
+with open("piles/pile_of_templated_actions.csv") as f:
     reader = csv.DictReader(f)
     pile_of_templated_actions = list(reader)
 
-with open("pile_of_device_actions.csv") as f:
+with open("piles/pile_of_device_actions.csv") as f:
     reader = csv.DictReader(f)
     pile_of_device_actions = list(reader)
 
-with open("pile_of_responses.csv") as f:
+with open("piles/pile_of_responses.csv") as f:
     reader = csv.DictReader(f)
     raw_pile_of_responses = list(reader)
 
@@ -182,7 +182,7 @@ with open("pile_of_responses.csv") as f:
             pile_of_responses[raw["device_type"]] = {}    
         pile_of_responses[raw["device_type"]][raw["service"]] = [ raw["response_1"], raw["response_2"], raw["response_3"] ]
 
-with open("pile_of_status_requests.csv") as f:
+with open("piles/pile_of_status_requests.csv") as f:
     reader = csv.DictReader(f)
     pile_of_status_requests = list(reader)
 
