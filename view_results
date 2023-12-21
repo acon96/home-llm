@@ -1,3 +1,0 @@
-#!/bin/bash
-source ../textgen-conda.sh
-tensorboard --logdir ./models --logdir ./loras

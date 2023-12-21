@@ -7,3 +7,4 @@
 [ ] Function calling as JSON
 [ ] RAG for getting info for setting up new devices (needs more refinement)
 [ ] Continued synthetic dataset improvements
+[ ] Licenses + Attributions

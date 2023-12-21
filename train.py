@@ -137,16 +137,8 @@ def find_max_vram(min_buffer_mib=800):
 
     return max_memory if len(max_memory) > 0 else None
 
-if True:
-    config = AutoConfig.from_pretrained(training_run_args.base_model, trust_remote_code=True)
-    config.flash_attn = True
-    config.flash_rotary = True
-else:
-    config = None
-
 model = AutoModelForCausalLM.from_pretrained(
     training_run_args.base_model,
-    config=config,
     trust_remote_code=True,
     device_map="auto",
     max_memory=find_max_vram(),
