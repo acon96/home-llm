@@ -7,7 +7,7 @@ Services: {{ services }}
 Devices:
 {{ devices }}"""
 CONF_CHAT_MODEL = "huggingface_model"
-DEFAULT_CHAT_MODEL = "microsoft/phi-2"
+DEFAULT_CHAT_MODEL = "TheBloke/phi-2-GGUF" # "microsoft/phi-2"
 CONF_MAX_TOKENS = "max_new_tokens"
 DEFAULT_MAX_TOKENS = 128
 CONF_TOP_K = "top_k"
@@ -18,6 +18,11 @@ CONF_TEMPERATURE = "temperature"
 DEFAULT_TEMPERATURE = 0.1
 CONF_USE_LOCAL_BACKEND = "use_local_backend"
 DEFAULT_USE_LOCAL_BACKEND = True
+CONF_DOWNLOAD_MODEL_FROM_HF = "download_model_from_hf"
+DEFAULT_DOWNLOAD_MODEL_FROM_HF = True
+CONF_DOWNLOADED_MODEL_QUANTIZATION = "downloaded_model_quantization"
+CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS = ["Q8_0", "Q5_K_M", "Q4_K_M", "Q3_K_M"]
+DEFAULT_DOWNLOADED_MODEL_QUANTIZATION = "Q5_K_M"
 CONF_DOWNLOADED_MODEL_FILE = "downloaded_model_file"
 DEFAULT_DOWNLOADED_MODEL_FILE = ""
 DEFAULT_HOST = "127.0.0.1"

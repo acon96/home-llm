@@ -2,13 +2,38 @@
   "config": {
     "step": {
       "user": {
+        "title": "Select Backend",
+        "description": "Select the backend for running the model. Either Llama.cpp (locally) or text-generation-webui (remote).",
         "data": {
-          "huggingface_model": "Hugging Face Model"
+          "huggingface_model": "HuggingFace Model",
+          "use_local_backend": "Use Llama.cpp"
+        }
+      },
+      "local_model": {
+        "title": "Configure llama.cpp",
+        "description": "If downloading from HuggingFace is enabled then do not provide a local file name. Otherwise a filename must be provided",
+        "data": {
+          "downloaded_model_file": "Local file name",
+          "download_model_from_hf": "Download model from HuggingFace",
+          "downloaded_model_quantization": "Downloaded model quantization"
+        }
+      },
+      "remote_model": {
+        "title": "Configure connection to remote API",
+        "description": "Provide the connection details for an instance of text-generation-webui that is hosting the model.",
+        "data": {
+          "host": "API Hostname",
+          "port": "API Port"
         }
       }
     },
     "error": {
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "download_failed": "The download failed to complete!",
+      "missing_file_name": "Must provide a filename when not downloading from HuggingFace"
+    },
+    "progress": {
+      "download": "Please wait while the model is being downloaded from HuggingFace. This can take a few minutes."
     }
   },
   "options": {
