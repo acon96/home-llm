@@ -4,6 +4,7 @@ from __future__ import annotations
 import os
 import logging
 import types
+import requests
 from types import MappingProxyType
 from typing import Any
 from abc import ABC, abstractmethod
@@ -34,9 +35,9 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
-    CONF_USE_LOCAL_BACKEND,
+    CONF_BACKEND_TYPE,
+    CONF_BACKEND_TYPE_OPTIONS,
     CONF_DOWNLOADED_MODEL_FILE,
-    CONF_DOWNLOAD_MODEL_FROM_HF,
     CONF_DOWNLOADED_MODEL_QUANTIZATION,
     CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS,
     DEFAULT_CHAT_MODEL,
@@ -47,8 +48,10 @@ from .const import (
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
-    DEFAULT_USE_LOCAL_BACKEND,
-    DEFAULT_DOWNLOAD_MODEL_FROM_HF,
+    DEFAULT_BACKEND_TYPE,
+    BACKEND_TYPE_LLAMA_HF,
+    BACKEND_TYPE_LLAMA_EXISTING,
+    BACKEND_TYPE_REMOTE,
     DEFAULT_DOWNLOADED_MODEL_QUANTIZATION,
     DOMAIN,
 )
@@ -57,22 +60,29 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_INIT_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_CHAT_MODEL, default=DEFAULT_CHAT_MODEL): str,
-        vol.Required(CONF_USE_LOCAL_BACKEND, default=DEFAULT_USE_LOCAL_BACKEND): bool,
+        vol.Required(CONF_BACKEND_TYPE, default=DEFAULT_BACKEND_TYPE): vol.In(CONF_BACKEND_TYPE_OPTIONS),
     }
 )
 
-STEP_LOCAL_SETUP_DATA_SCHEMA = vol.Schema(
+def STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA(default=None):
+    return vol.Schema(
+        {
+            vol.Required(CONF_DOWNLOADED_MODEL_FILE, default=default): str,
+        }
+    )
+
+STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_DOWNLOAD_MODEL_FROM_HF, default=DEFAULT_DOWNLOAD_MODEL_FROM_HF): bool,
+        vol.Required(CONF_CHAT_MODEL, default=DEFAULT_CHAT_MODEL): str,
         vol.Required(CONF_DOWNLOADED_MODEL_QUANTIZATION, default=DEFAULT_DOWNLOADED_MODEL_QUANTIZATION): vol.In(CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS),
-        vol.Optional(CONF_DOWNLOADED_MODEL_FILE, description="Leave blank if downloading from HF. Otherwise set to the path of the model file."): str,
     }
 )
+
 STEP_REMOTE_SETUP_DATA_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): str,
+        vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): str,
+        vol.Required(CONF_CHAT_MODEL, default=DEFAULT_CHAT_MODEL): str,
     }
 )
 
@@ -162,7 +172,8 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         )
 
     def async_remove(self) -> None:
-        self.download_task.cancel()
+        if self.download_task:
+            self.download_task.cancel()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -176,7 +187,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         errors = {}
 
         try:
-            local_backend = user_input[CONF_USE_LOCAL_BACKEND]
+            local_backend = user_input[CONF_BACKEND_TYPE] != BACKEND_TYPE_REMOTE
             self.model_options.update(user_input)
 
         except Exception:  # pylint: disable=broad-except
@@ -202,9 +213,18 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         if self.download_error:
             errors["base"] = "download_failed"
 
+        backend_type = self.model_options[CONF_BACKEND_TYPE]
+        if backend_type == BACKEND_TYPE_LLAMA_HF:
+            schema = STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA
+        elif backend_type == BACKEND_TYPE_LLAMA_EXISTING:
+            schema = STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA()
+        else:
+            raise ValueError()
+
         if user_input is None:
+
             return self.async_show_form(
-                step_id="local_model", data_schema=STEP_LOCAL_SETUP_DATA_SCHEMA, errors=errors
+                step_id="local_model", data_schema=schema, errors=errors
             )
 
         try:
@@ -214,16 +234,19 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            if self.model_options[CONF_DOWNLOAD_MODEL_FROM_HF]:
+            if backend_type == BACKEND_TYPE_LLAMA_HF:
                 return await self.async_step_download()
-            elif not self.model_options.__contains__(CONF_DOWNLOADED_MODEL_FILE):
-                errors["base"] = "missing_file_name"
             else:
-                return await self.async_step_finish()
+                model_file = self.model_options[CONF_DOWNLOADED_MODEL_FILE]
+                if os.path.exists(model_file):
+                    return await self.async_step_finish()
+                else:
+                    errors["base"] = "missing_model_file"
+                    schema = STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA(model_file)
 
 
         return self.async_show_form(
-            step_id="local_model", data_schema=STEP_LOCAL_SETUP_DATA_SCHEMA, errors=errors
+            step_id="local_model", data_schema=schema, errors=errors
         )
 
     async def async_step_download(
@@ -240,11 +263,11 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             quantization_type = self.model_options[CONF_DOWNLOADED_MODEL_QUANTIZATION]
 
             storage_folder = os.path.join(self.hass.config.media_dirs["local"], "models")
-            executor_job = self.hass.async_add_executor_job(
+            self.download_task = self.hass.async_add_executor_job(
                 download_model_from_hf, model_name, quantization_type, storage_folder
             )
 
-            self.download_task = self.hass.async_create_task(self._async_do_task(executor_job))
+            self.hass.async_create_task(self._async_do_task(self.download_task))
 
             return self.async_show_progress(
                 step_id="download",
@@ -261,6 +284,23 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             return self.async_show_progress_done(next_step_id="finish")
 
 
+    def _validate_remote_api(self) -> str:
+        try:
+            models_result = requests.get(f"http://{self.model_options[CONF_HOST]}:{self.model_options[CONF_PORT]}/v1/models")
+            models_result.raise_for_status()
+
+            models = models_result.json()
+
+            for model in models["data"]:
+                if model["id"] == self.model_options[CONF_CHAT_MODEL]:
+                    return ""
+
+            return "missing_model_api"
+
+        except Exception as ex:
+            _LOGGER.info("Connection error was: %s", repr(ex))
+            return "failed_to_connect"
+
     async def async_step_remote_model(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -275,11 +315,15 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         try:
             self.model_options.update(user_input)
 
+            error_reason = await self.hass.async_add_executor_job(self._validate_remote_api)
+            if error_reason:
+                errors["base"] = error_reason
+            else:
+                return await self.async_step_finish()
+
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
-        else:
-            return await self.async_step_finish()
 
         return self.async_show_form(
             step_id="remote_model", data_schema=STEP_REMOTE_SETUP_DATA_SCHEMA, errors=errors
@@ -287,8 +331,10 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
 
     async def async_step_finish(self, user_input=None):
 
-        model_name = self.model_options[CONF_CHAT_MODEL]
-        location = "llama.cpp" if self.model_options[CONF_USE_LOCAL_BACKEND] else "remote"
+        model_name = self.model_options.get(CONF_CHAT_MODEL)
+        if not model_name:
+            model_name = os.path.basename(self.model_options.get(CONF_DOWNLOADED_MODEL_FILE))
+        location = "remote" if self.model_options[CONF_BACKEND_TYPE] == BACKEND_TYPE_REMOTE else "llama.cpp"
 
         return self.async_create_entry(
             title=f"LLM Model '{model_name}' ({location})",

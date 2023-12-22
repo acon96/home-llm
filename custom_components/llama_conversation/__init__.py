@@ -42,7 +42,7 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
-    CONF_USE_LOCAL_BACKEND,
+    CONF_BACKEND_TYPE,
     CONF_DOWNLOADED_MODEL_FILE,
     DEFAULT_CHAT_MODEL,
     DEFAULT_HOST,
@@ -52,7 +52,8 @@ from .const import (
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
-    DEFAULT_USE_LOCAL_BACKEND,
+    DEFAULT_BACKEND_TYPE,
+    BACKEND_TYPE_REMOTE,
     DOMAIN,
 )
 
@@ -68,10 +69,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = entry
 
-    model_name = entry.data.get(CONF_CHAT_MODEL, DEFAULT_CHAT_MODEL)
     use_local_backend = entry.data.get(
-        CONF_USE_LOCAL_BACKEND, DEFAULT_USE_LOCAL_BACKEND
-    )
+        CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE
+    ) != BACKEND_TYPE_REMOTE
 
     if use_local_backend:
         _LOGGER.info(
@@ -104,10 +104,9 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         self.entry = entry
         self.history: dict[str, list[dict]] = {}
 
-        self.model_name = self.entry.data.get(CONF_CHAT_MODEL, DEFAULT_CHAT_MODEL)
         self.use_local_backend = self.entry.data.get(
-            CONF_USE_LOCAL_BACKEND, DEFAULT_USE_LOCAL_BACKEND
-        )
+            CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE
+        ) != BACKEND_TYPE_REMOTE
 
         self.api_host = None
         self.llm = None
@@ -115,7 +114,7 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         if self.use_local_backend:
             model_path = self.entry.data.get(CONF_DOWNLOADED_MODEL_FILE)
             if not model_path:
-                raise Exception("Model was not successfully downloaded!")
+                raise Exception(f"Model was not found at '{model_path}'!")
 
             self.llm = Llama(
                 model_path=model_path,
@@ -128,8 +127,8 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
             _LOGGER.info("Model loaded")
         else:
             # TODO: load the model using the api endpoint
-            host = entry.data.get(CONF_HOST, DEFAULT_HOST)
-            port = entry.data.get(CONF_PORT, DEFAULT_PORT)
+            host = entry.data[CONF_HOST]
+            port = entry.data[CONF_PORT]
             self.api_host = f"http://{host}:{port}"
 
     @property
@@ -174,7 +173,7 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
 
         prompt.append({"role": "user", "message": user_input.text})
 
-        _LOGGER.debug("Prompt for %s: %s", self.model_name, prompt)
+        _LOGGER.debug("Prompt: %s", prompt)
 
         try:
             generate_parameters = {
@@ -237,7 +236,7 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
     def _generate_remote(self, generate_params: dict) -> str:
         try:
             result = requests.post(
-                f"{self.api_host}/api/v1/generate", json=generate_params, timeout=30
+                f"{self.api_host}/v1/generate", json=generate_params, timeout=30
             )
             result.raise_for_status()
         except requests.RequestException as err:
