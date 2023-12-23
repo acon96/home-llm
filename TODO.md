@@ -4,9 +4,18 @@
 [x] Phi-2 fine tuning
 [x] Quantize /w llama.cpp
 [x] Make custom component use llama.cpp + ChatML
-[ ] Continued synthetic dataset improvements
+[ ] Continued synthetic dataset improvements (there are a bunch of TODOs in there)
 [x] Licenses + Attributions
 [ ] Finish Readme/docs for initial release
 [ ] Function calling as JSON
-[ ] RAG for getting info for setting up new devices (needs more refinement)
+[ ] multi-turn prompts
 [ ] Fine tune Phi-1 and Phi-1.5 versions
+[ ] "context requests"
+    - basically just let the model decide what RAG/extra context it wants
+    - the model predicts special tokens as the first few tokens of its output
+    - the requested content is added to the context after the request tokens and then generation continues
+    - needs more complicated training b/c multi-turn + there will be some weird masking going on for training the responses properly
+[ ] RAG for getting info for setting up new devices
+    - set up vectordb
+    - ingest home assistant docs
+    - "context request" from above to initiate a RAG search
