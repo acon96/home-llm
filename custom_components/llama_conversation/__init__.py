@@ -44,9 +44,6 @@ from .const import (
     CONF_TOP_P,
     CONF_BACKEND_TYPE,
     CONF_DOWNLOADED_MODEL_FILE,
-    DEFAULT_CHAT_MODEL,
-    DEFAULT_HOST,
-    DEFAULT_PORT,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
@@ -60,8 +57,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Local LLaMA Conversation from a config entry."""
@@ -111,8 +106,10 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         self.api_host = None
         self.llm = None
 
+        model_path = self.entry.data.get(CONF_DOWNLOADED_MODEL_FILE)
+        self.model_name = self.entry.data.get(CONF_CHAT_MODEL, model_path)
+
         if self.use_local_backend:
-            model_path = self.entry.data.get(CONF_DOWNLOADED_MODEL_FILE)
             if not model_path:
                 raise Exception(f"Model was not found at '{model_path}'!")
 
@@ -142,7 +139,7 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         """Process a sentence."""
 
         raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
-        max_new_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
+        max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
         top_k = self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K)
         top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
         temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
@@ -178,7 +175,7 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         try:
             generate_parameters = {
                 "prompt": await self._async_format_prompt(prompt),
-                "max_new_tokens": max_new_tokens,
+                "max_tokens": max_tokens,
                 "top_k": top_k,
                 "top_p": top_p,
                 "temperature": temperature,
@@ -215,7 +212,7 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
 
                 service = line.split("(")[0]
                 entity = line.split("(")[1][:-1]
-                domain = entity.split(".")[0]
+                domain, service = tuple(service.split("."))
                 try:
                     await self.hass.services.async_call(
                         domain,
@@ -235,15 +232,23 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
 
     def _generate_remote(self, generate_params: dict) -> str:
         try:
+            generate_params["model"] = self.model_name
+            del generate_params["top_k"]
+
             result = requests.post(
-                f"{self.api_host}/v1/generate", json=generate_params, timeout=30
+                f"{self.api_host}/v1/completions", json=generate_params, timeout=30
             )
             result.raise_for_status()
         except requests.RequestException as err:
             _LOGGER.debug(f"Err was: {err}")
             return "Failed to communicate with the API!"
 
-        return result.json()["results"][0]["text"]
+        choices = result.json()["choices"]
+
+        if choices[0]["finish_reason"] != "stop":
+            _LOGGER.warn("Model response did not end on a stop token (unfinished sentence)")
+
+        return choices[0]["text"]
 
     def _generate_local(self, generate_params: dict) -> str:
         input_tokens = self.llm.tokenize(
@@ -267,7 +272,7 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
             result_tokens.append(token)
             print(self.llm.detokenize([token]).decode(), end="")
 
-            if len(result_tokens) >= generate_params["max_new_tokens"]:
+            if len(result_tokens) >= generate_params["max_tokens"]:
                 break
 
         result = self.llm.detokenize(result_tokens).decode()

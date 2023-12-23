@@ -195,7 +195,14 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             errors["base"] = "unknown"
         else:
             if local_backend:
-                return await self.async_step_local_model()
+                for key, value in self.hass.data.get(DOMAIN, {}).items():
+                    other_backend_type = value.data.get(CONF_BACKEND_TYPE)
+                    if other_backend_type == BACKEND_TYPE_LLAMA_HF or \
+                        other_backend_type == BACKEND_TYPE_LLAMA_EXISTING:
+                        errors["base"] = "other_existing_local"
+
+                if "base" not in errors:
+                    return await self.async_step_local_model()
             else:
                 return await self.async_step_remote_model()
 
@@ -286,13 +293,13 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
 
     def _validate_remote_api(self) -> str:
         try:
-            models_result = requests.get(f"http://{self.model_options[CONF_HOST]}:{self.model_options[CONF_PORT]}/v1/models")
+            models_result = requests.get(f"http://{self.model_options[CONF_HOST]}:{self.model_options[CONF_PORT]}/v1/internal/model/list")
             models_result.raise_for_status()
 
             models = models_result.json()
 
-            for model in models["data"]:
-                if model["id"] == self.model_options[CONF_CHAT_MODEL]:
+            for model in models["model_names"]:
+                if model == self.model_options[CONF_CHAT_MODEL].replace("/", "_"):
                     return ""
 
             return "missing_model_api"
