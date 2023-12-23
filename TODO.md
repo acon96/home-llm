@@ -5,7 +5,8 @@
 [x] Quantize /w llama.cpp
 [x] Make custom component use llama.cpp + ChatML
 [ ] Continued synthetic dataset improvements
-[ ] Licenses + Attributions
+[x] Licenses + Attributions
+[ ] Finish Readme/docs for initial release
 [ ] Function calling as JSON
 [ ] RAG for getting info for setting up new devices (needs more refinement)
 [ ] Fine tune Phi-1 and Phi-1.5 versions

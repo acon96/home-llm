@@ -1,3 +1,5 @@
+#!/bin/bash
+
 LLAMA_CPP=../llama.cpp
 MODEL_NAME=$1
 PROMPT_SRC=${2:-./data/default_test_prompt.txt}
