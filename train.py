@@ -7,8 +7,6 @@ from datasets import load_dataset
 from dataclasses import dataclass, field
 from typing import Dict, Optional, Sequence
 
-# torch.set_default_device("cuda")
-
 """
 Phi Modules: fc1,fc2,Wqkv,out_proj,wte,lm_head.linear
 """
@@ -153,7 +151,6 @@ if training_run_args.add_pad_token:
 if training_run_args.add_chatml_tokens:
     tokenizer.add_tokens(["<|im_start|>", "<|im_end|>"])
 
-# TODO: figure out how to actually use the modified tokenizer when loading the base model + lora
 embeddings_len = math.ceil(len(tokenizer) / 32) * 32
 if model.get_input_embeddings().num_embeddings < embeddings_len:
     model.resize_token_embeddings(embeddings_len)
