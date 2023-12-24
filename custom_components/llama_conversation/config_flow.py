@@ -58,33 +58,36 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_INIT_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_BACKEND_TYPE, default=DEFAULT_BACKEND_TYPE): vol.In(CONF_BACKEND_TYPE_OPTIONS),
-    }
-)
-
-def STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA(default=None):
+def STEP_INIT_DATA_SCHEMA(backend_type=None):
     return vol.Schema(
         {
-            vol.Required(CONF_DOWNLOADED_MODEL_FILE, default=default): str,
+            vol.Required(CONF_BACKEND_TYPE, default=backend_type if backend_type else DEFAULT_BACKEND_TYPE): vol.In(CONF_BACKEND_TYPE_OPTIONS),
         }
     )
 
-STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_CHAT_MODEL, default=DEFAULT_CHAT_MODEL): str,
-        vol.Required(CONF_DOWNLOADED_MODEL_QUANTIZATION, default=DEFAULT_DOWNLOADED_MODEL_QUANTIZATION): vol.In(CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS),
-    }
-)
+def STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA(model_file=None):
+    return vol.Schema(
+        {
+            vol.Required(CONF_DOWNLOADED_MODEL_FILE, default=model_file if model_file else ""): str,
+        }
+    )
 
-STEP_REMOTE_SETUP_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): str,
-        vol.Required(CONF_CHAT_MODEL, default=DEFAULT_CHAT_MODEL): str,
-    }
-)
+def STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(*, chat_model=None, downloaded_model_quantization=None):
+    return vol.Schema(
+        {
+            vol.Required(CONF_CHAT_MODEL, default=chat_model if chat_model else DEFAULT_CHAT_MODEL): str,
+            vol.Required(CONF_DOWNLOADED_MODEL_QUANTIZATION, default=downloaded_model_quantization if downloaded_model_quantization else DEFAULT_DOWNLOADED_MODEL_QUANTIZATION): vol.In(CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS),
+        }
+    )
+
+def STEP_REMOTE_SETUP_DATA_SCHEMA(*, host=None, port=None, chat_model=None):
+    return vol.Schema(
+        {
+            vol.Required(CONF_HOST, default=host if host else DEFAULT_HOST): str,
+            vol.Required(CONF_PORT, default=port if port else DEFAULT_PORT): str,
+            vol.Required(CONF_CHAT_MODEL, default=chat_model if chat_model else DEFAULT_CHAT_MODEL): str,
+        }
+    )
 
 DEFAULT_OPTIONS = types.MappingProxyType(
     {
@@ -179,77 +182,75 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_INIT_DATA_SCHEMA
-            )
-
         errors = {}
 
-        try:
-            local_backend = user_input[CONF_BACKEND_TYPE] != BACKEND_TYPE_REMOTE
-            self.model_options.update(user_input)
+        schema = STEP_INIT_DATA_SCHEMA()
 
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            if local_backend:
-                for key, value in self.hass.data.get(DOMAIN, {}).items():
-                    other_backend_type = value.data.get(CONF_BACKEND_TYPE)
-                    if other_backend_type == BACKEND_TYPE_LLAMA_HF or \
-                        other_backend_type == BACKEND_TYPE_LLAMA_EXISTING:
-                        errors["base"] = "other_existing_local"
+        if user_input:
+            try:
+                local_backend = user_input[CONF_BACKEND_TYPE] != BACKEND_TYPE_REMOTE
+                self.model_options.update(user_input)
 
-                if "base" not in errors:
-                    return await self.async_step_local_model()
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
             else:
-                return await self.async_step_remote_model()
+                if local_backend:
+                    for key, value in self.hass.data.get(DOMAIN, {}).items():
+                        other_backend_type = value.data.get(CONF_BACKEND_TYPE)
+                        if other_backend_type == BACKEND_TYPE_LLAMA_HF or \
+                            other_backend_type == BACKEND_TYPE_LLAMA_EXISTING:
+                            errors["base"] = "other_existing_local"
+                            schema = STEP_INIT_DATA_SCHEMA(
+                                backend_type=user_input[CONF_BACKEND_TYPE],
+                            )
+
+                    if "base" not in errors:
+                        return await self.async_step_local_model()
+                else:
+                    return await self.async_step_remote_model()
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_INIT_DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=schema, errors=errors
         )
 
     async def async_step_local_model(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle the initial step."""
-
         errors = {}
-
-        if self.download_error:
-            errors["base"] = "download_failed"
 
         backend_type = self.model_options[CONF_BACKEND_TYPE]
         if backend_type == BACKEND_TYPE_LLAMA_HF:
-            schema = STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA
+            schema = STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA()
         elif backend_type == BACKEND_TYPE_LLAMA_EXISTING:
             schema = STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA()
         else:
             raise ValueError()
 
-        if user_input is None:
-
-            return self.async_show_form(
-                step_id="local_model", data_schema=schema, errors=errors
+        if self.download_error:
+            errors["base"] = "download_failed"
+            schema = STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(
+                chat_model=self.model_options[CONF_CHAT_MODEL],
+                downloaded_model_quantization=self.model_options[CONF_DOWNLOADED_MODEL_QUANTIZATION]
             )
 
-        try:
-            self.model_options.update(user_input)
+        if user_input:
+            try:
+                self.model_options.update(user_input)
 
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            if backend_type == BACKEND_TYPE_LLAMA_HF:
-                return await self.async_step_download()
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
             else:
-                model_file = self.model_options[CONF_DOWNLOADED_MODEL_FILE]
-                if os.path.exists(model_file):
-                    return await self.async_step_finish()
+                if backend_type == BACKEND_TYPE_LLAMA_HF:
+                    return await self.async_step_download()
                 else:
-                    errors["base"] = "missing_model_file"
-                    schema = STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA(model_file)
+                    model_file = self.model_options[CONF_DOWNLOADED_MODEL_FILE]
+                    if os.path.exists(model_file):
+                        return await self.async_step_finish()
+                    else:
+                        errors["base"] = "missing_model_file"
+                        schema = STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA(model_file)
 
 
         return self.async_show_form(
@@ -311,32 +312,35 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
     async def async_step_remote_model(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle the initial step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="remote_model", data_schema=STEP_REMOTE_SETUP_DATA_SCHEMA
-            )
-
         errors = {}
+        schema = STEP_REMOTE_SETUP_DATA_SCHEMA()
 
-        try:
-            self.model_options.update(user_input)
+        if user_input:
+            try:
+                self.model_options.update(user_input)
 
-            error_reason = await self.hass.async_add_executor_job(self._validate_remote_api)
-            if error_reason:
-                errors["base"] = error_reason
-            else:
-                return await self.async_step_finish()
+                error_reason = await self.hass.async_add_executor_job(self._validate_remote_api)
+                if error_reason:
+                    errors["base"] = error_reason
+                    schema = STEP_REMOTE_SETUP_DATA_SCHEMA(
+                        host=user_input[CONF_HOST],
+                        port=user_input[CONF_PORT],
+                        chat_model=user_input[CONF_CHAT_MODEL],
+                    )
+                else:
+                    return await self.async_step_finish()
 
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
 
         return self.async_show_form(
-            step_id="remote_model", data_schema=STEP_REMOTE_SETUP_DATA_SCHEMA, errors=errors
+            step_id="remote_model", data_schema=schema, errors=errors
         )
 
-    async def async_step_finish(self, user_input=None):
+    async def async_step_finish(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
 
         model_name = self.model_options.get(CONF_CHAT_MODEL)
         if not model_name:
