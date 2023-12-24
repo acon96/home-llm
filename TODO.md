@@ -7,7 +7,7 @@
 [ ] Continued synthetic dataset improvements (there are a bunch of TODOs in there)
 [x] Licenses + Attributions
 [ ] Finish Readme/docs for initial release
-[ ] Function calling as JSON
+[x] Function calling as JSON
 [ ] multi-turn prompts
 [ ] Fine tune Phi-1 and Phi-1.5 versions
 [ ] "context requests"

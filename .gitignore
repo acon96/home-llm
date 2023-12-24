@@ -6,3 +6,4 @@ config/
 data/*.json
 *.pyc
 main.log
+.venv

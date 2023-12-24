@@ -267,7 +267,7 @@ def generate_static_example(action: dict, max_devices: int = 32):
         "available_services": list(available_services),
         "question": question.lower(),
         "answers": [ random.choice(pile_of_responses[device_type][action["service_name"]]).lower() ],
-        "service_calls": [ f"{service_name}({target_device})" ]
+        "service_calls": [ { "service": service_name, "target_device": target_device } ]
     }
 
 def generate_templated_example(template: dict, max_devices: int = 32):
@@ -320,7 +320,7 @@ def generate_templated_example(template: dict, max_devices: int = 32):
     # generate the list of service calls and answers
     service_calls = []
     for device_dict, service in zip(chosen_devices, service_names):
-        service_calls.append(f"{service}({device_dict['device_name']})")
+        service_calls.append({ "service": service, "target_device": device_dict["device_name"] })
 
     return {
         "states": device_list,
@@ -373,14 +373,14 @@ def format_example(example):
     answers = " ".join(example["answers"])
 
     system_block = "\n".join(["<|im_start|>system " + sys_prompt, services_block, states_block, "<|im_end|>" ])
-    user_block = "<|im_start|>user " + question + "<|im_end|>"
+    user_block = "<|im_start|>user\n" + question + "\n<|im_end|>"
 
-    assistant_block = "<|im_start|>assistant " + answers
+    assistant_block = "<|im_start|>assistant\n" + answers
     if len(example["service_calls"]) > 0:
-        # TODO: make function calling JSON based
-        code_block = "\n```homeassistant\n" + "\n".join(example["service_calls"]) + "\n```\n"
+        json_calls = [ json.dumps(x) for x in example["service_calls"] ]
+        code_block = "\n```homeassistant\n" + "\n".join(json_calls) + "\n```"
         assistant_block = assistant_block + code_block
-    assistant_block = assistant_block + "<|im_end|>"
+    assistant_block = assistant_block + "\n<|im_end|>"
         
     example_lines = [system_block, user_block, assistant_block]
     result = "\n".join(example_lines) + "\n"
@@ -429,8 +429,8 @@ def generate_example_file(filename: str, seed: int, *, static_factor: int, templ
 # TODO: expose home assistant attributes in the context
 # TODO: add thermostat + switch device types
 def main():
-    # generate_example_file("sample", 42, static_factor=1, template_factor=1, status_request_factor=1)
-    # exit()
+    generate_example_file("sample", 42, static_factor=1, template_factor=1, status_request_factor=1)
+    exit()
     generate_example_file("home_assistant_train", 42, static_factor=3, template_factor=20, status_request_factor=15)
     generate_example_file("home_assistant_test", 12345, static_factor=0.25, template_factor=3, status_request_factor=2)
 
