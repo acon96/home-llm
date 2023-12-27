@@ -372,8 +372,8 @@ def format_example(example):
     question = example["question"]
     answers = " ".join(example["answers"])
 
-    system_block = "\n".join(["<|im_start|>system " + sys_prompt, services_block, states_block, "<|im_end|>" ])
-    user_block = "<|im_start|>user\n" + question + "\n<|im_end|>"
+    system_block = "\n".join([ "<|im_start|>system", sys_prompt, services_block, states_block, "<|im_end|>" ])
+    user_block = "\n".join([ "<|im_start|>user", question, "<|im_end|>" ])
 
     assistant_block = "<|im_start|>assistant\n" + answers
     if len(example["service_calls"]) > 0:
@@ -383,7 +383,7 @@ def format_example(example):
     assistant_block = assistant_block + "\n<|im_end|>"
         
     example_lines = [system_block, user_block, assistant_block]
-    result = "\n".join(example_lines) + "\n"
+    result = "\n".join(example_lines)
     if "<device_name" in result:
         print("bad templating")
 
