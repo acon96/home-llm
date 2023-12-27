@@ -200,6 +200,8 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         prompt.append({"role": "assistant", "message": response})
         self.history[conversation_id] = prompt
 
+        exposed_entities = list(self._async_get_exposed_entities()[0].keys())
+
         to_say = response.strip().split("\n")[0]
         pattern = re.compile(r"```homeassistant\n([\S\n]*)```")
         for block in pattern.findall(response.strip()):
@@ -213,16 +215,21 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
                 service = line.split("(")[0]
                 entity = line.split("(")[1][:-1]
                 domain, service = tuple(service.split("."))
-                try:
-                    await self.hass.services.async_call(
-                        domain,
-                        service,
-                        service_data={ATTR_ENTITY_ID: entity},
-                        blocking=True,
-                    )
-                except Exception as err:
-                    to_say += f"\nFailed to run: {line}"
-                    _LOGGER.debug(f"err: {err}; {repr(err)}")
+
+                # only acknowledge requests to exposed entities
+                if entity not in exposed_entities:
+                    to_say += f"Can't find device '{entity}'"
+                else:
+                    try:
+                        await self.hass.services.async_call(
+                            domain,
+                            service,
+                            service_data={ATTR_ENTITY_ID: entity},
+                            blocking=True,
+                        )
+                    except Exception as err:
+                        to_say += f"\nFailed to run: {line}"
+                        _LOGGER.debug(f"err: {err}; {repr(err)}")
 
         intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(to_say)

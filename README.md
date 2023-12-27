@@ -76,3 +76,6 @@ When setting up the component, there are 3 different "backend" options to choose
 **Setting up the Llama.cpp backend with a locally downloaded model**:
 
 **Setting up the "remote" backend**:
+
+### Configuring the component as a Conversation Agent
+**NOTE: ANY DEVICES THAT YOU SELECT TO BE EXPOSED TO THE MODEL WILL BE ADDED AS CONTEXT AND POTENTIALLY HAVE THEIR STATE CHANGED BY THE MODEL. ONLY EXPOSE DEVICES THAT YOU ARE OK WITH THE MODEL MODIFYING THE STATE OF, EVEN IF IT IS NOT WHAT YOU REQUESTED. THE MODEL MAY OCCASIONALLY HALLUCINATE AND ISSUE COMMANDS TO THE WRONG DEVICE! USE AT YOUR OWN RISK.**
