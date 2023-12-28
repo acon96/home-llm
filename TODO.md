@@ -20,3 +20,4 @@
     - ingest home assistant docs
     - "context request" from above to initiate a RAG search
 [ ] make llama-cpp-python wheels for "llama-cpp-python>=0.2.24"
+[ ] prime kv cache with current "state" so that requests are faster

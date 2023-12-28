@@ -98,3 +98,6 @@ In order to facilitate running the project entirely on the system where Home Ass
 5. There should now be a "Local Add-ons" section at the top of the "Add-on Store"
 6. Install the `oobabooga-text-generation-webui` add-on. It will take ~15-20 minutes to build the image on a Raspberry Pi.
 7. Copy any models you want to use to the `addon_configs/local_text-generation-webui/models` folder.
+
+### Performance of running the model on a Raspberry Pi
+The RPI4 4GB that I have was sitting right at 1.5 tokens/sec for prompt eval and 1.6 tokens/sec for token generation when running the `Q4_K_M`` quant. I was reliably getting responses in 30-40 seconds after the initial prompt processing which took almost 5 minutes.
