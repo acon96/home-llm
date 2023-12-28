@@ -63,19 +63,38 @@ The provided `custom_modeling_phi.py` has Gradient Checkpointing implemented for
 ## Home Assistant Component
 In order to integrate with Home Assistant, we provide a `custom_component` that exposes the locally running LLM as a "conversation agent" that can be interacted with using a chat interface as well as integrate with Speech-to-Text and Text-to-Speech addons to enable interacting with the model by speaking.  
 
-The component can either run the model directly as part of the Home Assistant software using llama-cpp-python, or you can run the [oobabooga/text-generation-webui](https://github.com/oobabooga/text-generation-webui) project to provide access to the LLM via an API interface. When doing this, you can host the model yourself and point the addon at machine where the model is hosted, or you can run the model using text-generation-webui using the provided [custom Home Assistant addon](./addon/README.md).
+The component can either run the model directly as part of the Home Assistant software using llama-cpp-python, or you can run the [oobabooga/text-generation-webui](https://github.com/oobabooga/text-generation-webui) project to provide access to the LLM via an API interface. When doing this, you can host the model yourself and point the add-on at machine where the model is hosted, or you can run the model using text-generation-webui using the provided [custom Home Assistant add-on](./addon/README.md).
+
+### Installing
+1. Ensure you have either the Samba, SSH, FTP, or another add-on installed that gives you access to the `config` folder
+2. If there is not already a `custom_components` folder, create one now.
+3. Copy the `custom_components/llama_conversation` folder from this repo to `config/custom_components/llama_conversation` on your Home Assistant machine.
+4. Restart Home Assistant using the "Developer Tools" tab -> Services -> Run `homeassistant.restart`
+5. The "LLaMA Conversation" integration should show up in the "Devices" section now.
 
 ### Setting up
 When setting up the component, there are 3 different "backend" options to choose from:
 1. Llama.cpp with a model from HuggingFace
 2. Llama.cpp with a locally provided model
-3. A remote instance of text-generateion-webui
+3. A remote instance of text-generation-webui
 
 **Setting up the Llama.cpp backend with a model from HuggingFace**:
-
+TODO: need to build wheels for llama.cpp first
 **Setting up the Llama.cpp backend with a locally downloaded model**:
+TODO: need to build wheels for llama.cpp first
 
 **Setting up the "remote" backend**:
 
 ### Configuring the component as a Conversation Agent
 **NOTE: ANY DEVICES THAT YOU SELECT TO BE EXPOSED TO THE MODEL WILL BE ADDED AS CONTEXT AND POTENTIALLY HAVE THEIR STATE CHANGED BY THE MODEL. ONLY EXPOSE DEVICES THAT YOU ARE OK WITH THE MODEL MODIFYING THE STATE OF, EVEN IF IT IS NOT WHAT YOU REQUESTED. THE MODEL MAY OCCASIONALLY HALLUCINATE AND ISSUE COMMANDS TO THE WRONG DEVICE! USE AT YOUR OWN RISK.**
+
+### Running the text-generation-webui add-on
+In order to facilitate running the project entirely on the system where Home Assistant is installed, there is an experimental Home Assistant Add-on that runs the oobabooga/text-generation-webui to connect to using the "remote" backend option.
+
+1. Ensure you have either the Samba, SSH, FTP, or another add-on installed that gives you access to the `addons` folder
+2. Copy the `addon` folder from this repo to `addons/text-generation-webui` on your Home Assistant machine.
+3. Go to the "Add-ons" section in settings and then pick the "Add-on Store" from the bottom right corner.
+4. Select the 3 dots in the top right and click "Check for Updates" and Refresh the webpage.
+5. There should now be a "Local Add-ons" section at the top of the "Add-on Store"
+6. Install the `oobabooga-text-generation-webui` add-on. It will take ~15-20 minutes to build the image on a Raspberry Pi.
+7. Copy any models you want to use to the `addon_configs/local_text-generation-webui/models` folder.

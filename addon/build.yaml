@@ -1,3 +1,4 @@
 ---
 build_from:
-  amd64: atinoda/text-generation-webui:default-snapshot-2023-10-29
+  aarch64: ghcr.io/hassio-addons/ubuntu-base:9.0.2
+  amd64: ghcr.io/hassio-addons/ubuntu-base:9.0.2

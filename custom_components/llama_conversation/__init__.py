@@ -8,7 +8,7 @@ from typing import Callable
 import numpy.typing as npt
 import numpy as np
 
-from llama_cpp import Llama
+# from llama_cpp import Llama
 import requests
 import re
 import os
@@ -42,6 +42,7 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
+    CONF_REQUEST_TIMEOUT,
     CONF_BACKEND_TYPE,
     CONF_DOWNLOADED_MODEL_FILE,
     DEFAULT_MAX_TOKENS,
@@ -50,6 +51,7 @@ from .const import (
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
     DEFAULT_BACKEND_TYPE,
+    DEFAULT_REQUEST_TIMEOUT,
     BACKEND_TYPE_REMOTE,
     DOMAIN,
 )
@@ -112,6 +114,8 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         if self.use_local_backend:
             if not model_path:
                 raise Exception(f"Model was not found at '{model_path}'!")
+            
+            raise NotImplementedError()
 
             self.llm = Llama(
                 model_path=model_path,
@@ -242,8 +246,10 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
             generate_params["model"] = self.model_name
             del generate_params["top_k"]
 
+            timeout = self.entry.options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
+
             result = requests.post(
-                f"{self.api_host}/v1/completions", json=generate_params, timeout=30
+                f"{self.api_host}/v1/completions", json=generate_params, timeout=timeout
             )
             result.raise_for_status()
         except requests.RequestException as err:

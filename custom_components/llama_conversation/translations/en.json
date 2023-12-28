@@ -1,0 +1,56 @@
+{
+    "config": {
+        "error": {
+            "download_failed": "The download failed to complete!",
+            "failed_to_connect": "Failed to connect to the remote API. See the logs for more details.",
+            "missing_model_api": "The selected model is not provided by this API.",
+            "missing_model_file": "The provided file does not exist.",
+            "other_existing_local": "Another model is already loaded locally. Please unload it or configure a remote model.",
+            "unknown": "Unexpected error"
+        },
+        "progress": {
+            "download": "Please wait while the model is being downloaded from HuggingFace. This can take a few minutes."
+        },
+        "step": {
+            "local_model": {
+                "data": {
+                    "downloaded_model_file": "Local file name",
+                    "downloaded_model_quantization": "Downloaded model quantization",
+                    "huggingface_model": "HuggingFace Model"
+                },
+                "description": "Please configure llama.cpp for the model",
+                "title": "Configure llama.cpp"
+            },
+            "remote_model": {
+                "data": {
+                    "host": "API Hostname",
+                    "huggingface_model": "Model Name",
+                    "port": "API Port"
+                },
+                "description": "Provide the connection details for an instance of text-generation-webui that is hosting the model.",
+                "title": "Configure connection to remote API"
+            },
+            "user": {
+                "data": {
+                    "download_model_from_hf": "Download model from HuggingFace",
+                    "use_local_backend": "Use Llama.cpp"
+                },
+                "description": "Select the backend for running the model. Either Llama.cpp (locally) or text-generation-webui (remote).",
+                "title": "Select Backend"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "max_new_tokens": "Maximum tokens to return in response",
+                    "prompt": "Prompt Template",
+                    "temperature": "Temperature",
+                    "top_k": "Top K",
+                    "top_p": "Top P"
+                }
+            }
+        }
+    }
+}
