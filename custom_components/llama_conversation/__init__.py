@@ -8,7 +8,7 @@ from typing import Callable
 import numpy.typing as npt
 import numpy as np
 
-from llama_cpp import Llama
+# from llama_cpp import Llama
 import requests
 import re
 import os
@@ -42,6 +42,7 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
+    CONF_REQUEST_TIMEOUT,
     CONF_BACKEND_TYPE,
     CONF_DOWNLOADED_MODEL_FILE,
     DEFAULT_MAX_TOKENS,
@@ -50,6 +51,7 @@ from .const import (
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
     DEFAULT_BACKEND_TYPE,
+    DEFAULT_REQUEST_TIMEOUT,
     BACKEND_TYPE_REMOTE,
     DOMAIN,
 )
@@ -112,6 +114,8 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         if self.use_local_backend:
             if not model_path:
                 raise Exception(f"Model was not found at '{model_path}'!")
+            
+            raise NotImplementedError()
 
             self.llm = Llama(
                 model_path=model_path,
@@ -200,6 +204,8 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         prompt.append({"role": "assistant", "message": response})
         self.history[conversation_id] = prompt
 
+        exposed_entities = list(self._async_get_exposed_entities()[0].keys())
+
         to_say = response.strip().split("\n")[0]
         pattern = re.compile(r"```homeassistant\n([\S\n]*)```")
         for block in pattern.findall(response.strip()):
@@ -213,16 +219,21 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
                 service = line.split("(")[0]
                 entity = line.split("(")[1][:-1]
                 domain, service = tuple(service.split("."))
-                try:
-                    await self.hass.services.async_call(
-                        domain,
-                        service,
-                        service_data={ATTR_ENTITY_ID: entity},
-                        blocking=True,
-                    )
-                except Exception as err:
-                    to_say += f"\nFailed to run: {line}"
-                    _LOGGER.debug(f"err: {err}; {repr(err)}")
+
+                # only acknowledge requests to exposed entities
+                if entity not in exposed_entities:
+                    to_say += f"Can't find device '{entity}'"
+                else:
+                    try:
+                        await self.hass.services.async_call(
+                            domain,
+                            service,
+                            service_data={ATTR_ENTITY_ID: entity},
+                            blocking=True,
+                        )
+                    except Exception as err:
+                        to_say += f"\nFailed to run: {line}"
+                        _LOGGER.debug(f"err: {err}; {repr(err)}")
 
         intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(to_say)
@@ -235,8 +246,10 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
             generate_params["model"] = self.model_name
             del generate_params["top_k"]
 
+            timeout = self.entry.options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
+
             result = requests.post(
-                f"{self.api_host}/v1/completions", json=generate_params, timeout=30
+                f"{self.api_host}/v1/completions", json=generate_params, timeout=timeout
             )
             result.raise_for_status()
         except requests.RequestException as err:

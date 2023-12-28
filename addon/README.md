@@ -1,4 +1,4 @@
 # text-generation-webui - Home Assistant Addon
-NOTE: This is super experimental and probably won't actually run on a Raspberry PI
+NOTE: This is super experimental and may or may not work on a Raspberry Pi
 
-This basically takes an existing Docker image and attempts to overlay the required files for Home Assistant to launch and recognize it as an addon.
+Installs text-generation-webui into a docker container using CPU only mode (llama.cpp)

@@ -35,6 +35,7 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
+    CONF_REQUEST_TIMEOUT,
     CONF_BACKEND_TYPE,
     CONF_BACKEND_TYPE_OPTIONS,
     CONF_DOWNLOADED_MODEL_FILE,
@@ -48,6 +49,7 @@ from .const import (
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
+    DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_BACKEND_TYPE,
     BACKEND_TYPE_LLAMA_HF,
     BACKEND_TYPE_LLAMA_EXISTING,
@@ -96,6 +98,7 @@ DEFAULT_OPTIONS = types.MappingProxyType(
         CONF_TOP_K: DEFAULT_TOP_K,
         CONF_TOP_P: DEFAULT_TOP_P,
         CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
+        CONF_REQUEST_TIMEOUT: DEFAULT_REQUEST_TIMEOUT,
     }
 )
 
@@ -374,18 +377,19 @@ class OptionsFlow(config_entries.OptionsFlow):
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="LLaMA Conversation", data=user_input)
-        schema = local_llama_config_option_schema(self.config_entry.options)
+        is_local_backend = self.config_entry.data[CONF_BACKEND_TYPE] != BACKEND_TYPE_REMOTE
+        schema = local_llama_config_option_schema(self.config_entry.options, is_local_backend)
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(schema),
         )
 
 
-def local_llama_config_option_schema(options: MappingProxyType[str, Any]) -> dict:
+def local_llama_config_option_schema(options: MappingProxyType[str, Any], is_local_backend: bool) -> dict:
     """Return a schema for Local LLaMA completion options."""
     if not options:
         options = DEFAULT_OPTIONS
-    return {
+    result = {
         vol.Optional(
             CONF_PROMPT,
             description={"suggested_value": options[CONF_PROMPT]},
@@ -412,3 +416,12 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any]) -> dic
             default=DEFAULT_TEMPERATURE,
         ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
     }
+
+    if not is_local_backend:
+        result[vol.Optional(
+            CONF_REQUEST_TIMEOUT,
+            description={"suggested_value": options[CONF_REQUEST_TIMEOUT]},
+            default=DEFAULT_REQUEST_TIMEOUT,
+        )] = int
+
+    return result
