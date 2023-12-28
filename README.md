@@ -1,8 +1,8 @@
 # Home LLM
-This project provides the required "glue" components to control your Home Assistant installation with a completely local Large Language Model acting as a personal assistant. The goal is to provide a drop in solution to be used as a "conversation agent" component type by the Home Assistant project.
+This project provides the required "glue" components to control your Home Assistant installation with a completely local Large Language Model acting as a personal assistant. The goal is to provide a drop in solution to be used as a "conversation agent" component by Home Assistant.
 
 ## Model
-The "Home" model is a fine tuning of the Phi model series from Microsoft.  The model is able to control devices in the user's house as well as perform basic question and answering.  The fine tuning dataset is a combination of the [Cleaned Stanford Alpaca Dataset](https://huggingface.co/datasets/yahma/alpaca-cleaned) as well as a [custom synthetic dataset](./data) designed to teach the model function calling based on the device information in the context.
+The "Home" model is a fine tuning of the Phi-2 model from Microsoft.  The model is able to control devices in the user's house as well as perform basic question and answering.  The fine tuning dataset is a combination of the [Cleaned Stanford Alpaca Dataset](https://huggingface.co/datasets/yahma/alpaca-cleaned) as well as a [custom synthetic dataset](./data) designed to teach the model function calling based on the device information in the context.
 
 The model can be found on HuggingFace: https://huggingface.co/acon96/Home-3B-v1-GGUF
 
@@ -69,7 +69,7 @@ The provided `custom_modeling_phi.py` has Gradient Checkpointing implemented for
 ## Home Assistant Component
 In order to integrate with Home Assistant, we provide a `custom_component` that exposes the locally running LLM as a "conversation agent" that can be interacted with using a chat interface as well as integrate with Speech-to-Text and Text-to-Speech addons to enable interacting with the model by speaking.  
 
-The component can either run the model directly as part of the Home Assistant software using llama-cpp-python, or you can run the [oobabooga/text-generation-webui](https://github.com/oobabooga/text-generation-webui) project to provide access to the LLM via an API interface. When doing this, you can host the model yourself and point the add-on at machine where the model is hosted, or you can run the model using text-generation-webui using the provided [custom Home Assistant add-on](./addon/README.md).
+The component can either run the model directly as part of the Home Assistant software using llama-cpp-python, or you can run the [oobabooga/text-generation-webui](https://github.com/oobabooga/text-generation-webui) project to provide access to the LLM via an API interface. When doing this, you can host the model yourself and point the add-on at machine where the model is hosted, or you can run the model using text-generation-webui using the provided [custom Home Assistant add-on](./addon).
 
 ### Installing
 1. Ensure you have either the Samba, SSH, FTP, or another add-on installed that gives you access to the `config` folder
@@ -84,9 +84,10 @@ When setting up the component, there are 3 different "backend" options to choose
 2. Llama.cpp with a locally provided model
 3. A remote instance of text-generation-webui
 
-**Setting up the Llama.cpp backend with a model from HuggingFace**:
+**Setting up the Llama.cpp backend with a model from HuggingFace**:  
 TODO: need to build wheels for llama.cpp first
-**Setting up the Llama.cpp backend with a locally downloaded model**:
+
+**Setting up the Llama.cpp backend with a locally downloaded model**:  
 TODO: need to build wheels for llama.cpp first
 
 **Setting up the "remote" backend**:
@@ -125,7 +126,10 @@ In order to facilitate running the project entirely on the system where Home Ass
 4. Select the 3 dots in the top right and click "Check for Updates" and Refresh the webpage.
 5. There should now be a "Local Add-ons" section at the top of the "Add-on Store"
 6. Install the `oobabooga-text-generation-webui` add-on. It will take ~15-20 minutes to build the image on a Raspberry Pi.
-7. Copy any models you want to use to the `addon_configs/local_text-generation-webui/models` folder.
+7. Copy any models you want to use to the `addon_configs/local_text-generation-webui/models` folder or download them using the UI.
+8. Load up a model to use. NOTE: The timeout for ingress pages is only 60 seconds so if the model takes longer than 60 seconds to load (very likely) then the UI will appear to time out and you will need to navigate to the add-on's logs to see when the model is fully loaded.
 
 ### Performance of running the model on a Raspberry Pi
-The RPI4 4GB that I have was sitting right at 1.5 tokens/sec for prompt eval and 1.6 tokens/sec for token generation when running the `Q4_K_M` quant. I was reliably getting responses in 30-40 seconds after the initial prompt processing which took almost 5 minutes. I highly recommend if you set up text-generation-webui on a separate machine that can take advantage of a GPU.
+The RPI4 4GB that I have was sitting right at 1.5 tokens/sec for prompt eval and 1.6 tokens/sec for token generation when running the `Q4_K_M` quant. I was reliably getting responses in 30-60 seconds after the initial prompt processing which took almost 5 minutes. It depends significantly on the number of devices that have been exposed as well as how many states have changed since the last invocation because llama.cpp caches KV values for identical prompt prefixes.
+
+It is highly recommend to set up text-generation-webui on a separate machine that can take advantage of a GPU.
