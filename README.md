@@ -1,10 +1,10 @@
 # Home LLM
-This project provides the required "glue" components to control your Home Assistant installation with a completely local Large Langage Model acting as a personal assistant. The goal is to provide a drop in solution to be used as a "conversation agent" component type by the Home Assistant project.
+This project provides the required "glue" components to control your Home Assistant installation with a completely local Large Language Model acting as a personal assistant. The goal is to provide a drop in solution to be used as a "conversation agent" component type by the Home Assistant project.
 
 ## Model
 The "Home" model is a fine tuning of the Phi model series from Microsoft.  The model is able to control devices in the user's house as well as perform basic question and answering.  The fine tuning dataset is a combination of the [Cleaned Stanford Alpaca Dataset](https://huggingface.co/datasets/yahma/alpaca-cleaned) as well as a [custom synthetic dataset](./data) designed to teach the model function calling based on the device information in the context.
 
-The model is quantized using Llama.cpp in order to enable running the model in super low resource environments that are common with Home Assistant installations such as Rapsberry Pis.
+The model is quantized using Llama.cpp in order to enable running the model in super low resource environments that are common with Home Assistant installations such as Raspberry Pis.
 
 The model can be used as an "instruct" type model using the ChatML prompt format. The system prompt is used to provide information about the state of the Home Assistant installation including available devices and callable services.
 
@@ -38,6 +38,10 @@ Due to the mix of data used during fine tuning, the model is also capable of bas
 <|im_start|>user if mary is 7 years old, and I am 3 years older than her. how old am I?<|im_end|>
 <|im_start|>assistant If Mary is 7 years old, then you are 10 years old (7+3=10).<|im_end|><|endoftext|>
 ```
+
+### Synthetic Dataset
+The synthetic dataset is aimed at covering basic day to day operations in home assistant such as turning devices on and off.
+The supported entity types are: light, fan, cover, lock, media_player
 
 ### Training
 The model was trained as a LoRA on an RTX 3090 (24GB) using the following settings for the custom training script. The embedding weights were "saved" and trained normally along with the rank matricies in order to train the newly added tokens to the embeddings. The full model is merged together at the end.
@@ -85,8 +89,30 @@ TODO: need to build wheels for llama.cpp first
 
 **Setting up the "remote" backend**:
 
+You need the following settings in order to configure the "remote" backend
+1. Hostname: the host of the machine where text-generation-webui API is hosted. If you are using the provided add-on then the hostname is `local-text-generation-webui`
+2. Port: the port for accessing the text-generation-webui API. NOTE: this is not the same as the UI port. (Usually 5000)
+3. Name of the Model: This name must EXACTLY match the name as it appears in `text-generation-webui`
+
+On creation, the component will validate that the model is available for use.
+
 ### Configuring the component as a Conversation Agent
 **NOTE: ANY DEVICES THAT YOU SELECT TO BE EXPOSED TO THE MODEL WILL BE ADDED AS CONTEXT AND POTENTIALLY HAVE THEIR STATE CHANGED BY THE MODEL. ONLY EXPOSE DEVICES THAT YOU ARE OK WITH THE MODEL MODIFYING THE STATE OF, EVEN IF IT IS NOT WHAT YOU REQUESTED. THE MODEL MAY OCCASIONALLY HALLUCINATE AND ISSUE COMMANDS TO THE WRONG DEVICE! USE AT YOUR OWN RISK.**
+
+In order to utilize the conversation agent in HomeAssistant:
+1. Navigate to "Settings" -> "Voice Assistants"
+2. Select "+ Add Assistant"
+3. Name the assistant whatever you want.
+4. Select the "Conversation Agent" that we created previously
+5. If using STT or TTS configure these now
+6. Return to the "Overview" dashboard and select chat icon in the top left.
+
+From here you can submit queries to the AI agent.
+
+In order for any entities be available to the agent, you must "expose" them first.
+1. Navigate to "Settings" -> "Voice Assistants" -> "Expose" Tab
+2. Select "+ Expose Entities" in the bottom right
+3. Check any entities you would like to be exposed to the conversation agent.
 
 ### Running the text-generation-webui add-on
 In order to facilitate running the project entirely on the system where Home Assistant is installed, there is an experimental Home Assistant Add-on that runs the oobabooga/text-generation-webui to connect to using the "remote" backend option.
@@ -100,4 +126,4 @@ In order to facilitate running the project entirely on the system where Home Ass
 7. Copy any models you want to use to the `addon_configs/local_text-generation-webui/models` folder.
 
 ### Performance of running the model on a Raspberry Pi
-The RPI4 4GB that I have was sitting right at 1.5 tokens/sec for prompt eval and 1.6 tokens/sec for token generation when running the `Q4_K_M`` quant. I was reliably getting responses in 30-40 seconds after the initial prompt processing which took almost 5 minutes.
+The RPI4 4GB that I have was sitting right at 1.5 tokens/sec for prompt eval and 1.6 tokens/sec for token generation when running the `Q4_K_M` quant. I was reliably getting responses in 30-40 seconds after the initial prompt processing which took almost 5 minutes. I highly recommend if you set up text-generation-webui on a separate machine that can take advantage of a GPU.
