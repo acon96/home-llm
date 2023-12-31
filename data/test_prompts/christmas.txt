@@ -1,4 +1,5 @@
-<|im_start|>system You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed with the information provided only.
+<|im_start|>system
+You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed with the information provided only.
 Services: cover.close_cover, cover.open_cover, cover.stop_cover, cover.toggle, fan.decrease_speed, fan.increase_speed, fan.toggle, fan.turn_off, fan.turn_on, cover.close_cover, cover.open_cover, cover.stop_cover, cover.toggle, light.toggle, light.turn_off, light.turn_on
 Devices:
 light.back_lounge_warm 'Back Lounge Warm Light' = off
@@ -21,7 +22,7 @@ light.downstairs_entryway_mqtt 'Downstairs Entryway Light' = off
 cover.somfy_living 'Living Room Blinds' = closed
 light.kitchen_winecellar_warm 'Kitchen Wine Cellar Warm Light' = off
 light.driveway 'driveway' = off
-light.shed 'Shed Light' = on
-<|im_end|>
-<|im_start|>user make sure both the lights on the christmas tree are on<|im_end|>
+light.shed 'Shed Light' = on<|im_end|>
+<|im_start|>user
+make sure both the lights on the christmas tree are on<|im_end|>
 <|im_start|>assistant

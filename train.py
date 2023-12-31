@@ -15,7 +15,7 @@ Phi Modules: fc1,fc2,Wqkv,out_proj,wte,lm_head.linear
 
 """
 python3 train.py \
-    --run_name home-llm-rev12 \
+    --run_name home-3b-v2-rev1 \
     --base_model microsoft/phi-2 \
     --add_pad_token \
     --add_chatml_tokens \
@@ -31,33 +31,22 @@ python3 train.py \
 
 """
 python3 train.py \
-    --run_name home-llm-rev10_8 \
-    --base_model microsoft/phi-2 \
+    --run_name home-1b-rev1 \
+    --base_model microsoft/phi-1_5 \
     --add_pad_token \
     --add_chatml_tokens \
     --bf16 \
-    --train_dataset data/home_assistant_train.json \
-    --test_dataset data/home_assistant_test.json \
-    --learning_rate 5e-6 \
+    --train_dataset data/home_assistant_alpaca_merged_train.json \
+    --test_dataset data/home_assistant_alpaca_merged_test.json \
+    --learning_rate 1e-5 \
     --save_steps 1000 \
-    --micro_batch_size 2 --gradient_checkpointing \
-    --use_lora --lora_rank 16 --lora_alpha 32 --lora_modules fc1,fc2,Wqkv,out_proj --lora_modules_to_save wte,lm_head.linear --lora_merge
+    --micro_batch_size 4 --gradient_checkpointing \
+    --ctx_size 2048
 """
 
 """
 python3 train.py \
-    --run_name home-llm-rev9.1 \
-    --base_model microsoft/phi-1_5 \
-    --disable_attention_mask \
-    --add_pad_token \
-    --bf16 \
-    --train_dataset data/home_assistant_train.json \
-    --test_dataset data/home_assistant_test.json
-"""
-
-"""
-python3 train.py \
-    --run_name home-llama2-7b-rev2 \
+    --run_name home-7b-rev2 \
     --base_model TheBloke/Llama-2-7B-GPTQ \
     --train_dataset data/home_assistant_train.json \
     --test_dataset data/home_assistant_test.json \
@@ -146,7 +135,7 @@ model = AutoModelForCausalLM.from_pretrained(
     trust_remote_code=True,
     device_map="auto",
     max_memory=find_max_vram(),
-    local_files_only=True,
+    # local_files_only=True,
     **model_kwargs
 )
 tokenizer = AutoTokenizer.from_pretrained(training_run_args.base_model, trust_remote_code=True, use_fast=False)
@@ -202,7 +191,8 @@ training_args = TrainingArguments(
     # eval_steps=training_run_args.eval_steps,
     save_strategy=("steps" if training_run_args.save_steps != -1 else "epoch"),
     save_steps=(training_run_args.save_steps if training_run_args.save_steps != -1 else None),
-    logging_steps=5,
+    save_safetensors=True,
+    logging_steps=5, 
     output_dir=model_dir,
     num_train_epochs=training_run_args.epochs,
     save_total_limit=1,
@@ -301,7 +291,7 @@ class DataCollatorForSupervisedFineTuning(object):
         return result
 
     def __call__(self, instances: Sequence[Dict]) -> Dict[str, torch.Tensor]:
-        input_ids = instances["input_ids"]
+        input_ids = [instance["input_ids"] for instance in instances]
         labels = copy.deepcopy(input_ids)
 
         for label in labels:
@@ -318,6 +308,7 @@ class DataCollatorForSupervisedFineTuning(object):
             attention_mask=input_ids.ne(self.tokenizer.pad_token_id),
         )
 
+print("Loading dataset...")
 datasets = load_dataset("json", data_files={ "train": training_run_args.train_dataset, "test": training_run_args.test_dataset })
 
 def tokenize(example):
@@ -328,8 +319,9 @@ def tokenize(example):
         add_special_tokens=False,
     )
 
-tokenized_train_dataset = datasets["train"].map(tokenize, batched=True)
-tokenized_test_dataset = datasets["test"].map(tokenize, batched=True)
+print("Tokenizing datasets...")
+tokenized_train_dataset = datasets["train"].map(tokenize, batched=True).remove_columns(["text"])
+tokenized_test_dataset = datasets["test"].map(tokenize, batched=True).remove_columns(["text"])
 
 data_collator = DataCollatorForSupervisedFineTuning(tokenizer=tokenizer)
 
@@ -365,10 +357,8 @@ class RandomEvalSubsetTrainer(Trainer):
 trainer = RandomEvalSubsetTrainer(
     model=model,
     args=training_args,
-    # train_dataset=tokenized_train_dataset,
+    train_dataset=tokenized_train_dataset,
     # eval_dataset=tokenized_test_dataset,
-    train_dataset=datasets["train"],
-    # eval_dataset=datasets["test"],
     data_collator=data_collator,
 )
 
@@ -390,14 +380,16 @@ try:
 
     # trainer.evaluate_all()
 
-    trainer.save_model()
-
     if training_run_args.use_lora and training_run_args.lora_merge:
+        trainer.save_model() # save lora
+
         merged_model = model.merge_and_unload(progressbar=True)
         merged_model_dir = f"./models/{training_run_args.run_name}"
         merged_model.save_pretrained(merged_model_dir, safe_serialization=True, max_shard_size="2GB")
+        
         tokenizer.save_pretrained(merged_model_dir)
     else:
+        trainer.save_model()
         tokenizer.save_pretrained(model_dir)
 
     if tensorboard_process:

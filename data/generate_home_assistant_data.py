@@ -372,15 +372,15 @@ def format_example(example):
     question = example["question"]
     answers = " ".join(example["answers"])
 
-    system_block = "\n".join([ "<|im_start|>system", sys_prompt, services_block, states_block, "<|im_end|>" ])
-    user_block = "\n".join([ "<|im_start|>user", question, "<|im_end|>" ])
+    system_block = "\n".join([ "<|im_start|>system", sys_prompt, services_block, states_block ]) + "<|im_end|>"
+    user_block = "\n".join([ "<|im_start|>user", question]) + "<|im_end|>"
 
     assistant_block = "<|im_start|>assistant\n" + answers
     if len(example["service_calls"]) > 0:
         json_calls = [ json.dumps(x) for x in example["service_calls"] ]
         code_block = "\n```homeassistant\n" + "\n".join(json_calls) + "\n```"
         assistant_block = assistant_block + code_block
-    assistant_block = assistant_block + "\n<|im_end|>"
+    assistant_block = assistant_block + "<|im_end|>"
         
     example_lines = [system_block, user_block, assistant_block]
     result = "\n".join(example_lines)
@@ -429,8 +429,8 @@ def generate_example_file(filename: str, seed: int, *, static_factor: int, templ
 # TODO: expose home assistant attributes in the context
 # TODO: add thermostat + switch device types
 def main():
-    generate_example_file("sample", 42, static_factor=1, template_factor=1, status_request_factor=1)
-    exit()
+    # generate_example_file("sample", 42, static_factor=1, template_factor=1, status_request_factor=1)
+    # exit()
     generate_example_file("home_assistant_train", 42, static_factor=3, template_factor=20, status_request_factor=15)
     generate_example_file("home_assistant_test", 12345, static_factor=0.25, template_factor=3, status_request_factor=2)
 
