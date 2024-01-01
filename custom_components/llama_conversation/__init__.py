@@ -2,13 +2,9 @@
 from __future__ import annotations
 
 import logging
+import importlib
 from typing import Literal
-from types import MappingProxyType
-from typing import Callable
-import numpy.typing as npt
-import numpy as np
 
-# from llama_cpp import Llama
 import requests
 import re
 import os
@@ -115,7 +111,9 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
             if not model_path:
                 raise Exception(f"Model was not found at '{model_path}'!")
             
-            raise NotImplementedError()
+            # don't import it until now because the wheel is
+            module = importlib.import_module("llama_cpp")
+            Llama = getattr(module, "Llama")
 
             self.llm = Llama(
                 model_path=model_path,
@@ -185,8 +183,9 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
                 "temperature": temperature,
             }
 
+            _LOGGER.debug(generate_parameters["prompt"])
             response = await self._async_generate(generate_parameters)
-            _LOGGER.debug("Response '%s'", response)
+            _LOGGER.debug(response)
 
         except Exception as err:
             intent_response = intent.IntentResponse(language=user_input.language)
@@ -269,7 +268,6 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         )
 
         _LOGGER.debug(f"Processing {len(input_tokens)} input tokens...")
-        print(generate_params["prompt"], end="")
         output_tokens = self.llm.generate(
             input_tokens,
             temp=generate_params["temperature"],
@@ -283,13 +281,11 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
                 break
 
             result_tokens.append(token)
-            print(self.llm.detokenize([token]).decode(), end="")
 
             if len(result_tokens) >= generate_params["max_tokens"]:
                 break
 
         result = self.llm.detokenize(result_tokens).decode()
-        _LOGGER.debug(f"result was: {result}")
 
         return result
 

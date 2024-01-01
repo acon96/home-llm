@@ -5,6 +5,7 @@ import os
 import logging
 import types
 import requests
+import platform
 from types import MappingProxyType
 from typing import Any
 from abc import ABC, abstractmethod
@@ -15,6 +16,8 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
+from homeassistant.requirements import pip_kwargs
+from homeassistant.util.package import install_package, is_installed
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import (
     AbortFlow,
@@ -120,6 +123,31 @@ def download_model_from_hf(
         )
     except Exception as ex:
         return ex
+    
+def install_llama_cpp_python(config_dir: str):
+    try:
+        if not is_installed("llama-cpp-python"):
+            _LOGGER.info("Installing llama-cpp-python from wheel")
+            platform_suffix = platform.machine()
+            if platform_suffix == "arm64":
+                platform_suffix = "aarch64"
+            folder = os.path.dirname(__file__)
+            potential_wheels = [ path for path in os.listdir(folder) if path.endswith(f"{platform_suffix}.whl") ]
+            if len(potential_wheels) == 1:
+                wheel_to_install = potential_wheels[0]
+            else:
+                _LOGGER.info("There are multiple potential wheels to install... Using the latest one")
+                wheel_to_install = sorted(potential_wheels, reverse=True)[0]
+
+            _LOGGER.debug("Wheel location: ", wheel_to_install)
+            return install_package(os.path.join(folder, wheel_to_install), pip_kwargs(config_dir))
+        else:
+            _LOGGER.info("llama-cpp-python is already installed")
+        return True
+    except Exception as ex:
+        _LOGGER.exception("Install failed!")
+        return ex
+
 
 class BaseLlamaConversationConfigFlow(FlowHandler, ABC):
     """Represent the base config flow for Z-Wave JS."""
@@ -129,6 +157,12 @@ class BaseLlamaConversationConfigFlow(FlowHandler, ABC):
     def flow_manager(self) -> FlowManager:
         """Return the flow manager of the flow."""
 
+    @abstractmethod
+    async def async_step_install_local_wheels(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """ Install pre-built wheels """
+    
     @abstractmethod
     async def async_step_local_model(
         self, user_input: dict[str, Any] | None = None
@@ -157,6 +191,8 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
     """Handle a config flow for Local LLaMA Conversation."""
 
     VERSION = 1
+    install_wheel_task = None
+    install_wheel_error = None
     download_task = None
     download_error = None
     model_options: dict[str, Any] = {}
@@ -209,13 +245,44 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                             )
 
                     if "base" not in errors:
-                        return await self.async_step_local_model()
+                        return await self.async_step_install_local_wheels()
                 else:
                     return await self.async_step_remote_model()
 
         return self.async_show_form(
             step_id="user", data_schema=schema, errors=errors
         )
+    
+    async def async_step_install_local_wheels(
+      self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        if not user_input:
+            if self.install_wheel_task:
+                return self.async_show_progress(
+                    step_id="install_local_wheels",
+                    progress_action="install_local_wheels",
+                )
+
+            _LOGGER.debug("Queuing install task...")
+            self.install_wheel_task = self.hass.async_add_executor_job(
+                install_llama_cpp_python, self.hass.config.config_dir
+            )
+
+            self.hass.async_create_task(self._async_do_task(self.install_wheel_task))
+
+            return self.async_show_progress(
+                step_id="install_local_wheels",
+                progress_action="install_local_wheels",
+            )
+
+        wheel_install_result = user_input["result"]
+        if isinstance(wheel_install_result, Exception):
+            _LOGGER.warning("Failed to install wheel: %s", repr(wheel_install_result))
+            self.wheel_install_error = wheel_install_result
+            return self.async_show_progress_done(next_step_id="user")
+        else:
+            _LOGGER.debug(f"Finished install")
+            return self.async_show_progress_done(next_step_id="local_model")
 
     async def async_step_local_model(
         self, user_input: dict[str, Any] | None = None

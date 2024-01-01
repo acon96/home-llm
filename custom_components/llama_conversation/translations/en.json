@@ -9,7 +9,8 @@
             "unknown": "Unexpected error"
         },
         "progress": {
-            "download": "Please wait while the model is being downloaded from HuggingFace. This can take a few minutes."
+            "download": "Please wait while the model is being downloaded from HuggingFace. This can take a few minutes.",
+            "install_local_wheels": "Please wait while Llama.cpp is installed..."
         },
         "step": {
             "local_model": {
