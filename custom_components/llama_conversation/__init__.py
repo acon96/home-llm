@@ -8,6 +8,7 @@ from typing import Literal
 import requests
 import re
 import os
+import json
 
 from homeassistant.components import conversation
 from homeassistant.components.conversation.const import DOMAIN as CONVERSATION_DOMAIN
@@ -50,6 +51,7 @@ from .const import (
     DEFAULT_REQUEST_TIMEOUT,
     BACKEND_TYPE_REMOTE,
     DOMAIN,
+    GBNF_GRAMMAR_FILE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -103,6 +105,7 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
 
         self.api_host = None
         self.llm = None
+        self.grammar = None
 
         model_path = self.entry.data.get(CONF_DOWNLOADED_MODEL_FILE)
         self.model_name = self.entry.data.get(CONF_CHAT_MODEL, model_path)
@@ -111,9 +114,10 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
             if not model_path:
                 raise Exception(f"Model was not found at '{model_path}'!")
             
-            # don't import it until now because the wheel is
+            # don't import it until now because the wheel is installed by config_flow.py
             module = importlib.import_module("llama_cpp")
             Llama = getattr(module, "Llama")
+            LlamaGrammar = getattr(module, "LlamaGrammar")
 
             self.llm = Llama(
                 model_path=model_path,
@@ -123,12 +127,17 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
                 # n_threads_batch=4,
             )
 
+            with open(os.path.join(os.path.dirname(__file__), GBNF_GRAMMAR_FILE)) as f:
+                grammar_str = "".join(f.readlines())
+            self.grammar = LlamaGrammar.from_string(grammar_str)
+
             _LOGGER.info("Model loaded")
         else:
-            # TODO: load the model using the api endpoint
             host = entry.data[CONF_HOST]
             port = entry.data[CONF_PORT]
             self.api_host = f"http://{host}:{port}"
+
+            self._load_remote_model()
 
     @property
     def supported_languages(self) -> list[str] | Literal["*"]:
@@ -204,9 +213,9 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         self.history[conversation_id] = prompt
 
         exposed_entities = list(self._async_get_exposed_entities()[0].keys())
-
-        to_say = response.strip().split("\n")[0]
         pattern = re.compile(r"```homeassistant\n([\S\n]*)```")
+        
+        to_say = pattern.sub("", response).strip()
         for block in pattern.findall(response.strip()):
             services = block.split("\n")
             _LOGGER.info(f"running services: {' '.join(services)}")
@@ -215,9 +224,16 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
                 if len(line) == 0:
                     break
 
-                service = line.split("(")[0]
-                entity = line.split("(")[1][:-1]
-                domain, service = tuple(service.split("."))
+                # parse old format or JSON format
+                try:
+                    json_output = json.loads(line)
+                    service = json_output["service"]
+                    entity = json_output["target_device"]
+                    domain, service = tuple(service.split("."))
+                except Exception:
+                    service = line.split("(")[0]
+                    entity = line.split("(")[1][:-1]
+                    domain, service = tuple(service.split("."))
 
                 # only acknowledge requests to exposed entities
                 if entity not in exposed_entities:
@@ -239,6 +255,21 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         return conversation.ConversationResult(
             response=intent_response, conversation_id=conversation_id
         )
+    
+    def _load_remote_model(self):
+        try:
+            load_result = requests.post(
+                f"{self.api_host}/v1/internal/model/load",
+                json={
+                    "model_name": self.model_name,
+                    # TODO: expose arguments to the user in home assistant UI
+                    # "args": {},
+                }
+            )
+            load_result.raise_for_status()
+
+        except Exception as ex:
+            _LOGGER.error("Connection error was: %s", repr(ex))
 
     def _generate_remote(self, generate_params: dict) -> str:
         try:
@@ -273,6 +304,7 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
             temp=generate_params["temperature"],
             top_k=generate_params["top_k"],
             top_p=generate_params["top_p"],
+            grammar=self.grammar
         )
 
         result_tokens = []
@@ -323,7 +355,7 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
             role = message["role"]
             message = message["message"]
             formatted_prompt = (
-                formatted_prompt + f"<|im_start|>{role} {message}<|im_end|>\n"
+                formatted_prompt + f"<|im_start|>{role}\n{message}<|im_end|>\n"
             )
 
         if include_generation_prompt:

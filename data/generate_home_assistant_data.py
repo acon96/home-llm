@@ -49,17 +49,44 @@ class DeviceType:
     possible_states: list[(str, float)]
     services: list[str]
 
-    def all_states(self):
-        return [ x[0] for x in self.possible_states ]
-
     def get_random_state(self):
         states = [ x[0] for x in self.possible_states ]
         weights = [ x[1] for x in self.possible_states ]
         return random.choices(states, weights=weights, k=1)[0]
+    
+class ClimateDeviceType(DeviceType):
+    def __init__(self):
+        super().__init__("climate", [], [
+            "set_temperature",
+            "set_humidity",
+            "set_fan_mode",
+            "set_hvac_mode",
+        ])
+
+    def get_random_state(self):
+        hvac = random.choice(["heating", "cooling", "idle"])
+        fan = random.choice(["fan on", "fan off"])
+        if random.random() > 0.5:
+            temp = str(random.randint(60, 80)) + "F"
+        else:
+            temp = str(random.randint(15, 25)) + "C"
+        return f"{hvac} ({fan}) at {temp}"
 
 SUPPORTED_DEVICES = {
     "light": DeviceType(
         name="light",
+        possible_states=[
+            (STATE_ON, 0.5),
+            (STATE_OFF, 0.5)
+        ],
+        services=[
+            "turn_on",
+            "turn_off",
+            "toggle"
+        ],
+    ),
+    "switch": DeviceType(
+        name="switch",
         possible_states=[
             (STATE_ON, 0.5),
             (STATE_OFF, 0.5)
@@ -151,6 +178,7 @@ SUPPORTED_DEVICES = {
             "media_previous_track"
         ],
     ),
+    "climate": ClimateDeviceType()
 }
 
 stacks_of_device_names = { x: [] for x in SUPPORTED_DEVICES.keys() }
@@ -232,8 +260,9 @@ def random_device_list(max_devices: int, avoid_device_names: list[str]):
             ))
             device_list.append(device_name)
             device_types.add(device_type)
-        except:
+        except Exception as ex:
             print(f"bad device name: {choice}")
+            print(repr(ex))
 
     return device_lines, list(device_types)
 
@@ -427,11 +456,9 @@ def generate_example_file(filename: str, seed: int, *, static_factor: int, templ
 # TODO: answer questions about more than one thing in the state list at once
 # TODO: add examples for rooms/groups of devices. i.e. "turn off all the lights in the kitchen"
 # TODO: expose home assistant attributes in the context
-# TODO: add thermostat + switch device types
 def main():
     # generate_example_file("sample", 42, static_factor=1, template_factor=1, status_request_factor=1)
-    # exit()
-    generate_example_file("home_assistant_train", 42, static_factor=3, template_factor=20, status_request_factor=15)
+    generate_example_file("home_assistant_train", 42, static_factor=5, template_factor=20, status_request_factor=15)
     generate_example_file("home_assistant_test", 12345, static_factor=0.25, template_factor=3, status_request_factor=2)
 
 if __name__ == "__main__":

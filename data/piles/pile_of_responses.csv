@@ -29,3 +29,6 @@
 "media_previous_track","media_player","Going back to the previous track.","I'll return to the previous track for you.","Sure, reverting to the previous track."
 "lock","lock","Locking the door for you.","I'll go ahead and lock the door.","Sure, securing the lock."
 "unlock","lock","Unlocking the door as you requested.","I'll unlock the door for you.","Sure, unlocking the door."
+"turn_on","switch","Turning on the switch for you.","Sure, I'll turn on the light now.","I'll go ahead and turn the switch on."
+"turn_off","switch","Turning off the switch as requested.","I'll switch off the device for you.","Sure, turning off the switch."
+"toggle","switch","Toggling the switch for you.","Changing the switch's state now.","I'll toggle the switch for you."

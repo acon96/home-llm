@@ -386,6 +386,55 @@ lock.wine_cellar,Wine cellar lock
 lock.yale_kitchen,"Yale Kitchen"
 lock.yale_living,"Yale Living Room"
 lock.yoga_room,"Yoga Room Lock"
+lock.attic,"Attic Door Lock"
+lock.balcony_door,Balcony access lock
+lock.bedroom_2,"Second Bedroom Lock"
+lock.bedroom_3,"Third Bedroom Lock"
+lock.boathouse,"Boathouse Lock"
+lock.closet,"Closet Door Lock"
+lock.conservatory,"Conservatory Lock"
+lock.den,"Den Lock"
+lock.dining_room,"Dining Room Lock"
+lock.driveway_gate,Driveway gate lock
+lock.electric_gate,Electric gate lock
+lock.elevator,"Private Elevator Lock"
+lock.fence_gate,Fence gate lock
+lock.filing_room,"Filing Room Lock"
+lock.front_gate,"Front Gate Lock"
+lock.garden_gate,Garden gate lock
+lock.greenhouse,"Greenhouse Lock"
+lock.gym,"Home Gym Lock"
+lock.hallway_closet,"Hallway Closet Lock"
+lock.home_theater,"Home Theater Lock"
+lock.kennel,"Animal Kennel Lock"
+lock.kitchen_door,Kitchen entry lock
+lock.laundry_room,"Laundry Room Lock"
+lock.living_room,"Living Room Lock"
+lock.loft,"Loft Lock"
+lock.mudroom,"Mudroom Lock"
+lock.music_room,"Music Room Lock"
+lock.office_cabinet,Office cabinet lock
+lock.pantry,"Pantry Lock"
+lock.playroom,"Playroom Lock"
+lock.porch_door,Porch door lock
+lock.rear_gate,Rear gate lock
+lock.rooftop_door,Rooftop access lock
+lock.sauna,"Sauna Door Lock"
+lock.secure_storage,Secure storage lock
+lock.service_entrance,Service entrance lock
+lock.side_door,Side entry lock
+lock.side_gate,Side gate lock
+lock.ski_storage,"Ski Storage Lock"
+lock.stair_gate,Staircase gate lock
+lock.storage_room,"Storage Room Lock"
+lock.studio,"Studio Lock"
+lock.sunroom,"Sunroom Lock"
+lock.terrace_door,Terrace door lock
+lock.vehicle_gate,Vehicle gate lock
+lock.walk_in_closet,"Walk-In Closet Lock"
+lock.workshop,"Workshop Lock"
+lock.workshop_cabinet,Workshop cabinet lock
+lock.yard_shed,"Yard Shed Lock"
 media_player.apple_tv,Apple TV media player
 media_player.basement,"Basement Media Player"
 media_player.bose_bedroom,"Bose Bedroom"
@@ -418,3 +467,114 @@ media_player.sonos_kitchen,Kitchen Sonos speaker
 media_player.sonos_living,"Sonos Living Room"
 media_player.soundbar_living_room,Living room soundbar
 media_player.xbox_den,Den Xbox console
+media_player.sony_bravia_tv, Sony Smart LED TV
+media_player.samsung_qled_tv, Samsung Quantum Dot TV
+media_player.lg_oled_tv, LG OLED Television
+media_player.panasonic_4k_bluray_player, Panasonic Blueray Player
+media_player.denon_av_receiver, Denon Audio-Video Receiver
+media_player.onkyo_tx_sr, Onkyo Home Theater Receiver
+media_player.google_nest_hub, Google Assistant Smart Display
+media_player.amazon_echo_show, Amazon Echo Smart Screen
+media_player.apple_tv_4k, Apple 4K Streaming Device
+media_player.roku_ultra, Roku High-Performance Streamer
+media_player.xbox_one, Xbox One
+media_player.playstation_5, Sony PS5
+media_player.joes_ps5,"Joe's PS5"
+media_player.nintendo_switch_dock, Nintendo Console Dock
+media_player.sony_4k_projector, Sony Home Cinema Projector
+media_player.epson_home_cinema, Epson Video Projector
+media_player.bose_home_speaker, Bose Wireless Speaker
+media_player.sonos_beam, Sonos Compact Soundbar
+media_player.harman_kardon_aura, Harman Kardon Glass Speaker
+media_player.bang_olufsen_beovision, B&O High-End Television
+media_player.philips_ambilight_tv, Philips LED Backlit TV
+media_player.vizio_smartcast_tv, Vizio Cast-Enabled TV
+media_player.sony_ps_lx310bt, Sony Bluetooth Turntable
+media_player.audio_technica_at_lp120, Audio-Technica Record Player
+media_player.samsung_hw_q90r, Samsung Surround Soundbar
+media_player.sonos_arc, Sonos Smart Soundbar
+media_player.home_theater_system_living_room, Living Room Home Theater
+media_player.desktop_computer_media_suite, Desktop Computer Media Center
+media_player.wall_mounted_tv_bedroom, Bedroom Wall-Mounted TV
+media_player.kitchen_radio, Kitchen Radio Player
+media_player.bathroom_speaker_system, Waterproof Bathroom Speaker
+media_player.garage_workshop_stereo, Garage Workshop Stereo
+media_player.patio_outdoor_speakers, Patio Outdoor Speakers
+media_player.basement_projector_setup, Basement Projector System
+media_player.office_pc_speakers, Office Computer Speakers
+media_player.bedside_alarm_clock_radio, Bedside Alarm Clock Radio
+media_player.gaming_room_console, Gaming Room Console
+media_player.lounge_hi_fi_system, Lounge Hi-Fi Audio
+media_player.dining_room_jukebox, Dining Room Jukebox
+media_player.guest_room_tv_set, Guest Room Television
+media_player.study_room_audio_book_player, Study Audio Book Player
+media_player.sunroom_cd_player, Sunroom CD Player
+media_player.attic_vinyl_turntable, Attic Vinyl Record Player
+media_player.backyard_outdoor_projector, Backyard Projector
+media_player.entryway_voice_assistant, Entryway Voice Assistant
+media_player.hallway_wall_speaker, Hallway Wall Speaker
+switch.attic_lights,"Attic Lights Switch"
+switch.balcony_lighting,Balcony lighting control
+switch.basement_lights,"Basement Lights Switch"
+switch.bathroom_fan,"Bathroom Fan Switch"
+switch.bedroom_lights,"Bedroom Lights Switch"
+switch.boathouse_lights,"Boathouse Lights Switch"
+switch.closet_lighting,Closet lighting control
+switch.conservatory_lights,"Conservatory Lights Switch"
+switch.deck_lights,"Deck Lighting Switch"
+switch.den_lights,"Den Lights Switch"
+switch.dining_room_lights,"Dining Room Lights Switch"
+switch.driveway_lights,Driveway lighting control
+switch.front_gate_lighting,Front gate lights switch
+switch.front_yard_lights,"Front Yard Lights Switch"
+switch.garage_door_opener,"Garage Door Opener Switch"
+switch.garden_lights,Garden lighting control
+switch.guest_room_lights,"Guest Room Lights Switch"
+switch.hallway_lights,"Hallway Lights Switch"
+switch.home_theater_lighting,Home theater lights control
+switch.kitchen_lights,"Kitchen Lights Switch"
+switch.laundry_room_lights,"Laundry Room Lights Switch"
+switch.living_room_lights,"Living Room Lights Switch"
+switch.loft_lights,"Loft Lights Switch"
+switch.master_bedroom_lights,"Master Bedroom Lights Switch"
+switch.office_lights,"Office Lights Switch"
+switch.outdoor_security_lights,"Outdoor Security Lights Switch"
+switch.pantry_lights,"Pantry Lights Switch"
+switch.patio_lights,"Patio Lights Switch"
+switch.playroom_lights,"Playroom Lights Switch"
+switch.pool_area_lighting,Pool area lighting control
+switch.porch_lights,"Porch Lights Switch"
+switch.rear_yard_lights,"Rear Yard Lights Switch"
+switch.sauna_lights,"Sauna Lights Switch"
+switch.security_system,Security system switch
+switch.shed_lights,"Shed Lights Switch"
+switch.stairway_lights,"Stairway Lights Switch"
+switch.study_room_lights,"Study Room Lights Switch"
+switch.sunroom_lights,"Sunroom Lights Switch"
+switch.terrace_lighting,Terrace lighting control
+switch.under_cabinet_lights,"Under Cabinet Lights Switch"
+switch.utility_room_lights,"Utility Room Lights Switch"
+switch.walkway_lights,"Walkway Lights Switch"
+switch.warehouse_lights,"Warehouse Lights Switch"
+switch.water_feature_lights,"Water Feature Lights Switch"
+switch.workshop_lights,"Workshop Lights Switch"
+switch.yard_floodlights,"Yard Floodlights Switch"
+switch.zoo_enclosure_lighting,Zoo enclosure lighting control
+switch.pool_pump,"Pool Pump Switch"
+switch.irrigation_system,"Irrigation System Switch"
+switch.garage_workshop_lights,"Garage Workshop Lights Switch"
+climate.nest_learning,"Nest Learning Thermostat"
+climate.ecobee_smart,"Ecobee SmartThermostat"
+climate.honeywell_lyric_t6,"Honeywell Lyric T6 Pro"
+climate.emerson_sensi_touch,"Emerson Sensi Touch Wi-Fi Thermostat"
+climate.bosch_bcc100,"Bosch BCC100 Connected Control"
+climate.johnson_glas,"Johnson Controls GLAS Smart Thermostat"
+climate.thermostat_lux_geo,"Lux Geo Wi-Fi Thermostat"
+climate.tado_smart,"Tado Smart Thermostat"
+climate.trane_comfortlink_ii,"Trane ComfortLink II XL1050"
+climate.carrier_cor,"Carrier Cor Wi-Fi Thermostat"
+climate.netatmo_smart,"Netatmo Smart Thermostat"
+climate.sinope_smart,"Sinopé Smart Thermostat"
+climate.kono_thermostat,"Kono Smart Thermostat"
+climate.mysa_smart_thermostat,"Mysa Smart Thermostat for Electric Baseboard Heaters"
+climate.zen_wifi_thermostat,"Zen Thermostat WiFi Edition"

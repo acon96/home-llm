@@ -245,7 +245,8 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                             )
 
                     if "base" not in errors:
-                        return await self.async_step_install_local_wheels()
+                        # return await self.async_step_install_local_wheels()
+                        return await self.async_step_local_model()
                 else:
                     return await self.async_step_remote_model()
 
@@ -281,7 +282,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             self.wheel_install_error = wheel_install_result
             return self.async_show_progress_done(next_step_id="user")
         else:
-            _LOGGER.debug(f"Finished install")
+            _LOGGER.debug(f"Finished install: {wheel_install_result}")
             return self.async_show_progress_done(next_step_id="local_model")
 
     async def async_step_local_model(
