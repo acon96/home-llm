@@ -12,23 +12,23 @@ The model can be used as an "instruct" type model using the ChatML prompt format
 
 Example "system" prompt: 
 ```
-<|im_start|>system You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed with the information provided only.
+<|im_start|>system
+You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed with the information provided only.
 Services: light.turn_off, light.turn_on, fan.turn_on, fan.turn_off
 Devices:
 light.office 'Office Light' = on
 fan.office 'Office fan' = off
-light.kitchen 'Kitchen Light' = on
-<|im_end|>
+light.kitchen 'Kitchen Light' = on<|im_end|>
 ```
 
 Output from the model will consist of a response that should be relayed back to the user, along with an optional code block that will invoke different Home Assistant "services". The output format from the model for function calling is as follows:
 
 `````
-<|im_start|>assistant turning on the kitchen lights for you now
+<|im_start|>assistant
+turning on the kitchen lights for you now
 ```homeassistant
 light.turn_on(light.kitchen)
-```
-<|im_end|><|endoftext|>
+```<|im_end|>
 `````
 
 Due to the mix of data used during fine tuning, the model is also capable of basic instruct and QA tasks. For example, the model is able to perform basic logic tasks such as the following:
@@ -37,8 +37,10 @@ Due to the mix of data used during fine tuning, the model is also capable of bas
 <|im_start|>system You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed with the information provided only.
 *snip*
 <|im_end|>
-<|im_start|>user if mary is 7 years old, and I am 3 years older than her. how old am I?<|im_end|>
-<|im_start|>assistant If Mary is 7 years old, then you are 10 years old (7+3=10).<|im_end|><|endoftext|>
+<|im_start|>user
+if mary is 7 years old, and I am 3 years older than her. how old am I?<|im_end|>
+<|im_start|>assistant
+If Mary is 7 years old, then you are 10 years old (7+3=10).<|im_end|>
 ```
 
 ### Synthetic Dataset
@@ -85,13 +87,15 @@ When setting up the component, there are 3 different "backend" options to choose
 3. A remote instance of text-generation-webui
 
 **Setting up the Llama.cpp backend with a model from HuggingFace**:  
-TODO: need to build wheels for llama.cpp first
+You need the following settings to configure the local backend from HuggingFace:
+1. Model Name: the name of the model in the form `repo/model-name`. The repo MUST contain a GGUF quantized model.
+2. Model Quantization: The quantization level to download. Pick from the list. Higher quantizations use more RAM but have higher quality responses.
 
 **Setting up the Llama.cpp backend with a locally downloaded model**:  
-TODO: need to build wheels for llama.cpp first
+You need the following settings to configure the local backend from HuggingFace:
+1. Model File Name: the file name where Home Assistant can access the model to load. Most likely a sub-path of `/config` or `/media` or wherever you copied the model file to.
 
-**Setting up the "remote" backend**:
-
+**Setting up the "remote" backend**:  
 You need the following settings in order to configure the "remote" backend
 1. Hostname: the host of the machine where text-generation-webui API is hosted. If you are using the provided add-on then the hostname is `local-text-generation-webui`
 2. Port: the port for accessing the text-generation-webui API. NOTE: this is not the same as the UI port. (Usually 5000)

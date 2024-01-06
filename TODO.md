@@ -8,7 +8,7 @@
 [x] Licenses + Attributions
 [x] Finish Readme/docs for initial release
 [x] Function calling as JSON
-[ ] multi-turn prompts
+[ ] multi-turn prompts; better instruct dataset like dolphin/wizardlm?
 [ ] Fine tune Phi-1 and Phi-1.5 versions
 [ ] "context requests"
     - basically just let the model decide what RAG/extra context it wants
@@ -21,3 +21,4 @@
     - "context request" from above to initiate a RAG search
 [x] make llama-cpp-python wheels for "llama-cpp-python>=0.2.24"
 [ ] prime kv cache with current "state" so that requests are faster
+[ ] make a proper evaluation framework to run. not just loss. should test accuracy on the function calling
