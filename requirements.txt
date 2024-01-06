@@ -1,4 +1,5 @@
 transformers
 tensorboard
+datasets
 peft
 bitsandbytes
