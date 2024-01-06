@@ -31,5 +31,6 @@ CONF_DOWNLOADED_MODEL_FILE = "downloaded_model_file"
 DEFAULT_DOWNLOADED_MODEL_FILE = ""
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = "5000"
-
+CONF_EXTRA_ATTRIBUTES_TO_EXPOSE = "extra_attributes_to_expose"
+DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE = "rgb_color,current_temperature,fan_mode,media_title,volume_level"
 GBNF_GRAMMAR_FILE = "output.gbnf"

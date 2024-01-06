@@ -9,6 +9,7 @@ import requests
 import re
 import os
 import json
+import webcolors
 
 from homeassistant.components import conversation
 from homeassistant.components.conversation.const import DOMAIN as CONVERSATION_DOMAIN
@@ -42,6 +43,7 @@ from .const import (
     CONF_REQUEST_TIMEOUT,
     CONF_BACKEND_TYPE,
     CONF_DOWNLOADED_MODEL_FILE,
+    CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
@@ -49,6 +51,7 @@ from .const import (
     DEFAULT_TOP_P,
     DEFAULT_BACKEND_TYPE,
     DEFAULT_REQUEST_TIMEOUT,
+    DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
     BACKEND_TYPE_REMOTE,
     DOMAIN,
     GBNF_GRAMMAR_FILE,
@@ -89,6 +92,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     conversation.async_unset_agent(hass, entry)
     return True
 
+async def closest_color(requested_colour):
+    min_colours = {}
+    for key, name in webcolors.CSS3_HEX_TO_NAMES.items():
+        r_c, g_c, b_c = webcolors.hex_to_rgb(key)
+        rd = (r_c - requested_colour[0]) ** 2
+        gd = (g_c - requested_colour[1]) ** 2
+        bd = (b_c - requested_colour[2]) ** 2
+        min_colours[(rd + gd + bd)] = name
+    return min_colours[min(min_colours.keys())]
 
 class LLaMAAgent(conversation.AbstractConversationAgent):
     """Local LLaMA conversation agent."""
@@ -109,6 +121,8 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
 
         model_path = self.entry.data.get(CONF_DOWNLOADED_MODEL_FILE)
         self.model_name = self.entry.data.get(CONF_CHAT_MODEL, model_path)
+        self.extra_attributes_to_expose = self.entry.data \
+            .get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE).split(",")
 
         if self.use_local_backend:
             if not model_path:
@@ -339,8 +353,9 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
             if not async_should_expose(self.hass, CONVERSATION_DOMAIN, state.entity_id):
                 continue
 
-            # TODO: also expose the "friendly name"
-            entity_states[state.entity_id] = { "state": state.state, "friendly_name": state.attributes["friendly_name"] }
+            attributes = dict(state.attributes)
+            attributes["state"] = state.state
+            entity_states[state.entity_id] = attributes
             domains.add(state.domain)
 
         _LOGGER.debug(f"Exposed entities: {entity_states}")
@@ -366,8 +381,29 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         """Generate a prompt for the user."""
         entities_to_expose, domains = self._async_get_exposed_entities()
 
+        def expose_attributes(attributes):
+            result = attributes["state"]
+            for attribute_name in self.extra_attributes_to_expose:
+                _LOGGER.info(f"{attribute_name} = {attributes['attribute_name']}")
+                if attribute_name not in attributes:
+                    continue
+
+                value = attributes[attribute_name]
+                if attribute_name == "current_temperature":
+                    value = int(value)
+                    if value > 50:
+                        value = value + "F"
+                    else:
+                        value = value + "C"
+                elif attribute_name == "rgb_color":
+                    value = tuple(value.split(", "))
+                    value = closest_color(value)
+                    
+                result = result + ";" + str(value)
+            return result
+
         formatted_states = "\n".join(
-            [f"{name} '{attributes['friendly_name']}' = {attributes['state']}" for name, attributes in entities_to_expose.items()]
+            [f"{name} '{attributes['friendly_name']}' = {expose_attributes(attributes)}" for name, attributes in entities_to_expose.items()]
         ) + "\n"
 
         service_dict = self.hass.services.async_services()

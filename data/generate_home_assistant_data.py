@@ -64,13 +64,45 @@ class ClimateDeviceType(DeviceType):
         ])
 
     def get_random_state(self):
-        hvac = random.choice(["heating", "cooling", "idle"])
-        fan = random.choice(["fan on", "fan off"])
+        hvac = random.choice(["heat", "cool", "heat_cool", "off", "auto", "fan_only"])
+        fan = random.choice(["On Low", "On High", "Auto Low", "Auto High", "Off"])
         if random.random() > 0.5:
             temp = str(random.randint(60, 80)) + "F"
         else:
             temp = str(random.randint(15, 25)) + "C"
-        return f"{hvac} ({fan}) at {temp}"
+        return f"{hvac};{fan};{temp}"
+
+class MediaPlayerDeviceType(DeviceType):
+    def __init__(self):
+        super().__init__("media_player", [
+            (STATE_ON, 0.15),
+            (STATE_OFF, 0.3),
+            (STATE_IDLE, 0.1),
+            (STATE_PLAYING, 0.2),
+            (STATE_PAUSED, 0.15),
+            (STATE_STANDBY, 0.05),
+            (STATE_BUFFERING, 0.05),
+        ], [
+            "turn_on",
+            "turn_off",
+            "toggle",
+            "volume_up",
+            "volume_down",
+            "volume_mute",
+            "media_play_pause",
+            "media_play",
+            "media_pause",
+            "media_stop",
+            "media_next_track",
+            "media_previous_track"
+        ])
+
+    def get_random_state(self):
+        state = super().get_random_state()
+
+        if state != STATE_OFF:
+            pass # TODO: add volume + a random media title
+        return state
 
 SUPPORTED_DEVICES = {
     "light": DeviceType(
@@ -152,32 +184,7 @@ SUPPORTED_DEVICES = {
             "unlock",
         ],
     ),
-    "media_player": DeviceType(
-        name="media_player",
-        possible_states=[
-            (STATE_ON, 0.15),
-            (STATE_OFF, 0.3),
-            (STATE_IDLE, 0.1),
-            (STATE_PLAYING, 0.2),
-            (STATE_PAUSED, 0.15),
-            (STATE_STANDBY, 0.05),
-            (STATE_BUFFERING, 0.05),
-        ],
-        services=[
-            "turn_on",
-            "turn_off",
-            "toggle",
-            "volume_up",
-            "volume_down",
-            "volume_mute",
-            "media_play_pause",
-            "media_play",
-            "media_pause",
-            "media_stop",
-            "media_next_track",
-            "media_previous_track"
-        ],
-    ),
+    "media_player": MediaPlayerDeviceType(),
     "climate": ClimateDeviceType()
 }
 
@@ -252,6 +259,9 @@ def random_device_list(max_devices: int, avoid_device_names: list[str]):
             device_type = device_name.split(".")[0]
             friendly_name = choice["description"]
 
+            if device_type == "climate":
+                continue # don't add random thermostats. we need to be careful about how we handle multiple thermostats
+
             state = SUPPORTED_DEVICES[device_type].get_random_state()
             device_lines.append(format_device_line(
                 device_name=device_name,
@@ -276,7 +286,6 @@ def generate_static_example(action: dict, max_devices: int = 32):
     device_list, device_types = random_device_list(max_devices=max_devices, avoid_device_names=[target_device])
 
     # insert our target device somewhere random in the list
-    
     index = random.randint(0, len(device_list))
     state = SUPPORTED_DEVICES[device_type].get_random_state()
 
@@ -288,7 +297,7 @@ def generate_static_example(action: dict, max_devices: int = 32):
 
     # gather a list of all available services
     available_services = []
-    for x in device_types:
+    for x in set(device_types + [device_type]):
         available_services.extend([ f"{x}.{y}" for y in SUPPORTED_DEVICES[x].services ])
 
     return {
@@ -329,10 +338,8 @@ def generate_templated_example(template: dict, max_devices: int = 32):
 
     # gather a list of all available services
     available_services = []
-    for x in device_types:
+    for x in set(device_types + template_device_types):
         available_services.extend([ f"{x}.{y}" for y in SUPPORTED_DEVICES[x].services ])
-
-    available_services.extend(service_names)
 
     # generate the question
     if len(template_device_types) == 1:
@@ -345,6 +352,18 @@ def generate_templated_example(template: dict, max_devices: int = 32):
             question = question.replace(f"<device_name{(i + 1)}>", chosen_devices[i]["description"])
             answer = answer.replace(f"<device_name{(i + 1)}>", chosen_devices[i]["description"])
 
+    if any(["climate" in service for service in service_names ]):
+        temp_f = str(random.randint(60, 80))
+        temp_c = str(random.randint(15, 25))
+        humidity = str(random.randint(0, 20) * 5)
+        question = question.replace("<temp_f>", temp_f)
+        question = question.replace("<temp_c>", temp_c)
+        question = question.replace("<humidity>", humidity)
+        
+        answer = answer.replace("<temp_f>", temp_f)
+        answer = answer.replace("<temp_c>", temp_c)
+        answer = answer.replace("<humidity>", humidity)
+        
 
     # generate the list of service calls and answers
     service_calls = []
@@ -377,7 +396,7 @@ def generate_status_request(template: dict, max_devices: int = 32):
 
     # gather a list of all available services
     available_services = []
-    for x in device_types:
+    for x in set(device_types + [device_type]):
         available_services.extend([ f"{x}.{y}" for y in SUPPORTED_DEVICES[x].services ])
 
     # generate the question
@@ -457,9 +476,9 @@ def generate_example_file(filename: str, seed: int, *, static_factor: int, templ
 # TODO: add examples for rooms/groups of devices. i.e. "turn off all the lights in the kitchen"
 # TODO: expose home assistant attributes in the context
 def main():
-    # generate_example_file("sample", 42, static_factor=1, template_factor=1, status_request_factor=1)
-    generate_example_file("home_assistant_train", 42, static_factor=5, template_factor=20, status_request_factor=15)
-    generate_example_file("home_assistant_test", 12345, static_factor=0.25, template_factor=3, status_request_factor=2)
+    generate_example_file("sample", 42, static_factor=1, template_factor=1, status_request_factor=1)
+    # generate_example_file("home_assistant_train", 42, static_factor=5, template_factor=20, status_request_factor=15)
+    # generate_example_file("home_assistant_test", 12345, static_factor=0.25, template_factor=3, status_request_factor=2)
 
 if __name__ == "__main__":
     main()

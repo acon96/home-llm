@@ -10,6 +10,7 @@
   "iot_class": "local_polling",
   "requirements": [
     "requests",
-    "huggingface-hub"
+    "huggingface-hub",
+    "webcolors"
   ]
 }
