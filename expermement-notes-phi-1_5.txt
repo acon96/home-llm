@@ -214,3 +214,21 @@ rev 9 - reduced dataset size
 + didn't work as well
 + would often not generate a service call
 + went back to 8.9
+
+------
+
+home-1b-rev1
+- 1 epoch
+- 2048 train ctx
+- batch size 8
+- learning rate 1e-5
+- weight decay 0.1
+- gradient clipping 1.0
+- dataset changes:
+  - updated chatml format
+  - json function calling
+  - included the alpaca split
++ it works OK with low temperatures
++ seems to handle the alpaca dataset not so well
+
+home-1b-rev2

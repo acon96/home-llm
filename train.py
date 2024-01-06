@@ -31,14 +31,14 @@ python3 train.py \
 
 """
 python3 train.py \
-    --run_name home-1b-rev1 \
+    --run_name home-1b-rev2_2 \
     --base_model microsoft/phi-1_5 \
     --add_pad_token \
     --add_chatml_tokens \
     --bf16 \
-    --train_dataset data/home_assistant_alpaca_merged_train.json \
-    --test_dataset data/home_assistant_alpaca_merged_test.json \
-    --learning_rate 1e-5 \
+    --train_dataset data/home_assistant_train.json \
+    --test_dataset data/home_assistant_test.json \
+    --learning_rate 5e-6 \
     --save_steps 1000 \
     --micro_batch_size 4 --gradient_checkpointing \
     --ctx_size 2048
