@@ -71,12 +71,17 @@ In order to integrate with Home Assistant, we provide a `custom_component` that 
 
 The component can either run the model directly as part of the Home Assistant software using llama-cpp-python, or you can run the [oobabooga/text-generation-webui](https://github.com/oobabooga/text-generation-webui) project to provide access to the LLM via an API interface. When doing this, you can host the model yourself and point the add-on at machine where the model is hosted, or you can run the model using text-generation-webui using the provided [custom Home Assistant add-on](./addon).
 
-### Installing
+### Installing Manual
 1. Ensure you have either the Samba, SSH, FTP, or another add-on installed that gives you access to the `config` folder
 2. If there is not already a `custom_components` folder, create one now.
 3. Copy the `custom_components/llama_conversation` folder from this repo to `config/custom_components/llama_conversation` on your Home Assistant machine.
 4. Restart Home Assistant using the "Developer Tools" tab -> Services -> Run `homeassistant.restart`
 5. The "LLaMA Conversation" integration should show up in the "Devices" section now.
+
+### Installing with HACS
+You can use this button to add the repository to HACS and open the download page
+
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?category=Integration&repository=home-llm&owner=acon96)
 
 ### Setting up
 When setting up the component, there are 3 different "backend" options to choose from:
