@@ -71,6 +71,10 @@ In order to integrate with Home Assistant, we provide a `custom_component` that 
 
 The component can either run the model directly as part of the Home Assistant software using llama-cpp-python, or you can run the [oobabooga/text-generation-webui](https://github.com/oobabooga/text-generation-webui) project to provide access to the LLM via an API interface. When doing this, you can host the model yourself and point the add-on at machine where the model is hosted, or you can run the model using text-generation-webui using the provided [custom Home Assistant add-on](./addon).
 
+You can use this button to be redirected to the Add-on Store page of the `oobabooga/text-generation-webui` [CPU only]
+
+[![Open your Home Assistant instance and show the dashboard of an add-on.](https://my.home-assistant.io/badges/supervisor_addon.svg)](https://my.home-assistant.io/redirect/supervisor_addon/?addon=2ad5febb_text-generation-webui&repository_url=https%3A%2F%2Fgithub.com%2Facon96%2Fhome-llm)
+
 ### Installing Manual
 1. Ensure you have either the Samba, SSH, FTP, or another add-on installed that gives you access to the `config` folder
 2. If there is not already a `custom_components` folder, create one now.
