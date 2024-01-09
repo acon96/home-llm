@@ -1,6 +1,6 @@
 {
     "name": "LLaMA Conversation",    
-    "homeassistant": "2022.5.0",
+    "homeassistant": "2023.10.0",
     "content_in_root": false,
     "render_readme": true
 } 
