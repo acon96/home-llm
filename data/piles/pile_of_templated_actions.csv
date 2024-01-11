@@ -192,3 +192,5 @@ climate,set_fan_mode,"Change the fan setting to medium.","Changing the fan to me
 climate,set_hvac_mode,"Switch the system to cooling mode.","Switching to cooling mode."
 climate,set_hvac_mode,"Can we set the HVAC to heat?","Setting the HVAC to heat."
 climate,set_hvac_mode,"Change the HVAC to automatic.","Changing HVAC to automatic mode."
+
+# TODO: add requests to set the color of lights

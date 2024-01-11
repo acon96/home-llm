@@ -2,3 +2,4 @@ transformers
 tensorboard
 peft
 bitsandbytes
+datasets

@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from difflib import SequenceMatcher
 from typing import Final, Any
 from tqdm import tqdm
+import webcolors
 
 # #### STATES ####
 STATE_ON: Final = "on"
@@ -29,20 +30,6 @@ STATE_UNAVAILABLE: Final = "unavailable"
 STATE_OK: Final = "ok"
 STATE_PROBLEM: Final = "problem"
 
-# class RandomValueType(enum.StrEnum):
-#     NUMBER = enum.auto()
-#     PERCENT = enum.auto()
-#     BOOL = enum.auto()
-
-# def get_random_value(type: RandomValueType):
-#     match type:
-#         case RandomValueType.NUMBER:
-#             return random.randint(0, 1000)
-#         case RandomValueType.PERCENT:
-#             return random.random()
-#         case RandomValueType.BOOL:
-#             return random.random() > 0.5
-
 @dataclass
 class DeviceType:
     name: str
@@ -53,6 +40,39 @@ class DeviceType:
         states = [ x[0] for x in self.possible_states ]
         weights = [ x[1] for x in self.possible_states ]
         return random.choices(states, weights=weights, k=1)[0]
+    
+class LightDeviceType(DeviceType):
+    def __init__(self):
+        super().__init__("light",
+            possible_states=[
+                (STATE_ON, 0.5),
+                (STATE_OFF, 0.5)
+            ],
+            services=[
+                "turn_on",
+                "turn_off",
+                "toggle"
+            ],
+        )
+
+    def closest_color(requested_color):
+        min_colors = {}
+        for key, name in webcolors.CSS3_HEX_TO_NAMES.items():
+            r_c, g_c, b_c = webcolors.hex_to_rgb(key)
+            rd = (r_c - requested_color[0]) ** 2
+            gd = (g_c - requested_color[1]) ** 2
+            bd = (b_c - requested_color[2]) ** 2
+            min_colors[(rd + gd + bd)] = name
+        return min_colors[min(min_colors.keys())]
+
+    def get_random_state(self, force_rgb=False):
+        state = super().get_random_state()
+
+        if random.random() < 0.05 or force_rgb:
+            random_rgb = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+            state = state + ";" + self.closest_color(random_rgb) + ";" + random_rgb
+
+        return state
     
 class ClimateDeviceType(DeviceType):
     def __init__(self):
@@ -115,18 +135,7 @@ class MediaPlayerDeviceType(DeviceType):
         return state
 
 SUPPORTED_DEVICES = {
-    "light": DeviceType(
-        name="light",
-        possible_states=[
-            (STATE_ON, 0.5),
-            (STATE_OFF, 0.5)
-        ],
-        services=[
-            "turn_on",
-            "turn_off",
-            "toggle"
-        ],
-    ),
+    "light": LightDeviceType(),
     "switch": DeviceType(
         name="switch",
         possible_states=[
@@ -491,7 +500,8 @@ def generate_example_file(filename: str, seed: int, *, static_factor: int, templ
 # TODO: make more randomized names for devices (random words or people's names)
 # TODO: answer questions about more than one thing in the state list at once
 # TODO: add examples for rooms/groups of devices. i.e. "turn off all the lights in the kitchen"
-# TODO: expose home assistant attributes in the context
+# TODO: setup argparse to configure which partition to generate
+# TODO: merge this with the alpaca merge script + support other datasets to merge with
 def main():
     generate_example_file("sample", 42, static_factor=1, template_factor=1, status_request_factor=1)
     # generate_example_file("home_assistant_train", 42, static_factor=5, template_factor=20, status_request_factor=15)
