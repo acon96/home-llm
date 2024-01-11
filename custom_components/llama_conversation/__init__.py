@@ -398,6 +398,8 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
                 elif attribute_name == "rgb_color":
                     value = tuple(value.split(", "))
                     value = closest_color(value)
+                elif attribute_name == "volume_level":
+                    value = "vol=" + value
                     
                 result = result + ";" + str(value)
             return result

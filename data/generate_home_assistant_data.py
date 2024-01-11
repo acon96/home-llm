@@ -57,10 +57,14 @@ class DeviceType:
 class ClimateDeviceType(DeviceType):
     def __init__(self):
         super().__init__("climate", [], [
+            "turn_on",
+            "turn_off",
+            "toggle",
             "set_temperature",
             "set_humidity",
             "set_fan_mode",
             "set_hvac_mode",
+            "set_preset_mode"
         ])
 
     def get_random_state(self):
@@ -76,12 +80,12 @@ class MediaPlayerDeviceType(DeviceType):
     def __init__(self):
         super().__init__("media_player", [
             (STATE_ON, 0.15),
-            (STATE_OFF, 0.3),
+            (STATE_OFF, 0.54),
             (STATE_IDLE, 0.1),
-            (STATE_PLAYING, 0.2),
-            (STATE_PAUSED, 0.15),
+            (STATE_PLAYING, 0.1),
+            (STATE_PAUSED, 0.05),
             (STATE_STANDBY, 0.05),
-            (STATE_BUFFERING, 0.05),
+            (STATE_BUFFERING, 0.01),
         ], [
             "turn_on",
             "turn_off",
@@ -97,11 +101,17 @@ class MediaPlayerDeviceType(DeviceType):
             "media_previous_track"
         ])
 
+        with open("piles/pile_of_media_names.csv") as f:
+            self.media_names = [ x.strip() for x in f.readlines() ]
+
     def get_random_state(self):
         state = super().get_random_state()
 
+        if state in [STATE_PLAYING, STATE_PAUSED, STATE_BUFFERING, STATE_ON]:
+            state = state + ";" + random.choice(self.media_names)
+
         if state != STATE_OFF:
-            pass # TODO: add volume + a random media title
+            state = state + ";vol=" + str(round(random.random(), 2))
         return state
 
 SUPPORTED_DEVICES = {
@@ -352,23 +362,29 @@ def generate_templated_example(template: dict, max_devices: int = 32):
             question = question.replace(f"<device_name{(i + 1)}>", chosen_devices[i]["description"])
             answer = answer.replace(f"<device_name{(i + 1)}>", chosen_devices[i]["description"])
 
-    if any(["climate" in service for service in service_names ]):
-        temp_f = str(random.randint(60, 80))
-        temp_c = str(random.randint(15, 25))
-        humidity = str(random.randint(0, 20) * 5)
-        question = question.replace("<temp_f>", temp_f)
-        question = question.replace("<temp_c>", temp_c)
-        question = question.replace("<humidity>", humidity)
-        
-        answer = answer.replace("<temp_f>", temp_f)
-        answer = answer.replace("<temp_c>", temp_c)
-        answer = answer.replace("<humidity>", humidity)
-        
-
     # generate the list of service calls and answers
     service_calls = []
     for device_dict, service in zip(chosen_devices, service_names):
         service_calls.append({ "service": service, "target_device": device_dict["device_name"] })
+
+    if any(["climate" in service for service in service_names ]):
+        if "<temp_f>" in question:
+            temp_f = random.randint(60, 80)
+            question = question.replace("<temp_f>", str(temp_f))
+            answer = answer.replace("<temp_f>", str(temp_f))
+            service_calls = [ { **call, "temperature": temp_f} for call in service_calls ]
+
+        if "<temp_c>" in question:
+            temp_c = random.randint(15, 25)
+            question = question.replace("<temp_c>", str(temp_c))
+            answer = answer.replace("<temp_c>", str(temp_c))
+            service_calls = [ { **call, "temperature": temp_c} for call in service_calls ]
+
+        if "<humidity>" in question:
+            humidity = random.randint(0, 20) * 5
+            question = question.replace("<humidity>", str(humidity))
+            answer = answer.replace("<humidity>", str(humidity))
+            service_calls = [ { **call, "humidity": humidity} for call in service_calls ]
 
     return {
         "states": device_list,
@@ -392,6 +408,7 @@ def generate_status_request(template: dict, max_devices: int = 32):
 
     # insert our target device somewhere random in the list
     index = random.randint(0, len(device_list))
+    # TODO: support more complex states
     device_list.insert(index, f"{chosen_device['device_name']} = {state_name}")
 
     # gather a list of all available services

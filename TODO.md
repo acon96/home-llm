@@ -23,3 +23,4 @@
 [ ] prime kv cache with current "state" so that requests are faster
 [ ] make a proper evaluation framework to run. not just loss. should test accuracy on the function calling
 [ ] add LocalAI backend
+[ ] more config options for prompt template (allow other than chatml)
