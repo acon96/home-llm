@@ -31,15 +31,14 @@ python3 train.py \
 
 """
 python3 train.py \
-    --run_name home-1b-rev2_2 \
+    --run_name home-1b-rev3_1 \
     --base_model microsoft/phi-1_5 \
     --add_pad_token \
     --add_chatml_tokens \
     --bf16 \
     --train_dataset data/home_assistant_train.json \
     --test_dataset data/home_assistant_test.json \
-    --learning_rate 5e-6 \
-    --save_steps 1000 \
+    --learning_rate 1e-5 \
     --micro_batch_size 4 --gradient_checkpointing \
     --ctx_size 2048
 """
@@ -118,7 +117,7 @@ if training_run_args.bf16:
 else:
     model_kwargs["torch_dtype"] = torch.float16
 
-model_kwargs["resid_pdrop"] = 0.0
+# model_kwargs["resid_pdrop"] = 0.0
 
 def find_max_vram(min_buffer_mib=800):
     total_mem = (torch.cuda.get_device_properties(0).total_memory / (1024 * 1024))
@@ -135,7 +134,6 @@ model = AutoModelForCausalLM.from_pretrained(
     trust_remote_code=True,
     device_map="auto",
     max_memory=find_max_vram(),
-    # local_files_only=True,
     **model_kwargs
 )
 tokenizer = AutoTokenizer.from_pretrained(training_run_args.base_model, trust_remote_code=True, use_fast=False)
@@ -185,8 +183,8 @@ training_args = TrainingArguments(
     # per_device_eval_batch_size=training_run_args.micro_batch_size,
     gradient_accumulation_steps=training_run_args.batch_size//training_run_args.micro_batch_size,
     gradient_checkpointing=training_run_args.gradient_checkpointing,
-    weight_decay=training_run_args.weight_decay,
-    max_grad_norm=training_run_args.gradient_clip,
+    # weight_decay=training_run_args.weight_decay,
+    # max_grad_norm=training_run_args.gradient_clip,
     # evaluation_strategy="steps",
     # eval_steps=training_run_args.eval_steps,
     save_strategy=("steps" if training_run_args.save_steps != -1 else "epoch"),
@@ -277,7 +275,7 @@ class DataCollatorForSupervisedFineTuning(object):
             current = max(current, end + 1)
         
         if current < len(input_ids):
-            inverse_ranges.append((current, len(input_ids) - 1))            
+            inverse_ranges.append((current, len(input_ids) - 1))
 
         return inverse_ranges
     
@@ -297,6 +295,8 @@ class DataCollatorForSupervisedFineTuning(object):
         for label in labels:
             mask_ranges = self._find_mask_ranges(label)
             for start, end in mask_ranges:
+                if end - start == len(label):
+                    print("warning! example had no assistant response in it!")
                 label[start:end] = [-100] * (end - start)
 
         input_ids = torch.LongTensor(self._pad(input_ids, self.tokenizer.pad_token_id))

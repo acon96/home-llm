@@ -66,8 +66,6 @@ python3 train.py \
     --use_lora --lora_rank 32 --lora_alpha 64 --lora_modules fc1,fc2,Wqkv,out_proj --lora_modules_to_save wte,lm_head.linear --lora_merge
 ```
 
-The provided `custom_modeling_phi.py` has Gradient Checkpointing implemented for the MHA and MLP modules, allowing for significantly reduced VRAM usage during training.
-
 ## Home Assistant Component
 In order to integrate with Home Assistant, we provide a `custom_component` that exposes the locally running LLM as a "conversation agent" that can be interacted with using a chat interface as well as integrate with Speech-to-Text and Text-to-Speech addons to enable interacting with the model by speaking.  
 
