@@ -1,8 +1,9 @@
+import argparse
 import json
 import csv
-import enum
 import random
 from dataclasses import dataclass
+from datasets import load_dataset, concatenate_datasets
 from difflib import SequenceMatcher
 from typing import Final, Any
 from tqdm import tqdm
@@ -30,6 +31,16 @@ STATE_UNAVAILABLE: Final = "unavailable"
 STATE_OK: Final = "ok"
 STATE_PROBLEM: Final = "problem"
 
+def closest_color(requested_color):
+    min_colors = {}
+    for key, name in webcolors.CSS3_HEX_TO_NAMES.items():
+        r_c, g_c, b_c = webcolors.hex_to_rgb(key)
+        rd = (r_c - requested_color[0]) ** 2
+        gd = (g_c - requested_color[1]) ** 2
+        bd = (b_c - requested_color[2]) ** 2
+        min_colors[(rd + gd + bd)] = name
+    return min_colors[min(min_colors.keys())]
+
 @dataclass
 class DeviceType:
     name: str
@@ -55,22 +66,17 @@ class LightDeviceType(DeviceType):
             ],
         )
 
-    def closest_color(requested_color):
-        min_colors = {}
-        for key, name in webcolors.CSS3_HEX_TO_NAMES.items():
-            r_c, g_c, b_c = webcolors.hex_to_rgb(key)
-            rd = (r_c - requested_color[0]) ** 2
-            gd = (g_c - requested_color[1]) ** 2
-            bd = (b_c - requested_color[2]) ** 2
-            min_colors[(rd + gd + bd)] = name
-        return min_colors[min(min_colors.keys())]
 
-    def get_random_state(self, force_rgb=False):
+
+    def get_random_state(self, force_rgb=False, force_brightness=False):
         state = super().get_random_state()
 
         if random.random() < 0.05 or force_rgb:
             random_rgb = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-            state = state + ";" + self.closest_color(random_rgb) + ";" + random_rgb
+            state = state + ";" + closest_color(random_rgb) + " " + str(random_rgb)
+
+        if random.random() < 0.3 or force_brightness:
+            state = state + ";" + str(random.randint(0, 100)) + "%"
 
         return state
     
@@ -395,6 +401,23 @@ def generate_templated_example(template: dict, max_devices: int = 32):
             answer = answer.replace("<humidity>", str(humidity))
             service_calls = [ { **call, "humidity": humidity} for call in service_calls ]
 
+    if any(["light" in service for service in service_names ]):
+        if "<brightness>" in question:
+            brightness = random.randint(0, 100)
+            question = question.replace("<brightness>", str(brightness))
+            answer = answer.replace("<brightness>", str(brightness))
+            service_calls = [ { **call, "brightness_pct": brightness} for call in service_calls ]
+
+        if "<color>" in question:
+            random_rgb = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+            random_rgb_name = closest_color(random_rgb)
+            actual_random_rgb = webcolors.name_to_rgb(random_rgb_name)
+            actual_random_rgb = (actual_random_rgb.red, actual_random_rgb.green, actual_random_rgb.blue)
+            question = question.replace("<color>", str(random_rgb_name))
+            answer = answer.replace("<color>", str(random_rgb_name))
+            service_calls = [ { **call, "rgb_color": str(actual_random_rgb) } for call in service_calls ]
+        
+
     return {
         "states": device_list,
         "available_services": list(available_services),
@@ -496,16 +519,68 @@ def generate_example_file(filename: str, seed: int, *, static_factor: int, templ
 
     print("Done!")
 
+def format_alpaca(example):
+    question = example["instruction"]
+    if example["input"]:
+        question = question = "\n" + example["input"]
+
+    answer = example["output"]
+
+    device_list, device_types = random_device_list(max_devices=32, avoid_device_names=[])
+
+    available_services = []
+    for x in device_types:
+        available_services.extend([ f"{x}.{y}" for y in SUPPORTED_DEVICES[x].services ])
+
+    text = format_example(example={
+        "states": device_list,
+        "available_services": list(available_services),
+        "question": question,
+        "answers": [ answer ],
+        "service_calls": []
+    })
+
+    result = {
+        "text": text
+    }
+
+    return result
+
+def merge_with_dataset(dataset_name, seed, outupt_name, format_function):
+    alpaca_dataset = load_dataset(dataset_name)["train"].train_test_split(test_size=0.1)
+    home_assistant_dataset = load_dataset("json", data_files={  "train": "home_assistant_train.json", "test": "home_assistant_test.json" })
+
+    random.seed(seed)
+
+    alpaca_dataset = alpaca_dataset.map(format_function).remove_columns(["input", "output", "instruction"])
+
+    combined_dataset_train = concatenate_datasets([home_assistant_dataset["train"], alpaca_dataset["train"]]).shuffle(seed=42)
+    combined_dataset_test = concatenate_datasets([home_assistant_dataset["test"], alpaca_dataset["test"]]).shuffle(seed=42)
+
+    combined_dataset_train.to_json(f"home_assistant_{outupt_name}_merged_train.json")
+    combined_dataset_test.to_json(f"home_assistant_{outupt_name}_merged_test.json")
+
+
 # TODO: add examples for ambiguous requests. asking a clarifying question
 # TODO: make more randomized names for devices (random words or people's names)
 # TODO: answer questions about more than one thing in the state list at once
 # TODO: add examples for rooms/groups of devices. i.e. "turn off all the lights in the kitchen"
-# TODO: setup argparse to configure which partition to generate
-# TODO: merge this with the alpaca merge script + support other datasets to merge with
 def main():
-    generate_example_file("sample", 42, static_factor=1, template_factor=1, status_request_factor=1)
-    # generate_example_file("home_assistant_train", 42, static_factor=5, template_factor=20, status_request_factor=15)
-    # generate_example_file("home_assistant_test", 12345, static_factor=0.25, template_factor=3, status_request_factor=2)
+    parser = argparse.ArgumentParser(description="Generate the full dataset from the CSV piles")
+    parser.add_argument("--sample", action="store_true", help="Set this flag to enable generation of the train dataset.")
+    parser.add_argument("--test", action="store_true", help="Set this flag to enable generation of the train dataset..")
+    parser.add_argument("--train", action="store_true", help="Set this flag to enable generation of the train dataset.")
+    parser.add_argument("--merge-alpaca", action="store_true", help="Set this flag to merge the generated datasets with the alpaca-cleaned dataset.")
+    args = parser.parse_args()
+
+    if args.sample:
+        generate_example_file("sample", 42, static_factor=1, template_factor=1, status_request_factor=1)
+    if args.train:
+        generate_example_file("home_assistant_train", 42, static_factor=5, template_factor=20, status_request_factor=15)
+    if args.test:
+        generate_example_file("home_assistant_test", 12345, static_factor=0.25, template_factor=3, status_request_factor=2)
+    if args.merge_alpaca:
+        merge_with_dataset("yahma/alpaca-cleaned", 42, "alpaca", format_alpaca)
 
 if __name__ == "__main__":
     main()
