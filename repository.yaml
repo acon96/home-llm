@@ -1,0 +1,4 @@
+# https://developers.home-assistant.io/docs/add-ons/repository#repository-configuration
+name: text-generation-webui - Home Assistant Add-on
+url: 'https://github.com/acon96/home-llm'
+maintainer: acon96
