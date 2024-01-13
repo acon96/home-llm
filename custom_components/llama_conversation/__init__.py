@@ -278,8 +278,16 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         )
     
     def _load_remote_model(self):
-        # TODO: check if model is already loaded
         try:
+            currently_loaded_result = requests.get(f"{self.api_host}/v1/internal/model/info")
+            currently_loaded_result.raise_for_status()
+
+            loaded_model = currently_loaded_result.json()["model_name"]
+            if loaded_model == self.model_name:
+                _LOGGER.info(f"Model {self.model_name} is already loaded on the remote backend.")
+            else:
+                _LOGGER.info(f"Model is not {self.model_name} loaded on the remote backend. Loading it now...")
+            
             load_result = requests.post(
                 f"{self.api_host}/v1/internal/model/load",
                 json={
