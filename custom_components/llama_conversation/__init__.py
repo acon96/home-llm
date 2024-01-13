@@ -44,6 +44,7 @@ from .const import (
     CONF_BACKEND_TYPE,
     CONF_DOWNLOADED_MODEL_FILE,
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
+    CONF_PROMPT_TEMPLATE,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
@@ -52,9 +53,11 @@ from .const import (
     DEFAULT_BACKEND_TYPE,
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
+    DEFAULT_PROMPT_TEMPLATE,
     BACKEND_TYPE_REMOTE,
     DOMAIN,
     GBNF_GRAMMAR_FILE,
+    PROMPT_TEMPLATE_DESCRIPTIONS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -92,7 +95,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     conversation.async_unset_agent(hass, entry)
     return True
 
-async def closest_color(requested_color):
+def closest_color(requested_color):
     min_colors = {}
     for key, name in webcolors.CSS3_HEX_TO_NAMES.items():
         r_c, g_c, b_c = webcolors.hex_to_rgb(key)
@@ -271,6 +274,7 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         )
     
     def _load_remote_model(self):
+        # TODO: check if model is already loaded
         try:
             load_result = requests.post(
                 f"{self.api_host}/v1/internal/model/load",
@@ -366,15 +370,21 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         self, prompt: list[dict], include_generation_prompt: bool = True
     ) -> str:
         formatted_prompt = ""
+
+        prompt_template = self.entry.options.get(CONF_PROMPT_TEMPLATE, DEFAULT_PROMPT_TEMPLATE)
+        template_desc = PROMPT_TEMPLATE_DESCRIPTIONS[prompt_template]
+
         for message in prompt:
             role = message["role"]
             message = message["message"]
+            role_desc = template_desc[role]
             formatted_prompt = (
-                formatted_prompt + f"<|im_start|>{role}\n{message}<|im_end|>\n"
+                formatted_prompt + f"{role_desc['prefix']}{message}{role_desc['suffix']}\n"
             )
 
         if include_generation_prompt:
-            formatted_prompt = formatted_prompt + "<|im_start|>assistant"
+            formatted_prompt = formatted_prompt + template_desc["generation_prompt"]
+            
         return formatted_prompt
 
     def _async_generate_prompt(self, prompt_template: str) -> str:
@@ -384,28 +394,29 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         def expose_attributes(attributes):
             result = attributes["state"]
             for attribute_name in self.extra_attributes_to_expose:
-                _LOGGER.info(f"{attribute_name} = {attributes['attribute_name']}")
                 if attribute_name not in attributes:
                     continue
 
+                _LOGGER.info(f"{attribute_name} = {attributes[attribute_name]}")
+
                 value = attributes[attribute_name]
-                if attribute_name == "current_temperature":
-                    value = int(value)
-                    if value > 50:
-                        value = value + "F"
-                    else:
-                        value = value + "C"
-                elif attribute_name == "rgb_color":
-                    value = tuple(value.split(", "))
-                    value = closest_color(value)
-                elif attribute_name == "volume_level":
-                    value = "vol=" + value
-                    
-                result = result + ";" + str(value)
+                if value is not None:
+                    if attribute_name == "current_temperature":
+                        value = int(value)
+                        if value > 50:
+                            value = f"{value}F"
+                        else:
+                            value = f"{value}C"
+                    elif attribute_name == "rgb_color":
+                        value = F"{closest_color(value)} {value}"
+                    elif attribute_name == "volume_level":
+                        value = f"{int(value*100)}%"
+                        
+                    result = result + ";" + str(value)
             return result
 
         formatted_states = "\n".join(
-            [f"{name} '{attributes['friendly_name']}' = {expose_attributes(attributes)}" for name, attributes in entities_to_expose.items()]
+            [f"{name} '{attributes.get('friendly_name')}' = {expose_attributes(attributes)}" for name, attributes in entities_to_expose.items()]
         ) + "\n"
 
         service_dict = self.hass.services.async_services()

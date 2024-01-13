@@ -19,11 +19,10 @@ DEFAULT_TEMPERATURE = 0.1
 CONF_REQUEST_TIMEOUT = "request_timeout"
 DEFAULT_REQUEST_TIMEOUT = 90
 CONF_BACKEND_TYPE = "model_backend"
-BACKEND_TYPE_LLAMA_HF = "Llama.cpp (HuggingFace)"
-BACKEND_TYPE_LLAMA_EXISTING = "Llama.cpp (existing model)"
-BACKEND_TYPE_REMOTE = "text-generation-webui API"
+BACKEND_TYPE_LLAMA_HF = "llama_cpp_hf"
+BACKEND_TYPE_LLAMA_EXISTING = "llama_cpp_existing"
+BACKEND_TYPE_REMOTE = "text-generation-webui_api"
 DEFAULT_BACKEND_TYPE = BACKEND_TYPE_LLAMA_HF
-CONF_BACKEND_TYPE_OPTIONS = [ BACKEND_TYPE_LLAMA_HF, BACKEND_TYPE_LLAMA_EXISTING, BACKEND_TYPE_REMOTE ]
 CONF_DOWNLOADED_MODEL_QUANTIZATION = "downloaded_model_quantization"
 CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS = ["Q8_0", "Q5_K_M", "Q4_K_M", "Q3_K_M"]
 DEFAULT_DOWNLOADED_MODEL_QUANTIZATION = "Q5_K_M"
@@ -34,3 +33,35 @@ DEFAULT_PORT = "5000"
 CONF_EXTRA_ATTRIBUTES_TO_EXPOSE = "extra_attributes_to_expose"
 DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE = "rgb_color,current_temperature,fan_mode,media_title,volume_level"
 GBNF_GRAMMAR_FILE = "output.gbnf"
+CONF_PROMPT_TEMPLATE = "prompt_template"
+PROMPT_TEMPLATE_CHATML = "chatml"
+PROMPT_TEMPLATE_ALPACA = "alpaca"
+PROMPT_TEMPLATE_VICUNA = "vicuna"
+PROMPT_TEMPLATE_NONE = "no_prompt_template"
+DEFAULT_PROMPT_TEMPLATE = PROMPT_TEMPLATE_CHATML
+PROMPT_TEMPLATE_DESCRIPTIONS = {
+    PROMPT_TEMPLATE_CHATML: {
+        "system": { "prefix": "<|im_start|>system\n", "suffix": "<|im_end|>" },
+        "user": { "prefix": "<|im_start|>user\n", "suffix": "<|im_end|>" },
+        "assistant": { "prefix": "<|im_start|>assistant\n", "suffix": "" },
+        "generation_prompt": "<|im_start|>assistant"
+    },
+    PROMPT_TEMPLATE_ALPACA: {
+        "system": { "prefix": "", "suffix": "\n" },
+        "user": { "prefix": "### Instruction:\n", "suffix": "\n" },
+        "assistant": { "prefix": "### Response:\n", "suffix": "\n" },
+        "generation_prompt": "### Response:"
+    },
+    PROMPT_TEMPLATE_VICUNA: {
+        "system": { "prefix": "", "suffix": "\n" },
+        "user": { "prefix": "USER: ", "suffix": "" },
+        "assistant": { "prefix": "ASSISTANT: ", "suffix": "</s>" },
+        "generation_prompt": "ASSISTANT:"
+    },
+    PROMPT_TEMPLATE_NONE: {
+        "system": { "prefix": "", "suffix": "" },
+        "user": { "prefix": "", "suffix": "" },
+        "assistant": { "prefix": "", "suffix": "" },
+        "generation_prompt": ""
+    }
+}

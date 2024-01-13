@@ -29,6 +29,9 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     TemplateSelector,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
 )
 
 from .const import (
@@ -40,10 +43,10 @@ from .const import (
     CONF_TOP_P,
     CONF_REQUEST_TIMEOUT,
     CONF_BACKEND_TYPE,
-    CONF_BACKEND_TYPE_OPTIONS,
     CONF_DOWNLOADED_MODEL_FILE,
     CONF_DOWNLOADED_MODEL_QUANTIZATION,
     CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS,
+    CONF_PROMPT_TEMPLATE,
     DEFAULT_CHAT_MODEL,
     DEFAULT_HOST,
     DEFAULT_PORT,
@@ -54,9 +57,14 @@ from .const import (
     DEFAULT_TOP_P,
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_BACKEND_TYPE,
+    DEFAULT_PROMPT_TEMPLATE,
     BACKEND_TYPE_LLAMA_HF,
     BACKEND_TYPE_LLAMA_EXISTING,
     BACKEND_TYPE_REMOTE,
+    PROMPT_TEMPLATE_CHATML,
+    PROMPT_TEMPLATE_ALPACA,
+    PROMPT_TEMPLATE_VICUNA,
+    PROMPT_TEMPLATE_NONE,
     DEFAULT_DOWNLOADED_MODEL_QUANTIZATION,
     DOMAIN,
 )
@@ -66,7 +74,15 @@ _LOGGER = logging.getLogger(__name__)
 def STEP_INIT_DATA_SCHEMA(backend_type=None):
     return vol.Schema(
         {
-            vol.Required(CONF_BACKEND_TYPE, default=backend_type if backend_type else DEFAULT_BACKEND_TYPE): vol.In(CONF_BACKEND_TYPE_OPTIONS),
+            vol.Required(
+                CONF_BACKEND_TYPE, 
+                default=backend_type if backend_type else DEFAULT_BACKEND_TYPE
+            ): SelectSelector(SelectSelectorConfig(
+                options=[ BACKEND_TYPE_LLAMA_HF, BACKEND_TYPE_LLAMA_EXISTING, BACKEND_TYPE_REMOTE ],
+                translation_key=CONF_BACKEND_TYPE,
+                multiple=False,
+                mode=SelectSelectorMode.LIST,
+            ))
         }
     )
 
@@ -102,6 +118,7 @@ DEFAULT_OPTIONS = types.MappingProxyType(
         CONF_TOP_P: DEFAULT_TOP_P,
         CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
         CONF_REQUEST_TIMEOUT: DEFAULT_REQUEST_TIMEOUT,
+        CONF_PROMPT_TEMPLATE: DEFAULT_PROMPT_TEMPLATE,
     }
 )
 
@@ -463,6 +480,16 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], is_loc
             description={"suggested_value": options[CONF_PROMPT]},
             default=DEFAULT_PROMPT,
         ): TemplateSelector(),
+        vol.Optional(
+            CONF_PROMPT_TEMPLATE,
+            description={"suggested_value": options[CONF_PROMPT_TEMPLATE]},
+            default=DEFAULT_PROMPT_TEMPLATE,
+        ): SelectSelector(SelectSelectorConfig(
+            options=[PROMPT_TEMPLATE_CHATML, PROMPT_TEMPLATE_ALPACA, PROMPT_TEMPLATE_VICUNA, PROMPT_TEMPLATE_NONE],
+            translation_key=CONF_PROMPT_TEMPLATE,
+            multiple=False,
+            mode=SelectSelectorMode.DROPDOWN,
+        )),
         vol.Optional(
             CONF_MAX_TOKENS,
             description={"suggested_value": options[CONF_MAX_TOKENS]},

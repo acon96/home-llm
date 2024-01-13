@@ -46,12 +46,30 @@
             "init": {
                 "data": {
                     "max_new_tokens": "Maximum tokens to return in response",
-                    "prompt": "Prompt Template",
+                    "prompt": "System Prompt",
+                    "prompt_template": "Prompt Format",
                     "temperature": "Temperature",
                     "top_k": "Top K",
                     "top_p": "Top P",
                     "request_timeout": "Remote Request Timeout (seconds)"
                 }
+            }
+        }
+    },
+    "selector": {
+        "prompt_template": {
+            "options": {
+                "chatml": "ChatML",
+                "vicuna": "Vicuna",
+                "alpaca": "Alpaca",
+                "no_prompt_template": "None"
+            }
+        },
+        "model_backend": {
+            "options": {
+                "llama_cpp_hf": "Llama.cpp (HuggingFace)",
+                "llama_cpp_existing": "Llama.cpp (existing model)",
+                "text-generation-webui_api": "text-generation-webui API"
             }
         }
     }
