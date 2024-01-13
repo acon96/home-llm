@@ -15,7 +15,7 @@ Phi Modules: fc1,fc2,Wqkv,out_proj,wte,lm_head.linear
 
 """
 python3 train.py \
-    --run_name home-3b-v2-rev1 \
+    --run_name home-3b-v2-rev2 \
     --base_model microsoft/phi-2 \
     --add_pad_token \
     --add_chatml_tokens \
@@ -31,7 +31,7 @@ python3 train.py \
 
 """
 python3 train.py \
-    --run_name home-1b-rev3_1 \
+    --run_name home-1b-rev3_3 \
     --base_model microsoft/phi-1_5 \
     --add_pad_token \
     --add_chatml_tokens \
@@ -172,7 +172,10 @@ if training_run_args.use_lora:
             model, use_gradient_checkpointing=training_run_args.gradient_checkpointing
         )
     model = get_peft_model(model, peft_config)
+    model.enable_input_require_grads()
+    
     model.print_trainable_parameters()
+    
 
 base_dir = "loras" if training_run_args.use_lora else "models"
 model_dir = f"./{base_dir}/{training_run_args.run_name}"
