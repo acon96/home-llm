@@ -230,7 +230,7 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         self.history[conversation_id] = prompt
 
         exposed_entities = list(self._async_get_exposed_entities()[0].keys())
-        pattern = re.compile(r"```homeassistant\n([\S \t\n]*)```")
+        pattern = re.compile(r"```homeassistant\n([\S \t\n]*?)```")
         
         to_say = pattern.sub("", response).strip()
         for block in pattern.findall(response.strip()):
@@ -248,13 +248,17 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
                     entity = json_output["target_device"]
                     domain, service = tuple(service.split("."))
                 except Exception:
-                    service = line.split("(")[0]
-                    entity = line.split("(")[1][:-1]
-                    domain, service = tuple(service.split("."))
+                    try:
+                        service = line.split("(")[0]
+                        entity = line.split("(")[1][:-1]
+                        domain, service = tuple(service.split("."))
+                    except Exception:
+                        to_say += f" Failed to parse call from '{line}'!"
+                        continue
 
                 # only acknowledge requests to exposed entities
                 if entity not in exposed_entities:
-                    to_say += f"Can't find device '{entity}'"
+                    to_say += f" Can't find device '{entity}'!"
                 else:
                     try:
                         await self.hass.services.async_call(
