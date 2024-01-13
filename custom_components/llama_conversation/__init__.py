@@ -230,7 +230,7 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         self.history[conversation_id] = prompt
 
         exposed_entities = list(self._async_get_exposed_entities()[0].keys())
-        pattern = re.compile(r"```homeassistant\n([\S\n]*)```")
+        pattern = re.compile(r"```homeassistant\n([\S \t\n]*)```")
         
         to_say = pattern.sub("", response).strip()
         for block in pattern.findall(response.strip()):
