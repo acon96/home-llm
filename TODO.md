@@ -4,7 +4,7 @@
 [x] Phi-2 fine tuning
 [x] Quantize /w llama.cpp
 [x] Make custom component use llama.cpp + ChatML
-[ ] Continued synthetic dataset improvements (there are a bunch of TODOs in there)
+[x] Continued synthetic dataset improvements (there are a bunch of TODOs in there)
 [x] Licenses + Attributions
 [x] Finish Readme/docs for initial release
 [x] Function calling as JSON
@@ -23,4 +23,4 @@
 [ ] prime kv cache with current "state" so that requests are faster
 [ ] make a proper evaluation framework to run. not just loss. should test accuracy on the function calling
 [ ] add LocalAI backend
-[ ] more config options for prompt template (allow other than chatml)
+[x] more config options for prompt template (allow other than chatml)
