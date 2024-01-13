@@ -24,3 +24,4 @@
 [ ] make a proper evaluation framework to run. not just loss. should test accuracy on the function calling
 [ ] add LocalAI backend
 [x] more config options for prompt template (allow other than chatml)
+[ ] publish snapshot of dataset on HF

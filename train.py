@@ -24,7 +24,7 @@ python3 train.py \
     --test_dataset data/home_assistant_alpaca_merged_test.json \
     --learning_rate 1e-5 \
     --save_steps 1000 \
-    --micro_batch_size 2 --gradient_checkpointing \
+    --micro_batch_size 4 --gradient_checkpointing \
     --ctx_size 2048 \
     --use_lora --lora_rank 32 --lora_alpha 64 --lora_modules fc1,fc2,Wqkv,out_proj --lora_modules_to_save wte,lm_head.linear --lora_merge
 """
@@ -147,6 +147,9 @@ if training_run_args.add_chatml_tokens:
         'eos_token': '<|im_end|>'
     })
 
+    model.config.bos_token_id = tokenizer.bos_token_id
+    model.config.eos_token_id = tokenizer.eos_token_id
+
 embeddings_len = math.ceil(len(tokenizer) / 32) * 32
 if model.get_input_embeddings().num_embeddings < embeddings_len:
     model.resize_token_embeddings(embeddings_len)
@@ -173,7 +176,7 @@ if training_run_args.use_lora:
         )
     model = get_peft_model(model, peft_config)
     model.enable_input_require_grads()
-    
+
     model.print_trainable_parameters()
     
 
