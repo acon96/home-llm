@@ -179,7 +179,7 @@ def install_llama_cpp_python(config_dir: str):
             _LOGGER.info("llama-cpp-python is already installed")
             # someone who is better at async can figure out why this is necessary
             time.sleep(0.5)
-        return True
+            return True
     except Exception as ex:
         _LOGGER.exception("Install failed!")
         return ex

@@ -340,8 +340,6 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
             generate_params["prompt"].encode(), add_bos=False
         )
 
-        CONF_USE_GBNF_GRAMMAR
-
         _LOGGER.debug(f"Processing {len(input_tokens)} input tokens...")
         output_tokens = self.llm.generate(
             input_tokens,
