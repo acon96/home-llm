@@ -5,8 +5,11 @@ This project provides the required "glue" components to control your Home Assist
 The "Home" models are a fine tuning of the Phi model series from Microsoft.  The model is able to control devices in the user's house as well as perform basic question and answering.  The fine tuning dataset is a combination of the [Cleaned Stanford Alpaca Dataset](https://huggingface.co/datasets/yahma/alpaca-cleaned) as well as a [custom synthetic dataset](./data) designed to teach the model function calling based on the device information in the context.
 
 The models can be found on HuggingFace: 
-3B (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v2-GGUF
-1B (Based on Phi-1.5): https://huggingface.co/acon96/Home-1B-v1-GGUF
+3B v1 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v1-GGUF
+
+Below are waiting on a bug-fix for Llama.cpp to make it in to a release for `llama-cpp-python` and then a release for `text-generation-webui`.
+~~ 3B v2 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v2-GGUF ~~
+~~ 1B (Based on Phi-1.5): https://huggingface.co/acon96/Home-1B-v1-GGUF ~~
 
 The main difference between the 2 models (besides parameter count) is the training data. The 1B model is ONLY trained on the synthetic dataset provided in this project, while the 3B model is trained on a mixture of this synthetic dataset, and the [cleaned Stanford Alpaca dataset](https://huggingface.co/datasets/yahma/alpaca-cleaned).
 
@@ -52,7 +55,7 @@ The synthetic dataset is aimed at covering basic day to day operations in home a
 The supported entity types are: light, fan, cover, lock, media_player, climate, switch
 
 ### Training
-The model was trained as a LoRA on an RTX 3090 (24GB) using the following settings for the custom training script. The embedding weights were "saved" and trained normally along with the rank matricies in order to train the newly added tokens to the embeddings. The full model is merged together at the end.
+The 3B model was trained as a LoRA on an RTX 3090 (24GB) using the following settings for the custom training script. The embedding weights were "saved" and trained normally along with the rank matricies in order to train the newly added tokens to the embeddings. The full model is merged together at the end. Training took approximately 10 hours.
 
 ```
 python3 train.py \
@@ -69,6 +72,8 @@ python3 train.py \
     --ctx_size 2048 \
     --use_lora --lora_rank 32 --lora_alpha 64 --lora_modules fc1,fc2,Wqkv,out_proj --lora_modules_to_save wte,lm_head.linear --lora_merge
 ```
+
+The 1B model was trained as a full fine-tuning on on an RTX 3090 (24GB). Training took approximately 1.5 hours.
 
 ## Home Assistant Component
 In order to integrate with Home Assistant, we provide a `custom_component` that exposes the locally running LLM as a "conversation agent" that can be interacted with using a chat interface as well as integrate with Speech-to-Text and Text-to-Speech addons to enable interacting with the model by speaking.  

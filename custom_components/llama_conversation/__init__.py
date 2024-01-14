@@ -45,6 +45,7 @@ from .const import (
     CONF_DOWNLOADED_MODEL_FILE,
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
     CONF_PROMPT_TEMPLATE,
+    CONF_USE_GBNF_GRAMMAR,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
@@ -54,6 +55,7 @@ from .const import (
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
     DEFAULT_PROMPT_TEMPLATE,
+    DEFAULT_USE_GBNF_GRAMMAR,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
     BACKEND_TYPE_GENERIC_OPENAI,
     DOMAIN,
@@ -129,8 +131,6 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
 
         model_path = self.entry.data.get(CONF_DOWNLOADED_MODEL_FILE)
         self.model_name = self.entry.data.get(CONF_CHAT_MODEL, model_path)
-        self.extra_attributes_to_expose = self.entry.data \
-            .get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE).split(",")
 
         if self.use_local_backend:
             if not model_path:
@@ -151,11 +151,11 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
                 # n_threads_batch=4,
             )
 
-            # _LOGGER.debug("Loading grammar...")
+            _LOGGER.debug("Loading grammar...")
 
-            # with open(os.path.join(os.path.dirname(__file__), GBNF_GRAMMAR_FILE)) as f:
-            #     grammar_str = "".join(f.readlines())
-            # self.grammar = LlamaGrammar.from_string(grammar_str)
+            with open(os.path.join(os.path.dirname(__file__), GBNF_GRAMMAR_FILE)) as f:
+                grammar_str = "".join(f.readlines())
+            self.grammar = LlamaGrammar.from_string(grammar_str)
 
             _LOGGER.info("Model loaded")
         else:
@@ -225,10 +225,9 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
             _LOGGER.debug(response)
 
         except Exception as err:
+            _LOGGER.exception("There was a problem talking to the backend")
+            
             intent_response = intent.IntentResponse(language=user_input.language)
-            import traceback
-
-            traceback.print_exc()
             intent_response.async_set_error(
                 intent.IntentResponseErrorCode.UNKNOWN,
                 f"Sorry, there was a problem talking to the backend: {err}",
@@ -282,6 +281,8 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
                         to_say += f"\nFailed to run: {line}"
                         _LOGGER.debug(f"err: {err}; {repr(err)}")
 
+        to_say = to_say.replace("<|im_end|>", "") # remove the eos token if it is returned (some backends + the old model does this)
+        
         intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(to_say)
         return conversation.ConversationResult(
@@ -339,13 +340,15 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
             generate_params["prompt"].encode(), add_bos=False
         )
 
+        CONF_USE_GBNF_GRAMMAR
+
         _LOGGER.debug(f"Processing {len(input_tokens)} input tokens...")
         output_tokens = self.llm.generate(
             input_tokens,
             temp=generate_params["temperature"],
             top_k=generate_params["top_k"],
             top_p=generate_params["top_p"],
-            grammar=self.grammar
+            grammar=generate_params["grammar"]
         )
 
         result_tokens = []
@@ -364,6 +367,10 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
 
     async def _async_generate(self, generate_parameters: dict) -> str:
         if self.use_local_backend:
+            if self.entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
+                generate_parameters["grammar"] = self.grammar
+            else:
+                generate_parameters["grammar"] = None
             return await self.hass.async_add_executor_job(
                 self._generate_local, generate_parameters
             )
@@ -414,9 +421,12 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         """Generate a prompt for the user."""
         entities_to_expose, domains = self._async_get_exposed_entities()
 
+        extra_attributes_to_expose = self.entry.options \
+            .get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE)
+
         def expose_attributes(attributes):
             result = attributes["state"]
-            for attribute_name in self.extra_attributes_to_expose:
+            for attribute_name in extra_attributes_to_expose:
                 if attribute_name not in attributes:
                     continue
 

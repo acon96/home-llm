@@ -33,6 +33,8 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
 )
 
 from .const import (
@@ -48,6 +50,8 @@ from .const import (
     CONF_DOWNLOADED_MODEL_QUANTIZATION,
     CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS,
     CONF_PROMPT_TEMPLATE,
+    CONF_USE_GBNF_GRAMMAR,
+    CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
     DEFAULT_CHAT_MODEL,
     DEFAULT_HOST,
     DEFAULT_PORT,
@@ -59,6 +63,8 @@ from .const import (
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_BACKEND_TYPE,
     DEFAULT_PROMPT_TEMPLATE,
+    DEFAULT_USE_GBNF_GRAMMAR,
+    DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
     BACKEND_TYPE_LLAMA_HF,
     BACKEND_TYPE_LLAMA_EXISTING,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
@@ -124,6 +130,8 @@ DEFAULT_OPTIONS = types.MappingProxyType(
         CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
         CONF_REQUEST_TIMEOUT: DEFAULT_REQUEST_TIMEOUT,
         CONF_PROMPT_TEMPLATE: DEFAULT_PROMPT_TEMPLATE,
+        CONF_USE_GBNF_GRAMMAR: DEFAULT_USE_GBNF_GRAMMAR,
+        CONF_EXTRA_ATTRIBUTES_TO_EXPOSE: DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
     }
 )
 
@@ -548,9 +556,30 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], is_loc
             description={"suggested_value": options[CONF_TEMPERATURE]},
             default=DEFAULT_TEMPERATURE,
         ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+        vol.Optional(
+            CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
+            description={"suggested_value": options[CONF_EXTRA_ATTRIBUTES_TO_EXPOSE]},
+            default=DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
+        ): TextSelector(TextSelectorConfig(multiple=True)),
     }
 
-    if not is_local_backend:
+    if is_local_backend:
+        # if we want to insert them into the above list we need to re-build the dictionary
+        new_result = {}
+        for key in result.keys():
+            new_result[key] = result[key]
+
+            _LOGGER.debug(f"{key} - {repr(key)}")
+
+            if key.schema == CONF_MAX_TOKENS:
+                new_result[vol.Optional(
+                    CONF_USE_GBNF_GRAMMAR,
+                    description={"suggested_value": options[CONF_USE_GBNF_GRAMMAR]},
+                    default=DEFAULT_USE_GBNF_GRAMMAR,
+                )] = bool
+
+        result = new_result
+    else:
         result[vol.Optional(
             CONF_REQUEST_TIMEOUT,
             description={"suggested_value": options[CONF_REQUEST_TIMEOUT]},

@@ -32,7 +32,7 @@ DEFAULT_DOWNLOADED_MODEL_FILE = ""
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = "5000"
 CONF_EXTRA_ATTRIBUTES_TO_EXPOSE = "extra_attributes_to_expose"
-DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE = "rgb_color,current_temperature,fan_mode,media_title,volume_level"
+DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE = ["rgb_color", "current_temperature", "fan_mode", "media_title", "volume_level" ]
 GBNF_GRAMMAR_FILE = "output.gbnf"
 CONF_PROMPT_TEMPLATE = "prompt_template"
 PROMPT_TEMPLATE_CHATML = "chatml"
@@ -66,3 +66,5 @@ PROMPT_TEMPLATE_DESCRIPTIONS = {
         "generation_prompt": ""
     }
 }
+CONF_USE_GBNF_GRAMMAR = "gbnf_grammar"
+DEFAULT_USE_GBNF_GRAMMAR = False
