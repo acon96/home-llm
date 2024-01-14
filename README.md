@@ -162,3 +162,9 @@ If the automatic installation fails then you can install the addon manually usin
 The RPI4 4GB that I have was sitting right at 1.5 tokens/sec for prompt eval and 1.6 tokens/sec for token generation when running the `Q4_K_M` quant. I was reliably getting responses in 30-60 seconds after the initial prompt processing which took almost 5 minutes. It depends significantly on the number of devices that have been exposed as well as how many states have changed since the last invocation because llama.cpp caches KV values for identical prompt prefixes.
 
 It is highly recommend to set up text-generation-webui on a separate machine that can take advantage of a GPU.
+
+## Version History
+| Version | Description                                                                                                                        |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| v0.2    | Bug fixes, support more backends, support for climate + switch devices, JSON style function calling with parameters, GBNF grammars |
+| v0.1    | Initial Release                                                                                                                    |
