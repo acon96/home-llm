@@ -54,7 +54,8 @@ from .const import (
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
     DEFAULT_PROMPT_TEMPLATE,
-    BACKEND_TYPE_REMOTE,
+    BACKEND_TYPE_TEXT_GEN_WEBUI,
+    BACKEND_TYPE_GENERIC_OPENAI,
     DOMAIN,
     GBNF_GRAMMAR_FILE,
     PROMPT_TEMPLATE_DESCRIPTIONS,
@@ -64,12 +65,15 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
+def is_local_backend(backend):
+    return backend not in [BACKEND_TYPE_TEXT_GEN_WEBUI, BACKEND_TYPE_GENERIC_OPENAI]
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Local LLaMA Conversation from a config entry."""
 
-    use_local_backend = entry.data.get(
-        CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE
-    ) != BACKEND_TYPE_REMOTE
+    use_local_backend = is_local_backend(
+        entry.data.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE)
+    )
 
     if use_local_backend:
         _LOGGER.info(
@@ -114,9 +118,10 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         self.entry = entry
         self.history: dict[str, list[dict]] = {}
 
-        self.use_local_backend = self.entry.data.get(
+        self.backend_type = self.entry.data.get(
             CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE
-        ) != BACKEND_TYPE_REMOTE
+        )
+        self.use_local_backend = is_local_backend(self.backend_type)
 
         self.api_host = None
         self.llm = None
@@ -158,7 +163,9 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
             port = entry.data[CONF_PORT]
             self.api_host = f"http://{host}:{port}"
 
-            self._load_remote_model()
+            # only load model if using text-generation-webui
+            if self.backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
+                self._load_remote_model()
 
     @property
     def supported_languages(self) -> list[str] | Literal["*"]:

@@ -61,7 +61,8 @@ from .const import (
     DEFAULT_PROMPT_TEMPLATE,
     BACKEND_TYPE_LLAMA_HF,
     BACKEND_TYPE_LLAMA_EXISTING,
-    BACKEND_TYPE_REMOTE,
+    BACKEND_TYPE_TEXT_GEN_WEBUI,
+    BACKEND_TYPE_GENERIC_OPENAI,
     PROMPT_TEMPLATE_CHATML,
     PROMPT_TEMPLATE_ALPACA,
     PROMPT_TEMPLATE_VICUNA,
@@ -72,6 +73,9 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+def is_local_backend(backend):
+    return backend not in [BACKEND_TYPE_TEXT_GEN_WEBUI, BACKEND_TYPE_GENERIC_OPENAI]
+
 def STEP_INIT_DATA_SCHEMA(backend_type=None):
     return vol.Schema(
         {
@@ -79,7 +83,7 @@ def STEP_INIT_DATA_SCHEMA(backend_type=None):
                 CONF_BACKEND_TYPE,
                 default=backend_type if backend_type else DEFAULT_BACKEND_TYPE
             ): SelectSelector(SelectSelectorConfig(
-                options=[ BACKEND_TYPE_LLAMA_HF, BACKEND_TYPE_LLAMA_EXISTING, BACKEND_TYPE_REMOTE ],
+                options=[ BACKEND_TYPE_LLAMA_HF, BACKEND_TYPE_LLAMA_EXISTING, BACKEND_TYPE_TEXT_GEN_WEBUI, BACKEND_TYPE_GENERIC_OPENAI ],
                 translation_key=CONF_BACKEND_TYPE,
                 multiple=False,
                 mode=SelectSelectorMode.LIST,
@@ -263,7 +267,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
 
         if user_input:
             try:
-                local_backend = user_input[CONF_BACKEND_TYPE] != BACKEND_TYPE_REMOTE
+                local_backend = is_local_backend(user_input[CONF_BACKEND_TYPE])
                 self.model_options.update(user_input)
 
             except Exception:  # pylint: disable=broad-except
@@ -435,14 +439,18 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             try:
                 self.model_options.update(user_input)
 
-                error_reason = await self.hass.async_add_executor_job(self._validate_remote_api)
-                if error_reason:
-                    errors["base"] = error_reason
-                    schema = STEP_REMOTE_SETUP_DATA_SCHEMA(
-                        host=user_input[CONF_HOST],
-                        port=user_input[CONF_PORT],
-                        chat_model=user_input[CONF_CHAT_MODEL],
-                    )
+                # only validate and load when using text-generation-webui
+                if self.model_options[CONF_BACKEND_TYPE] == BACKEND_TYPE_TEXT_GEN_WEBUI:
+                    error_reason = await self.hass.async_add_executor_job(self._validate_remote_api)
+                    if error_reason:
+                        errors["base"] = error_reason
+                        schema = STEP_REMOTE_SETUP_DATA_SCHEMA(
+                            host=user_input[CONF_HOST],
+                            port=user_input[CONF_PORT],
+                            chat_model=user_input[CONF_CHAT_MODEL],
+                        )
+                    else:
+                        return await self.async_step_finish()
                 else:
                     return await self.async_step_finish()
 
@@ -461,7 +469,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         model_name = self.model_options.get(CONF_CHAT_MODEL)
         if not model_name:
             model_name = os.path.basename(self.model_options.get(CONF_DOWNLOADED_MODEL_FILE))
-        location = "remote" if self.model_options[CONF_BACKEND_TYPE] == BACKEND_TYPE_REMOTE else "llama.cpp"
+        location = "llama.cpp" if is_local_backend(self.model_options[CONF_BACKEND_TYPE]) else "remote"
 
         return self.async_create_entry(
             title=f"LLM Model '{model_name}' ({location})",
@@ -490,7 +498,7 @@ class OptionsFlow(config_entries.OptionsFlow):
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="LLaMA Conversation", data=user_input)
-        is_local_backend = self.config_entry.data[CONF_BACKEND_TYPE] != BACKEND_TYPE_REMOTE
+        is_local_backend = is_local_backend(self.config_entry.data[CONF_BACKEND_TYPE])
         schema = local_llama_config_option_schema(self.config_entry.options, is_local_backend)
         return self.async_show_form(
             step_id="init",

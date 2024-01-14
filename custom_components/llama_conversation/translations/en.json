@@ -71,7 +71,8 @@
             "options": {
                 "llama_cpp_hf": "Llama.cpp (HuggingFace)",
                 "llama_cpp_existing": "Llama.cpp (existing model)",
-                "text-generation-webui_api": "text-generation-webui API"
+                "text-generation-webui_api": "text-generation-webui API",
+                "generic_openai": "Generic OpenAI Compatible API"
             }
         }
     }
