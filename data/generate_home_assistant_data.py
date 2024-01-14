@@ -1,11 +1,13 @@
+import argparse
 import json
 import csv
-import enum
 import random
 from dataclasses import dataclass
+from datasets import load_dataset, concatenate_datasets
 from difflib import SequenceMatcher
 from typing import Final, Any
 from tqdm import tqdm
+import webcolors
 
 # #### STATES ####
 STATE_ON: Final = "on"
@@ -29,19 +31,15 @@ STATE_UNAVAILABLE: Final = "unavailable"
 STATE_OK: Final = "ok"
 STATE_PROBLEM: Final = "problem"
 
-# class RandomValueType(enum.StrEnum):
-#     NUMBER = enum.auto()
-#     PERCENT = enum.auto()
-#     BOOL = enum.auto()
-
-# def get_random_value(type: RandomValueType):
-#     match type:
-#         case RandomValueType.NUMBER:
-#             return random.randint(0, 1000)
-#         case RandomValueType.PERCENT:
-#             return random.random()
-#         case RandomValueType.BOOL:
-#             return random.random() > 0.5
+def closest_color(requested_color):
+    min_colors = {}
+    for key, name in webcolors.CSS3_HEX_TO_NAMES.items():
+        r_c, g_c, b_c = webcolors.hex_to_rgb(key)
+        rd = (r_c - requested_color[0]) ** 2
+        gd = (g_c - requested_color[1]) ** 2
+        bd = (b_c - requested_color[2]) ** 2
+        min_colors[(rd + gd + bd)] = name
+    return min_colors[min(min_colors.keys())]
 
 @dataclass
 class DeviceType:
@@ -49,17 +47,103 @@ class DeviceType:
     possible_states: list[(str, float)]
     services: list[str]
 
-    def all_states(self):
-        return [ x[0] for x in self.possible_states ]
-
-    def get_random_state(self):
+    def get_random_state(self, **kwargs):
         states = [ x[0] for x in self.possible_states ]
         weights = [ x[1] for x in self.possible_states ]
         return random.choices(states, weights=weights, k=1)[0]
+    
+class LightDeviceType(DeviceType):
+    def __init__(self):
+        super().__init__("light",
+            possible_states=[
+                (STATE_ON, 0.5),
+                (STATE_OFF, 0.5)
+            ],
+            services=[
+                "turn_on",
+                "turn_off",
+                "toggle"
+            ],
+        )
+
+
+
+    def get_random_state(self, force_rgb=False, force_brightness=False, **kwargs):
+        state = super().get_random_state()
+
+        if random.random() < 0.05 or force_rgb:
+            random_rgb = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+            state = state + ";" + closest_color(random_rgb) + " " + str(random_rgb)
+
+        if random.random() < 0.3 or force_brightness:
+            state = state + ";" + str(random.randint(0, 100)) + "%"
+
+        return state
+    
+class ClimateDeviceType(DeviceType):
+    def __init__(self):
+        super().__init__("climate", [], [
+            "turn_on",
+            "turn_off",
+            "toggle",
+            "set_temperature",
+            "set_humidity",
+            "set_fan_mode",
+            "set_hvac_mode",
+            "set_preset_mode"
+        ])
+
+    def get_random_state(self, **kwargs):
+        hvac = random.choice(["heat", "cool", "heat_cool", "off", "auto", "fan_only"])
+        fan = random.choice(["On Low", "On High", "Auto Low", "Auto High", "Off"])
+        if random.random() > 0.5:
+            temp = str(random.randint(60, 80)) + "F"
+        else:
+            temp = str(random.randint(15, 25)) + "C"
+        return f"{hvac};{fan};{temp}"
+
+class MediaPlayerDeviceType(DeviceType):
+    def __init__(self):
+        super().__init__("media_player", [
+            (STATE_ON, 0.15),
+            (STATE_OFF, 0.54),
+            (STATE_IDLE, 0.1),
+            (STATE_PLAYING, 0.1),
+            (STATE_PAUSED, 0.05),
+            (STATE_STANDBY, 0.05),
+            (STATE_BUFFERING, 0.01),
+        ], [
+            "turn_on",
+            "turn_off",
+            "toggle",
+            "volume_up",
+            "volume_down",
+            "volume_mute",
+            "media_play_pause",
+            "media_play",
+            "media_pause",
+            "media_stop",
+            "media_next_track",
+            "media_previous_track"
+        ])
+
+        with open("piles/pile_of_media_names.csv") as f:
+            self.media_names = [ x.strip() for x in f.readlines() ]
+
+    def get_random_state(self, **kwargs):
+        state = super().get_random_state()
+
+        if state in [STATE_PLAYING, STATE_PAUSED, STATE_BUFFERING, STATE_ON]:
+            state = state + ";" + random.choice(self.media_names)
+
+        if state != STATE_OFF:
+            state = state + ";vol=" + str(round(random.random(), 2))
+        return state
 
 SUPPORTED_DEVICES = {
-    "light": DeviceType(
-        name="light",
+    "light": LightDeviceType(),
+    "switch": DeviceType(
+        name="switch",
         possible_states=[
             (STATE_ON, 0.5),
             (STATE_OFF, 0.5)
@@ -125,32 +209,8 @@ SUPPORTED_DEVICES = {
             "unlock",
         ],
     ),
-    "media_player": DeviceType(
-        name="media_player",
-        possible_states=[
-            (STATE_ON, 0.15),
-            (STATE_OFF, 0.3),
-            (STATE_IDLE, 0.1),
-            (STATE_PLAYING, 0.2),
-            (STATE_PAUSED, 0.15),
-            (STATE_STANDBY, 0.05),
-            (STATE_BUFFERING, 0.05),
-        ],
-        services=[
-            "turn_on",
-            "turn_off",
-            "toggle",
-            "volume_up",
-            "volume_down",
-            "volume_mute",
-            "media_play_pause",
-            "media_play",
-            "media_pause",
-            "media_stop",
-            "media_next_track",
-            "media_previous_track"
-        ],
-    ),
+    "media_player": MediaPlayerDeviceType(),
+    "climate": ClimateDeviceType()
 }
 
 stacks_of_device_names = { x: [] for x in SUPPORTED_DEVICES.keys() }
@@ -167,6 +227,12 @@ with open("piles/pile_of_device_names.csv") as f:
 with open("piles/pile_of_templated_actions.csv") as f:
     reader = csv.DictReader(f)
     pile_of_templated_actions = list(reader)
+    processed_pile_of_templated_actions = []
+    for action in pile_of_templated_actions:
+        for x in range(int(action["multiplier"])):
+            processed_pile_of_templated_actions.append(action)
+
+    pile_of_templated_actions = processed_pile_of_templated_actions
 
 with open("piles/pile_of_device_actions.csv") as f:
     reader = csv.DictReader(f)
@@ -224,6 +290,9 @@ def random_device_list(max_devices: int, avoid_device_names: list[str]):
             device_type = device_name.split(".")[0]
             friendly_name = choice["description"]
 
+            if device_type == "climate":
+                continue # don't add random thermostats. we need to be careful about how we handle multiple thermostats
+
             state = SUPPORTED_DEVICES[device_type].get_random_state()
             device_lines.append(format_device_line(
                 device_name=device_name,
@@ -232,8 +301,9 @@ def random_device_list(max_devices: int, avoid_device_names: list[str]):
             ))
             device_list.append(device_name)
             device_types.add(device_type)
-        except:
+        except Exception as ex:
             print(f"bad device name: {choice}")
+            print(repr(ex))
 
     return device_lines, list(device_types)
 
@@ -247,7 +317,6 @@ def generate_static_example(action: dict, max_devices: int = 32):
     device_list, device_types = random_device_list(max_devices=max_devices, avoid_device_names=[target_device])
 
     # insert our target device somewhere random in the list
-    
     index = random.randint(0, len(device_list))
     state = SUPPORTED_DEVICES[device_type].get_random_state()
 
@@ -259,7 +328,7 @@ def generate_static_example(action: dict, max_devices: int = 32):
 
     # gather a list of all available services
     available_services = []
-    for x in device_types:
+    for x in set(device_types + [device_type]):
         available_services.extend([ f"{x}.{y}" for y in SUPPORTED_DEVICES[x].services ])
 
     return {
@@ -267,7 +336,7 @@ def generate_static_example(action: dict, max_devices: int = 32):
         "available_services": list(available_services),
         "question": question.lower(),
         "answers": [ random.choice(pile_of_responses[device_type][action["service_name"]]).lower() ],
-        "service_calls": [ f"{service_name}({target_device})" ]
+        "service_calls": [ { "service": service_name, "target_device": target_device } ]
     }
 
 def generate_templated_example(template: dict, max_devices: int = 32):
@@ -288,7 +357,12 @@ def generate_templated_example(template: dict, max_devices: int = 32):
     # insert our target device somewhere random in the list
     for device_dict in chosen_devices:
         index = random.randint(0, len(device_list))
-        state = SUPPORTED_DEVICES[device_dict["type"]].get_random_state()
+        state_kwargs = {}
+        if "<brightness>" in question_template:
+            state_kwargs["force_brightness"] = True
+        if "<color>" in question_template:
+            state_kwargs["force_rgb"] = True
+        state = SUPPORTED_DEVICES[device_dict["type"]].get_random_state(**state_kwargs)
         device_name = device_dict["device_name"]
         friendly_name = device_dict["description"]
 
@@ -300,10 +374,8 @@ def generate_templated_example(template: dict, max_devices: int = 32):
 
     # gather a list of all available services
     available_services = []
-    for x in device_types:
+    for x in set(device_types + template_device_types):
         available_services.extend([ f"{x}.{y}" for y in SUPPORTED_DEVICES[x].services ])
-
-    available_services.extend(service_names)
 
     # generate the question
     if len(template_device_types) == 1:
@@ -316,11 +388,46 @@ def generate_templated_example(template: dict, max_devices: int = 32):
             question = question.replace(f"<device_name{(i + 1)}>", chosen_devices[i]["description"])
             answer = answer.replace(f"<device_name{(i + 1)}>", chosen_devices[i]["description"])
 
-
     # generate the list of service calls and answers
     service_calls = []
     for device_dict, service in zip(chosen_devices, service_names):
-        service_calls.append(f"{service}({device_dict['device_name']})")
+        service_calls.append({ "service": service, "target_device": device_dict["device_name"] })
+
+    if any(["climate" in service for service in service_names ]):
+        if "<temp_f>" in question:
+            temp_f = random.randint(60, 80)
+            question = question.replace("<temp_f>", str(temp_f))
+            answer = answer.replace("<temp_f>", str(temp_f))
+            service_calls = [ { **call, "temperature": temp_f} for call in service_calls ]
+
+        if "<temp_c>" in question:
+            temp_c = random.randint(15, 25)
+            question = question.replace("<temp_c>", str(temp_c))
+            answer = answer.replace("<temp_c>", str(temp_c))
+            service_calls = [ { **call, "temperature": temp_c} for call in service_calls ]
+
+        if "<humidity>" in question:
+            humidity = random.randint(0, 20) * 5
+            question = question.replace("<humidity>", str(humidity))
+            answer = answer.replace("<humidity>", str(humidity))
+            service_calls = [ { **call, "humidity": humidity} for call in service_calls ]
+
+    if any(["light" in service for service in service_names ]):
+        if "<brightness>" in question:
+            brightness = random.randint(0, 100)
+            question = question.replace("<brightness>", str(brightness))
+            answer = answer.replace("<brightness>", str(brightness))
+            service_calls = [ { **call, "brightness_pct": brightness} for call in service_calls ]
+
+        if "<color>" in question:
+            random_rgb = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+            random_rgb_name = closest_color(random_rgb)
+            actual_random_rgb = webcolors.name_to_rgb(random_rgb_name)
+            actual_random_rgb = (actual_random_rgb.red, actual_random_rgb.green, actual_random_rgb.blue)
+            question = question.replace("<color>", str(random_rgb_name))
+            answer = answer.replace("<color>", str(random_rgb_name))
+            service_calls = [ { **call, "rgb_color": str(actual_random_rgb) } for call in service_calls ]
+        
 
     return {
         "states": device_list,
@@ -344,16 +451,49 @@ def generate_status_request(template: dict, max_devices: int = 32):
 
     # insert our target device somewhere random in the list
     index = random.randint(0, len(device_list))
-    device_list.insert(index, f"{chosen_device['device_name']} = {state_name}")
-
-    # gather a list of all available services
-    available_services = []
-    for x in device_types:
-        available_services.extend([ f"{x}.{y}" for y in SUPPORTED_DEVICES[x].services ])
 
     # generate the question
     question = question_template.replace("<device_name>", chosen_device["description"])
     answer = answer_template.replace("<device_name>", chosen_device["description"])
+    
+    # insert other templated variables
+    if device_type == "climate":
+        temp_f = random.randint(60, 80)
+        answer = answer.replace("<temp_f>", str(temp_f))
+        state_name = state_name.replace("<temp_f>", str(temp_f))
+
+        temp_c = random.randint(15, 25)
+        answer = answer.replace("<temp_c>", str(temp_c))
+        state_name = state_name.replace("<temp_c>", str(temp_f))
+
+        humidity = random.randint(0, 20) * 5
+        answer = answer.replace("<humidity>", str(humidity))
+        state_name = state_name.replace("<humidity>", str(temp_f))
+
+    if device_type == "light":
+        brightness = random.randint(0, 100)
+        answer = answer.replace("<brightness>", str(brightness))
+        state_name = state_name.replace("<brightness>", str(brightness))
+
+        random_rgb = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        random_rgb_name = closest_color(random_rgb)
+        actual_random_rgb = webcolors.name_to_rgb(random_rgb_name)
+        actual_random_rgb = (actual_random_rgb.red, actual_random_rgb.green, actual_random_rgb.blue)
+        state_name = state_name.replace("<color>", str(random_rgb_name) + " " + str(actual_random_rgb))
+        answer = answer.replace("<color>", str(random_rgb_name))
+
+    if device_type == "media_player":
+        volume = random.randint(0, 100)
+
+        answer = answer.replace("<volume>", str(volume) + "%")
+        state_name = state_name.replace("<volume>", str(volume) + "%")
+
+    device_list.insert(index, f"{chosen_device['device_name']} = {state_name}")
+
+    # gather a list of all available services
+    available_services = []
+    for x in set(device_types + [device_type]):
+        available_services.extend([ f"{x}.{y}" for y in SUPPORTED_DEVICES[x].services ])
 
     return {
         "states": device_list,
@@ -372,18 +512,18 @@ def format_example(example):
     question = example["question"]
     answers = " ".join(example["answers"])
 
-    system_block = "\n".join(["<|im_start|>system " + sys_prompt, services_block, states_block, "<|im_end|>" ])
-    user_block = "<|im_start|>user " + question + "<|im_end|>"
+    system_block = "\n".join([ "<|im_start|>system", sys_prompt, services_block, states_block ]) + "<|im_end|>"
+    user_block = "\n".join([ "<|im_start|>user", question]) + "<|im_end|>"
 
-    assistant_block = "<|im_start|>assistant " + answers
+    assistant_block = "<|im_start|>assistant\n" + answers
     if len(example["service_calls"]) > 0:
-        # TODO: make function calling JSON based
-        code_block = "\n```homeassistant\n" + "\n".join(example["service_calls"]) + "\n```\n"
+        json_calls = [ json.dumps(x) for x in example["service_calls"] ]
+        code_block = "\n```homeassistant\n" + "\n".join(json_calls) + "\n```"
         assistant_block = assistant_block + code_block
     assistant_block = assistant_block + "<|im_end|>"
         
     example_lines = [system_block, user_block, assistant_block]
-    result = "\n".join(example_lines) + "\n"
+    result = "\n".join(example_lines)
     if "<device_name" in result:
         print("bad templating")
 
@@ -422,17 +562,68 @@ def generate_example_file(filename: str, seed: int, *, static_factor: int, templ
 
     print("Done!")
 
+def format_alpaca(example):
+    question = example["instruction"]
+    if example["input"]:
+        question = question = "\n" + example["input"]
+
+    answer = example["output"]
+
+    device_list, device_types = random_device_list(max_devices=32, avoid_device_names=[])
+
+    available_services = []
+    for x in device_types:
+        available_services.extend([ f"{x}.{y}" for y in SUPPORTED_DEVICES[x].services ])
+
+    text = format_example(example={
+        "states": device_list,
+        "available_services": list(available_services),
+        "question": question,
+        "answers": [ answer ],
+        "service_calls": []
+    })
+
+    result = {
+        "text": text
+    }
+
+    return result
+
+def merge_with_dataset(dataset_name, seed, outupt_name, format_function):
+    alpaca_dataset = load_dataset(dataset_name)["train"].train_test_split(test_size=0.1)
+    home_assistant_dataset = load_dataset("json", data_files={  "train": "home_assistant_train.json", "test": "home_assistant_test.json" })
+
+    random.seed(seed)
+
+    alpaca_dataset = alpaca_dataset.map(format_function).remove_columns(["input", "output", "instruction"])
+
+    combined_dataset_train = concatenate_datasets([home_assistant_dataset["train"], alpaca_dataset["train"]]).shuffle(seed=42)
+    combined_dataset_test = concatenate_datasets([home_assistant_dataset["test"], alpaca_dataset["test"]]).shuffle(seed=42)
+
+    combined_dataset_train.to_json(f"home_assistant_{outupt_name}_merged_train.json")
+    combined_dataset_test.to_json(f"home_assistant_{outupt_name}_merged_test.json")
+
+
 # TODO: add examples for ambiguous requests. asking a clarifying question
 # TODO: make more randomized names for devices (random words or people's names)
 # TODO: answer questions about more than one thing in the state list at once
 # TODO: add examples for rooms/groups of devices. i.e. "turn off all the lights in the kitchen"
-# TODO: expose home assistant attributes in the context
-# TODO: add thermostat + switch device types
 def main():
-    # generate_example_file("sample", 42, static_factor=1, template_factor=1, status_request_factor=1)
-    # exit()
-    generate_example_file("home_assistant_train", 42, static_factor=3, template_factor=20, status_request_factor=15)
-    generate_example_file("home_assistant_test", 12345, static_factor=0.25, template_factor=3, status_request_factor=2)
+    parser = argparse.ArgumentParser(description="Generate the full dataset from the CSV piles")
+    parser.add_argument("--sample", action="store_true", help="Set this flag to enable generation of the train dataset.")
+    parser.add_argument("--test", action="store_true", help="Set this flag to enable generation of the train dataset..")
+    parser.add_argument("--train", action="store_true", help="Set this flag to enable generation of the train dataset.")
+    parser.add_argument("--merge-alpaca", action="store_true", help="Set this flag to merge the generated datasets with the alpaca-cleaned dataset.")
+    args = parser.parse_args()
+
+    if args.sample:
+        generate_example_file("sample", 42, static_factor=1, template_factor=1, status_request_factor=1)
+    if args.train:
+        generate_example_file("home_assistant_train", 42, static_factor=5, template_factor=15, status_request_factor=12)
+    if args.test:
+        generate_example_file("home_assistant_test", 12345, static_factor=0.25, template_factor=3, status_request_factor=2)
+    if args.merge_alpaca:
+        merge_with_dataset("yahma/alpaca-cleaned", 42, "alpaca", format_alpaca)
 
 if __name__ == "__main__":
     main()

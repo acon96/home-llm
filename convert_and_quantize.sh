@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 LLAMA_CPP=../llama.cpp
 MODEL_NAME=$1

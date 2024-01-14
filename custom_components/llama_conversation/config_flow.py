@@ -1,10 +1,12 @@
 """Config flow for Local LLaMA Conversation integration."""
 from __future__ import annotations
 
+import time
 import os
 import logging
 import types
 import requests
+import platform
 from types import MappingProxyType
 from typing import Any
 from abc import ABC, abstractmethod
@@ -15,6 +17,8 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
+from homeassistant.requirements import pip_kwargs
+from homeassistant.util.package import install_package, is_installed
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import (
     AbortFlow,
@@ -26,6 +30,11 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     TemplateSelector,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
 )
 
 from .const import (
@@ -37,10 +46,12 @@ from .const import (
     CONF_TOP_P,
     CONF_REQUEST_TIMEOUT,
     CONF_BACKEND_TYPE,
-    CONF_BACKEND_TYPE_OPTIONS,
     CONF_DOWNLOADED_MODEL_FILE,
     CONF_DOWNLOADED_MODEL_QUANTIZATION,
     CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS,
+    CONF_PROMPT_TEMPLATE,
+    CONF_USE_GBNF_GRAMMAR,
+    CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
     DEFAULT_CHAT_MODEL,
     DEFAULT_HOST,
     DEFAULT_PORT,
@@ -51,19 +62,38 @@ from .const import (
     DEFAULT_TOP_P,
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_BACKEND_TYPE,
+    DEFAULT_PROMPT_TEMPLATE,
+    DEFAULT_USE_GBNF_GRAMMAR,
+    DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
     BACKEND_TYPE_LLAMA_HF,
     BACKEND_TYPE_LLAMA_EXISTING,
-    BACKEND_TYPE_REMOTE,
+    BACKEND_TYPE_TEXT_GEN_WEBUI,
+    BACKEND_TYPE_GENERIC_OPENAI,
+    PROMPT_TEMPLATE_CHATML,
+    PROMPT_TEMPLATE_ALPACA,
+    PROMPT_TEMPLATE_VICUNA,
+    PROMPT_TEMPLATE_NONE,
     DEFAULT_DOWNLOADED_MODEL_QUANTIZATION,
     DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
+def is_local_backend(backend):
+    return backend not in [BACKEND_TYPE_TEXT_GEN_WEBUI, BACKEND_TYPE_GENERIC_OPENAI]
+
 def STEP_INIT_DATA_SCHEMA(backend_type=None):
     return vol.Schema(
         {
-            vol.Required(CONF_BACKEND_TYPE, default=backend_type if backend_type else DEFAULT_BACKEND_TYPE): vol.In(CONF_BACKEND_TYPE_OPTIONS),
+            vol.Required(
+                CONF_BACKEND_TYPE,
+                default=backend_type if backend_type else DEFAULT_BACKEND_TYPE
+            ): SelectSelector(SelectSelectorConfig(
+                options=[ BACKEND_TYPE_LLAMA_HF, BACKEND_TYPE_LLAMA_EXISTING, BACKEND_TYPE_TEXT_GEN_WEBUI, BACKEND_TYPE_GENERIC_OPENAI ],
+                translation_key=CONF_BACKEND_TYPE,
+                multiple=False,
+                mode=SelectSelectorMode.LIST,
+            ))
         }
     )
 
@@ -99,6 +129,9 @@ DEFAULT_OPTIONS = types.MappingProxyType(
         CONF_TOP_P: DEFAULT_TOP_P,
         CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
         CONF_REQUEST_TIMEOUT: DEFAULT_REQUEST_TIMEOUT,
+        CONF_PROMPT_TEMPLATE: DEFAULT_PROMPT_TEMPLATE,
+        CONF_USE_GBNF_GRAMMAR: DEFAULT_USE_GBNF_GRAMMAR,
+        CONF_EXTRA_ATTRIBUTES_TO_EXPOSE: DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
     }
 )
 
@@ -121,6 +154,37 @@ def download_model_from_hf(
     except Exception as ex:
         return ex
 
+def install_llama_cpp_python(config_dir: str):
+    try:
+        if not is_installed("llama-cpp-python"):
+            _LOGGER.info("Installing llama-cpp-python from wheel")
+            platform_suffix = platform.machine()
+            if platform_suffix == "arm64":
+                platform_suffix = "aarch64"
+            folder = os.path.dirname(__file__)
+            potential_wheels = [ path for path in os.listdir(folder) if path.endswith(f"{platform_suffix}.whl") ]
+            if len(potential_wheels) == 0:
+                # someone who is better at async can figure out why this is necessary
+                time.sleep(0.5)
+                return Exception("missing_wheels")
+            elif len(potential_wheels) == 1:
+                wheel_to_install = potential_wheels[0]
+            else:
+                _LOGGER.info("There are multiple potential wheels to install... Using the latest one")
+                wheel_to_install = sorted(potential_wheels, reverse=True)[0]
+
+            _LOGGER.debug(f"Wheel location: {wheel_to_install}")
+            return install_package(os.path.join(folder, wheel_to_install), pip_kwargs(config_dir))
+        else:
+            _LOGGER.info("llama-cpp-python is already installed")
+            # someone who is better at async can figure out why this is necessary
+            time.sleep(0.5)
+        return True
+    except Exception as ex:
+        _LOGGER.exception("Install failed!")
+        return ex
+
+
 class BaseLlamaConversationConfigFlow(FlowHandler, ABC):
     """Represent the base config flow for Z-Wave JS."""
 
@@ -128,6 +192,18 @@ class BaseLlamaConversationConfigFlow(FlowHandler, ABC):
     @abstractmethod
     def flow_manager(self) -> FlowManager:
         """Return the flow manager of the flow."""
+
+    @abstractmethod
+    async def async_step_pick_backend(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """ Select backend """
+
+    @abstractmethod
+    async def async_step_install_local_wheels(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """ Install pre-built wheels """
 
     @abstractmethod
     async def async_step_local_model(
@@ -157,6 +233,8 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
     """Handle a config flow for Local LLaMA Conversation."""
 
     VERSION = 1
+    install_wheel_task = None
+    install_wheel_error = None
     download_task = None
     download_error = None
     model_options: dict[str, Any] = {}
@@ -185,13 +263,19 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
+        return await self.async_step_pick_backend()
+
+    async def async_step_pick_backend(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the initial step."""
         errors = {}
 
         schema = STEP_INIT_DATA_SCHEMA()
 
         if user_input:
             try:
-                local_backend = user_input[CONF_BACKEND_TYPE] != BACKEND_TYPE_REMOTE
+                local_backend = is_local_backend(user_input[CONF_BACKEND_TYPE])
                 self.model_options.update(user_input)
 
             except Exception:  # pylint: disable=broad-except
@@ -209,13 +293,54 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                             )
 
                     if "base" not in errors:
-                        return await self.async_step_local_model()
+                        return await self.async_step_install_local_wheels()
                 else:
                     return await self.async_step_remote_model()
+        elif self.install_wheel_error:
+            errors["base"] = str(self.install_wheel_error)
+            self.install_wheel_error = None
 
         return self.async_show_form(
-            step_id="user", data_schema=schema, errors=errors
+            step_id="pick_backend", data_schema=schema, errors=errors
         )
+
+    async def async_step_install_local_wheels(
+      self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        if not user_input:
+            if self.install_wheel_task:
+                return self.async_show_progress(
+                    step_id="install_local_wheels",
+                    progress_action="install_local_wheels",
+                )
+
+            _LOGGER.debug("Queuing install task...")
+            self.install_wheel_task = self.hass.async_add_executor_job(
+                install_llama_cpp_python, self.hass.config.config_dir
+            )
+
+            self.hass.async_create_task(self._async_do_task(self.install_wheel_task))
+
+            return self.async_show_progress(
+                step_id="install_local_wheels",
+                progress_action="install_local_wheels",
+            )
+
+        wheel_install_result = user_input["result"]
+        if isinstance(wheel_install_result, Exception):
+            _LOGGER.warning("Failed to install wheel: %s", repr(wheel_install_result))
+            self.install_wheel_error = wheel_install_result
+            self.install_wheel_task = None
+            return self.async_show_progress_done(next_step_id="pick_backend")
+        elif wheel_install_result == False:
+            _LOGGER.warning("Failed to install wheel: %s", repr(wheel_install_result))
+            self.install_wheel_error = "pip_wheel_error"
+            self.install_wheel_task = None
+            return self.async_show_progress_done(next_step_id="pick_backend")
+        else:
+            _LOGGER.debug(f"Finished install: {wheel_install_result}")
+            self.install_wheel_task = None
+            return self.async_show_progress_done(next_step_id="local_model")
 
     async def async_step_local_model(
         self, user_input: dict[str, Any] | None = None
@@ -322,14 +447,18 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             try:
                 self.model_options.update(user_input)
 
-                error_reason = await self.hass.async_add_executor_job(self._validate_remote_api)
-                if error_reason:
-                    errors["base"] = error_reason
-                    schema = STEP_REMOTE_SETUP_DATA_SCHEMA(
-                        host=user_input[CONF_HOST],
-                        port=user_input[CONF_PORT],
-                        chat_model=user_input[CONF_CHAT_MODEL],
-                    )
+                # only validate and load when using text-generation-webui
+                if self.model_options[CONF_BACKEND_TYPE] == BACKEND_TYPE_TEXT_GEN_WEBUI:
+                    error_reason = await self.hass.async_add_executor_job(self._validate_remote_api)
+                    if error_reason:
+                        errors["base"] = error_reason
+                        schema = STEP_REMOTE_SETUP_DATA_SCHEMA(
+                            host=user_input[CONF_HOST],
+                            port=user_input[CONF_PORT],
+                            chat_model=user_input[CONF_CHAT_MODEL],
+                        )
+                    else:
+                        return await self.async_step_finish()
                 else:
                     return await self.async_step_finish()
 
@@ -348,7 +477,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         model_name = self.model_options.get(CONF_CHAT_MODEL)
         if not model_name:
             model_name = os.path.basename(self.model_options.get(CONF_DOWNLOADED_MODEL_FILE))
-        location = "remote" if self.model_options[CONF_BACKEND_TYPE] == BACKEND_TYPE_REMOTE else "llama.cpp"
+        location = "llama.cpp" if is_local_backend(self.model_options[CONF_BACKEND_TYPE]) else "remote"
 
         return self.async_create_entry(
             title=f"LLM Model '{model_name}' ({location})",
@@ -377,8 +506,10 @@ class OptionsFlow(config_entries.OptionsFlow):
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="LLaMA Conversation", data=user_input)
-        is_local_backend = self.config_entry.data[CONF_BACKEND_TYPE] != BACKEND_TYPE_REMOTE
-        schema = local_llama_config_option_schema(self.config_entry.options, is_local_backend)
+        schema = local_llama_config_option_schema(
+            self.config_entry.options,
+            is_local_backend(self.config_entry.data[CONF_BACKEND_TYPE]),
+        )
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(schema),
@@ -395,6 +526,16 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], is_loc
             description={"suggested_value": options[CONF_PROMPT]},
             default=DEFAULT_PROMPT,
         ): TemplateSelector(),
+        vol.Optional(
+            CONF_PROMPT_TEMPLATE,
+            description={"suggested_value": options[CONF_PROMPT_TEMPLATE]},
+            default=DEFAULT_PROMPT_TEMPLATE,
+        ): SelectSelector(SelectSelectorConfig(
+            options=[PROMPT_TEMPLATE_CHATML, PROMPT_TEMPLATE_ALPACA, PROMPT_TEMPLATE_VICUNA, PROMPT_TEMPLATE_NONE],
+            translation_key=CONF_PROMPT_TEMPLATE,
+            multiple=False,
+            mode=SelectSelectorMode.DROPDOWN,
+        )),
         vol.Optional(
             CONF_MAX_TOKENS,
             description={"suggested_value": options[CONF_MAX_TOKENS]},
@@ -415,9 +556,30 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], is_loc
             description={"suggested_value": options[CONF_TEMPERATURE]},
             default=DEFAULT_TEMPERATURE,
         ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+        vol.Optional(
+            CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
+            description={"suggested_value": options[CONF_EXTRA_ATTRIBUTES_TO_EXPOSE]},
+            default=DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
+        ): TextSelector(TextSelectorConfig(multiple=True)),
     }
 
-    if not is_local_backend:
+    if is_local_backend:
+        # if we want to insert them into the above list we need to re-build the dictionary
+        new_result = {}
+        for key in result.keys():
+            new_result[key] = result[key]
+
+            _LOGGER.debug(f"{key} - {repr(key)}")
+
+            if key.schema == CONF_MAX_TOKENS:
+                new_result[vol.Optional(
+                    CONF_USE_GBNF_GRAMMAR,
+                    description={"suggested_value": options[CONF_USE_GBNF_GRAMMAR]},
+                    default=DEFAULT_USE_GBNF_GRAMMAR,
+                )] = bool
+
+        result = new_result
+    else:
         result[vol.Optional(
             CONF_REQUEST_TIMEOUT,
             description={"suggested_value": options[CONF_REQUEST_TIMEOUT]},

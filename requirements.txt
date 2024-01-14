@@ -3,3 +3,4 @@ tensorboard
 datasets
 peft
 bitsandbytes
+webcolors

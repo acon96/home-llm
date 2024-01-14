@@ -6,10 +6,13 @@
             "missing_model_api": "The selected model is not provided by this API.",
             "missing_model_file": "The provided file does not exist.",
             "other_existing_local": "Another model is already loaded locally. Please unload it or configure a remote model.",
-            "unknown": "Unexpected error"
+            "unknown": "Unexpected error",
+            "missing_wheel": "Llama.cpp is not installed and could not find any wheels to install!",
+            "pip_wheel_error": "Pip returned an error while installing the wheel!"
         },
         "progress": {
-            "download": "Please wait while the model is being downloaded from HuggingFace. This can take a few minutes."
+            "download": "Please wait while the model is being downloaded from HuggingFace. This can take a few minutes.",
+            "install_local_wheels": "Please wait while Llama.cpp is installed..."
         },
         "step": {
             "local_model": {
@@ -30,7 +33,7 @@
                 "description": "Provide the connection details for an instance of text-generation-webui that is hosting the model.",
                 "title": "Configure connection to remote API"
             },
-            "user": {
+            "pick_backend": {
                 "data": {
                     "download_model_from_hf": "Download model from HuggingFace",
                     "use_local_backend": "Use Llama.cpp"
@@ -45,12 +48,33 @@
             "init": {
                 "data": {
                     "max_new_tokens": "Maximum tokens to return in response",
-                    "prompt": "Prompt Template",
+                    "prompt": "System Prompt",
+                    "prompt_template": "Prompt Format",
                     "temperature": "Temperature",
                     "top_k": "Top K",
                     "top_p": "Top P",
-                    "request_timeout": "Remote Request Timeout (seconds)"
+                    "request_timeout": "Remote Request Timeout (seconds)",
+                    "extra_attributes_to_expose": "Additional attribute to expose in the context",
+                    "gbnf_grammar": "Enable GBNF Grammar"
                 }
+            }
+        }
+    },
+    "selector": {
+        "prompt_template": {
+            "options": {
+                "chatml": "ChatML",
+                "vicuna": "Vicuna",
+                "alpaca": "Alpaca",
+                "no_prompt_template": "None"
+            }
+        },
+        "model_backend": {
+            "options": {
+                "llama_cpp_hf": "Llama.cpp (HuggingFace)",
+                "llama_cpp_existing": "Llama.cpp (existing model)",
+                "text-generation-webui_api": "text-generation-webui API",
+                "generic_openai": "Generic OpenAI Compatible API"
             }
         }
     }
