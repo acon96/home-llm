@@ -6,7 +6,9 @@
             "missing_model_api": "The selected model is not provided by this API.",
             "missing_model_file": "The provided file does not exist.",
             "other_existing_local": "Another model is already loaded locally. Please unload it or configure a remote model.",
-            "unknown": "Unexpected error"
+            "unknown": "Unexpected error",
+            "missing_wheel": "Llama.cpp is not installed and could not find any wheels to install!",
+            "pip_wheel_error": "Pip returned an error while installing the wheel!"
         },
         "progress": {
             "download": "Please wait while the model is being downloaded from HuggingFace. This can take a few minutes.",
@@ -31,7 +33,7 @@
                 "description": "Provide the connection details for an instance of text-generation-webui that is hosting the model.",
                 "title": "Configure connection to remote API"
             },
-            "user": {
+            "pick_backend": {
                 "data": {
                     "download_model_from_hf": "Download model from HuggingFace",
                     "use_local_backend": "Use Llama.cpp"

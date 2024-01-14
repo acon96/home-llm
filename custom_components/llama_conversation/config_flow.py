@@ -1,6 +1,7 @@
 """Config flow for Local LLaMA Conversation integration."""
 from __future__ import annotations
 
+import time
 import os
 import logging
 import types
@@ -75,7 +76,7 @@ def STEP_INIT_DATA_SCHEMA(backend_type=None):
     return vol.Schema(
         {
             vol.Required(
-                CONF_BACKEND_TYPE, 
+                CONF_BACKEND_TYPE,
                 default=backend_type if backend_type else DEFAULT_BACKEND_TYPE
             ): SelectSelector(SelectSelectorConfig(
                 options=[ BACKEND_TYPE_LLAMA_HF, BACKEND_TYPE_LLAMA_EXISTING, BACKEND_TYPE_REMOTE ],
@@ -140,7 +141,7 @@ def download_model_from_hf(
         )
     except Exception as ex:
         return ex
-    
+
 def install_llama_cpp_python(config_dir: str):
     try:
         if not is_installed("llama-cpp-python"):
@@ -150,16 +151,22 @@ def install_llama_cpp_python(config_dir: str):
                 platform_suffix = "aarch64"
             folder = os.path.dirname(__file__)
             potential_wheels = [ path for path in os.listdir(folder) if path.endswith(f"{platform_suffix}.whl") ]
-            if len(potential_wheels) == 1:
+            if len(potential_wheels) == 0:
+                # someone who is better at async can figure out why this is necessary
+                time.sleep(0.5)
+                return Exception("missing_wheels")
+            elif len(potential_wheels) == 1:
                 wheel_to_install = potential_wheels[0]
             else:
                 _LOGGER.info("There are multiple potential wheels to install... Using the latest one")
                 wheel_to_install = sorted(potential_wheels, reverse=True)[0]
 
-            _LOGGER.debug("Wheel location: ", wheel_to_install)
+            _LOGGER.debug(f"Wheel location: {wheel_to_install}")
             return install_package(os.path.join(folder, wheel_to_install), pip_kwargs(config_dir))
         else:
             _LOGGER.info("llama-cpp-python is already installed")
+            # someone who is better at async can figure out why this is necessary
+            time.sleep(0.5)
         return True
     except Exception as ex:
         _LOGGER.exception("Install failed!")
@@ -175,11 +182,17 @@ class BaseLlamaConversationConfigFlow(FlowHandler, ABC):
         """Return the flow manager of the flow."""
 
     @abstractmethod
+    async def async_step_pick_backend(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """ Select backend """
+
+    @abstractmethod
     async def async_step_install_local_wheels(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """ Install pre-built wheels """
-    
+
     @abstractmethod
     async def async_step_local_model(
         self, user_input: dict[str, Any] | None = None
@@ -238,6 +251,12 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
+        return await self.async_step_pick_backend()
+
+    async def async_step_pick_backend(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the initial step."""
         errors = {}
 
         schema = STEP_INIT_DATA_SCHEMA()
@@ -262,15 +281,17 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                             )
 
                     if "base" not in errors:
-                        # return await self.async_step_install_local_wheels()
-                        return await self.async_step_local_model()
+                        return await self.async_step_install_local_wheels()
                 else:
                     return await self.async_step_remote_model()
+        elif self.install_wheel_error:
+            errors["base"] = str(self.install_wheel_error)
+            self.install_wheel_error = None
 
         return self.async_show_form(
-            step_id="user", data_schema=schema, errors=errors
+            step_id="pick_backend", data_schema=schema, errors=errors
         )
-    
+
     async def async_step_install_local_wheels(
       self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -296,10 +317,17 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         wheel_install_result = user_input["result"]
         if isinstance(wheel_install_result, Exception):
             _LOGGER.warning("Failed to install wheel: %s", repr(wheel_install_result))
-            self.wheel_install_error = wheel_install_result
-            return self.async_show_progress_done(next_step_id="user")
+            self.install_wheel_error = wheel_install_result
+            self.install_wheel_task = None
+            return self.async_show_progress_done(next_step_id="pick_backend")
+        elif wheel_install_result == False:
+            _LOGGER.warning("Failed to install wheel: %s", repr(wheel_install_result))
+            self.install_wheel_error = "pip_wheel_error"
+            self.install_wheel_task = None
+            return self.async_show_progress_done(next_step_id="pick_backend")
         else:
             _LOGGER.debug(f"Finished install: {wheel_install_result}")
+            self.install_wheel_task = None
             return self.async_show_progress_done(next_step_id="local_model")
 
     async def async_step_local_model(

@@ -1,7 +1,7 @@
-root   ::= (ws tosay)+ ws functioncalls?
+root   ::= (tosay "\n")+ functioncalls?
 
-tosay ::= [0-9a-zA-Z .#%]*
-functioncalls ::= 
+tosay ::= [0-9a-zA-Z #%.?!]*
+functioncalls ::=
   "```homeassistant\n" (object ws)* "```"
 
 value  ::= object | array | string | number | ("true" | "false" | "null") ws

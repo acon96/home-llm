@@ -67,9 +67,6 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Local LLaMA Conversation from a config entry."""
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = entry
-
     use_local_backend = entry.data.get(
         CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE
     ) != BACKEND_TYPE_REMOTE
@@ -86,6 +83,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     agent = await hass.async_add_executor_job(create_agent)
 
     conversation.async_set_agent(hass, entry, agent)
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = entry
     return True
 
 
@@ -130,11 +130,13 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         if self.use_local_backend:
             if not model_path:
                 raise Exception(f"Model was not found at '{model_path}'!")
-            
+
             # don't import it until now because the wheel is installed by config_flow.py
             module = importlib.import_module("llama_cpp")
             Llama = getattr(module, "Llama")
             LlamaGrammar = getattr(module, "LlamaGrammar")
+
+            _LOGGER.debug("Loading model...")
 
             self.llm = Llama(
                 model_path=model_path,
@@ -144,9 +146,11 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
                 # n_threads_batch=4,
             )
 
-            with open(os.path.join(os.path.dirname(__file__), GBNF_GRAMMAR_FILE)) as f:
-                grammar_str = "".join(f.readlines())
-            self.grammar = LlamaGrammar.from_string(grammar_str)
+            # _LOGGER.debug("Loading grammar...")
+
+            # with open(os.path.join(os.path.dirname(__file__), GBNF_GRAMMAR_FILE)) as f:
+            #     grammar_str = "".join(f.readlines())
+            # self.grammar = LlamaGrammar.from_string(grammar_str)
 
             _LOGGER.info("Model loaded")
         else:
@@ -276,7 +280,7 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         return conversation.ConversationResult(
             response=intent_response, conversation_id=conversation_id
         )
-    
+
     def _load_remote_model(self):
         try:
             currently_loaded_result = requests.get(f"{self.api_host}/v1/internal/model/info")
@@ -396,7 +400,7 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
 
         if include_generation_prompt:
             formatted_prompt = formatted_prompt + template_desc["generation_prompt"]
-            
+
         return formatted_prompt
 
     def _async_generate_prompt(self, prompt_template: str) -> str:
@@ -423,7 +427,7 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
                         value = F"{closest_color(value)} {value}"
                     elif attribute_name == "volume_level":
                         value = f"{int(value*100)}%"
-                        
+
                     result = result + ";" + str(value)
             return result
 
