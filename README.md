@@ -4,14 +4,14 @@ This project provides the required "glue" components to control your Home Assist
 ## Model
 The "Home" models are a fine tuning of the Phi model series from Microsoft.  The model is able to control devices in the user's house as well as perform basic question and answering.  The fine tuning dataset is a combination of the [Cleaned Stanford Alpaca Dataset](https://huggingface.co/datasets/yahma/alpaca-cleaned) as well as a [custom synthetic dataset](./data) designed to teach the model function calling based on the device information in the context.
 
-The models can be found on HuggingFace: 
+The models can be found on HuggingFace:  
 3B v1 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v1-GGUF
 
-Below are waiting on a bug-fix for Llama.cpp to make it in to a release for `llama-cpp-python` and then a release for `text-generation-webui`.
-~~ 3B v2 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v2-GGUF ~~
-~~ 1B (Based on Phi-1.5): https://huggingface.co/acon96/Home-1B-v1-GGUF ~~
+Below are waiting on a bug-fix for Llama.cpp to make it in to a release for `llama-cpp-python` and then a release for `text-generation-webui`.  
+~~3B v2 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v2-GGUF~~  
+~~1B v1 (Based on Phi-1.5): https://huggingface.co/acon96/Home-1B-v1-GGUF~~  
 
-The main difference between the 2 models (besides parameter count) is the training data. The 1B model is ONLY trained on the synthetic dataset provided in this project, while the 3B model is trained on a mixture of this synthetic dataset, and the [cleaned Stanford Alpaca dataset](https://huggingface.co/datasets/yahma/alpaca-cleaned).
+The main difference between the 2 models (besides parameter count) is the training data. The 1B model is ONLY trained on the synthetic dataset provided in this project, while the 3B model is trained on a mixture of this synthetic dataset, and the cleaned Stanford Alpaca dataset.
 
 The model is quantized using Llama.cpp in order to enable running the model in super low resource environments that are common with Home Assistant installations such as Raspberry Pis.
 
@@ -102,7 +102,7 @@ When setting up the component, there are 4 different "backend" options to choose
 4. A generic OpenAI API compatible interface
 - *should* be compatible with: LocalAI, LM Studio, and all other OpenAI compatible backends
 
-**Installing llama-cpp-python for local model usage**
+**Installing llama-cpp-python for local model usage**:  
 In order to run a model directly as part of your Home Assistant installation, you will need to install one of the pre-build wheels because there are no existing musllinux wheels for the package. Compatible wheels for x86_x64 and arm64 are provided in the [dist](./dist) folder. Copy the `*.whl` files to the `custom_components/llama_conversation/` folder. They will be installed while setting up the component.
 
 **Setting up the Llama.cpp backend with a model from HuggingFace**:  
