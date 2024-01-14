@@ -15,7 +15,7 @@ Phi Modules: fc1,fc2,Wqkv,out_proj,wte,lm_head.linear
 
 """
 python3 train.py \
-    --run_name home-3b-v2-rev2 \
+    --run_name home-3b-v2-rev2_1 \
     --base_model microsoft/phi-2 \
     --add_pad_token \
     --add_chatml_tokens \

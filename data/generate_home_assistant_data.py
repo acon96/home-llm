@@ -619,7 +619,7 @@ def main():
     if args.sample:
         generate_example_file("sample", 42, static_factor=1, template_factor=1, status_request_factor=1)
     if args.train:
-        generate_example_file("home_assistant_train", 42, static_factor=1, template_factor=10, status_request_factor=8)
+        generate_example_file("home_assistant_train", 42, static_factor=5, template_factor=15, status_request_factor=12)
     if args.test:
         generate_example_file("home_assistant_test", 12345, static_factor=0.25, template_factor=3, status_request_factor=2)
     if args.merge_alpaca:
