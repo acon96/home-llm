@@ -498,8 +498,10 @@ class OptionsFlow(config_entries.OptionsFlow):
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="LLaMA Conversation", data=user_input)
-        is_local_backend = is_local_backend(self.config_entry.data[CONF_BACKEND_TYPE])
-        schema = local_llama_config_option_schema(self.config_entry.options, is_local_backend)
+        schema = local_llama_config_option_schema(
+            self.config_entry.options,
+            is_local_backend(self.config_entry.data[CONF_BACKEND_TYPE]),
+        )
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(schema),

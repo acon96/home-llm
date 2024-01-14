@@ -209,7 +209,7 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
 
         prompt.append({"role": "user", "message": user_input.text})
 
-        _LOGGER.debug("Prompt: %s", prompt)
+        # _LOGGER.debug("Prompt: %s", prompt)
 
         try:
             generate_parameters = {
@@ -325,7 +325,7 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
             result.raise_for_status()
         except requests.RequestException as err:
             _LOGGER.debug(f"Err was: {err}")
-            return "Failed to communicate with the API!"
+            return f"Failed to communicate with the API! {err}"
 
         choices = result.json()["choices"]
 
@@ -385,7 +385,7 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
             entity_states[state.entity_id] = attributes
             domains.add(state.domain)
 
-        _LOGGER.debug(f"Exposed entities: {entity_states}")
+        # _LOGGER.debug(f"Exposed entities: {entity_states}")
 
         return entity_states, list(domains)
 
@@ -420,7 +420,7 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
                 if attribute_name not in attributes:
                     continue
 
-                _LOGGER.info(f"{attribute_name} = {attributes[attribute_name]}")
+                _LOGGER.debug(f"{attribute_name} = {attributes[attribute_name]}")
 
                 value = attributes[attribute_name]
                 if value is not None:
@@ -433,7 +433,7 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
                     elif attribute_name == "rgb_color":
                         value = F"{closest_color(value)} {value}"
                     elif attribute_name == "volume_level":
-                        value = f"{int(value*100)}%"
+                        value = f"vol={int(value*100)}"
 
                     result = result + ";" + str(value)
             return result

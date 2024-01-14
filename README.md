@@ -2,9 +2,13 @@
 This project provides the required "glue" components to control your Home Assistant installation with a completely local Large Language Model acting as a personal assistant. The goal is to provide a drop in solution to be used as a "conversation agent" component by Home Assistant.
 
 ## Model
-The "Home" model is a fine tuning of the Phi-2 model from Microsoft.  The model is able to control devices in the user's house as well as perform basic question and answering.  The fine tuning dataset is a combination of the [Cleaned Stanford Alpaca Dataset](https://huggingface.co/datasets/yahma/alpaca-cleaned) as well as a [custom synthetic dataset](./data) designed to teach the model function calling based on the device information in the context.
+The "Home" models are a fine tuning of the Phi model series from Microsoft.  The model is able to control devices in the user's house as well as perform basic question and answering.  The fine tuning dataset is a combination of the [Cleaned Stanford Alpaca Dataset](https://huggingface.co/datasets/yahma/alpaca-cleaned) as well as a [custom synthetic dataset](./data) designed to teach the model function calling based on the device information in the context.
 
-The model can be found on HuggingFace: https://huggingface.co/acon96/Home-3B-v1-GGUF
+The models can be found on HuggingFace: 
+3B (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v2-GGUF
+1B (Based on Phi-1.5): https://huggingface.co/acon96/Home-1B-v1-GGUF
+
+The main difference between the 2 models (besides parameter count) is the training data. The 1B model is ONLY trained on the synthetic dataset provided in this project, while the 3B model is trained on a mixture of this synthetic dataset, and the [cleaned Stanford Alpaca dataset](https://huggingface.co/datasets/yahma/alpaca-cleaned).
 
 The model is quantized using Llama.cpp in order to enable running the model in super low resource environments that are common with Home Assistant installations such as Raspberry Pis.
 
@@ -27,11 +31,11 @@ Output from the model will consist of a response that should be relayed back to 
 <|im_start|>assistant
 turning on the kitchen lights for you now
 ```homeassistant
-light.turn_on(light.kitchen)
+{ "service": "light.turn_on", "target_device": "light.kitchen" }
 ```<|im_end|>
 `````
 
-Due to the mix of data used during fine tuning, the model is also capable of basic instruct and QA tasks. For example, the model is able to perform basic logic tasks such as the following:
+Due to the mix of data used during fine tuning, the 3B model is also capable of basic instruct and QA tasks. For example, the model is able to perform basic logic tasks such as the following:
 
 ```
 <|im_start|>system You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed with the information provided only.
@@ -45,7 +49,7 @@ If Mary is 7 years old, then you are 10 years old (7+3=10).<|im_end|>
 
 ### Synthetic Dataset
 The synthetic dataset is aimed at covering basic day to day operations in home assistant such as turning devices on and off.
-The supported entity types are: light, fan, cover, lock, media_player
+The supported entity types are: light, fan, cover, lock, media_player, climate, switch
 
 ### Training
 The model was trained as a LoRA on an RTX 3090 (24GB) using the following settings for the custom training script. The embedding weights were "saved" and trained normally along with the rank matricies in order to train the newly added tokens to the embeddings. The full model is merged together at the end.
@@ -71,6 +75,8 @@ In order to integrate with Home Assistant, we provide a `custom_component` that 
 
 The component can either run the model directly as part of the Home Assistant software using llama-cpp-python, or you can run the [oobabooga/text-generation-webui](https://github.com/oobabooga/text-generation-webui) project to provide access to the LLM via an API interface. When doing this, you can host the model yourself and point the add-on at machine where the model is hosted, or you can run the model using text-generation-webui using the provided [custom Home Assistant add-on](./addon).
 
+When running the model locally with Llama.cpp, the component also constrains the model output using a GBNF grammar. This forces the model to provide valid output no matter what because it is constrained to outputting valid JSON every time.  This helps the model perform significantly better at lower quantization levels where it would generate syntax errors previously. See [output.gbnf](./custom_components/llama_conversation/output.gbnf) for the existing grammar.
+
 ### Installing with HACS
 You can use this button to add the repository to HACS and open the download page
 
@@ -84,10 +90,15 @@ You can use this button to add the repository to HACS and open the download page
 5. The "LLaMA Conversation" integration should show up in the "Devices" section now.
 
 ### Setting up
-When setting up the component, there are 3 different "backend" options to choose from:
+When setting up the component, there are 4 different "backend" options to choose from:
 1. Llama.cpp with a model from HuggingFace
 2. Llama.cpp with a locally provided model
 3. A remote instance of text-generation-webui
+4. A generic OpenAI API compatible interface
+- *should* be compatible with: LocalAI, LM Studio, and all other OpenAI compatible backends
+
+**Installing llama-cpp-python for local model usage**
+In order to run a model directly as part of your Home Assistant installation, you will need to install one of the pre-build wheels because there are no existing musllinux wheels for the package. Compatible wheels for x86_x64 and arm64 are provided in the [dist](./dist) folder. Copy the `*.whl` files to the `custom_components/llama_conversation/` folder. They will be installed while setting up the component.
 
 **Setting up the Llama.cpp backend with a model from HuggingFace**:  
 You need the following settings to configure the local backend from HuggingFace:
@@ -98,13 +109,13 @@ You need the following settings to configure the local backend from HuggingFace:
 You need the following settings to configure the local backend from HuggingFace:
 1. Model File Name: the file name where Home Assistant can access the model to load. Most likely a sub-path of `/config` or `/media` or wherever you copied the model file to.
 
-**Setting up the "remote" backend**:  
-You need the following settings in order to configure the "remote" backend
-1. Hostname: the host of the machine where text-generation-webui API is hosted. If you are using the provided add-on then the hostname is `local-text-generation-webui`
+**Setting up the "remote" backends**:  
+You need the following settings in order to configure the "remote" backend:
+1. Hostname: the host of the machine where text-generation-webui API is hosted. If you are using the provided add-on then the hostname is `local-text-generation-webui` or `<random hex string>-text-generation-webui`. The actual hostname can be found on the addon's page.
 2. Port: the port for accessing the text-generation-webui API. NOTE: this is not the same as the UI port. (Usually 5000)
 3. Name of the Model: This name must EXACTLY match the name as it appears in `text-generation-webui`
 
-On creation, the component will validate that the model is available for use.
+With the remote text-generation-webui backend, the component will validate that the selected model is available for use and will ensure it is loaded remotely. The Generic OpenAI compatible version does NOT do any validation or model loading.
 
 ### Configuring the component as a Conversation Agent
 **NOTE: ANY DEVICES THAT YOU SELECT TO BE EXPOSED TO THE MODEL WILL BE ADDED AS CONTEXT AND POTENTIALLY HAVE THEIR STATE CHANGED BY THE MODEL. ONLY EXPOSE DEVICES THAT YOU ARE OK WITH THE MODEL MODIFYING THE STATE OF, EVEN IF IT IS NOT WHAT YOU REQUESTED. THE MODEL MAY OCCASIONALLY HALLUCINATE AND ISSUE COMMANDS TO THE WRONG DEVICE! USE AT YOUR OWN RISK.**
