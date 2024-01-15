@@ -116,7 +116,7 @@ You need the following settings to configure the local backend from HuggingFace:
 
 **Setting up the "remote" backends**:  
 You need the following settings in order to configure the "remote" backend:
-1. Hostname: the host of the machine where text-generation-webui API is hosted. If you are using the provided add-on then the hostname is `local-text-generation-webui` or `<random hex string>-text-generation-webui`. The actual hostname can be found on the addon's page.
+1. Hostname: the host of the machine where text-generation-webui API is hosted. If you are using the provided add-on then the hostname is `local-text-generation-webui` or `2ad5febb-text-generation-webui` depending on how the addon was installed.
 2. Port: the port for accessing the text-generation-webui API. NOTE: this is not the same as the UI port. (Usually 5000)
 3. Name of the Model: This name must EXACTLY match the name as it appears in `text-generation-webui`
 
