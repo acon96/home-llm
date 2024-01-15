@@ -116,7 +116,7 @@ You need the following settings to configure the local backend from HuggingFace:
 
 **Setting up the "remote" backends**:  
 You need the following settings in order to configure the "remote" backend:
-1. Hostname: the host of the machine where text-generation-webui API is hosted. If you are using the provided add-on then the hostname is `local-text-generation-webui` or `<random hex string>-text-generation-webui`. The actual hostname can be found on the addon's page.
+1. Hostname: the host of the machine where text-generation-webui API is hosted. If you are using the provided add-on then the hostname is `local-text-generation-webui` or `2ad5febb-text-generation-webui` depending on how the addon was installed.
 2. Port: the port for accessing the text-generation-webui API. NOTE: this is not the same as the UI port. (Usually 5000)
 3. Name of the Model: This name must EXACTLY match the name as it appears in `text-generation-webui`
 
@@ -145,7 +145,7 @@ In order to facilitate running the project entirely on the system where Home Ass
 
 You can use this button to automatically download and build the addon for `oobabooga/text-generation-webui`
 
-[![Open your Home Assistant instance and show the dashboard of an add-on.](https://my.home-assistant.io/badges/supervisor_addon.svg)](https://my.home-assistant.io/redirect/supervisor_addon/?addon=2ad5febb_text-generation-webui&repository_url=https%3A%2F%2Fgithub.com%2Facon96%2Fhome-llm)
+[![Open your Home Assistant instance and show the dashboard of an add-on.](https://my.home-assistant.io/badges/supervisor_addon.svg)](https://my.home-assistant.io/redirect/supervisor_addon/?addon=f459db47_text-generation-webui&repository_url=https%3A%2F%2Fgithub.com%2Facon96%2Fhome-llm)
 
 If the automatic installation fails then you can install the addon manually using the following steps:
 
