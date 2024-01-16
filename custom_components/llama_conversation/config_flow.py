@@ -10,6 +10,7 @@ import platform
 from types import MappingProxyType
 from typing import Any
 from abc import ABC, abstractmethod
+from importlib.metadata import version
 
 from huggingface_hub import hf_hub_download
 
@@ -172,22 +173,22 @@ def download_model_from_hf(
 
 def install_llama_cpp_python(config_dir: str):
     try:
-        if not is_installed("llama-cpp-python"):
+        platform_suffix = platform.machine()
+        if platform_suffix == "arm64":
+            platform_suffix = "aarch64"
+        folder = os.path.dirname(__file__)
+        potential_wheels = sorted([ path for path in os.listdir(folder) if path.endswith(f"{platform_suffix}.whl") ], reverse=True)
+        latest_wheel = potential_wheels[0]
+        latest_version = latest_wheel.split("-")[1]
+
+        if not is_installed("llama-cpp-python") or version("llama-cpp-python") != latest_version:
             _LOGGER.info("Installing llama-cpp-python from wheel")
-            platform_suffix = platform.machine()
-            if platform_suffix == "arm64":
-                platform_suffix = "aarch64"
-            folder = os.path.dirname(__file__)
-            potential_wheels = [ path for path in os.listdir(folder) if path.endswith(f"{platform_suffix}.whl") ]
             if len(potential_wheels) == 0:
                 # someone who is better at async can figure out why this is necessary
                 time.sleep(0.5)
                 return Exception("missing_wheels")
-            elif len(potential_wheels) == 1:
-                wheel_to_install = potential_wheels[0]
             else:
-                _LOGGER.info("There are multiple potential wheels to install... Using the latest one")
-                wheel_to_install = sorted(potential_wheels, reverse=True)[0]
+                wheel_to_install = potential_wheels[0]
 
             _LOGGER.debug(f"Wheel location: {wheel_to_install}")
             return install_package(os.path.join(folder, wheel_to_install), pip_kwargs(config_dir))
