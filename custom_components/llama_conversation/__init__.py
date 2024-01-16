@@ -78,6 +78,11 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 def is_local_backend(backend):
     return backend not in [BACKEND_TYPE_TEXT_GEN_WEBUI, BACKEND_TYPE_GENERIC_OPENAI]
 
+async def update_listener(hass, entry):
+    """Handle options update."""
+    hass.data[DOMAIN][entry.entry_id] = entry
+    return True
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Local LLaMA Conversation from a config entry."""
 
@@ -95,6 +100,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # load the model in an executor job because it takes a while and locks up the UI otherwise
     agent = await hass.async_add_executor_job(create_agent)
+
+    # handle updates to the options
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     ha_conversation.async_set_agent(hass, entry, agent)
 
@@ -125,10 +133,10 @@ class LLaMAAgent(AbstractConversationAgent):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the agent."""
         self.hass = hass
-        self.entry = entry
+        self.entry_id = entry.entry_id
         self.history: dict[str, list[dict]] = {}
 
-        self.backend_type = self.entry.data.get(
+        self.backend_type = entry.data.get(
             CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE
         )
         self.use_local_backend = is_local_backend(self.backend_type)
@@ -137,8 +145,8 @@ class LLaMAAgent(AbstractConversationAgent):
         self.llm = None
         self.grammar = None
 
-        self.model_path = self.entry.data.get(CONF_DOWNLOADED_MODEL_FILE)
-        self.model_name = self.entry.data.get(CONF_CHAT_MODEL, self.model_path)
+        self.model_path = entry.data.get(CONF_DOWNLOADED_MODEL_FILE)
+        self.model_name = entry.data.get(CONF_CHAT_MODEL, self.model_path)
 
         if self.use_local_backend:
             self._load_local_model()
@@ -149,7 +157,12 @@ class LLaMAAgent(AbstractConversationAgent):
 
             # only load model if using text-generation-webui
             if self.backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
-                self._load_remote_model()
+                api_key = entry.data.get(CONF_TEXT_GEN_WEBUI_ADMIN_KEY, entry.data.get(CONF_OPENAI_API_KEY))
+                self._load_remote_model(api_key)
+
+    @property
+    def entry(self):
+        return self.hass.data[DOMAIN][self.entry_id]
 
     @property
     def supported_languages(self) -> list[str] | Literal["*"]:
@@ -164,6 +177,20 @@ class LLaMAAgent(AbstractConversationAgent):
         raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
         refresh_system_prompt = self.entry.options.get(CONF_REFRESH_SYSTEM_PROMPT, DEFAULT_REFRESH_SYSTEM_PROMPT)
         service_call_regex = self.entry.options.get(CONF_SERVICE_CALL_REGEX, DEFAULT_SERVICE_CALL_REGEX)
+
+        try:
+            service_call_pattern = re.compile(service_call_regex)
+        except Exception as err:
+            _LOGGER.exception("There was a problem compiling the service call regex")
+            
+            intent_response = intent.IntentResponse(language=user_input.language)
+            intent_response.async_set_error(
+                intent.IntentResponseErrorCode.UNKNOWN,
+                f"Sorry, there was a problem compiling the service call regex: {err}",
+            )
+            return ConversationResult(
+                response=intent_response, conversation_id=conversation_id
+            )
 
         if user_input.conversation_id in self.history:
             conversation_id = user_input.conversation_id
@@ -220,23 +247,9 @@ class LLaMAAgent(AbstractConversationAgent):
         self.history[conversation_id] = conversation
 
         exposed_entities = list(self._async_get_exposed_entities()[0].keys())
-
-        try:
-            pattern = re.compile(service_call_regex)
-        except Exception as err:
-            _LOGGER.exception("There was a problem compiling the service call regex")
-            
-            intent_response = intent.IntentResponse(language=user_input.language)
-            intent_response.async_set_error(
-                intent.IntentResponseErrorCode.UNKNOWN,
-                f"Sorry, there was a problem compiling the service call regex: {err}",
-            )
-            return ConversationResult(
-                response=intent_response, conversation_id=conversation_id
-            )
         
-        to_say = pattern.sub("", response).strip()
-        for block in pattern.findall(response.strip()):
+        to_say = service_call_pattern.sub("", response).strip()
+        for block in service_call_pattern.findall(response.strip()):
             services = block.split("\n")
             _LOGGER.info(f"running services: {' '.join(services)}")
 
@@ -282,7 +295,7 @@ class LLaMAAgent(AbstractConversationAgent):
             response=intent_response, conversation_id=conversation_id
         )
 
-    def _load_remote_model(self):
+    def _load_remote_model(self, admin_key: str | None):
         try:
             currently_loaded_result = requests.get(f"{self.api_host}/v1/internal/model/info")
             currently_loaded_result.raise_for_status()
@@ -294,7 +307,6 @@ class LLaMAAgent(AbstractConversationAgent):
                 _LOGGER.info(f"Model is not {self.model_name} loaded on the remote backend. Loading it now...")
             
             headers = {}
-            admin_key = self.entry.data.get(CONF_TEXT_GEN_WEBUI_ADMIN_KEY, self.entry.data.get(CONF_OPENAI_API_KEY))
             if admin_key:
                 headers["Authorization"] = f"Basic {admin_key}"
             
