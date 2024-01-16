@@ -52,6 +52,11 @@ from .const import (
     CONF_PROMPT_TEMPLATE,
     CONF_USE_GBNF_GRAMMAR,
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
+    CONF_TEXT_GEN_WEBUI_PRESET,
+    CONF_REFRESH_SYSTEM_PROMPT,
+    CONF_OPENAI_API_KEY,
+    CONF_TEXT_GEN_WEBUI_ADMIN_KEY,
+    CONF_SERVICE_CALL_REGEX,
     DEFAULT_CHAT_MODEL,
     DEFAULT_HOST,
     DEFAULT_PORT,
@@ -62,9 +67,12 @@ from .const import (
     DEFAULT_TOP_P,
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_BACKEND_TYPE,
+    DEFAULT_DOWNLOADED_MODEL_QUANTIZATION,
     DEFAULT_PROMPT_TEMPLATE,
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
+    DEFAULT_REFRESH_SYSTEM_PROMPT,
+    DEFAULT_SERVICE_CALL_REGEX,
     BACKEND_TYPE_LLAMA_HF,
     BACKEND_TYPE_LLAMA_EXISTING,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
@@ -73,7 +81,6 @@ from .const import (
     PROMPT_TEMPLATE_ALPACA,
     PROMPT_TEMPLATE_VICUNA,
     PROMPT_TEMPLATE_NONE,
-    DEFAULT_DOWNLOADED_MODEL_QUANTIZATION,
     DOMAIN,
 )
 
@@ -112,12 +119,19 @@ def STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(*, chat_model=None, downloaded_model_q
         }
     )
 
-def STEP_REMOTE_SETUP_DATA_SCHEMA(*, host=None, port=None, chat_model=None):
+def STEP_REMOTE_SETUP_DATA_SCHEMA(include_admin_key: bool, *, host=None, port=None, chat_model=None):
+
+    extra = {}
+    if include_admin_key: 
+        extra[vol.Optional(CONF_TEXT_GEN_WEBUI_ADMIN_KEY)] = TextSelector(TextSelectorConfig(type="password"))
+
     return vol.Schema(
         {
             vol.Required(CONF_HOST, default=host if host else DEFAULT_HOST): str,
             vol.Required(CONF_PORT, default=port if port else DEFAULT_PORT): str,
             vol.Required(CONF_CHAT_MODEL, default=chat_model if chat_model else DEFAULT_CHAT_MODEL): str,
+            vol.Optional(CONF_OPENAI_API_KEY): TextSelector(TextSelectorConfig(type="password")),
+            **extra
         }
     )
 
@@ -132,6 +146,8 @@ DEFAULT_OPTIONS = types.MappingProxyType(
         CONF_PROMPT_TEMPLATE: DEFAULT_PROMPT_TEMPLATE,
         CONF_USE_GBNF_GRAMMAR: DEFAULT_USE_GBNF_GRAMMAR,
         CONF_EXTRA_ATTRIBUTES_TO_EXPOSE: DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
+        CONF_REFRESH_SYSTEM_PROMPT: DEFAULT_REFRESH_SYSTEM_PROMPT,
+        CONF_SERVICE_CALL_REGEX: DEFAULT_SERVICE_CALL_REGEX
     }
 )
 
@@ -179,7 +195,7 @@ def install_llama_cpp_python(config_dir: str):
             _LOGGER.info("llama-cpp-python is already installed")
             # someone who is better at async can figure out why this is necessary
             time.sleep(0.5)
-        return True
+            return True
     except Exception as ex:
         _LOGGER.exception("Install failed!")
         return ex
@@ -283,17 +299,18 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                 errors["base"] = "unknown"
             else:
                 if local_backend:
-                    for key, value in self.hass.data.get(DOMAIN, {}).items():
-                        other_backend_type = value.data.get(CONF_BACKEND_TYPE)
-                        if other_backend_type == BACKEND_TYPE_LLAMA_HF or \
-                            other_backend_type == BACKEND_TYPE_LLAMA_EXISTING:
-                            errors["base"] = "other_existing_local"
-                            schema = STEP_INIT_DATA_SCHEMA(
-                                backend_type=user_input[CONF_BACKEND_TYPE],
-                            )
-
-                    if "base" not in errors:
-                        return await self.async_step_install_local_wheels()
+                    return await self.async_step_install_local_wheels()
+                    # this check isn't working right now
+                    # for key, value in self.hass.data.get(DOMAIN, {}).items():
+                    #     other_backend_type = value.data.get(CONF_BACKEND_TYPE)
+                    #     if other_backend_type == BACKEND_TYPE_LLAMA_HF or \
+                    #         other_backend_type == BACKEND_TYPE_LLAMA_EXISTING:
+                    #         errors["base"] = "other_existing_local"
+                    #         schema = STEP_INIT_DATA_SCHEMA(
+                    #             backend_type=user_input[CONF_BACKEND_TYPE],
+                    #         )
+                    # if "base" not in errors:
+                    #     return await self.async_step_install_local_wheels()
                 else:
                     return await self.async_step_remote_model()
         elif self.install_wheel_error:
@@ -420,9 +437,17 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             return self.async_show_progress_done(next_step_id="finish")
 
 
-    def _validate_remote_api(self) -> str:
+    def _validate_remote_api(self, user_input: dict) -> str:
         try:
-            models_result = requests.get(f"http://{self.model_options[CONF_HOST]}:{self.model_options[CONF_PORT]}/v1/internal/model/list")
+            headers = {}
+            api_key = user_input.get(CONF_TEXT_GEN_WEBUI_ADMIN_KEY, user_input.get(CONF_OPENAI_API_KEY))
+            if api_key:
+                headers["Authorization"] = f"Basic {api_key}"
+
+            models_result = requests.get(
+                f"http://{self.model_options[CONF_HOST]}:{self.model_options[CONF_PORT]}/v1/internal/model/list",
+                headers=headers
+            )
             models_result.raise_for_status()
 
             models = models_result.json()
@@ -441,18 +466,22 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         errors = {}
-        schema = STEP_REMOTE_SETUP_DATA_SCHEMA()
+        backend_type = self.model_options[CONF_BACKEND_TYPE]
+        schema = STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI)
 
         if user_input:
             try:
                 self.model_options.update(user_input)
 
                 # only validate and load when using text-generation-webui
-                if self.model_options[CONF_BACKEND_TYPE] == BACKEND_TYPE_TEXT_GEN_WEBUI:
-                    error_reason = await self.hass.async_add_executor_job(self._validate_remote_api)
+                if backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
+                    error_reason = await self.hass.async_add_executor_job(
+                        self._validate_remote_api, user_input
+                    )
                     if error_reason:
                         errors["base"] = error_reason
                         schema = STEP_REMOTE_SETUP_DATA_SCHEMA(
+                            True,
                             host=user_input[CONF_HOST],
                             port=user_input[CONF_PORT],
                             chat_model=user_input[CONF_CHAT_MODEL],
@@ -475,13 +504,14 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
     ) -> FlowResult:
 
         model_name = self.model_options.get(CONF_CHAT_MODEL)
-        if not model_name:
+        backend = self.model_options[CONF_BACKEND_TYPE]
+        if backend == BACKEND_TYPE_LLAMA_EXISTING:
             model_name = os.path.basename(self.model_options.get(CONF_DOWNLOADED_MODEL_FILE))
-        location = "llama.cpp" if is_local_backend(self.model_options[CONF_BACKEND_TYPE]) else "remote"
+        location = "llama.cpp" if is_local_backend(backend) else "remote"
 
         return self.async_create_entry(
             title=f"LLM Model '{model_name}' ({location})",
-            description="A Transformers Model Agent",
+            description="A Large Language Model Chat Agent",
             data=self.model_options,
         )
 
@@ -508,7 +538,7 @@ class OptionsFlow(config_entries.OptionsFlow):
             return self.async_create_entry(title="LLaMA Conversation", data=user_input)
         schema = local_llama_config_option_schema(
             self.config_entry.options,
-            is_local_backend(self.config_entry.data[CONF_BACKEND_TYPE]),
+            self.config_entry.data[CONF_BACKEND_TYPE],
         )
         return self.async_show_form(
             step_id="init",
@@ -516,10 +546,23 @@ class OptionsFlow(config_entries.OptionsFlow):
         )
 
 
-def local_llama_config_option_schema(options: MappingProxyType[str, Any], is_local_backend: bool) -> dict:
+def insert_after_key(input_dict: dict, key_name: str, other_dict: dict):
+    # if we want to insert them into the above list we need to re-build the dictionary
+    result = {}
+    for key in input_dict.keys():
+        result[key] = input_dict[key]
+
+        if key.schema == key_name:
+            for other_key in other_dict.keys():
+                result[other_key] = other_dict[other_key]
+
+    return result
+
+def local_llama_config_option_schema(options: MappingProxyType[str, Any], backend_type: str) -> dict:
     """Return a schema for Local LLaMA completion options."""
     if not options:
         options = DEFAULT_OPTIONS
+
     result = {
         vol.Optional(
             CONF_PROMPT,
@@ -542,48 +585,71 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], is_loc
             default=DEFAULT_MAX_TOKENS,
         ): int,
         vol.Optional(
-            CONF_TOP_K,
-            description={"suggested_value": options[CONF_TOP_K]},
-            default=DEFAULT_TOP_K,
-        ): NumberSelector(NumberSelectorConfig(min=1, max=256, step=1)),
-        vol.Optional(
-            CONF_TOP_P,
-            description={"suggested_value": options[CONF_TOP_P]},
-            default=DEFAULT_TOP_P,
-        ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-        vol.Optional(
-            CONF_TEMPERATURE,
-            description={"suggested_value": options[CONF_TEMPERATURE]},
-            default=DEFAULT_TEMPERATURE,
-        ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-        vol.Optional(
             CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
             description={"suggested_value": options[CONF_EXTRA_ATTRIBUTES_TO_EXPOSE]},
             default=DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
         ): TextSelector(TextSelectorConfig(multiple=True)),
+        vol.Optional(
+            CONF_SERVICE_CALL_REGEX,
+            description={"suggested_value": options[CONF_SERVICE_CALL_REGEX]},
+            default=DEFAULT_SERVICE_CALL_REGEX,
+        ): str,
     }
 
-    if is_local_backend:
-        # if we want to insert them into the above list we need to re-build the dictionary
-        new_result = {}
-        for key in result.keys():
-            new_result[key] = result[key]
-
-            _LOGGER.debug(f"{key} - {repr(key)}")
-
-            if key.schema == CONF_MAX_TOKENS:
-                new_result[vol.Optional(
-                    CONF_USE_GBNF_GRAMMAR,
-                    description={"suggested_value": options[CONF_USE_GBNF_GRAMMAR]},
-                    default=DEFAULT_USE_GBNF_GRAMMAR,
-                )] = bool
-
-        result = new_result
-    else:
-        result[vol.Optional(
-            CONF_REQUEST_TIMEOUT,
-            description={"suggested_value": options[CONF_REQUEST_TIMEOUT]},
-            default=DEFAULT_REQUEST_TIMEOUT,
-        )] = int
+    if is_local_backend(backend_type):
+        result = insert_after_key(result, CONF_MAX_TOKENS, {
+            vol.Optional(
+                CONF_TOP_K,
+                description={"suggested_value": options[CONF_TOP_K]},
+                default=DEFAULT_TOP_K,
+            ): NumberSelector(NumberSelectorConfig(min=1, max=256, step=1)),
+            vol.Optional(
+                CONF_TOP_P,
+                description={"suggested_value": options[CONF_TOP_P]},
+                default=DEFAULT_TOP_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Optional(
+                CONF_TEMPERATURE,
+                description={"suggested_value": options[CONF_TEMPERATURE]},
+                default=DEFAULT_TEMPERATURE,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Optional(
+                CONF_USE_GBNF_GRAMMAR,
+                description={"suggested_value": options[CONF_USE_GBNF_GRAMMAR]},
+                default=DEFAULT_USE_GBNF_GRAMMAR,
+            ): bool,
+            vol.Optional(
+                CONF_REFRESH_SYSTEM_PROMPT,
+                description={"suggested_value": options[CONF_REFRESH_SYSTEM_PROMPT]},
+                default=DEFAULT_REFRESH_SYSTEM_PROMPT,
+            ): bool,
+        })
+    elif backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
+        result = insert_after_key(result, CONF_MAX_TOKENS, {
+            vol.Optional(
+                CONF_REQUEST_TIMEOUT,
+                description={"suggested_value": options[CONF_REQUEST_TIMEOUT]},
+                default=DEFAULT_REQUEST_TIMEOUT,
+            ): int,
+            vol.Optional(CONF_TEXT_GEN_WEBUI_PRESET): str,
+        })
+    elif backend_type == BACKEND_TYPE_GENERIC_OPENAI:
+        result = insert_after_key(result, CONF_MAX_TOKENS, {
+            vol.Optional(
+                CONF_TEMPERATURE,
+                description={"suggested_value": options[CONF_TEMPERATURE]},
+                default=DEFAULT_TEMPERATURE,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Optional(
+                CONF_TOP_P,
+                description={"suggested_value": options[CONF_TOP_P]},
+                default=DEFAULT_TOP_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Optional(
+                CONF_TOP_P,
+                description={"suggested_value": options[CONF_TOP_P]},
+                default=DEFAULT_TOP_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+        })
 
     return result

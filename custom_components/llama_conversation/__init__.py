@@ -11,7 +11,8 @@ import os
 import json
 import webcolors
 
-from homeassistant.components import conversation
+import homeassistant.components.conversation as ha_conversation
+from homeassistant.components.conversation import ConversationInput, ConversationResult, AbstractConversationAgent
 from homeassistant.components.conversation.const import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import (
     async_should_expose,
@@ -46,6 +47,11 @@ from .const import (
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
     CONF_PROMPT_TEMPLATE,
     CONF_USE_GBNF_GRAMMAR,
+    CONF_TEXT_GEN_WEBUI_PRESET,
+    CONF_OPENAI_API_KEY,
+    CONF_TEXT_GEN_WEBUI_ADMIN_KEY,
+    CONF_REFRESH_SYSTEM_PROMPT,
+    CONF_SERVICE_CALL_REGEX,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
@@ -56,6 +62,8 @@ from .const import (
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
     DEFAULT_PROMPT_TEMPLATE,
     DEFAULT_USE_GBNF_GRAMMAR,
+    DEFAULT_REFRESH_SYSTEM_PROMPT,
+    DEFAULT_SERVICE_CALL_REGEX,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
     BACKEND_TYPE_GENERIC_OPENAI,
     DOMAIN,
@@ -69,6 +77,11 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 def is_local_backend(backend):
     return backend not in [BACKEND_TYPE_TEXT_GEN_WEBUI, BACKEND_TYPE_GENERIC_OPENAI]
+
+async def update_listener(hass, entry):
+    """Handle options update."""
+    hass.data[DOMAIN][entry.entry_id] = entry
+    return True
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Local LLaMA Conversation from a config entry."""
@@ -88,7 +101,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # load the model in an executor job because it takes a while and locks up the UI otherwise
     agent = await hass.async_add_executor_job(create_agent)
 
-    conversation.async_set_agent(hass, entry, agent)
+    # handle updates to the options
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
+    ha_conversation.async_set_agent(hass, entry, agent)
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = entry
@@ -98,7 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Local LLaMA."""
     hass.data[DOMAIN].pop(entry.entry_id)
-    conversation.async_unset_agent(hass, entry)
+    ha_conversation.async_unset_agent(hass, entry)
     return True
 
 def closest_color(requested_color):
@@ -111,16 +127,16 @@ def closest_color(requested_color):
         min_colors[(rd + gd + bd)] = name
     return min_colors[min(min_colors.keys())]
 
-class LLaMAAgent(conversation.AbstractConversationAgent):
+class LLaMAAgent(AbstractConversationAgent):
     """Local LLaMA conversation agent."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the agent."""
         self.hass = hass
-        self.entry = entry
+        self.entry_id = entry.entry_id
         self.history: dict[str, list[dict]] = {}
 
-        self.backend_type = self.entry.data.get(
+        self.backend_type = entry.data.get(
             CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE
         )
         self.use_local_backend = is_local_backend(self.backend_type)
@@ -129,35 +145,11 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         self.llm = None
         self.grammar = None
 
-        model_path = self.entry.data.get(CONF_DOWNLOADED_MODEL_FILE)
-        self.model_name = self.entry.data.get(CONF_CHAT_MODEL, model_path)
+        self.model_path = entry.data.get(CONF_DOWNLOADED_MODEL_FILE)
+        self.model_name = entry.data.get(CONF_CHAT_MODEL, self.model_path)
 
         if self.use_local_backend:
-            if not model_path:
-                raise Exception(f"Model was not found at '{model_path}'!")
-
-            # don't import it until now because the wheel is installed by config_flow.py
-            module = importlib.import_module("llama_cpp")
-            Llama = getattr(module, "Llama")
-            LlamaGrammar = getattr(module, "LlamaGrammar")
-
-            _LOGGER.debug("Loading model...")
-
-            self.llm = Llama(
-                model_path=model_path,
-                n_ctx=2048,
-                n_batch=2048,
-                # n_threads=16,
-                # n_threads_batch=4,
-            )
-
-            _LOGGER.debug("Loading grammar...")
-
-            with open(os.path.join(os.path.dirname(__file__), GBNF_GRAMMAR_FILE)) as f:
-                grammar_str = "".join(f.readlines())
-            self.grammar = LlamaGrammar.from_string(grammar_str)
-
-            _LOGGER.info("Model loaded")
+            self._load_local_model()
         else:
             host = entry.data[CONF_HOST]
             port = entry.data[CONF_PORT]
@@ -165,7 +157,12 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
 
             # only load model if using text-generation-webui
             if self.backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
-                self._load_remote_model()
+                api_key = entry.data.get(CONF_TEXT_GEN_WEBUI_ADMIN_KEY, entry.data.get(CONF_OPENAI_API_KEY))
+                self._load_remote_model(api_key)
+
+    @property
+    def entry(self):
+        return self.hass.data[DOMAIN][self.entry_id]
 
     @property
     def supported_languages(self) -> list[str] | Literal["*"]:
@@ -173,29 +170,38 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         return MATCH_ALL
 
     async def async_process(
-        self, user_input: conversation.ConversationInput
-    ) -> conversation.ConversationResult:
+        self, user_input: ConversationInput
+    ) -> ConversationResult:
         """Process a sentence."""
 
         raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
-        max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
-        top_k = self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K)
-        top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
-        temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
+        refresh_system_prompt = self.entry.options.get(CONF_REFRESH_SYSTEM_PROMPT, DEFAULT_REFRESH_SYSTEM_PROMPT)
+        service_call_regex = self.entry.options.get(CONF_SERVICE_CALL_REGEX, DEFAULT_SERVICE_CALL_REGEX)
+
+        try:
+            service_call_pattern = re.compile(service_call_regex)
+        except Exception as err:
+            _LOGGER.exception("There was a problem compiling the service call regex")
+            
+            intent_response = intent.IntentResponse(language=user_input.language)
+            intent_response.async_set_error(
+                intent.IntentResponseErrorCode.UNKNOWN,
+                f"Sorry, there was a problem compiling the service call regex: {err}",
+            )
+            return ConversationResult(
+                response=intent_response, conversation_id=conversation_id
+            )
 
         if user_input.conversation_id in self.history:
             conversation_id = user_input.conversation_id
-            prompt = self.history[conversation_id]
+            conversation = self.history[conversation_id]            
         else:
             conversation_id = ulid.ulid()
+            conversation = []
+        
+        if len(conversation) == 0 or refresh_system_prompt:
             try:
-                prompt = [
-                    {
-                        "role": "system",
-                        "message": self._async_generate_prompt(raw_prompt),
-                    }
-                ]
-
+                message = self._async_generate_system_prompt(raw_prompt)
             except TemplateError as err:
                 _LOGGER.error("Error rendering prompt: %s", err)
                 intent_response = intent.IntentResponse(language=user_input.language)
@@ -203,25 +209,26 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
                     intent.IntentResponseErrorCode.UNKNOWN,
                     f"Sorry, I had a problem with my template: {err}",
                 )
-                return conversation.ConversationResult(
+                return ConversationResult(
                     response=intent_response, conversation_id=conversation_id
                 )
+            
+            system_prompt = { "role": "system", "message": message }
+            
+            if len(conversation) == 0:
+                conversation.append(system_prompt)
+            else:
+                conversation[0] = system_prompt
 
-        prompt.append({"role": "user", "message": user_input.text})
+        conversation.append({"role": "user", "message": user_input.text})
 
         # _LOGGER.debug("Prompt: %s", prompt)
 
         try:
-            generate_parameters = {
-                "prompt": await self._async_format_prompt(prompt),
-                "max_tokens": max_tokens,
-                "top_k": top_k,
-                "top_p": top_p,
-                "temperature": temperature,
-            }
+            prompt = await self._async_format_prompt(conversation)
 
-            _LOGGER.debug(generate_parameters["prompt"])
-            response = await self._async_generate(generate_parameters)
+            _LOGGER.debug(prompt)
+            response = await self._async_generate(prompt)
             _LOGGER.debug(response)
 
         except Exception as err:
@@ -232,18 +239,17 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
                 intent.IntentResponseErrorCode.UNKNOWN,
                 f"Sorry, there was a problem talking to the backend: {err}",
             )
-            return conversation.ConversationResult(
+            return ConversationResult(
                 response=intent_response, conversation_id=conversation_id
             )
 
-        prompt.append({"role": "assistant", "message": response})
-        self.history[conversation_id] = prompt
+        conversation.append({"role": "assistant", "message": response})
+        self.history[conversation_id] = conversation
 
         exposed_entities = list(self._async_get_exposed_entities()[0].keys())
-        pattern = re.compile(r"```homeassistant\n([\S \t\n]*?)```")
         
-        to_say = pattern.sub("", response).strip()
-        for block in pattern.findall(response.strip()):
+        to_say = service_call_pattern.sub("", response).strip()
+        for block in service_call_pattern.findall(response.strip()):
             services = block.split("\n")
             _LOGGER.info(f"running services: {' '.join(services)}")
 
@@ -285,11 +291,11 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         
         intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(to_say)
-        return conversation.ConversationResult(
+        return ConversationResult(
             response=intent_response, conversation_id=conversation_id
         )
 
-    def _load_remote_model(self):
+    def _load_remote_model(self, admin_key: str | None):
         try:
             currently_loaded_result = requests.get(f"{self.api_host}/v1/internal/model/info")
             currently_loaded_result.raise_for_status()
@@ -299,6 +305,10 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
                 _LOGGER.info(f"Model {self.model_name} is already loaded on the remote backend.")
             else:
                 _LOGGER.info(f"Model is not {self.model_name} loaded on the remote backend. Loading it now...")
+            
+            headers = {}
+            if admin_key:
+                headers["Authorization"] = f"Basic {admin_key}"
             
             load_result = requests.post(
                 f"{self.api_host}/v1/internal/model/load",
@@ -313,19 +323,42 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
         except Exception as ex:
             _LOGGER.error("Connection error was: %s", repr(ex))
 
-    def _generate_remote(self, generate_params: dict) -> str:
+    def _generate_remote(self, prompt: str) -> str:
+        max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
+        temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
+        top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
+        timeout = self.entry.options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
+
+        request_params = {
+            "prompt": prompt,
+            "model": self.model_name,
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+            "top_p": top_p,
+        }
+        headers = {}
+        api_key = self.entry.data.get(CONF_OPENAI_API_KEY)
+        if api_key:
+            headers["Authorization"] = f"Basic {api_key}"
+
+        if self.backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
+            preset = self.entry.options.get(CONF_TEXT_GEN_WEBUI_PRESET)
+            if preset:
+                request_params["preset"] = preset
+
+        result = requests.post(
+            f"{self.api_host}/v1/completions", 
+            json=request_params,
+            timeout=timeout,
+            headers=headers,
+        )
+
         try:
-            generate_params["model"] = self.model_name
-            del generate_params["top_k"]
-
-            timeout = self.entry.options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
-
-            result = requests.post(
-                f"{self.api_host}/v1/completions", json=generate_params, timeout=timeout
-            )
             result.raise_for_status()
         except requests.RequestException as err:
             _LOGGER.debug(f"Err was: {err}")
+            _LOGGER.debug(f"Request was: {request_params}")
+            _LOGGER.debug(f"Result was: {result.text}")
             return f"Failed to communicate with the API! {err}"
 
         choices = result.json()["choices"]
@@ -334,21 +367,57 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
             _LOGGER.warn("Model response did not end on a stop token (unfinished sentence)")
 
         return choices[0]["text"]
+    
+    def _load_local_model(self):
+        if not self.model_path:
+            raise Exception(f"Model was not found at '{self.model_path}'!")
 
-    def _generate_local(self, generate_params: dict) -> str:
-        input_tokens = self.llm.tokenize(
-            generate_params["prompt"].encode(), add_bos=False
+        # don't import it until now because the wheel is installed by config_flow.py
+        module = importlib.import_module("llama_cpp")
+        Llama = getattr(module, "Llama")
+        LlamaGrammar = getattr(module, "LlamaGrammar")
+
+        _LOGGER.debug("Loading model...")
+        self.llm = Llama(
+            model_path=self.model_path,
+            n_ctx=2048,
+            n_batch=2048,
+            # TODO: expose arguments to the user in home assistant UI
+            # n_threads=16,
+            # n_threads_batch=4,
         )
 
-        CONF_USE_GBNF_GRAMMAR
+        _LOGGER.debug("Loading grammar...")
+        try:
+            with open(os.path.join(os.path.dirname(__file__), GBNF_GRAMMAR_FILE)) as f:
+                grammar_str = "".join(f.readlines())
+            self.grammar = LlamaGrammar.from_string(grammar_str)
+            _LOGGER.debug("Loaded grammar")
+        except Exception:
+            _LOGGER.exception("Failed to load grammar!")
+            self.grammar = None
+
+
+    def _generate_local(self, prompt: str) -> str:
+        input_tokens = self.llm.tokenize(
+            prompt.encode(), add_bos=False
+        )
+
+        max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
+        temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
+        top_k = int(self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K))
+        top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
+        grammar = self.grammar if self.entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR) else None
+
+        _LOGGER.debug(f"Options: {self.entry.options}")
 
         _LOGGER.debug(f"Processing {len(input_tokens)} input tokens...")
         output_tokens = self.llm.generate(
             input_tokens,
-            temp=generate_params["temperature"],
-            top_k=generate_params["top_k"],
-            top_p=generate_params["top_p"],
-            grammar=generate_params["grammar"]
+            temp=temperature,
+            top_k=top_k,
+            top_p=top_p,
+            grammar=grammar
         )
 
         result_tokens = []
@@ -358,25 +427,21 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
 
             result_tokens.append(token)
 
-            if len(result_tokens) >= generate_params["max_tokens"]:
+            if len(result_tokens) >= max_tokens:
                 break
 
         result = self.llm.detokenize(result_tokens).decode()
 
         return result
 
-    async def _async_generate(self, generate_parameters: dict) -> str:
+    async def _async_generate(self, prompt: str) -> str:
         if self.use_local_backend:
-            if self.entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
-                generate_parameters["grammar"] = self.grammar
-            else:
-                generate_parameters["grammar"] = None
             return await self.hass.async_add_executor_job(
-                self._generate_local, generate_parameters
+                self._generate_local, prompt
             )
         else:
             return await self.hass.async_add_executor_job(
-                self._generate_remote, generate_parameters
+                self._generate_remote, prompt
             )
 
     def _async_get_exposed_entities(self) -> tuple[dict[str, str], list[str]]:
@@ -417,7 +482,7 @@ class LLaMAAgent(conversation.AbstractConversationAgent):
 
         return formatted_prompt
 
-    def _async_generate_prompt(self, prompt_template: str) -> str:
+    def _async_generate_system_prompt(self, prompt_template: str) -> str:
         """Generate a prompt for the user."""
         entities_to_expose, domains = self._async_get_exposed_entities()
 

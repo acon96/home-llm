@@ -68,3 +68,10 @@ PROMPT_TEMPLATE_DESCRIPTIONS = {
 }
 CONF_USE_GBNF_GRAMMAR = "gbnf_grammar"
 DEFAULT_USE_GBNF_GRAMMAR = False
+CONF_TEXT_GEN_WEBUI_PRESET = "text_generation_webui_preset"
+CONF_OPENAI_API_KEY = "openai_api_key"
+CONF_TEXT_GEN_WEBUI_ADMIN_KEY = "text_generation_webui_admin_key"
+CONF_REFRESH_SYSTEM_PROMPT = "refresh_prompt_per_tern"
+DEFAULT_REFRESH_SYSTEM_PROMPT = True
+CONF_SERVICE_CALL_REGEX = "service_call_regex"
+DEFAULT_SERVICE_CALL_REGEX = r"```homeassistant\n([\S \t\n]*?)```"
