@@ -164,7 +164,8 @@ The RPI4 4GB that I have was sitting right at 1.5 tokens/sec for prompt eval and
 It is highly recommend to set up text-generation-webui on a separate machine that can take advantage of a GPU.
 
 ## Version History
-| Version | Description                                                                                                                        |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| v0.2    | Bug fixes, support more backends, support for climate + switch devices, JSON style function calling with parameters, GBNF grammars |
-| v0.1    | Initial Release                                                                                                                    |
+| Version | Description                                                                                                                                    |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| v0.2.1  | Properly expose generation parameters for each backend, handle config entry updates without reloading, support remote backends with an API key |
+| v0.2    | Bug fixes, support more backends, support for climate + switch devices, JSON style function calling with parameters, GBNF grammars             |
+| v0.1    | Initial Release                                                                                                                                |
