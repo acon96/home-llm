@@ -7,7 +7,7 @@
             "missing_model_file": "The provided file does not exist.",
             "other_existing_local": "Another model is already loaded locally. Please unload it or configure a remote model.",
             "unknown": "Unexpected error",
-            "missing_wheel": "Llama.cpp is not installed and could not find any wheels to install!",
+            "missing_wheels": "Llama.cpp is not installed and could not find any wheels to install!",
             "pip_wheel_error": "Pip returned an error while installing the wheel!"
         },
         "progress": {
@@ -28,7 +28,9 @@
                 "data": {
                     "host": "API Hostname",
                     "huggingface_model": "Model Name",
-                    "port": "API Port"
+                    "port": "API Port",
+                    "openai_api_key": "API Key",
+                    "text_generation_webui_admin_key": "Admin Key"
                 },
                 "description": "Provide the connection details for an instance of text-generation-webui that is hosting the model.",
                 "title": "Configure connection to remote API"
@@ -55,7 +57,12 @@
                     "top_p": "Top P",
                     "request_timeout": "Remote Request Timeout (seconds)",
                     "extra_attributes_to_expose": "Additional attribute to expose in the context",
-                    "gbnf_grammar": "Enable GBNF Grammar"
+                    "gbnf_grammar": "Enable GBNF Grammar",
+                    "openai_api_key": "API Key",
+                    "text_generation_webui_admin_key": "Admin Key",
+                    "service_call_regex": "Service Call Regex",
+                    "refresh_prompt_per_tern": "Refresh System Prompt Every Turn",
+                    "text_generation_webui_preset": "Generation Preset Name"
                 }
             }
         }
