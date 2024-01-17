@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from typing import Dict, Optional, Sequence
 
 """
-Phi Modules: fc1,fc2,Wqkv,out_proj,wte,lm_head.linear
+Phi Modules: fc1,fc2,q_proj,v_proj,k_proj,dense,embed_tokens,lm_head
 """
 
 """
@@ -26,7 +26,7 @@ python3 train.py \
     --save_steps 1000 \
     --micro_batch_size 4 --gradient_checkpointing \
     --ctx_size 2048 \
-    --use_lora --lora_rank 32 --lora_alpha 64 --lora_modules fc1,fc2,Wqkv,out_proj --lora_modules_to_save wte,lm_head.linear --lora_merge
+    --use_lora --lora_rank 32 --lora_alpha 64 --lora_modules fc1,fc2,q_proj,v_proj,dense --lora_modules_to_save embed_tokens,lm_head --lora_merge
 """
 
 """

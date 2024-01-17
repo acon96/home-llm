@@ -261,6 +261,7 @@ def random_device_list(max_devices: int, avoid_device_names: list[str]):
 
     local_device_names = { k: v[:] for k,v in stacks_of_device_names.items() }
 
+    avoid_climate = False
     for avoid_device in avoid_device_names:
         avoid_type = avoid_device.split(".")[0]
 
@@ -271,6 +272,9 @@ def random_device_list(max_devices: int, avoid_device_names: list[str]):
             if similarity_ratio < 0.4:
                 filtered_possible_devices.append(possible_device)
         local_device_names[avoid_type] = filtered_possible_devices
+
+        if avoid_type == "climate":
+            avoid_climate = True
 
     possible_choices = []
     for device_type in local_device_names.keys():
@@ -290,8 +294,9 @@ def random_device_list(max_devices: int, avoid_device_names: list[str]):
             device_type = device_name.split(".")[0]
             friendly_name = choice["description"]
 
-            if device_type == "climate":
-                continue # don't add random thermostats. we need to be careful about how we handle multiple thermostats
+            # don't add random thermostats. we need to be careful about how we handle multiple thermostats
+            if avoid_climate and device_type == "climate":
+                continue
 
             state = SUPPORTED_DEVICES[device_type].get_random_state()
             device_lines.append(format_device_line(

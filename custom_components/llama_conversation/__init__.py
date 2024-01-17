@@ -410,6 +410,7 @@ class LLaMAAgent(AbstractConversationAgent):
 
         _LOGGER.debug("Loading grammar...")
         try:
+            # TODO: make grammar configurable
             with open(os.path.join(os.path.dirname(__file__), GBNF_GRAMMAR_FILE)) as f:
                 grammar_str = "".join(f.readlines())
             self.grammar = LlamaGrammar.from_string(grammar_str)

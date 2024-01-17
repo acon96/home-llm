@@ -28,6 +28,8 @@ fan.office 'Office fan' = off
 light.kitchen 'Kitchen Light' = on<|im_end|>
 ```
 
+For more about how the model is prompted see [./docs/Model Prompting.md]
+
 Output from the model will consist of a response that should be relayed back to the user, along with an optional code block that will invoke different Home Assistant "services". The output format from the model for function calling is as follows:
 
 `````
