@@ -4,12 +4,14 @@ This project provides the required "glue" components to control your Home Assist
 ## Model
 The "Home" models are a fine tuning of the Phi model series from Microsoft.  The model is able to control devices in the user's house as well as perform basic question and answering.  The fine tuning dataset is a combination of the [Cleaned Stanford Alpaca Dataset](https://huggingface.co/datasets/yahma/alpaca-cleaned) as well as a [custom synthetic dataset](./data) designed to teach the model function calling based on the device information in the context.
 
-The models can be found on HuggingFace:  
-3B v1 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v1-GGUF
+The latest models can be found on HuggingFace:  
+3B v2 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v2-GGUF  
+1B v1 (Based on Phi-1.5): https://huggingface.co/acon96/Home-1B-v1-GGUF  
 
-Below are waiting on a bug-fix for Llama.cpp to make it in to a release for `llama-cpp-python` and then a release for `text-generation-webui`.  
-~~3B v2 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v2-GGUF~~  
-~~1B v1 (Based on Phi-1.5): https://huggingface.co/acon96/Home-1B-v1-GGUF~~  
+Make sure you have `llama-cpp-python>=0.2.29` in order to run these models.
+
+Old Models:
+3B v1 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v1-GGUF
 
 The main difference between the 2 models (besides parameter count) is the training data. The 1B model is ONLY trained on the synthetic dataset provided in this project, while the 3B model is trained on a mixture of this synthetic dataset, and the cleaned Stanford Alpaca dataset.
 
@@ -27,6 +29,8 @@ light.office 'Office Light' = on
 fan.office 'Office fan' = off
 light.kitchen 'Kitchen Light' = on<|im_end|>
 ```
+
+For more about how the model is prompted see [./docs/Model Prompting.md]
 
 Output from the model will consist of a response that should be relayed back to the user, along with an optional code block that will invoke different Home Assistant "services". The output format from the model for function calling is as follows:
 

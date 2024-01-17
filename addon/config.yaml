@@ -1,6 +1,6 @@
 ---
 name: oobabooga-text-generation-webui
-version: 2024.01.14
+version: 2024.01.16
 slug: text-generation-webui
 description: "A tool for running Large Language Models"
 url: "https://github.com/oobabooga/text-generation-webui"

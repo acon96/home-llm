@@ -1,4 +1,5 @@
 """Constants for the LLaMa Conversation integration."""
+import types
 
 DOMAIN = "llama_conversation"
 CONF_PROMPT = "prompt"
@@ -38,6 +39,8 @@ CONF_PROMPT_TEMPLATE = "prompt_template"
 PROMPT_TEMPLATE_CHATML = "chatml"
 PROMPT_TEMPLATE_ALPACA = "alpaca"
 PROMPT_TEMPLATE_VICUNA = "vicuna"
+PROMPT_TEMPLATE_MISTRAL = "mistral"
+PROMPT_TEMPLATE_LLAMA2 = "llama2"
 PROMPT_TEMPLATE_NONE = "no_prompt_template"
 DEFAULT_PROMPT_TEMPLATE = PROMPT_TEMPLATE_CHATML
 PROMPT_TEMPLATE_DESCRIPTIONS = {
@@ -64,6 +67,12 @@ PROMPT_TEMPLATE_DESCRIPTIONS = {
         "user": { "prefix": "", "suffix": "" },
         "assistant": { "prefix": "", "suffix": "" },
         "generation_prompt": ""
+    },
+    PROMPT_TEMPLATE_MISTRAL: {
+        "system": { "prefix": "<s>", "suffix": "" },
+        "user": { "prefix": "[INST]", "suffix": "[/INST]" },
+        "assistant": { "prefix": "", "suffix": "</s>" },
+        "generation_prompt": ""
     }
 }
 CONF_USE_GBNF_GRAMMAR = "gbnf_grammar"
@@ -75,3 +84,19 @@ CONF_REFRESH_SYSTEM_PROMPT = "refresh_prompt_per_tern"
 DEFAULT_REFRESH_SYSTEM_PROMPT = True
 CONF_SERVICE_CALL_REGEX = "service_call_regex"
 DEFAULT_SERVICE_CALL_REGEX = r"```homeassistant\n([\S \t\n]*?)```"
+
+DEFAULT_OPTIONS = types.MappingProxyType(
+    {
+        CONF_PROMPT: DEFAULT_PROMPT,
+        CONF_MAX_TOKENS: DEFAULT_MAX_TOKENS,
+        CONF_TOP_K: DEFAULT_TOP_K,
+        CONF_TOP_P: DEFAULT_TOP_P,
+        CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
+        CONF_REQUEST_TIMEOUT: DEFAULT_REQUEST_TIMEOUT,
+        CONF_PROMPT_TEMPLATE: DEFAULT_PROMPT_TEMPLATE,
+        CONF_USE_GBNF_GRAMMAR: DEFAULT_USE_GBNF_GRAMMAR,
+        CONF_EXTRA_ATTRIBUTES_TO_EXPOSE: DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
+        CONF_REFRESH_SYSTEM_PROMPT: DEFAULT_REFRESH_SYSTEM_PROMPT,
+        CONF_SERVICE_CALL_REGEX: DEFAULT_SERVICE_CALL_REGEX
+    }
+)

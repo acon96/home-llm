@@ -261,6 +261,7 @@ def random_device_list(max_devices: int, avoid_device_names: list[str]):
 
     local_device_names = { k: v[:] for k,v in stacks_of_device_names.items() }
 
+    avoid_climate = False
     for avoid_device in avoid_device_names:
         avoid_type = avoid_device.split(".")[0]
 
@@ -271,6 +272,9 @@ def random_device_list(max_devices: int, avoid_device_names: list[str]):
             if similarity_ratio < 0.4:
                 filtered_possible_devices.append(possible_device)
         local_device_names[avoid_type] = filtered_possible_devices
+
+        if avoid_type == "climate":
+            avoid_climate = True
 
     possible_choices = []
     for device_type in local_device_names.keys():
@@ -290,8 +294,9 @@ def random_device_list(max_devices: int, avoid_device_names: list[str]):
             device_type = device_name.split(".")[0]
             friendly_name = choice["description"]
 
-            if device_type == "climate":
-                continue # don't add random thermostats. we need to be careful about how we handle multiple thermostats
+            # don't add random thermostats. we need to be careful about how we handle multiple thermostats
+            if avoid_climate and device_type == "climate":
+                continue
 
             state = SUPPORTED_DEVICES[device_type].get_random_state()
             device_lines.append(format_device_line(
@@ -620,8 +625,8 @@ def main():
         generate_example_file("sample", 42, static_factor=1, template_factor=1, status_request_factor=1)
     if args.train:
         # TODO: add small, medium, large cli clags
-        # generate_example_file("home_assistant_train", 42, static_factor=1, template_factor=10, status_request_factor=8)
-        generate_example_file("home_assistant_train", 42, static_factor=5, template_factor=15, status_request_factor=12)
+        generate_example_file("home_assistant_train", 42, static_factor=1, template_factor=10, status_request_factor=8)
+        # generate_example_file("home_assistant_train", 42, static_factor=5, template_factor=15, status_request_factor=12)
         # generate_example_file("home_assistant_train", 42, static_factor=5, template_factor=20, status_request_factor=15)
     if args.test:
         generate_example_file("home_assistant_test", 12345, static_factor=0.25, template_factor=3, status_request_factor=2)

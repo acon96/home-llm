@@ -64,6 +64,7 @@ from .const import (
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_REFRESH_SYSTEM_PROMPT,
     DEFAULT_SERVICE_CALL_REGEX,
+    DEFAULT_OPTIONS,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
     BACKEND_TYPE_GENERIC_OPENAI,
     DOMAIN,
@@ -115,6 +116,26 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Local LLaMA."""
     hass.data[DOMAIN].pop(entry.entry_id)
     ha_conversation.async_unset_agent(hass, entry)
+    return True
+
+async def async_migrate_entry(hass, config_entry: ConfigEntry):
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version > 1:
+      # This means the user has downgraded from a future version
+      return False
+
+    # if config_entry.version < 2:
+    #     # just ensure that the defaults are set
+    #     new_options = dict(DEFAULT_OPTIONS)
+    #     new_options.update(config_entry.options)
+
+    #     config_entry.version = 2
+    #     hass.config_entries.async_update_entry(config_entry, options=new_options)
+
+    _LOGGER.debug("Migration to version %s successful", config_entry.version)
+
     return True
 
 def closest_color(requested_color):
@@ -389,6 +410,7 @@ class LLaMAAgent(AbstractConversationAgent):
 
         _LOGGER.debug("Loading grammar...")
         try:
+            # TODO: make grammar configurable
             with open(os.path.join(os.path.dirname(__file__), GBNF_GRAMMAR_FILE)) as f:
                 grammar_str = "".join(f.readlines())
             self.grammar = LlamaGrammar.from_string(grammar_str)

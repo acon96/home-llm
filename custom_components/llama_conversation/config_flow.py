@@ -4,7 +4,6 @@ from __future__ import annotations
 import time
 import os
 import logging
-import types
 import requests
 import platform
 from types import MappingProxyType
@@ -74,6 +73,7 @@ from .const import (
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
     DEFAULT_REFRESH_SYSTEM_PROMPT,
     DEFAULT_SERVICE_CALL_REGEX,
+    DEFAULT_OPTIONS,
     BACKEND_TYPE_LLAMA_HF,
     BACKEND_TYPE_LLAMA_EXISTING,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
@@ -81,6 +81,7 @@ from .const import (
     PROMPT_TEMPLATE_CHATML,
     PROMPT_TEMPLATE_ALPACA,
     PROMPT_TEMPLATE_VICUNA,
+    PROMPT_TEMPLATE_MISTRAL,
     PROMPT_TEMPLATE_NONE,
     DOMAIN,
 )
@@ -136,22 +137,6 @@ def STEP_REMOTE_SETUP_DATA_SCHEMA(include_admin_key: bool, *, host=None, port=No
         }
     )
 
-DEFAULT_OPTIONS = types.MappingProxyType(
-    {
-        CONF_PROMPT: DEFAULT_PROMPT,
-        CONF_MAX_TOKENS: DEFAULT_MAX_TOKENS,
-        CONF_TOP_K: DEFAULT_TOP_K,
-        CONF_TOP_P: DEFAULT_TOP_P,
-        CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
-        CONF_REQUEST_TIMEOUT: DEFAULT_REQUEST_TIMEOUT,
-        CONF_PROMPT_TEMPLATE: DEFAULT_PROMPT_TEMPLATE,
-        CONF_USE_GBNF_GRAMMAR: DEFAULT_USE_GBNF_GRAMMAR,
-        CONF_EXTRA_ATTRIBUTES_TO_EXPOSE: DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
-        CONF_REFRESH_SYSTEM_PROMPT: DEFAULT_REFRESH_SYSTEM_PROMPT,
-        CONF_SERVICE_CALL_REGEX: DEFAULT_SERVICE_CALL_REGEX
-    }
-)
-
 def download_model_from_hf(
     model_name: str, quantization_type: str, storage_folder: str
 ):
@@ -178,24 +163,27 @@ def install_llama_cpp_python(config_dir: str):
             platform_suffix = "aarch64"
         folder = os.path.dirname(__file__)
         potential_wheels = sorted([ path for path in os.listdir(folder) if path.endswith(f"{platform_suffix}.whl") ], reverse=True)
+        if len(potential_wheels) == 0:
+            # someone who is better at async can figure out why this is necessary
+            time.sleep(0.5)
+
+            if is_installed("llama-cpp-python"):
+                _LOGGER.info("llama-cpp-python is already installed")
+                return True
+            return Exception("missing_wheels")
+        
         latest_wheel = potential_wheels[0]
         latest_version = latest_wheel.split("-")[1]
 
         if not is_installed("llama-cpp-python") or version("llama-cpp-python") != latest_version:
             _LOGGER.info("Installing llama-cpp-python from wheel")
-            if len(potential_wheels) == 0:
-                # someone who is better at async can figure out why this is necessary
-                time.sleep(0.5)
-                return Exception("missing_wheels")
-            else:
-                wheel_to_install = potential_wheels[0]
-
-            _LOGGER.debug(f"Wheel location: {wheel_to_install}")
-            return install_package(os.path.join(folder, wheel_to_install), pip_kwargs(config_dir))
+            _LOGGER.debug(f"Wheel location: {latest_wheel}")
+            return install_package(os.path.join(folder, latest_wheel), pip_kwargs(config_dir))
         else:
-            _LOGGER.info("llama-cpp-python is already installed")
             # someone who is better at async can figure out why this is necessary
             time.sleep(0.5)
+
+            _LOGGER.info("llama-cpp-python is already installed")
             return True
     except Exception as ex:
         _LOGGER.exception("Install failed!")
@@ -565,90 +553,93 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
         options = DEFAULT_OPTIONS
 
     result = {
-        vol.Optional(
+        vol.Required(
             CONF_PROMPT,
-            description={"suggested_value": options[CONF_PROMPT]},
+            description={"suggested_value": options.get(CONF_PROMPT)},
             default=DEFAULT_PROMPT,
         ): TemplateSelector(),
-        vol.Optional(
+        vol.Required(
             CONF_PROMPT_TEMPLATE,
-            description={"suggested_value": options[CONF_PROMPT_TEMPLATE]},
+            description={"suggested_value": options.get(CONF_PROMPT_TEMPLATE)},
             default=DEFAULT_PROMPT_TEMPLATE,
         ): SelectSelector(SelectSelectorConfig(
-            options=[PROMPT_TEMPLATE_CHATML, PROMPT_TEMPLATE_ALPACA, PROMPT_TEMPLATE_VICUNA, PROMPT_TEMPLATE_NONE],
+            options=[PROMPT_TEMPLATE_CHATML, PROMPT_TEMPLATE_ALPACA, PROMPT_TEMPLATE_VICUNA, PROMPT_TEMPLATE_MISTRAL, PROMPT_TEMPLATE_NONE],
             translation_key=CONF_PROMPT_TEMPLATE,
             multiple=False,
             mode=SelectSelectorMode.DROPDOWN,
         )),
-        vol.Optional(
+        vol.Required(
             CONF_MAX_TOKENS,
-            description={"suggested_value": options[CONF_MAX_TOKENS]},
+            description={"suggested_value": options.get(CONF_MAX_TOKENS)},
             default=DEFAULT_MAX_TOKENS,
         ): int,
-        vol.Optional(
+        vol.Required(
             CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
-            description={"suggested_value": options[CONF_EXTRA_ATTRIBUTES_TO_EXPOSE]},
+            description={"suggested_value": options.get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE)},
             default=DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
         ): TextSelector(TextSelectorConfig(multiple=True)),
-        vol.Optional(
+        vol.Required(
             CONF_SERVICE_CALL_REGEX,
-            description={"suggested_value": options[CONF_SERVICE_CALL_REGEX]},
+            description={"suggested_value": options.get(CONF_SERVICE_CALL_REGEX)},
             default=DEFAULT_SERVICE_CALL_REGEX,
         ): str,
     }
 
     if is_local_backend(backend_type):
         result = insert_after_key(result, CONF_MAX_TOKENS, {
-            vol.Optional(
+            vol.Required(
                 CONF_TOP_K,
-                description={"suggested_value": options[CONF_TOP_K]},
+                description={"suggested_value": options.get(CONF_TOP_K)},
                 default=DEFAULT_TOP_K,
             ): NumberSelector(NumberSelectorConfig(min=1, max=256, step=1)),
-            vol.Optional(
+            vol.Required(
                 CONF_TOP_P,
-                description={"suggested_value": options[CONF_TOP_P]},
+                description={"suggested_value": options.get(CONF_TOP_P)},
                 default=DEFAULT_TOP_P,
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Optional(
+            vol.Required(
                 CONF_TEMPERATURE,
-                description={"suggested_value": options[CONF_TEMPERATURE]},
+                description={"suggested_value": options.get(CONF_TEMPERATURE)},
                 default=DEFAULT_TEMPERATURE,
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Optional(
+            vol.Required(
                 CONF_USE_GBNF_GRAMMAR,
-                description={"suggested_value": options[CONF_USE_GBNF_GRAMMAR]},
+                description={"suggested_value": options.get(CONF_USE_GBNF_GRAMMAR)},
                 default=DEFAULT_USE_GBNF_GRAMMAR,
             ): bool,
-            vol.Optional(
+            vol.Required(
                 CONF_REFRESH_SYSTEM_PROMPT,
-                description={"suggested_value": options[CONF_REFRESH_SYSTEM_PROMPT]},
+                description={"suggested_value": options.get(CONF_REFRESH_SYSTEM_PROMPT)},
                 default=DEFAULT_REFRESH_SYSTEM_PROMPT,
             ): bool,
         })
     elif backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
         result = insert_after_key(result, CONF_MAX_TOKENS, {
-            vol.Optional(
+            vol.Required(
                 CONF_REQUEST_TIMEOUT,
-                description={"suggested_value": options[CONF_REQUEST_TIMEOUT]},
+                description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
                 default=DEFAULT_REQUEST_TIMEOUT,
             ): int,
-            vol.Optional(CONF_TEXT_GEN_WEBUI_PRESET): str,
+            vol.Optional(
+                CONF_TEXT_GEN_WEBUI_PRESET,
+                description={"suggested_value": options.get(CONF_TEXT_GEN_WEBUI_PRESET)},
+            ): str,
         })
     elif backend_type == BACKEND_TYPE_GENERIC_OPENAI:
         result = insert_after_key(result, CONF_MAX_TOKENS, {
-            vol.Optional(
+            vol.Required(
                 CONF_TEMPERATURE,
-                description={"suggested_value": options[CONF_TEMPERATURE]},
+                description={"suggested_value": options.get(CONF_TEMPERATURE)},
                 default=DEFAULT_TEMPERATURE,
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Optional(
+            vol.Required(
                 CONF_TOP_P,
-                description={"suggested_value": options[CONF_TOP_P]},
+                description={"suggested_value": options.get(CONF_TOP_P)},
                 default=DEFAULT_TOP_P,
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Optional(
+            vol.Required(
                 CONF_TOP_P,
-                description={"suggested_value": options[CONF_TOP_P]},
+                description={"suggested_value": options.get(CONF_TOP_P)},
                 default=DEFAULT_TOP_P,
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
         })
