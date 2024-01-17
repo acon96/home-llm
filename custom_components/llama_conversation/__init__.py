@@ -118,25 +118,25 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ha_conversation.async_unset_agent(hass, entry)
     return True
 
-# async def async_migrate_entry(hass, config_entry: ConfigEntry):
-#     """Migrate old entry."""
-#     _LOGGER.debug("Migrating from version %s", config_entry.version)
+async def async_migrate_entry(hass, config_entry: ConfigEntry):
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
 
-#     if config_entry.version > 1:
-#       # This means the user has downgraded from a future version
-#       return False
+    if config_entry.version > 1:
+      # This means the user has downgraded from a future version
+      return False
 
-#     if config_entry.version < 2:
-#         # just ensure that the defaults are set
-#         new_options = dict(DEFAULT_OPTIONS)
-#         new_options.update(config_entry.options)
+    # if config_entry.version < 2:
+    #     # just ensure that the defaults are set
+    #     new_options = dict(DEFAULT_OPTIONS)
+    #     new_options.update(config_entry.options)
 
-#         config_entry.version = 2
-#         hass.config_entries.async_update_entry(config_entry, options=new_options)
+    #     config_entry.version = 2
+    #     hass.config_entries.async_update_entry(config_entry, options=new_options)
 
-#     _LOGGER.debug("Migration to version %s successful", config_entry.version)
+    _LOGGER.debug("Migration to version %s successful", config_entry.version)
 
-#     return True
+    return True
 
 def closest_color(requested_color):
     min_colors = {}

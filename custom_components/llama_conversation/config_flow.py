@@ -620,7 +620,10 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
                 default=DEFAULT_REQUEST_TIMEOUT,
             ): int,
-            vol.Required(CONF_TEXT_GEN_WEBUI_PRESET): str,
+            vol.Optional(
+                CONF_TEXT_GEN_WEBUI_PRESET,
+                description={"suggested_value": options.get(CONF_TEXT_GEN_WEBUI_PRESET)},
+            ): str,
         })
     elif backend_type == BACKEND_TYPE_GENERIC_OPENAI:
         result = insert_after_key(result, CONF_MAX_TOKENS, {
