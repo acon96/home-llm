@@ -387,7 +387,10 @@ class LLaMAAgent(AbstractConversationAgent):
         if choices[0]["finish_reason"] != "stop":
             _LOGGER.warn("Model response did not end on a stop token (unfinished sentence)")
 
-        return choices[0]["text"]
+        if result.json()["object"] == "chat.completion":
+            return choices[0]["message"]["content"]
+        else:
+            return choices[0]["text"]
     
     def _load_local_model(self):
         if not self.model_path:
