@@ -170,6 +170,7 @@ It is highly recommend to set up text-generation-webui on a separate machine tha
 ## Version History
 | Version | Description                                                                                                                                    |
 | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| v0.2.2  | Fix options window after upgrade, fix training script for new Phi model format, and release new models                                         |
 | v0.2.1  | Properly expose generation parameters for each backend, handle config entry updates without reloading, support remote backends with an API key |
 | v0.2    | Bug fixes, support more backends, support for climate + switch devices, JSON style function calling with parameters, GBNF grammars             |
 | v0.1    | Initial Release                                                                                                                                |
