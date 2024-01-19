@@ -62,7 +62,7 @@
                     "text_generation_webui_admin_key": "Admin Key",
                     "service_call_regex": "Service Call Regex",
                     "refresh_prompt_per_tern": "Refresh System Prompt Every Turn",
-                    "text_generation_webui_preset": "Generation Preset Name"
+                    "text_generation_webui_preset": "Generation Preset/Character Name"
                 }
             }
         }

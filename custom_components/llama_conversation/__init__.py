@@ -222,7 +222,7 @@ class LLaMAAgent(AbstractConversationAgent):
         
         if len(conversation) == 0 or refresh_system_prompt:
             try:
-                message = self._async_generate_system_prompt(raw_prompt)
+                message = self._generate_system_prompt(raw_prompt)
             except TemplateError as err:
                 _LOGGER.error("Error rendering prompt: %s", err)
                 intent_response = intent.IntentResponse(language=user_input.language)
@@ -243,13 +243,9 @@ class LLaMAAgent(AbstractConversationAgent):
 
         conversation.append({"role": "user", "message": user_input.text})
 
-        # _LOGGER.debug("Prompt: %s", prompt)
-
         try:
-            prompt = await self._async_format_prompt(conversation)
-
-            _LOGGER.debug(prompt)
-            response = await self._async_generate(prompt)
+            _LOGGER.debug(conversation)
+            response = await self._async_generate(conversation)
             _LOGGER.debug(response)
 
         except Exception as err:
@@ -344,31 +340,48 @@ class LLaMAAgent(AbstractConversationAgent):
         except Exception as ex:
             _LOGGER.error("Connection error was: %s", repr(ex))
 
-    def _generate_remote(self, prompt: str) -> str:
+    def _generate_remote(self, conversation: dict) -> str:
         max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
         temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
         top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
         timeout = self.entry.options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
+        use_chat_api = self.entry.options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
 
         request_params = {
-            "prompt": prompt,
             "model": self.model_name,
             "max_tokens": max_tokens,
             "temperature": temperature,
             "top_p": top_p,
         }
+        
+        if use_chat_api:
+            endpoint = "/v1/chat/completions"
+            request_params["messages"] = [ { "role": x["roles"], "content": x["message"] } for x in conversation ]
+            
+        else:
+            endpoint = "/v1/completions"
+            prompt = self._format_prompt(conversation)
+            request_params["prompt"] = prompt
+
+        # handle extra parameters to make text-generation-webui work
+        if self.backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
+            if use_chat_api:
+                request_params["mode"] = "chat"
+                if preset:
+                    request_params["character"] = preset
+            else:
+                preset = self.entry.options.get(CONF_TEXT_GEN_WEBUI_PRESET)
+                if preset:
+                    request_params["preset"] = preset
+
+
         headers = {}
         api_key = self.entry.data.get(CONF_OPENAI_API_KEY)
         if api_key:
             headers["Authorization"] = f"Basic {api_key}"
 
-        if self.backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
-            preset = self.entry.options.get(CONF_TEXT_GEN_WEBUI_PRESET)
-            if preset:
-                request_params["preset"] = preset
-
         result = requests.post(
-            f"{self.api_host}/v1/completions", 
+            f"{self.api_host}/{endpoint}", 
             json=request_params,
             timeout=timeout,
             headers=headers,
@@ -387,7 +400,10 @@ class LLaMAAgent(AbstractConversationAgent):
         if choices[0]["finish_reason"] != "stop":
             _LOGGER.warn("Model response did not end on a stop token (unfinished sentence)")
 
-        return choices[0]["text"]
+        if result.json()["object"] == "chat.completion":
+            return choices[0]["message"]["content"]
+        else:
+            return choices[0]["text"]
     
     def _load_local_model(self):
         if not self.model_path:
@@ -420,7 +436,8 @@ class LLaMAAgent(AbstractConversationAgent):
             self.grammar = None
 
 
-    def _generate_local(self, prompt: str) -> str:
+    def _generate_local(self, conversation: dict) -> str:
+        prompt = self._format_prompt(conversation)
         input_tokens = self.llm.tokenize(
             prompt.encode(), add_bos=False
         )
@@ -456,14 +473,14 @@ class LLaMAAgent(AbstractConversationAgent):
 
         return result
 
-    async def _async_generate(self, prompt: str) -> str:
+    async def _async_generate(self, conversation: dict) -> str:
         if self.use_local_backend:
             return await self.hass.async_add_executor_job(
-                self._generate_local, prompt
+                self._generate_local, conversation
             )
         else:
             return await self.hass.async_add_executor_job(
-                self._generate_remote, prompt
+                self._generate_remote, conversation
             )
 
     def _async_get_exposed_entities(self) -> tuple[dict[str, str], list[str]]:
@@ -483,7 +500,7 @@ class LLaMAAgent(AbstractConversationAgent):
 
         return entity_states, list(domains)
 
-    async def _async_format_prompt(
+    def _format_prompt(
         self, prompt: list[dict], include_generation_prompt: bool = True
     ) -> str:
         formatted_prompt = ""
@@ -504,7 +521,7 @@ class LLaMAAgent(AbstractConversationAgent):
 
         return formatted_prompt
 
-    def _async_generate_system_prompt(self, prompt_template: str) -> str:
+    def _generate_system_prompt(self, prompt_template: str) -> str:
         """Generate a prompt for the user."""
         entities_to_expose, domains = self._async_get_exposed_entities()
 
