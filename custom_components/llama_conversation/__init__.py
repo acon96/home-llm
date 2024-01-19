@@ -52,6 +52,8 @@ from .const import (
     CONF_TEXT_GEN_WEBUI_ADMIN_KEY,
     CONF_REFRESH_SYSTEM_PROMPT,
     CONF_SERVICE_CALL_REGEX,
+    CONF_REMOTE_USE_CHAT_ENDPOINT,
+    CONF_TEXT_GEN_WEBUI_CHAT_MODE,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
@@ -64,6 +66,8 @@ from .const import (
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_REFRESH_SYSTEM_PROMPT,
     DEFAULT_SERVICE_CALL_REGEX,
+    DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
+    DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
     DEFAULT_OPTIONS,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
     BACKEND_TYPE_GENERIC_OPENAI,
@@ -90,6 +94,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     use_local_backend = is_local_backend(
         entry.data.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE)
     )
+
+    # TODO: figure out how to make this happen as part of the config flow. when I tried it errored out passing options in
+    if len(entry.options) == 0:
+        entry.options = { **DEFAULT_OPTIONS }
+        copy_to_options = [ CONF_REMOTE_USE_CHAT_ENDPOINT, CONF_TEXT_GEN_WEBUI_CHAT_MODE, CONF_TEXT_GEN_WEBUI_PRESET ]
+        for item in copy_to_options:
+            value = entry.data.get(item)
+            if value:
+                entry.options[item] = value
 
     if use_local_backend:
         _LOGGER.info(
@@ -320,6 +333,7 @@ class LLaMAAgent(AbstractConversationAgent):
             loaded_model = currently_loaded_result.json()["model_name"]
             if loaded_model == self.model_name:
                 _LOGGER.info(f"Model {self.model_name} is already loaded on the remote backend.")
+                return
             else:
                 _LOGGER.info(f"Model is not {self.model_name} loaded on the remote backend. Loading it now...")
             
@@ -345,7 +359,7 @@ class LLaMAAgent(AbstractConversationAgent):
         temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
         top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
         timeout = self.entry.options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
-        use_chat_api = self.entry.options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
+        use_chat_api = self.entry.options.get(CONF_REMOTE_USE_CHAT_ENDPOINT, DEFAULT_REMOTE_USE_CHAT_ENDPOINT)
 
         request_params = {
             "model": self.model_name,
@@ -356,7 +370,7 @@ class LLaMAAgent(AbstractConversationAgent):
         
         if use_chat_api:
             endpoint = "/v1/chat/completions"
-            request_params["messages"] = [ { "role": x["roles"], "content": x["message"] } for x in conversation ]
+            request_params["messages"] = [ { "role": x["role"], "content": x["message"] } for x in conversation ]
             
         else:
             endpoint = "/v1/completions"
@@ -365,12 +379,12 @@ class LLaMAAgent(AbstractConversationAgent):
 
         # handle extra parameters to make text-generation-webui work
         if self.backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
+            preset = self.entry.options.get(CONF_TEXT_GEN_WEBUI_PRESET)
             if use_chat_api:
-                request_params["mode"] = "chat"
+                request_params["mode"] = self.entry.options.get(CONF_TEXT_GEN_WEBUI_CHAT_MODE, DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE)
                 if preset:
                     request_params["character"] = preset
             else:
-                preset = self.entry.options.get(CONF_TEXT_GEN_WEBUI_PRESET)
                 if preset:
                     request_params["preset"] = preset
 
@@ -381,7 +395,7 @@ class LLaMAAgent(AbstractConversationAgent):
             headers["Authorization"] = f"Basic {api_key}"
 
         result = requests.post(
-            f"{self.api_host}/{endpoint}", 
+            f"{self.api_host}{endpoint}", 
             json=request_params,
             timeout=timeout,
             headers=headers,
@@ -397,10 +411,13 @@ class LLaMAAgent(AbstractConversationAgent):
 
         choices = result.json()["choices"]
 
+        _LOGGER.debug(result.json())
+
         if choices[0]["finish_reason"] != "stop":
             _LOGGER.warn("Model response did not end on a stop token (unfinished sentence)")
 
-        if result.json()["object"] == "chat.completion":
+        # text-gen-webui has a typo where it is 'chat.completions' not 'chat.completion'
+        if result.json()["object"] in ["chat.completion", "chat.completions" ]:
             return choices[0]["message"]["content"]
         else:
             return choices[0]["text"]

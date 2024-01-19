@@ -30,7 +30,10 @@
                     "huggingface_model": "Model Name",
                     "port": "API Port",
                     "openai_api_key": "API Key",
-                    "text_generation_webui_admin_key": "Admin Key"
+                    "text_generation_webui_admin_key": "Admin Key",
+                    "text_generation_webui_preset": "Generation Preset/Character Name",
+                    "remote_use_chat_endpoint": "Use chat completions endpoint",
+                    "text_generation_webui_chat_mode": "Chat Mode"
                 },
                 "description": "Provide the connection details for an instance of text-generation-webui that is hosting the model.",
                 "title": "Configure connection to remote API"
@@ -62,7 +65,9 @@
                     "text_generation_webui_admin_key": "Admin Key",
                     "service_call_regex": "Service Call Regex",
                     "refresh_prompt_per_tern": "Refresh System Prompt Every Turn",
-                    "text_generation_webui_preset": "Generation Preset/Character Name"
+                    "text_generation_webui_preset": "Generation Preset/Character Name",
+                    "remote_use_chat_endpoint": "Use chat completions endpoint",
+                    "text_generation_webui_chat_mode": "Chat Mode"
                 }
             }
         }
@@ -73,6 +78,7 @@
                 "chatml": "ChatML",
                 "vicuna": "Vicuna",
                 "alpaca": "Alpaca",
+                "mistral": "Mistral",
                 "no_prompt_template": "None"
             }
         },
@@ -82,6 +88,13 @@
                 "llama_cpp_existing": "Llama.cpp (existing model)",
                 "text-generation-webui_api": "text-generation-webui API",
                 "generic_openai": "Generic OpenAI Compatible API"
+            }
+        },
+        "text_generation_webui_chat_mode": {
+            "options": {
+                "chat": "Chat",
+                "instruct": "Instruct",
+                "chat-instruct": "Chat-Instruct"
             }
         }
     }

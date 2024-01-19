@@ -57,6 +57,8 @@ from .const import (
     CONF_OPENAI_API_KEY,
     CONF_TEXT_GEN_WEBUI_ADMIN_KEY,
     CONF_SERVICE_CALL_REGEX,
+    CONF_REMOTE_USE_CHAT_ENDPOINT,
+    CONF_TEXT_GEN_WEBUI_CHAT_MODE,
     DEFAULT_CHAT_MODEL,
     DEFAULT_HOST,
     DEFAULT_PORT,
@@ -74,6 +76,8 @@ from .const import (
     DEFAULT_REFRESH_SYSTEM_PROMPT,
     DEFAULT_SERVICE_CALL_REGEX,
     DEFAULT_OPTIONS,
+    DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
+    DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
     BACKEND_TYPE_LLAMA_HF,
     BACKEND_TYPE_LLAMA_EXISTING,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
@@ -83,6 +87,9 @@ from .const import (
     PROMPT_TEMPLATE_VICUNA,
     PROMPT_TEMPLATE_MISTRAL,
     PROMPT_TEMPLATE_NONE,
+    TEXT_GEN_WEBUI_CHAT_MODE_CHAT,
+    TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT,
+    TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT,
     DOMAIN,
 )
 
@@ -121,19 +128,28 @@ def STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(*, chat_model=None, downloaded_model_q
         }
     )
 
-def STEP_REMOTE_SETUP_DATA_SCHEMA(include_admin_key: bool, *, host=None, port=None, chat_model=None):
+def STEP_REMOTE_SETUP_DATA_SCHEMA(text_gen_webui: bool, *, host=None, port=None, chat_model=None, use_chat_endpoint=None, webui_preset=None, webui_chat_mode=None):
 
-    extra = {}
-    if include_admin_key: 
-        extra[vol.Optional(CONF_TEXT_GEN_WEBUI_ADMIN_KEY)] = TextSelector(TextSelectorConfig(type="password"))
+    extra1, extra2 = ({}, {})
+    if text_gen_webui: 
+        extra1[vol.Optional(CONF_TEXT_GEN_WEBUI_PRESET, default=webui_preset)] = str
+        extra1[vol.Optional(CONF_TEXT_GEN_WEBUI_CHAT_MODE, default=webui_chat_mode)] = SelectSelector(SelectSelectorConfig(
+            options=[TEXT_GEN_WEBUI_CHAT_MODE_CHAT, TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT, TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT],
+            translation_key=CONF_TEXT_GEN_WEBUI_CHAT_MODE,
+            multiple=False,
+            mode=SelectSelectorMode.DROPDOWN,
+        ))
+        extra2[vol.Optional(CONF_TEXT_GEN_WEBUI_ADMIN_KEY)] = TextSelector(TextSelectorConfig(type="password"))
 
     return vol.Schema(
         {
             vol.Required(CONF_HOST, default=host if host else DEFAULT_HOST): str,
             vol.Required(CONF_PORT, default=port if port else DEFAULT_PORT): str,
             vol.Required(CONF_CHAT_MODEL, default=chat_model if chat_model else DEFAULT_CHAT_MODEL): str,
+            vol.Required(CONF_REMOTE_USE_CHAT_ENDPOINT, default=use_chat_endpoint if use_chat_endpoint else DEFAULT_REMOTE_USE_CHAT_ENDPOINT): bool,
+            **extra1,
             vol.Optional(CONF_OPENAI_API_KEY): TextSelector(TextSelectorConfig(type="password")),
-            **extra
+            **extra2
         }
     )
 
@@ -242,7 +258,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
     install_wheel_error = None
     download_task = None
     download_error = None
-    model_options: dict[str, Any] = {}
+    model_config: dict[str, Any] = {}
 
     @property
     def flow_manager(self) -> config_entries.ConfigEntriesFlowManager:
@@ -281,7 +297,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         if user_input:
             try:
                 local_backend = is_local_backend(user_input[CONF_BACKEND_TYPE])
-                self.model_options.update(user_input)
+                self.model_config.update(user_input)
 
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
@@ -353,7 +369,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
     ) -> FlowResult:
         errors = {}
 
-        backend_type = self.model_options[CONF_BACKEND_TYPE]
+        backend_type = self.model_config[CONF_BACKEND_TYPE]
         if backend_type == BACKEND_TYPE_LLAMA_HF:
             schema = STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA()
         elif backend_type == BACKEND_TYPE_LLAMA_EXISTING:
@@ -364,13 +380,13 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         if self.download_error:
             errors["base"] = "download_failed"
             schema = STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(
-                chat_model=self.model_options[CONF_CHAT_MODEL],
-                downloaded_model_quantization=self.model_options[CONF_DOWNLOADED_MODEL_QUANTIZATION]
+                chat_model=self.model_config[CONF_CHAT_MODEL],
+                downloaded_model_quantization=self.model_config[CONF_DOWNLOADED_MODEL_QUANTIZATION]
             )
 
         if user_input:
             try:
-                self.model_options.update(user_input)
+                self.model_config.update(user_input)
 
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
@@ -379,7 +395,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                 if backend_type == BACKEND_TYPE_LLAMA_HF:
                     return await self.async_step_download()
                 else:
-                    model_file = self.model_options[CONF_DOWNLOADED_MODEL_FILE]
+                    model_file = self.model_config[CONF_DOWNLOADED_MODEL_FILE]
                     if os.path.exists(model_file):
                         return await self.async_step_finish()
                     else:
@@ -401,8 +417,8 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                     progress_action="download",
                 )
 
-            model_name = self.model_options[CONF_CHAT_MODEL]
-            quantization_type = self.model_options[CONF_DOWNLOADED_MODEL_QUANTIZATION]
+            model_name = self.model_config[CONF_CHAT_MODEL]
+            quantization_type = self.model_config[CONF_DOWNLOADED_MODEL_QUANTIZATION]
 
             storage_folder = os.path.join(self.hass.config.media_dirs["local"], "models")
             self.download_task = self.hass.async_add_executor_job(
@@ -422,7 +438,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             self.download_error = download_result
             return self.async_show_progress_done(next_step_id="local_model")
         else:
-            self.model_options[CONF_DOWNLOADED_MODEL_FILE] = download_result
+            self.model_config[CONF_DOWNLOADED_MODEL_FILE] = download_result
             return self.async_show_progress_done(next_step_id="finish")
 
 
@@ -434,7 +450,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                 headers["Authorization"] = f"Basic {api_key}"
 
             models_result = requests.get(
-                f"http://{self.model_options[CONF_HOST]}:{self.model_options[CONF_PORT]}/v1/internal/model/list",
+                f"http://{self.model_config[CONF_HOST]}:{self.model_config[CONF_PORT]}/v1/internal/model/list",
                 headers=headers
             )
             models_result.raise_for_status()
@@ -442,7 +458,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             models = models_result.json()
 
             for model in models["model_names"]:
-                if model == self.model_options[CONF_CHAT_MODEL].replace("/", "_"):
+                if model == self.model_config[CONF_CHAT_MODEL].replace("/", "_"):
                     return ""
 
             return "missing_model_api"
@@ -455,12 +471,12 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         errors = {}
-        backend_type = self.model_options[CONF_BACKEND_TYPE]
+        backend_type = self.model_config[CONF_BACKEND_TYPE]
         schema = STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI)
 
         if user_input:
             try:
-                self.model_options.update(user_input)
+                self.model_config.update(user_input)
 
                 # only validate and load when using text-generation-webui
                 if backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
@@ -474,6 +490,9 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                             host=user_input[CONF_HOST],
                             port=user_input[CONF_PORT],
                             chat_model=user_input[CONF_CHAT_MODEL],
+                            use_chat_endpoint=user_input[CONF_REMOTE_USE_CHAT_ENDPOINT],
+                            webui_preset=user_input.get(CONF_TEXT_GEN_WEBUI_PRESET),
+                            webui_chat_mode=user_input.get(CONF_TEXT_GEN_WEBUI_CHAT_MODE),
                         )
                     else:
                         return await self.async_step_finish()
@@ -492,16 +511,16 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
 
-        model_name = self.model_options.get(CONF_CHAT_MODEL)
-        backend = self.model_options[CONF_BACKEND_TYPE]
+        model_name = self.model_config.get(CONF_CHAT_MODEL)
+        backend = self.model_config[CONF_BACKEND_TYPE]
         if backend == BACKEND_TYPE_LLAMA_EXISTING:
-            model_name = os.path.basename(self.model_options.get(CONF_DOWNLOADED_MODEL_FILE))
+            model_name = os.path.basename(self.model_config.get(CONF_DOWNLOADED_MODEL_FILE))
         location = "llama.cpp" if is_local_backend(backend) else "remote"
 
         return self.async_create_entry(
             title=f"LLM Model '{model_name}' ({location})",
             description="A Large Language Model Chat Agent",
-            data=self.model_options,
+            data=self.model_config,
         )
 
     @staticmethod
@@ -583,6 +602,11 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
             description={"suggested_value": options.get(CONF_SERVICE_CALL_REGEX)},
             default=DEFAULT_SERVICE_CALL_REGEX,
         ): str,
+        vol.Required(
+            CONF_REFRESH_SYSTEM_PROMPT,
+            description={"suggested_value": options.get(CONF_REFRESH_SYSTEM_PROMPT)},
+            default=DEFAULT_REFRESH_SYSTEM_PROMPT,
+        ): bool,
     }
 
     if is_local_backend(backend_type):
@@ -606,12 +630,7 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_USE_GBNF_GRAMMAR,
                 description={"suggested_value": options.get(CONF_USE_GBNF_GRAMMAR)},
                 default=DEFAULT_USE_GBNF_GRAMMAR,
-            ): bool,
-            vol.Required(
-                CONF_REFRESH_SYSTEM_PROMPT,
-                description={"suggested_value": options.get(CONF_REFRESH_SYSTEM_PROMPT)},
-                default=DEFAULT_REFRESH_SYSTEM_PROMPT,
-            ): bool,
+            ): bool
         })
     elif backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
         result = insert_after_key(result, CONF_MAX_TOKENS, {
@@ -620,10 +639,26 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
                 default=DEFAULT_REQUEST_TIMEOUT,
             ): int,
+            vol.Required(
+                CONF_REMOTE_USE_CHAT_ENDPOINT,
+                description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
+                default=DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
+            ): bool,
             vol.Optional(
                 CONF_TEXT_GEN_WEBUI_PRESET,
                 description={"suggested_value": options.get(CONF_TEXT_GEN_WEBUI_PRESET)},
             ): str,
+            vol.Required(
+                CONF_TEXT_GEN_WEBUI_CHAT_MODE,
+                description={"suggested_value": options.get(CONF_TEXT_GEN_WEBUI_CHAT_MODE)},
+                default=DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
+            ): SelectSelector(SelectSelectorConfig(
+                options=[TEXT_GEN_WEBUI_CHAT_MODE_CHAT, TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT, TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT],
+                translation_key=CONF_TEXT_GEN_WEBUI_CHAT_MODE,
+                multiple=False,
+                mode=SelectSelectorMode.DROPDOWN,
+            )),
+            
         })
     elif backend_type == BACKEND_TYPE_GENERIC_OPENAI:
         result = insert_after_key(result, CONF_MAX_TOKENS, {
