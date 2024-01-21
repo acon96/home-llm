@@ -103,8 +103,9 @@ When setting up the component, there are 4 different "backend" options to choose
 1. Llama.cpp with a model from HuggingFace
 2. Llama.cpp with a locally provided model
 3. A remote instance of text-generation-webui
-4. A generic OpenAI API compatible interface
-- *should* be compatible with: LocalAI, LM Studio, and all other OpenAI compatible backends
+4. A generic OpenAI API compatible interface; *should* be compatible with LocalAI, LM Studio, and all other OpenAI compatible backends
+
+See (docs/Backend Configuration.md)[/docs/Backend%20Configuration.md] for more info.
 
 **Installing llama-cpp-python for local model usage**:  
 In order to run a model directly as part of your Home Assistant installation, you will need to install one of the pre-build wheels because there are no existing musllinux wheels for the package. Compatible wheels for x86_x64 and arm64 are provided in the [dist](./dist) folder. Copy the `*.whl` files to the `custom_components/llama_conversation/` folder. They will be installed while setting up the component.

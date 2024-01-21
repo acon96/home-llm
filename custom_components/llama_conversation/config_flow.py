@@ -658,19 +658,23 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 multiple=False,
                 mode=SelectSelectorMode.DROPDOWN,
             )),
-            
         })
     elif backend_type == BACKEND_TYPE_GENERIC_OPENAI:
         result = insert_after_key(result, CONF_MAX_TOKENS, {
             vol.Required(
+                CONF_REQUEST_TIMEOUT,
+                description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
+                default=DEFAULT_REQUEST_TIMEOUT,
+            ): int,
+            vol.Required(
+                CONF_REMOTE_USE_CHAT_ENDPOINT,
+                description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
+                default=DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
+            ): bool,
+            vol.Required(
                 CONF_TEMPERATURE,
                 description={"suggested_value": options.get(CONF_TEMPERATURE)},
                 default=DEFAULT_TEMPERATURE,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Required(
-                CONF_TOP_P,
-                description={"suggested_value": options.get(CONF_TOP_P)},
-                default=DEFAULT_TOP_P,
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
             vol.Required(
                 CONF_TOP_P,

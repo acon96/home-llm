@@ -71,6 +71,9 @@ from .const import (
     DEFAULT_OPTIONS,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
     BACKEND_TYPE_GENERIC_OPENAI,
+    TEXT_GEN_WEBUI_CHAT_MODE_CHAT,
+    TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT,
+    TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT,
     DOMAIN,
     GBNF_GRAMMAR_FILE,
     PROMPT_TEMPLATE_DESCRIPTIONS,
@@ -381,13 +384,18 @@ class LLaMAAgent(AbstractConversationAgent):
         if self.backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
             preset = self.entry.options.get(CONF_TEXT_GEN_WEBUI_PRESET)
             if use_chat_api:
-                request_params["mode"] = self.entry.options.get(CONF_TEXT_GEN_WEBUI_CHAT_MODE, DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE)
-                if preset:
-                    request_params["character"] = preset
+                mode = self.entry.options.get(CONF_TEXT_GEN_WEBUI_CHAT_MODE, DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE)
+                request_params["mode"] = mode
+                if mode == TEXT_GEN_WEBUI_CHAT_MODE_CHAT or mode == TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT:
+                    if preset:
+                        request_params["character"] = preset
+                elif mode == TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT:
+                    # TODO: handle uppercase?
+                    request_params["instruction_template"] = self.entry.options.get(CONF_PROMPT_TEMPLATE, DEFAULT_PROMPT_TEMPLATE)
+                
             else:
                 if preset:
                     request_params["preset"] = preset
-
 
         headers = {}
         api_key = self.entry.data.get(CONF_OPENAI_API_KEY)
