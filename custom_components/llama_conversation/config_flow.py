@@ -96,7 +96,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 def is_local_backend(backend):
-    return backend not in [BACKEND_TYPE_TEXT_GEN_WEBUI, BACKEND_TYPE_GENERIC_OPENAI]
+    return backend in [BACKEND_TYPE_LLAMA_EXISTING, BACKEND_TYPE_LLAMA_HF]
 
 def STEP_INIT_DATA_SCHEMA(backend_type=None):
     return vol.Schema(
