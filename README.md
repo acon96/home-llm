@@ -126,6 +126,9 @@ You need the following settings in order to configure the "remote" backend:
 
 With the remote text-generation-webui backend, the component will validate that the selected model is available for use and will ensure it is loaded remotely. The Generic OpenAI compatible version does NOT do any validation or model loading.
 
+**Setting up with LocalAI (Docker)**:
+If you are an existing LocalAI user or would like to use LocalAI as your backend, please refer to [this](https://discord.com/channels/@me/1176983414231011378/1198660490763698347) website which has instructions on how to setup LocalAI to work with Home-LLM including automatic installation of the latest version of the the Home-LLM model and of reqiored, the latest version of LocalAI in Docker (Docker is required to be pre-installed if you do not have LocalAI installed already). The auto-installer will automatically download and setup LocalAI and/or the model of your choice and automatically create the necessary template files for the model.
+
 ### Configuring the component as a Conversation Agent
 **NOTE: ANY DEVICES THAT YOU SELECT TO BE EXPOSED TO THE MODEL WILL BE ADDED AS CONTEXT AND POTENTIALLY HAVE THEIR STATE CHANGED BY THE MODEL. ONLY EXPOSE DEVICES THAT YOU ARE OK WITH THE MODEL MODIFYING THE STATE OF, EVEN IF IT IS NOT WHAT YOU REQUESTED. THE MODEL MAY OCCASIONALLY HALLUCINATE AND ISSUE COMMANDS TO THE WRONG DEVICE! USE AT YOUR OWN RISK.**
 
