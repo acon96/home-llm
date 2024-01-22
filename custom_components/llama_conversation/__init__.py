@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 import importlib
-from typing import Literal
+from typing import Literal, Any
 
 import requests
 import re
@@ -52,6 +52,8 @@ from .const import (
     CONF_TEXT_GEN_WEBUI_ADMIN_KEY,
     CONF_REFRESH_SYSTEM_PROMPT,
     CONF_SERVICE_CALL_REGEX,
+    CONF_REMOTE_USE_CHAT_ENDPOINT,
+    CONF_TEXT_GEN_WEBUI_CHAT_MODE,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
@@ -64,9 +66,18 @@ from .const import (
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_REFRESH_SYSTEM_PROMPT,
     DEFAULT_SERVICE_CALL_REGEX,
+    DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
+    DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
     DEFAULT_OPTIONS,
+    BACKEND_TYPE_LLAMA_HF,
+    BACKEND_TYPE_LLAMA_EXISTING,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
     BACKEND_TYPE_GENERIC_OPENAI,
+    BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER,
+    BACKEND_TYPE_OLLAMA,
+    TEXT_GEN_WEBUI_CHAT_MODE_CHAT,
+    TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT,
+    TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT,
     DOMAIN,
     GBNF_GRAMMAR_FILE,
     PROMPT_TEMPLATE_DESCRIPTIONS,
@@ -76,9 +87,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-def is_local_backend(backend):
-    return backend not in [BACKEND_TYPE_TEXT_GEN_WEBUI, BACKEND_TYPE_GENERIC_OPENAI]
-
 async def update_listener(hass, entry):
     """Handle options update."""
     hass.data[DOMAIN][entry.entry_id] = entry
@@ -87,20 +95,31 @@ async def update_listener(hass, entry):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Local LLaMA Conversation from a config entry."""
 
-    use_local_backend = is_local_backend(
-        entry.data.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE)
-    )
+    # TODO: figure out how to make this happen as part of the config flow. when I tried it errored out passing options in
+    if len(entry.options) == 0:
+        entry.options = { **DEFAULT_OPTIONS }
+        copy_to_options = [ CONF_REMOTE_USE_CHAT_ENDPOINT, CONF_TEXT_GEN_WEBUI_CHAT_MODE, CONF_TEXT_GEN_WEBUI_PRESET ]
+        for item in copy_to_options:
+            value = entry.data.get(item)
+            if value:
+                entry.options[item] = value
 
-    if use_local_backend:
-        _LOGGER.info(
-            "Using model file '%s'", entry.data.get(CONF_DOWNLOADED_MODEL_FILE)
-        )
+    def create_agent(backend_type):
+        agent_cls = None
 
-    def create_agent():
-        return LLaMAAgent(hass, entry)
+        if backend_type in [ BACKEND_TYPE_LLAMA_HF, BACKEND_TYPE_LLAMA_EXISTING ]:
+            agent_cls = LocalLLaMAAgent
+        elif backend_type == BACKEND_TYPE_GENERIC_OPENAI:
+            agent_cls = GenericOpenAIAPIAgent
+        elif backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
+            agent_cls = TextGenerationWebuiAgent
+        elif backend_type == BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER:
+            agent_cls = LlamaCppPythonAPIAgent
+        
+        return agent_cls(hass, entry)
 
     # load the model in an executor job because it takes a while and locks up the UI otherwise
-    agent = await hass.async_add_executor_job(create_agent)
+    agent = await hass.async_add_executor_job(create_agent, entry.data.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE))
 
     # handle updates to the options
     entry.async_on_unload(entry.add_update_listener(update_listener))
@@ -151,35 +170,21 @@ def closest_color(requested_color):
 class LLaMAAgent(AbstractConversationAgent):
     """Local LLaMA conversation agent."""
 
+    hass: Any
+    entry_id: str
+    history: dict[str, list[dict]]
+
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the agent."""
         self.hass = hass
         self.entry_id = entry.entry_id
-        self.history: dict[str, list[dict]] = {}
+        self.history = {}
 
         self.backend_type = entry.data.get(
             CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE
         )
-        self.use_local_backend = is_local_backend(self.backend_type)
 
-        self.api_host = None
-        self.llm = None
-        self.grammar = None
-
-        self.model_path = entry.data.get(CONF_DOWNLOADED_MODEL_FILE)
-        self.model_name = entry.data.get(CONF_CHAT_MODEL, self.model_path)
-
-        if self.use_local_backend:
-            self._load_local_model()
-        else:
-            host = entry.data[CONF_HOST]
-            port = entry.data[CONF_PORT]
-            self.api_host = f"http://{host}:{port}"
-
-            # only load model if using text-generation-webui
-            if self.backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
-                api_key = entry.data.get(CONF_TEXT_GEN_WEBUI_ADMIN_KEY, entry.data.get(CONF_OPENAI_API_KEY))
-                self._load_remote_model(api_key)
+        self._load_model(entry)
 
     @property
     def entry(self):
@@ -189,6 +194,17 @@ class LLaMAAgent(AbstractConversationAgent):
     def supported_languages(self) -> list[str] | Literal["*"]:
         """Return a list of supported languages."""
         return MATCH_ALL
+    
+    def _load_model(self, entry: ConfigEntry) -> None:
+        raise NotImplementedError()
+    
+    def _generate(self, conversation: dict) -> str:
+        raise NotImplementedError()
+
+    async def _async_generate(self, conversation: dict) -> str:
+        return await self.hass.async_add_executor_job(
+            self._generate, conversation
+        )
 
     async def async_process(
         self, user_input: ConversationInput
@@ -222,7 +238,7 @@ class LLaMAAgent(AbstractConversationAgent):
         
         if len(conversation) == 0 or refresh_system_prompt:
             try:
-                message = self._async_generate_system_prompt(raw_prompt)
+                message = self._generate_system_prompt(raw_prompt)
             except TemplateError as err:
                 _LOGGER.error("Error rendering prompt: %s", err)
                 intent_response = intent.IntentResponse(language=user_input.language)
@@ -243,13 +259,9 @@ class LLaMAAgent(AbstractConversationAgent):
 
         conversation.append({"role": "user", "message": user_input.text})
 
-        # _LOGGER.debug("Prompt: %s", prompt)
-
         try:
-            prompt = await self._async_format_prompt(conversation)
-
-            _LOGGER.debug(prompt)
-            response = await self._async_generate(prompt)
+            _LOGGER.debug(conversation)
+            response = await self._async_generate(conversation)
             _LOGGER.debug(response)
 
         except Exception as err:
@@ -316,156 +328,6 @@ class LLaMAAgent(AbstractConversationAgent):
             response=intent_response, conversation_id=conversation_id
         )
 
-    def _load_remote_model(self, admin_key: str | None):
-        try:
-            currently_loaded_result = requests.get(f"{self.api_host}/v1/internal/model/info")
-            currently_loaded_result.raise_for_status()
-
-            loaded_model = currently_loaded_result.json()["model_name"]
-            if loaded_model == self.model_name:
-                _LOGGER.info(f"Model {self.model_name} is already loaded on the remote backend.")
-            else:
-                _LOGGER.info(f"Model is not {self.model_name} loaded on the remote backend. Loading it now...")
-            
-            headers = {}
-            if admin_key:
-                headers["Authorization"] = f"Basic {admin_key}"
-            
-            load_result = requests.post(
-                f"{self.api_host}/v1/internal/model/load",
-                json={
-                    "model_name": self.model_name,
-                    # TODO: expose arguments to the user in home assistant UI
-                    # "args": {},
-                }
-            )
-            load_result.raise_for_status()
-
-        except Exception as ex:
-            _LOGGER.error("Connection error was: %s", repr(ex))
-
-    def _generate_remote(self, prompt: str) -> str:
-        max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
-        temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
-        top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
-        timeout = self.entry.options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
-
-        request_params = {
-            "prompt": prompt,
-            "model": self.model_name,
-            "max_tokens": max_tokens,
-            "temperature": temperature,
-            "top_p": top_p,
-        }
-        headers = {}
-        api_key = self.entry.data.get(CONF_OPENAI_API_KEY)
-        if api_key:
-            headers["Authorization"] = f"Basic {api_key}"
-
-        if self.backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
-            preset = self.entry.options.get(CONF_TEXT_GEN_WEBUI_PRESET)
-            if preset:
-                request_params["preset"] = preset
-
-        result = requests.post(
-            f"{self.api_host}/v1/completions", 
-            json=request_params,
-            timeout=timeout,
-            headers=headers,
-        )
-
-        try:
-            result.raise_for_status()
-        except requests.RequestException as err:
-            _LOGGER.debug(f"Err was: {err}")
-            _LOGGER.debug(f"Request was: {request_params}")
-            _LOGGER.debug(f"Result was: {result.text}")
-            return f"Failed to communicate with the API! {err}"
-
-        choices = result.json()["choices"]
-
-        if choices[0]["finish_reason"] != "stop":
-            _LOGGER.warn("Model response did not end on a stop token (unfinished sentence)")
-
-        return choices[0]["text"]
-    
-    def _load_local_model(self):
-        if not self.model_path:
-            raise Exception(f"Model was not found at '{self.model_path}'!")
-
-        # don't import it until now because the wheel is installed by config_flow.py
-        module = importlib.import_module("llama_cpp")
-        Llama = getattr(module, "Llama")
-        LlamaGrammar = getattr(module, "LlamaGrammar")
-
-        _LOGGER.debug("Loading model...")
-        self.llm = Llama(
-            model_path=self.model_path,
-            n_ctx=2048,
-            n_batch=2048,
-            # TODO: expose arguments to the user in home assistant UI
-            # n_threads=16,
-            # n_threads_batch=4,
-        )
-
-        _LOGGER.debug("Loading grammar...")
-        try:
-            # TODO: make grammar configurable
-            with open(os.path.join(os.path.dirname(__file__), GBNF_GRAMMAR_FILE)) as f:
-                grammar_str = "".join(f.readlines())
-            self.grammar = LlamaGrammar.from_string(grammar_str)
-            _LOGGER.debug("Loaded grammar")
-        except Exception:
-            _LOGGER.exception("Failed to load grammar!")
-            self.grammar = None
-
-
-    def _generate_local(self, prompt: str) -> str:
-        input_tokens = self.llm.tokenize(
-            prompt.encode(), add_bos=False
-        )
-
-        max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
-        temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
-        top_k = int(self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K))
-        top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
-        grammar = self.grammar if self.entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR) else None
-
-        _LOGGER.debug(f"Options: {self.entry.options}")
-
-        _LOGGER.debug(f"Processing {len(input_tokens)} input tokens...")
-        output_tokens = self.llm.generate(
-            input_tokens,
-            temp=temperature,
-            top_k=top_k,
-            top_p=top_p,
-            grammar=grammar
-        )
-
-        result_tokens = []
-        for token in output_tokens:
-            if token == self.llm.token_eos():
-                break
-
-            result_tokens.append(token)
-
-            if len(result_tokens) >= max_tokens:
-                break
-
-        result = self.llm.detokenize(result_tokens).decode()
-
-        return result
-
-    async def _async_generate(self, prompt: str) -> str:
-        if self.use_local_backend:
-            return await self.hass.async_add_executor_job(
-                self._generate_local, prompt
-            )
-        else:
-            return await self.hass.async_add_executor_job(
-                self._generate_remote, prompt
-            )
-
     def _async_get_exposed_entities(self) -> tuple[dict[str, str], list[str]]:
         """Gather exposed entity states"""
         entity_states = {}
@@ -479,11 +341,11 @@ class LLaMAAgent(AbstractConversationAgent):
             entity_states[state.entity_id] = attributes
             domains.add(state.domain)
 
-        # _LOGGER.debug(f"Exposed entities: {entity_states}")
+        _LOGGER.debug(f"Exposed entities: {entity_states}")
 
         return entity_states, list(domains)
 
-    async def _async_format_prompt(
+    def _format_prompt(
         self, prompt: list[dict], include_generation_prompt: bool = True
     ) -> str:
         formatted_prompt = ""
@@ -502,9 +364,10 @@ class LLaMAAgent(AbstractConversationAgent):
         if include_generation_prompt:
             formatted_prompt = formatted_prompt + template_desc["generation_prompt"]
 
+        # _LOGGER.debug(formatted_prompt)
         return formatted_prompt
 
-    def _async_generate_system_prompt(self, prompt_template: str) -> str:
+    def _generate_system_prompt(self, prompt_template: str) -> str:
         """Generate a prompt for the user."""
         entities_to_expose, domains = self._async_get_exposed_entities()
 
@@ -555,3 +418,269 @@ class LLaMAAgent(AbstractConversationAgent):
             },
             parse_result=False,
         )
+
+class LocalLLaMAAgent(LLaMAAgent):
+    model_path: str
+    llm: Any
+    grammar: Any
+
+    def _load_model(self, entry: ConfigEntry) -> None:
+        self.model_path = entry.data.get(CONF_DOWNLOADED_MODEL_FILE)
+
+        _LOGGER.info(
+            "Using model file '%s'", self.model_path
+        )
+
+        if not self.model_path:
+            raise Exception(f"Model was not found at '{self.model_path}'!")
+
+        # don't import it until now because the wheel is installed by config_flow.py
+        module = importlib.import_module("llama_cpp")
+        Llama = getattr(module, "Llama")
+        LlamaGrammar = getattr(module, "LlamaGrammar")
+
+        _LOGGER.debug("Loading model...")
+        self.llm = Llama(
+            model_path=self.model_path,
+            n_ctx=2048,
+            n_batch=2048,
+            # TODO: expose arguments to the user in home assistant UI
+            # n_threads=16,
+            # n_threads_batch=4,
+        )
+
+        _LOGGER.debug("Loading grammar...")
+        try:
+            # TODO: make grammar configurable
+            with open(os.path.join(os.path.dirname(__file__), GBNF_GRAMMAR_FILE)) as f:
+                grammar_str = "".join(f.readlines())
+            self.grammar = LlamaGrammar.from_string(grammar_str)
+            _LOGGER.debug("Loaded grammar")
+        except Exception:
+            _LOGGER.exception("Failed to load grammar!")
+            self.grammar = None
+    
+    def _generate(self, conversation: dict) -> str:
+        prompt = self._format_prompt(conversation)
+        input_tokens = self.llm.tokenize(
+            prompt.encode(), add_bos=False
+        )
+
+        max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
+        temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
+        top_k = int(self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K))
+        top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
+        grammar = self.grammar if self.entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR) else None
+
+        _LOGGER.debug(f"Options: {self.entry.options}")
+
+        _LOGGER.debug(f"Processing {len(input_tokens)} input tokens...")
+        output_tokens = self.llm.generate(
+            input_tokens,
+            temp=temperature,
+            top_k=top_k,
+            top_p=top_p,
+            grammar=grammar
+        )
+
+        result_tokens = []
+        for token in output_tokens:
+            if token == self.llm.token_eos():
+                break
+
+            result_tokens.append(token)
+
+            if len(result_tokens) >= max_tokens:
+                break
+
+        result = self.llm.detokenize(result_tokens).decode()
+
+        return result
+    
+class GenericOpenAIAPIAgent(LLaMAAgent):
+    api_host: str
+    api_key: str
+    model_name: str
+
+    def _load_model(self, entry: ConfigEntry) -> None:
+        # TODO: https
+        self.api_host = f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
+        self.api_key = entry.data.get(CONF_OPENAI_API_KEY)
+        self.model_name = entry.data.get(CONF_CHAT_MODEL)
+
+
+    def _chat_completion_params(self, conversation: dict) -> (str, dict):
+        request_params = {}
+
+        endpoint = "/v1/chat/completions"
+        request_params["messages"] = [ { "role": x["role"], "content": x["message"] } for x in conversation ]
+
+        return endpoint, request_params
+
+    def _completion_params(self, conversation: dict) -> (str, dict):
+        request_params = {}
+
+        endpoint = "/v1/completions"
+        request_params["prompt"] = self._format_prompt(conversation)
+
+        return endpoint, request_params
+    
+    def _extract_response(self, response_json: dict) -> str:
+        choices = response_json["choices"]
+        if choices[0]["finish_reason"] != "stop":
+            _LOGGER.warn("Model response did not end on a stop token (unfinished sentence)")
+
+        if response_json["object"] == "chat.completion":
+            return choices[0]["message"]["content"]
+        else:
+            return choices[0]["text"]
+    
+    def _generate(self, conversation: dict) -> str:
+        max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
+        temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
+        top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
+        timeout = self.entry.options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
+        use_chat_api = self.entry.options.get(CONF_REMOTE_USE_CHAT_ENDPOINT, DEFAULT_REMOTE_USE_CHAT_ENDPOINT)
+        
+
+        request_params = {
+            "model": self.model_name,
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+            "top_p": top_p,
+        }
+        
+        if use_chat_api:
+            endpoint, additional_params = self._chat_completion_params(conversation)
+        else:
+            endpoint, additional_params = self._completion_params(conversation)
+        
+        request_params.update(additional_params)
+
+        headers = {}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+
+        result = requests.post(
+            f"{self.api_host}{endpoint}", 
+            json=request_params,
+            timeout=timeout,
+            headers=headers,
+        )
+
+        try:
+            result.raise_for_status()
+        except requests.RequestException as err:
+            _LOGGER.debug(f"Err was: {err}")
+            _LOGGER.debug(f"Request was: {request_params}")
+            _LOGGER.debug(f"Result was: {result.text}")
+            return f"Failed to communicate with the API! {err}"
+
+        _LOGGER.debug(result.json())
+
+        return self._extract_response(result.json())
+        
+class TextGenerationWebuiAgent(GenericOpenAIAPIAgent):
+    admin_key: str
+
+    def _load_model(self, entry: ConfigEntry) -> None:
+        super()._load_model(entry)
+        self.admin_key = entry.data.get(CONF_TEXT_GEN_WEBUI_ADMIN_KEY, self.api_key)
+
+        try:
+            currently_loaded_result = requests.get(f"{self.api_host}/v1/internal/model/info")
+            currently_loaded_result.raise_for_status()
+
+            loaded_model = currently_loaded_result.json()["model_name"]
+            if loaded_model == self.model_name:
+                _LOGGER.info(f"Model {self.model_name} is already loaded on the remote backend.")
+                return
+            else:
+                _LOGGER.info(f"Model is not {self.model_name} loaded on the remote backend. Loading it now...")
+            
+            headers = {}
+            if self.admin_key:
+                headers["Authorization"] = f"Bearer {self.admin_key}"
+            
+            load_result = requests.post(
+                f"{self.api_host}/v1/internal/model/load",
+                json={
+                    "model_name": self.model_name,
+                    # TODO: expose arguments to the user in home assistant UI
+                    # "args": {},
+                }
+            )
+            load_result.raise_for_status()
+
+        except Exception as ex:
+            _LOGGER.debug("Connection error was: %s", repr(ex))
+            raise ConfigEntryNotReady("There was a problem connecting to the remote server") from ex
+
+    def _chat_completion_params(self, conversation: dict) -> (str, dict):
+        preset = self.entry.options.get(CONF_TEXT_GEN_WEBUI_PRESET)
+        chat_mode = self.entry.options.get(CONF_TEXT_GEN_WEBUI_CHAT_MODE, DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE)
+
+        endpoint, request_params = super()._chat_completion_params(conversation)
+
+        request_params["mode"] = chat_mode
+        if chat_mode == TEXT_GEN_WEBUI_CHAT_MODE_CHAT or chat_mode == TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT:
+            if preset:
+                request_params["character"] = preset
+        elif chat_mode == TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT:
+            # TODO: handle uppercase properly?
+            request_params["instruction_template"] = self.entry.options.get(CONF_PROMPT_TEMPLATE, DEFAULT_PROMPT_TEMPLATE)
+
+        return endpoint, request_params
+    
+    def _completion_params(self, conversation: dict) -> (str, dict):
+        preset = self.entry.options.get(CONF_TEXT_GEN_WEBUI_PRESET)
+
+        endpoint, request_params = super()._completion_params(conversation)
+
+        if preset:
+            request_params["preset"] = preset
+
+        return endpoint, request_params
+    
+    def _extract_response(self, response_json: dict) -> str:
+        choices = response_json["choices"]
+        if choices[0]["finish_reason"] != "stop":
+            _LOGGER.warn("Model response did not end on a stop token (unfinished sentence)")
+
+        # text-gen-webui has a typo where it is 'chat.completions' not 'chat.completion'
+        if response_json["object"] == "chat.completions":
+            return choices[0]["message"]["content"]
+        else:
+            return choices[0]["text"]
+        
+class LlamaCppPythonAPIAgent(GenericOpenAIAPIAgent):
+    """https://llama-cpp-python.readthedocs.io/en/latest/server/"""
+    grammar: str
+
+    def _load_model(self, entry: ConfigEntry):
+        super()._load_model(entry)
+
+        with open(os.path.join(os.path.dirname(__file__), GBNF_GRAMMAR_FILE)) as f:
+            self.grammar = "".join(f.readlines())
+
+    def _chat_completion_params(self, conversation: dict) -> (str, dict):
+        top_k = int(self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K))
+        endpoint, request_params = super()._chat_completion_params(conversation)
+
+        request_params["top_k"] = top_k
+
+        if self.entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
+            request_params["grammar"] = self.grammar
+
+        return endpoint, request_params
+    
+    def _completion_params(self, conversation: dict) -> (str, dict):
+        top_k = int(self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K))
+        endpoint, request_params = super()._completion_params(conversation)
+
+        request_params["top_k"] = top_k
+        
+        if self.entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
+            request_params["grammar"] = self.grammar
+
+        return endpoint, request_params
