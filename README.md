@@ -103,8 +103,9 @@ When setting up the component, there are 4 different "backend" options to choose
 1. Llama.cpp with a model from HuggingFace
 2. Llama.cpp with a locally provided model
 3. A remote instance of text-generation-webui
-4. A generic OpenAI API compatible interface
-- *should* be compatible with: LocalAI, LM Studio, and all other OpenAI compatible backends
+4. A generic OpenAI API compatible interface; *should* be compatible with LocalAI, LM Studio, and all other OpenAI compatible backends
+
+See (docs/Backend Configuration.md)[/docs/Backend%20Configuration.md] for more info.
 
 **Installing llama-cpp-python for local model usage**:  
 In order to run a model directly as part of your Home Assistant installation, you will need to install one of the pre-build wheels because there are no existing musllinux wheels for the package. Compatible wheels for x86_x64 and arm64 are provided in the [dist](./dist) folder. Copy the `*.whl` files to the `custom_components/llama_conversation/` folder. They will be installed while setting up the component.
@@ -170,6 +171,7 @@ It is highly recommend to set up text-generation-webui on a separate machine tha
 ## Version History
 | Version | Description                                                                                                                                    |
 | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| v0.2.3  | Fix API key auth, Support chat completion endpoint, and refactor to make it easier to add more remote backends                                 |
 | v0.2.2  | Fix options window after upgrade, fix training script for new Phi model format, and release new models                                         |
 | v0.2.1  | Properly expose generation parameters for each backend, handle config entry updates without reloading, support remote backends with an API key |
 | v0.2    | Bug fixes, support more backends, support for climate + switch devices, JSON style function calling with parameters, GBNF grammars             |
