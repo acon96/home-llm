@@ -43,7 +43,7 @@
                     "download_model_from_hf": "Download model from HuggingFace",
                     "use_local_backend": "Use Llama.cpp"
                 },
-                "description": "Select the backend for running the model. Either Llama.cpp (locally) or text-generation-webui (remote).",
+                "description": "Select the backend for running the model. The options are:\n1. Llama.cpp with a model from HuggingFace\n2. Llama.cpp with a model stored on the disk\n3. [text-generation-webui API](https://github.com/oobabooga/text-generation-webui)\n4. Generic OpenAI API Compatible API\n5. [llama-cpp-python Server](https://llama-cpp-python.readthedocs.io/en/latest/server/)\n\nIf using Llama.cpp locally, make sure you copied the correct wheel file to the same directory as the integration.",
                 "title": "Select Backend"
             }
         }
@@ -87,7 +87,10 @@
                 "llama_cpp_hf": "Llama.cpp (HuggingFace)",
                 "llama_cpp_existing": "Llama.cpp (existing model)",
                 "text-generation-webui_api": "text-generation-webui API",
-                "generic_openai": "Generic OpenAI Compatible API"
+                "generic_openai": "Generic OpenAI Compatible API",
+                "llama_cpp_python_server": "llama-cpp-python Server",
+                "ollama": "Ollama"
+
             }
         },
         "text_generation_webui_chat_mode": {

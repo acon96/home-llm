@@ -73,6 +73,8 @@ from .const import (
     BACKEND_TYPE_LLAMA_EXISTING,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
     BACKEND_TYPE_GENERIC_OPENAI,
+    BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER,
+    BACKEND_TYPE_OLLAMA,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT,
     TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT,
@@ -103,12 +105,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 entry.options[item] = value
 
     def create_agent(backend_type):
+        agent_cls = None
+
         if backend_type in [ BACKEND_TYPE_LLAMA_HF, BACKEND_TYPE_LLAMA_EXISTING ]:
-            return LocalLLaMAAgent(hass, entry)
+            agent_cls = LocalLLaMAAgent
         elif backend_type == BACKEND_TYPE_GENERIC_OPENAI:
-            return GenericOpenAIAPIAgent(hass, entry)
+            agent_cls = GenericOpenAIAPIAgent
         elif backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
-            return TextGenerationWebuiAgent(hass, entry)
+            agent_cls = TextGenerationWebuiAgent
+        elif backend_type == BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER:
+            agent_cls = LlamaCppPythonAPIAgent
+        
+        return agent_cls(hass, entry)
 
     # load the model in an executor job because it takes a while and locks up the UI otherwise
     agent = await hass.async_add_executor_job(create_agent, entry.data.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE))
@@ -333,7 +341,7 @@ class LLaMAAgent(AbstractConversationAgent):
             entity_states[state.entity_id] = attributes
             domains.add(state.domain)
 
-        # _LOGGER.debug(f"Exposed entities: {entity_states}")
+        _LOGGER.debug(f"Exposed entities: {entity_states}")
 
         return entity_states, list(domains)
 
@@ -356,6 +364,7 @@ class LLaMAAgent(AbstractConversationAgent):
         if include_generation_prompt:
             formatted_prompt = formatted_prompt + template_desc["generation_prompt"]
 
+        # _LOGGER.debug(formatted_prompt)
         return formatted_prompt
 
     def _generate_system_prompt(self, prompt_template: str) -> str:
@@ -497,7 +506,7 @@ class GenericOpenAIAPIAgent(LLaMAAgent):
         # TODO: https
         self.api_host = f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
         self.api_key = entry.data.get(CONF_OPENAI_API_KEY)
-        self.model_name = entry.data.get(CONF_CHAT_MODEL, self.model_path)
+        self.model_name = entry.data.get(CONF_CHAT_MODEL)
 
 
     def _chat_completion_params(self, conversation: dict) -> (str, dict):
@@ -550,7 +559,7 @@ class GenericOpenAIAPIAgent(LLaMAAgent):
 
         headers = {}
         if self.api_key:
-            headers["Authorization"] = f"Basic {self.api_key}"
+            headers["Authorization"] = f"Bearer {self.api_key}"
 
         result = requests.post(
             f"{self.api_host}{endpoint}", 
@@ -591,7 +600,7 @@ class TextGenerationWebuiAgent(GenericOpenAIAPIAgent):
             
             headers = {}
             if self.admin_key:
-                headers["Authorization"] = f"Basic {self.admin_key}"
+                headers["Authorization"] = f"Bearer {self.admin_key}"
             
             load_result = requests.post(
                 f"{self.api_host}/v1/internal/model/load",
@@ -604,7 +613,8 @@ class TextGenerationWebuiAgent(GenericOpenAIAPIAgent):
             load_result.raise_for_status()
 
         except Exception as ex:
-            _LOGGER.error("Connection error was: %s", repr(ex))
+            _LOGGER.debug("Connection error was: %s", repr(ex))
+            raise ConfigEntryNotReady("There was a problem connecting to the remote server") from ex
 
     def _chat_completion_params(self, conversation: dict) -> (str, dict):
         preset = self.entry.options.get(CONF_TEXT_GEN_WEBUI_PRESET)
@@ -654,7 +664,7 @@ class LlamaCppPythonAPIAgent(GenericOpenAIAPIAgent):
             self.grammar = "".join(f.readlines())
 
     def _chat_completion_params(self, conversation: dict) -> (str, dict):
-        top_k = self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K)
+        top_k = int(self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K))
         endpoint, request_params = super()._chat_completion_params(conversation)
 
         request_params["top_k"] = top_k
@@ -665,7 +675,7 @@ class LlamaCppPythonAPIAgent(GenericOpenAIAPIAgent):
         return endpoint, request_params
     
     def _completion_params(self, conversation: dict) -> (str, dict):
-        top_k = self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K)
+        top_k = int(self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K))
         endpoint, request_params = super()._completion_params(conversation)
 
         request_params["top_k"] = top_k

@@ -82,6 +82,8 @@ from .const import (
     BACKEND_TYPE_LLAMA_EXISTING,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
     BACKEND_TYPE_GENERIC_OPENAI,
+    BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER,
+    BACKEND_TYPE_OLLAMA,
     PROMPT_TEMPLATE_CHATML,
     PROMPT_TEMPLATE_ALPACA,
     PROMPT_TEMPLATE_VICUNA,
@@ -105,10 +107,16 @@ def STEP_INIT_DATA_SCHEMA(backend_type=None):
                 CONF_BACKEND_TYPE,
                 default=backend_type if backend_type else DEFAULT_BACKEND_TYPE
             ): SelectSelector(SelectSelectorConfig(
-                options=[ BACKEND_TYPE_LLAMA_HF, BACKEND_TYPE_LLAMA_EXISTING, BACKEND_TYPE_TEXT_GEN_WEBUI, BACKEND_TYPE_GENERIC_OPENAI ],
+                options=[ 
+                    BACKEND_TYPE_LLAMA_HF, BACKEND_TYPE_LLAMA_EXISTING,
+                    BACKEND_TYPE_TEXT_GEN_WEBUI,
+                    BACKEND_TYPE_GENERIC_OPENAI,
+                    BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER,
+                    # BACKEND_TYPE_OLLAMA
+                ],
                 translation_key=CONF_BACKEND_TYPE,
                 multiple=False,
-                mode=SelectSelectorMode.LIST,
+                mode=SelectSelectorMode.DROPDOWN,
             ))
         }
     )
@@ -128,10 +136,12 @@ def STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(*, chat_model=None, downloaded_model_q
         }
     )
 
-def STEP_REMOTE_SETUP_DATA_SCHEMA(text_gen_webui: bool, *, host=None, port=None, chat_model=None, use_chat_endpoint=None, webui_preset=None, webui_chat_mode=None):
+def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, chat_model=None, use_chat_endpoint=None, webui_preset=None, webui_chat_mode=None):
 
     extra1, extra2 = ({}, {})
-    if text_gen_webui: 
+    default_port = DEFAULT_PORT
+
+    if backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI: 
         extra1[vol.Optional(CONF_TEXT_GEN_WEBUI_PRESET, default=webui_preset)] = str
         extra1[vol.Optional(CONF_TEXT_GEN_WEBUI_CHAT_MODE, default=webui_chat_mode)] = SelectSelector(SelectSelectorConfig(
             options=[TEXT_GEN_WEBUI_CHAT_MODE_CHAT, TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT, TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT],
@@ -141,10 +151,13 @@ def STEP_REMOTE_SETUP_DATA_SCHEMA(text_gen_webui: bool, *, host=None, port=None,
         ))
         extra2[vol.Optional(CONF_TEXT_GEN_WEBUI_ADMIN_KEY)] = TextSelector(TextSelectorConfig(type="password"))
 
+    elif backend_type == BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER:
+        default_port = "8000"
+
     return vol.Schema(
         {
             vol.Required(CONF_HOST, default=host if host else DEFAULT_HOST): str,
-            vol.Required(CONF_PORT, default=port if port else DEFAULT_PORT): str,
+            vol.Required(CONF_PORT, default=port if port else default_port): str,
             vol.Required(CONF_CHAT_MODEL, default=chat_model if chat_model else DEFAULT_CHAT_MODEL): str,
             vol.Required(CONF_REMOTE_USE_CHAT_ENDPOINT, default=use_chat_endpoint if use_chat_endpoint else DEFAULT_REMOTE_USE_CHAT_ENDPOINT): bool,
             **extra1,
@@ -447,7 +460,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             headers = {}
             api_key = user_input.get(CONF_TEXT_GEN_WEBUI_ADMIN_KEY, user_input.get(CONF_OPENAI_API_KEY))
             if api_key:
-                headers["Authorization"] = f"Basic {api_key}"
+                headers["Authorization"] = f"Bearer {api_key}"
 
             models_result = requests.get(
                 f"http://{self.model_config[CONF_HOST]}:{self.model_config[CONF_PORT]}/v1/internal/model/list",
@@ -681,6 +694,39 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 description={"suggested_value": options.get(CONF_TOP_P)},
                 default=DEFAULT_TOP_P,
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+        })
+    elif backend_type == BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER:
+        result = insert_after_key(result, CONF_MAX_TOKENS, {
+            vol.Required(
+                CONF_REQUEST_TIMEOUT,
+                description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
+                default=DEFAULT_REQUEST_TIMEOUT,
+            ): int,
+            vol.Required(
+                CONF_REMOTE_USE_CHAT_ENDPOINT,
+                description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
+                default=DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
+            ): bool,
+            vol.Required(
+                CONF_TOP_K,
+                description={"suggested_value": options.get(CONF_TOP_K)},
+                default=DEFAULT_TOP_K,
+            ): NumberSelector(NumberSelectorConfig(min=1, max=256, step=1)),
+            vol.Required(
+                CONF_TEMPERATURE,
+                description={"suggested_value": options.get(CONF_TEMPERATURE)},
+                default=DEFAULT_TEMPERATURE,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Required(
+                CONF_TOP_P,
+                description={"suggested_value": options.get(CONF_TOP_P)},
+                default=DEFAULT_TOP_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Required(
+                CONF_USE_GBNF_GRAMMAR,
+                description={"suggested_value": options.get(CONF_USE_GBNF_GRAMMAR)},
+                default=DEFAULT_USE_GBNF_GRAMMAR,
+            ): bool
         })
 
     return result
