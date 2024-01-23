@@ -112,7 +112,7 @@ def STEP_INIT_DATA_SCHEMA(backend_type=None):
                     BACKEND_TYPE_TEXT_GEN_WEBUI,
                     BACKEND_TYPE_GENERIC_OPENAI,
                     BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER,
-                    # BACKEND_TYPE_OLLAMA
+                    BACKEND_TYPE_OLLAMA
                 ],
                 translation_key=CONF_BACKEND_TYPE,
                 multiple=False,
@@ -727,6 +727,29 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 description={"suggested_value": options.get(CONF_USE_GBNF_GRAMMAR)},
                 default=DEFAULT_USE_GBNF_GRAMMAR,
             ): bool
+        })
+    elif backend_type == BACKEND_TYPE_OLLAMA:
+        result = insert_after_key(result, CONF_MAX_TOKENS, {
+            vol.Required(
+                CONF_REQUEST_TIMEOUT,
+                description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
+                default=DEFAULT_REQUEST_TIMEOUT,
+            ): int,
+            vol.Required(
+                CONF_REMOTE_USE_CHAT_ENDPOINT,
+                description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
+                default=DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
+            ): bool,
+            vol.Required(
+                CONF_TEMPERATURE,
+                description={"suggested_value": options.get(CONF_TEMPERATURE)},
+                default=DEFAULT_TEMPERATURE,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Required(
+                CONF_TOP_P,
+                description={"suggested_value": options.get(CONF_TOP_P)},
+                default=DEFAULT_TOP_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
         })
 
     return result
