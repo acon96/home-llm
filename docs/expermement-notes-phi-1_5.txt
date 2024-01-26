@@ -1,3 +1,4 @@
+# home-llm experiements (phi1.5)
 rev1 - original test
 - 1 epoch
 - train ctx 1900
@@ -217,7 +218,8 @@ rev 9 - reduced dataset size
 
 ------
 
-home-1b-rev1
+# Home 1B
+## home-1b-rev1
 - 1 epoch
 - 2048 train ctx
 - batch size 8
@@ -231,4 +233,80 @@ home-1b-rev1
 + it works OK with low temperatures
 + seems to handle the alpaca dataset not so well
 
-home-1b-rev2
+Eval results for existing models:
+Home-1b-v1: 0.767816091954023
+Home-3b-v2: 0.6908045977011494
+
+## home-1b-rev5 series
+- 1 epoch
+- 2048 train ctx
+- batch size 8
+- learning rate 1e-5
+- weight decay 0.1
+- gradient clipping 1.0
+- save model every 200 steps
+
+home-1b-rev5
+- dataset size: medium
+- evaluation results:
+  - 200: 0.553448275862069
+  - 400: 0.7482758620689656 (+.19)
+  - 600: 0.8103448275862069 (+.06)
+  - 800: 0.8316091954022988 (+.02)
+  - 1000:  0.8396551724137931 (+.008)
+  - 1200: 0.8488505747126437 (+.009)
+  - Final (1467): 0.8494252873563218 (+.00005)
+
+home-1b-rev5_1
+- dataset size: small
+- evaluation results:
+  - 200: 0.6057471264367816
+  - 400: 0.7494252873563219 (+.143)
+  - 600: 0.7683908045977011 (+.018)
+  - 800: 0.7729885057471264 (+.0046)
+  - Final (869): bad
+
+home-1b-rev5_2
+- dataset size: large
+- evaluation results:
+  - 200: --
+  - 400: --
+  - 600: 0.8425287356321839
+  - 800: 0.8666666666666667
+  - 1000: 0.8770114942528736
+  - 1200: 0.8844827586206897
+  - 1400: 0.8879310344827587
+  - 1600: 0.8844827586206897
+  - Final (1848): 0.8833333333333333
+
+home-3b-v3-rev1
+- dataset size: large
+- evaluation results: 0.9091954022988505
+
+home-3b-v3-rev2
+- dataset size: large + alpaca
+- evaluation results: 
+
+# Datasets
+
+## SFT
+Alpaca: https://huggingface.co/datasets/yahma/alpaca-cleaned
+Alpaca (Translated): https://huggingface.co/datasets/saillab/taco-datasets
+WizardLM 200k: https://huggingface.co/datasets/WizardLM/WizardLM_evol_instruct_V2_196k
+WizardLM 70k: https://huggingface.co/datasets/WizardLM/WizardLM_evol_instruct_70k
+Huggingface Ultrachat 200k: https://huggingface.co/datasets/HuggingFaceH4/ultrachat_200k
+OpenOrca Slim Deduped (363k): https://huggingface.co/datasets/Open-Orca/SlimOrca-Dedup
+
+## DPO
+Intel Orca DPO Pairs: https://huggingface.co/datasets/Intel/orca_dpo_pairs
+Huggingface Ultrachat: https://huggingface.co/datasets/HuggingFaceH4/ultrafeedback_binarized
+
+----------------------------------------------------------------------------------------------------
+python3 evaluate.py home-1b-rev5_2/checkpoint-600 --batch-size 12 && \
+  python3 evaluate.py home-1b-rev5_2/checkpoint-800 --batch-size 12  && \
+  python3 evaluate.py home-1b-rev5_2/checkpoint-1000 --batch-size 12 && \
+  python3 evaluate.py home-1b-rev5_2/checkpoint-1200 --batch-size 12 && \
+  python3 evaluate.py home-1b-rev5_2/checkpoint-1400 --batch-size 12 && \
+  python3 evaluate.py home-1b-rev5_2/checkpoint-1600 --batch-size 12 && \
+  python3 evaluate.py home-1b-rev5_2/checkpoint-1800 --batch-size 12 && \
+  python3 evaluate.py home-1b-rev5_2 --batch-size 12

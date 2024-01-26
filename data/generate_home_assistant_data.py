@@ -567,7 +567,7 @@ def generate_example_file(filename: str, seed: int, *, static_factor: int, templ
 
 def format_alpaca(example):
     question = example["instruction"]
-    if example["input"]:
+    if "input" in example and example["input"]:
         question = question = "\n" + example["input"]
 
     answer = example["output"]
@@ -592,13 +592,13 @@ def format_alpaca(example):
 
     return result
 
-def merge_with_dataset(dataset_name, seed, outupt_name, format_function):
+def merge_with_dataset(dataset_name, seed, outupt_name, format_function, dataset_column_names):
     alpaca_dataset = load_dataset(dataset_name)["train"].train_test_split(test_size=0.1)
     home_assistant_dataset = load_dataset("json", data_files={  "train": "home_assistant_train.json", "test": "home_assistant_test.json" })
 
     random.seed(seed)
 
-    alpaca_dataset = alpaca_dataset.map(format_function).remove_columns(["input", "output", "instruction"])
+    alpaca_dataset = alpaca_dataset.map(format_function).remove_columns(dataset_column_names)
 
     combined_dataset_train = concatenate_datasets([home_assistant_dataset["train"], alpaca_dataset["train"]]).shuffle(seed=42)
     combined_dataset_test = concatenate_datasets([home_assistant_dataset["test"], alpaca_dataset["test"]]).shuffle(seed=42)
@@ -616,20 +616,33 @@ def main():
     parser.add_argument("--sample", action="store_true", help="Set this flag to enable generation of the train dataset.")
     parser.add_argument("--test", action="store_true", help="Set this flag to enable generation of the train dataset..")
     parser.add_argument("--train", action="store_true", help="Set this flag to enable generation of the train dataset.")
-    parser.add_argument("--merge-alpaca", action="store_true", help="Set this flag to merge the generated datasets with the alpaca-cleaned dataset.")
+    parser.add_argument("--merge", help="Set this flag to merge the generated datasets with the specified dataset.")
+    train_size_group = parser.add_mutually_exclusive_group()
+    train_size_group.add_argument('--small', action='store_const', const='small', dest='size')
+    train_size_group.add_argument('--medium', action='store_const', const='medium', dest='size')
+    train_size_group.add_argument('--large', action='store_const', const='large', dest='size')
+
     args = parser.parse_args()
 
     if args.sample:
         generate_example_file("sample", 42, static_factor=1, template_factor=1, status_request_factor=1)
     if args.train:
         # TODO: add small, medium, large cli clags
-        # generate_example_file("home_assistant_train", 42, static_factor=1, template_factor=10, status_request_factor=8)
-        generate_example_file("home_assistant_train", 42, static_factor=5, template_factor=15, status_request_factor=12)
-        # generate_example_file("home_assistant_train", 42, static_factor=5, template_factor=20, status_request_factor=15)
+        if args.size == "small":
+            generate_example_file("home_assistant_train", 42, static_factor=1, template_factor=10, status_request_factor=8)
+        elif args.size == "medium":
+            generate_example_file("home_assistant_train", 42, static_factor=5, template_factor=15, status_request_factor=12)
+        elif args.size == "large":
+            generate_example_file("home_assistant_train", 42, static_factor=5, template_factor=20, status_request_factor=15)
+        else:
+            raise Exception(f"Unrecognized dataset size: {args.size}")
     if args.test:
         generate_example_file("home_assistant_test", 12345, static_factor=0.25, template_factor=3, status_request_factor=2)
-    if args.merge_alpaca:
-        merge_with_dataset("yahma/alpaca-cleaned", 42, "alpaca", format_alpaca)
+
+    if args.merge == "alpaca":
+        merge_with_dataset("yahma/alpaca-cleaned", 42, "alpaca", format_alpaca, ["input", "output", "instruction"])
+    elif args.merge == "wizardlm70k":
+        merge_with_dataset("WizardLM/WizardLM_evol_instruct_70k", 42, "wizardlm70k", format_alpaca, ["output", "instruction"])
 
 if __name__ == "__main__":
     main()

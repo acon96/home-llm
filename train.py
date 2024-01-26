@@ -17,7 +17,7 @@ Phi Modules: fc1,fc2,q_proj,v_proj,k_proj,dense,embed_tokens,lm_head
 
 """
 python3 train.py \
-    --run_name home-3b-v3-rev1 \
+    --run_name home-3b-v3-rev2 \
     --base_model microsoft/phi-2 \
     --add_pad_token \
     --add_chatml_tokens \
@@ -33,7 +33,7 @@ python3 train.py \
 
 """
 python3 train.py \
-    --run_name home-1b-rev4 \
+    --run_name home-1b-rev5 \
     --base_model microsoft/phi-1_5 \
     --add_pad_token \
     --add_chatml_tokens \
@@ -42,7 +42,7 @@ python3 train.py \
     --test_dataset data/home_assistant_test.json \
     --learning_rate 1e-5 \
     --micro_batch_size 4 --gradient_checkpointing \
-    --ctx_size 2048
+    --ctx_size 2048 --save_steps 200
 """
 
 """
@@ -73,6 +73,7 @@ class TrainingRunArguments:
     resume_from_checkpoint: str = field(default="", metadata={"help": "The name of the checkpoint to resume training from"})
     eval_steps: int = field(default=100, metadata={"help": "The number of steps in between evaluations of the model"})
     save_steps: int = field(default=-1, metadata={"help": "The number of steps in between model checkpoints; set to -1 to save every epoch"})
+    save_total_limit: int = field(default=1, metadata={"help": "The number of recent checkpoints of the model to save (not including the final model)"})
     group_by_length: bool = field(default=False, metadata={"help": "If enabled, the training data will be grouped by length to optimize use of padding"})
     
     # Quantization
@@ -100,8 +101,6 @@ training_run_args, _ = parser.parse_args_into_dataclasses(return_remaining_strin
 
 if sum([training_run_args.load_in_8bit, training_run_args.load_in_4bit, training_run_args.load_as_gptq]) > 1:
     raise Exception("Please select exactly one of 'load_in_8bit', 'load_in_4bit', or 'load_as_gptq")
-
-# TODO: write a proper evaluation script
 
 print(f"Loading model '{training_run_args.base_model}'...")
 
@@ -139,7 +138,7 @@ model = AutoModelForCausalLM.from_pretrained(
     max_memory=find_max_vram(),
     **model_kwargs
 )
-tokenizer = AutoTokenizer.from_pretrained(training_run_args.base_model, trust_remote_code=True, use_fast=False)
+tokenizer = AutoTokenizer.from_pretrained(training_run_args.base_model, trust_remote_code=True)
 
 if training_run_args.add_pad_token:
     tokenizer.add_special_tokens({'pad_token': '<|pad|>'})
@@ -196,8 +195,8 @@ training_args = TrainingArguments(
     # per_device_eval_batch_size=1,
     gradient_accumulation_steps=training_run_args.batch_size//training_run_args.micro_batch_size,
     gradient_checkpointing=training_run_args.gradient_checkpointing,
-    # weight_decay=training_run_args.weight_decay,
-    # max_grad_norm=training_run_args.gradient_clip,
+    weight_decay=training_run_args.weight_decay,
+    max_grad_norm=training_run_args.gradient_clip,
     evaluation_strategy="steps",
     eval_steps=training_run_args.eval_steps,
     save_strategy=("steps" if training_run_args.save_steps != -1 else "epoch"),
@@ -206,7 +205,7 @@ training_args = TrainingArguments(
     logging_steps=5, 
     output_dir=model_dir,
     num_train_epochs=training_run_args.epochs,
-    save_total_limit=1,
+    save_total_limit=training_run_args.save_total_limit,
     # dataloader_pin_memory=False,
     report_to="tensorboard",
     learning_rate=training_run_args.learning_rate,
