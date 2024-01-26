@@ -590,7 +590,14 @@ class TextGenerationWebuiAgent(GenericOpenAIAPIAgent):
         self.admin_key = entry.data.get(CONF_TEXT_GEN_WEBUI_ADMIN_KEY, self.api_key)
 
         try:
-            currently_loaded_result = requests.get(f"{self.api_host}/v1/internal/model/info")
+            headers = {}
+            if self.admin_key:
+                headers["Authorization"] = f"Bearer {self.admin_key}"
+                
+            currently_loaded_result = requests.get(
+                f"{self.api_host}/v1/internal/model/info",
+                headers=headers,
+            )
             currently_loaded_result.raise_for_status()
 
             loaded_model = currently_loaded_result.json()["model_name"]
@@ -600,9 +607,7 @@ class TextGenerationWebuiAgent(GenericOpenAIAPIAgent):
             else:
                 _LOGGER.info(f"Model is not {self.model_name} loaded on the remote backend. Loading it now...")
             
-            headers = {}
-            if self.admin_key:
-                headers["Authorization"] = f"Bearer {self.admin_key}"
+            
             
             load_result = requests.post(
                 f"{self.api_host}/v1/internal/model/load",
@@ -610,7 +615,8 @@ class TextGenerationWebuiAgent(GenericOpenAIAPIAgent):
                     "model_name": self.model_name,
                     # TODO: expose arguments to the user in home assistant UI
                     # "args": {},
-                }
+                },
+                headers=headers
             )
             load_result.raise_for_status()
 
