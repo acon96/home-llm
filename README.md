@@ -10,7 +10,7 @@ The latest models can be found on HuggingFace:
 
 Make sure you have `llama-cpp-python>=0.2.29` in order to run these models.
 
-Old Models:
+Old Models:  
 3B v1 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v1-GGUF
 
 The main difference between the 2 models (besides parameter count) is the training data. The 1B model is ONLY trained on the synthetic dataset provided in this project, while the 3B model is trained on a mixture of this synthetic dataset, and the cleaned Stanford Alpaca dataset.
@@ -63,7 +63,7 @@ The 3B model was trained as a LoRA on an RTX 3090 (24GB) using the following set
 
 ```
 python3 train.py \
-    --run_name home-llm-rev11_1 \
+    --run_name home-3b \
     --base_model microsoft/phi-2 \
     --add_pad_token \
     --add_chatml_tokens \
@@ -74,10 +74,24 @@ python3 train.py \
     --save_steps 1000 \
     --micro_batch_size 2 --gradient_checkpointing \
     --ctx_size 2048 \
-    --use_lora --lora_rank 32 --lora_alpha 64 --lora_modules fc1,fc2,Wqkv,out_proj --lora_modules_to_save wte,lm_head.linear --lora_merge
+    --use_lora --lora_rank 32 --lora_alpha 64 --lora_modules fc1,fc2,q_proj,v_proj,dense --lora_modules_to_save embed_tokens,lm_head --lora_merge
 ```
 
 The 1B model was trained as a full fine-tuning on on an RTX 3090 (24GB). Training took approximately 1.5 hours.
+
+```
+python3 train.py \
+    --run_name home-1b \
+    --base_model microsoft/phi-1_5 \
+    --add_pad_token \
+    --add_chatml_tokens \
+    --bf16 \
+    --train_dataset data/home_assistant_train.json \
+    --test_dataset data/home_assistant_test.json \
+    --learning_rate 1e-5 \
+    --micro_batch_size 4 --gradient_checkpointing \
+    --ctx_size 2048
+```
 
 ## Home Assistant Component
 In order to integrate with Home Assistant, we provide a `custom_component` that exposes the locally running LLM as a "conversation agent" that can be interacted with using a chat interface as well as integrate with Speech-to-Text and Text-to-Speech addons to enable interacting with the model by speaking.  
@@ -105,7 +119,7 @@ When setting up the component, there are 4 different "backend" options to choose
 3. A remote instance of text-generation-webui
 4. A generic OpenAI API compatible interface; *should* be compatible with LocalAI, LM Studio, and all other OpenAI compatible backends
 
-See (docs/Backend Configuration.md)[/docs/Backend%20Configuration.md] for more info.
+See [docs/Backend Configuration.md](/docs/Backend%20Configuration.md) for more info.
 
 **Installing llama-cpp-python for local model usage**:  
 In order to run a model directly as part of your Home Assistant installation, you will need to install one of the pre-build wheels because there are no existing musllinux wheels for the package. Compatible wheels for x86_x64 and arm64 are provided in the [dist](./dist) folder. Copy the `*.whl` files to the `custom_components/llama_conversation/` folder. They will be installed while setting up the component.
@@ -126,6 +140,9 @@ You need the following settings in order to configure the "remote" backend:
 3. Name of the Model: This name must EXACTLY match the name as it appears in `text-generation-webui`
 
 With the remote text-generation-webui backend, the component will validate that the selected model is available for use and will ensure it is loaded remotely. The Generic OpenAI compatible version does NOT do any validation or model loading.
+
+**Setting up with LocalAI**:
+If you are an existing LocalAI user or would like to use LocalAI as your backend, please refer to [this](https://io.midori-ai.xyz/howtos/setup-with-ha/) website which has instructions on how to setup LocalAI to work with Home-LLM including automatic installation of the latest version of the the Home-LLM model. The auto-installer (LocalAI Manager) will automatically download and setup LocalAI and/or the model of your choice and automatically create the necessary template files for the model to work with this integration.
 
 ### Configuring the component as a Conversation Agent
 **NOTE: ANY DEVICES THAT YOU SELECT TO BE EXPOSED TO THE MODEL WILL BE ADDED AS CONTEXT AND POTENTIALLY HAVE THEIR STATE CHANGED BY THE MODEL. ONLY EXPOSE DEVICES THAT YOU ARE OK WITH THE MODEL MODIFYING THE STATE OF, EVEN IF IT IS NOT WHAT YOU REQUESTED. THE MODEL MAY OCCASIONALLY HALLUCINATE AND ISSUE COMMANDS TO THE WRONG DEVICE! USE AT YOUR OWN RISK.**
@@ -171,6 +188,7 @@ It is highly recommend to set up text-generation-webui on a separate machine tha
 ## Version History
 | Version | Description                                                                                                                                    |
 | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| v0.2.4  | Fix API key auth on model load for text-generation-webui, and add support for Ollama API backend                                               |
 | v0.2.3  | Fix API key auth, Support chat completion endpoint, and refactor to make it easier to add more remote backends                                 |
 | v0.2.2  | Fix options window after upgrade, fix training script for new Phi model format, and release new models                                         |
 | v0.2.1  | Properly expose generation parameters for each backend, handle config entry updates without reloading, support remote backends with an API key |

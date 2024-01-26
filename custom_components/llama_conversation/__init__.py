@@ -115,6 +115,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             agent_cls = TextGenerationWebuiAgent
         elif backend_type == BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER:
             agent_cls = LlamaCppPythonAPIAgent
+        elif backend_type == BACKEND_TYPE_OLLAMA:
+            agent_cls = OllamaAPIAgent
         
         return agent_cls(hass, entry)
 
@@ -588,7 +590,14 @@ class TextGenerationWebuiAgent(GenericOpenAIAPIAgent):
         self.admin_key = entry.data.get(CONF_TEXT_GEN_WEBUI_ADMIN_KEY, self.api_key)
 
         try:
-            currently_loaded_result = requests.get(f"{self.api_host}/v1/internal/model/info")
+            headers = {}
+            if self.admin_key:
+                headers["Authorization"] = f"Bearer {self.admin_key}"
+                
+            currently_loaded_result = requests.get(
+                f"{self.api_host}/v1/internal/model/info",
+                headers=headers,
+            )
             currently_loaded_result.raise_for_status()
 
             loaded_model = currently_loaded_result.json()["model_name"]
@@ -598,9 +607,7 @@ class TextGenerationWebuiAgent(GenericOpenAIAPIAgent):
             else:
                 _LOGGER.info(f"Model is not {self.model_name} loaded on the remote backend. Loading it now...")
             
-            headers = {}
-            if self.admin_key:
-                headers["Authorization"] = f"Bearer {self.admin_key}"
+            
             
             load_result = requests.post(
                 f"{self.api_host}/v1/internal/model/load",
@@ -608,7 +615,8 @@ class TextGenerationWebuiAgent(GenericOpenAIAPIAgent):
                     "model_name": self.model_name,
                     # TODO: expose arguments to the user in home assistant UI
                     # "args": {},
-                }
+                },
+                headers=headers
             )
             load_result.raise_for_status()
 
@@ -684,3 +692,88 @@ class LlamaCppPythonAPIAgent(GenericOpenAIAPIAgent):
             request_params["grammar"] = self.grammar
 
         return endpoint, request_params
+
+class OllamaAPIAgent(LLaMAAgent):
+    api_host: str
+    api_key: str
+    model_name: str
+
+    def _load_model(self, entry: ConfigEntry) -> None:
+        # TODO: https
+        self.api_host = f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
+        self.api_key = entry.data.get(CONF_OPENAI_API_KEY)
+        self.model_name = entry.data.get(CONF_CHAT_MODEL)
+
+
+    def _chat_completion_params(self, conversation: dict) -> (str, dict):
+        request_params = {}
+
+        endpoint = "/api/chat"
+        request_params["messages"] = [ { "role": x["role"], "content": x["message"] } for x in conversation ]
+
+        return endpoint, request_params
+
+    def _completion_params(self, conversation: dict) -> (str, dict):
+        request_params = {}
+
+        endpoint = "/api/generate"
+        request_params["prompt"] = self._format_prompt(conversation)
+
+        return endpoint, request_params
+    
+    def _extract_response(self, response_json: dict) -> str:        
+        if response_json["done"] != "true":
+            _LOGGER.warn("Model response did not end on a stop token (unfinished sentence)")
+
+        if "response" in response_json:
+            return response_json["response"]
+        else:
+            return response_json["message"]["content"]
+    
+    def _generate(self, conversation: dict) -> str:
+        max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
+        temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
+        top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
+        timeout = self.entry.options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
+        use_chat_api = self.entry.options.get(CONF_REMOTE_USE_CHAT_ENDPOINT, DEFAULT_REMOTE_USE_CHAT_ENDPOINT)
+        
+
+        request_params = {
+            "model": self.model_name,
+            "stream": False,
+            "options": {
+                "top_p": top_p,
+                "temperature": temperature,
+                "num_ctx": max_tokens,
+            }   
+        }
+        
+        if use_chat_api:
+            endpoint, additional_params = self._chat_completion_params(conversation)
+        else:
+            endpoint, additional_params = self._completion_params(conversation)
+        
+        request_params.update(additional_params)
+
+        headers = {}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+
+        result = requests.post(
+            f"{self.api_host}{endpoint}", 
+            json=request_params,
+            timeout=timeout,
+            headers=headers,
+        )
+
+        try:
+            result.raise_for_status()
+        except requests.RequestException as err:
+            _LOGGER.debug(f"Err was: {err}")
+            _LOGGER.debug(f"Request was: {request_params}")
+            _LOGGER.debug(f"Result was: {result.text}")
+            return f"Failed to communicate with the API! {err}"
+        
+        _LOGGER.debug(result.json())
+
+        return self._extract_response(result.json())
