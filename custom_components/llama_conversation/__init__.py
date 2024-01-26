@@ -11,6 +11,9 @@ import os
 import json
 import webcolors
 
+import voluptuous as vol
+from collections.abc import Iterable
+
 import homeassistant.components.conversation as ha_conversation
 from homeassistant.components.conversation import ConversationInput, ConversationResult, AbstractConversationAgent
 from homeassistant.components.conversation.const import DOMAIN as CONVERSATION_DOMAIN
@@ -168,6 +171,24 @@ def closest_color(requested_color):
         bd = (b_c - requested_color[2]) ** 2
         min_colors[(rd + gd + bd)] = name
     return min_colors[min(min_colors.keys())]
+
+def flatten_schema(schema):
+    flattened = []
+    def _flatten(current_schema, prefix=''):
+        if isinstance(current_schema, vol.Schema):
+            if isinstance(current_schema.schema, vol.validators._WithSubValidators):
+                for subval in current_schema.schema.validators:
+                    _flatten(subval, prefix)
+            else:
+                for key, val in current_schema.schema.items():
+                    _flatten(val, prefix + str(key) + '/')
+        elif isinstance(current_schema, vol.validators._WithSubValidators):
+            for subval in current_schema.validators:
+                _flatten(subval, prefix)
+        elif callable(current_schema):
+            flattened.append(prefix[:-1] if prefix else prefix)
+    _flatten(schema)
+    return flattened
 
 class LLaMAAgent(AbstractConversationAgent):
     """Local LLaMA conversation agent."""
@@ -396,6 +417,8 @@ class LLaMAAgent(AbstractConversationAgent):
                         value = F"{closest_color(value)} {value}"
                     elif attribute_name == "volume_level":
                         value = f"vol={int(value*100)}"
+                    elif attribute_name == "brightness":
+                        value = f"{int(value/255*100)}%"
 
                     result = result + ";" + str(value)
             return result
@@ -407,10 +430,10 @@ class LLaMAAgent(AbstractConversationAgent):
         service_dict = self.hass.services.async_services()
         all_services = []
         for domain in domains:
-            # all_services.extend(service_dict.get(domain, {}).keys())
-            all_services.extend(
-                [f"{domain}.{name}" for name in service_dict.get(domain, {}).keys()]
-            )
+            for name, service in service_dict.get(domain, {}).items():
+                args = flatten_schema(service.schema)
+                args_to_expose = set(args).intersection(extra_attributes_to_expose)
+                all_services.append(f"{domain}.{name}({','.join(args_to_expose)})")
         formatted_services = ", ".join(all_services)
 
         return template.Template(prompt_template, self.hass).async_render(
