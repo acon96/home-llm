@@ -17,7 +17,7 @@ Phi Modules: fc1,fc2,q_proj,v_proj,k_proj,dense,embed_tokens,lm_head
 
 """
 python3 train.py \
-    --run_name home-3b-v2-rev3 \
+    --run_name home-3b-v3-rev1 \
     --base_model microsoft/phi-2 \
     --add_pad_token \
     --add_chatml_tokens \
@@ -120,6 +120,7 @@ else:
     model_kwargs["torch_dtype"] = torch.float16
 
 # model_kwargs["resid_pdrop"] = 0.0
+model_kwargs["revision"] = "accfee56d8988cae60915486310362db5831b1bd"
 
 def find_max_vram(min_buffer_mib=800):
     total_mem = (torch.cuda.get_device_properties(0).total_memory / (1024 * 1024))
@@ -142,6 +143,7 @@ tokenizer = AutoTokenizer.from_pretrained(training_run_args.base_model, trust_re
 
 if training_run_args.add_pad_token:
     tokenizer.add_special_tokens({'pad_token': '<|pad|>'})
+    model.config.pad_token_id = tokenizer.pad_token_id
 
 if training_run_args.add_chatml_tokens:
     tokenizer.add_special_tokens({
@@ -151,6 +153,8 @@ if training_run_args.add_chatml_tokens:
 
     model.config.bos_token_id = tokenizer.bos_token_id
     model.config.eos_token_id = tokenizer.eos_token_id
+
+    # TODO: add chatml template to tokenizer for auto-formatting
 
 embeddings_len = math.ceil(len(tokenizer) / 32) * 32
 if model.get_input_embeddings().num_embeddings < embeddings_len:
@@ -188,13 +192,14 @@ model_dir = f"./{base_dir}/{training_run_args.run_name}"
 # TODO: eval is broken (returning NaN for loss)
 training_args = TrainingArguments(
     per_device_train_batch_size=training_run_args.micro_batch_size,
-    # per_device_eval_batch_size=training_run_args.micro_batch_size,
+    per_device_eval_batch_size=training_run_args.micro_batch_size,
+    # per_device_eval_batch_size=1,
     gradient_accumulation_steps=training_run_args.batch_size//training_run_args.micro_batch_size,
     gradient_checkpointing=training_run_args.gradient_checkpointing,
     # weight_decay=training_run_args.weight_decay,
     # max_grad_norm=training_run_args.gradient_clip,
-    # evaluation_strategy="steps",
-    # eval_steps=training_run_args.eval_steps,
+    evaluation_strategy="steps",
+    eval_steps=training_run_args.eval_steps,
     save_strategy=("steps" if training_run_args.save_steps != -1 else "epoch"),
     save_steps=(training_run_args.save_steps if training_run_args.save_steps != -1 else None),
     save_safetensors=True,
@@ -208,8 +213,9 @@ training_args = TrainingArguments(
     lr_scheduler_type=training_run_args.learning_rate_schedule,
     log_level="info",
     bf16=training_run_args.bf16,
-    # bf16_full_eval=training_run_args.bf16,
-    group_by_length=training_run_args.group_by_length
+    bf16_full_eval=training_run_args.bf16,
+    group_by_length=training_run_args.group_by_length,
+    include_inputs_for_metrics=True,
 )
 
 class DataCollatorForSupervisedFineTuning(object):
@@ -363,38 +369,17 @@ class RandomEvalSubsetTrainer(Trainer):
         return RandomSampler(self.train_dataset, generator=torch.Generator(device='cpu'))
     
 def compute_metrics(pred: EvalPrediction):
-    print(pred)
     inputs = pred.inputs
     label_ids = pred.label_ids
     logits = pred.predictions
 
-    # Determine where the assistant prompt is in the inputs
-    start_positions = np.where(label_ids[::-1] != -100)[0]
-    if len(start_positions) == 0:
-        start_position = 0
-    else:
-        start_position = len(label_ids) - start_positions[0]
 
-    # Truncate inputs and prepare for generation
-    truncated_input_ids = inputs[:start_position]
+    return {"accuracy": 1.0 }
 
-    # Generate the expected number of tokens + 5
-    generated_ids = model.generate(
-        input_ids=truncated_input_ids,
-        max_length=len(label_ids) + 5,
-        pad_token_id=tokenizer.pad_token_id
-    )
-
-    # Flatten the list of generated tokens if it's a nested list
-    if isinstance(generated_ids, list) and isinstance(generated_ids[0], list):
-        generated_ids = [token for sublist in generated_ids for token in sublist]
-
-    # Compare with original output
-    # Assuming a simple accuracy calculation (exact match)
-    match_count = sum(1 for i, j in zip(generated_ids, label_ids) if i == j)
-    accuracy = match_count / len(label_ids)
-
-    return {"accuracy": accuracy}
+def preprocess_logits_for_metrics(logits, labels):
+    """https://discuss.huggingface.co/t/cuda-out-of-memory-when-using-trainer-with-compute-metrics/2941/22"""
+    pred_ids = torch.argmax(logits, dim=-1)
+    return pred_ids, labels
 
 trainer = RandomEvalSubsetTrainer(
     model=model,
@@ -402,7 +387,8 @@ trainer = RandomEvalSubsetTrainer(
     train_dataset=tokenized_train_dataset,
     eval_dataset=tokenized_test_dataset,
     data_collator=data_collator,
-    compute_metrics=compute_metrics
+    # compute_metrics=compute_metrics,
+    # preprocess_logits_for_metrics=preprocess_logits_for_metrics,
 )
 
 tensorboard_process = None
