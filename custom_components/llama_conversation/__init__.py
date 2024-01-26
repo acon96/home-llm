@@ -744,7 +744,7 @@ class OllamaAPIAgent(LLaMAAgent):
             "options": {
                 "top_p": top_p,
                 "temperature": temperature,
-                "num_ctx": max_tokens,
+                "num_predict": max_tokens,
             }   
         }
         
