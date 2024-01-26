@@ -3,8 +3,10 @@
 import math
 import copy
 import torch
+import numpy as np
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer, \
     PreTrainedTokenizerFast, HfArgumentParser, GPTQConfig, AutoConfig
+from transformers.trainer_utils import EvalPrediction
 from datasets import load_dataset
 from dataclasses import dataclass, field
 from typing import Dict, Optional, Sequence
@@ -359,13 +361,48 @@ class RandomEvalSubsetTrainer(Trainer):
             return super()._get_train_sampler()
         
         return RandomSampler(self.train_dataset, generator=torch.Generator(device='cpu'))
+    
+def compute_metrics(pred: EvalPrediction):
+    print(pred)
+    inputs = pred.inputs
+    label_ids = pred.label_ids
+    logits = pred.predictions
+
+    # Determine where the assistant prompt is in the inputs
+    start_positions = np.where(label_ids[::-1] != -100)[0]
+    if len(start_positions) == 0:
+        start_position = 0
+    else:
+        start_position = len(label_ids) - start_positions[0]
+
+    # Truncate inputs and prepare for generation
+    truncated_input_ids = inputs[:start_position]
+
+    # Generate the expected number of tokens + 5
+    generated_ids = model.generate(
+        input_ids=truncated_input_ids,
+        max_length=len(label_ids) + 5,
+        pad_token_id=tokenizer.pad_token_id
+    )
+
+    # Flatten the list of generated tokens if it's a nested list
+    if isinstance(generated_ids, list) and isinstance(generated_ids[0], list):
+        generated_ids = [token for sublist in generated_ids for token in sublist]
+
+    # Compare with original output
+    # Assuming a simple accuracy calculation (exact match)
+    match_count = sum(1 for i, j in zip(generated_ids, label_ids) if i == j)
+    accuracy = match_count / len(label_ids)
+
+    return {"accuracy": accuracy}
 
 trainer = RandomEvalSubsetTrainer(
     model=model,
     args=training_args,
     train_dataset=tokenized_train_dataset,
-    # eval_dataset=tokenized_test_dataset,
+    eval_dataset=tokenized_test_dataset,
     data_collator=data_collator,
+    compute_metrics=compute_metrics
 )
 
 tensorboard_process = None
