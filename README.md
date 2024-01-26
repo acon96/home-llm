@@ -10,7 +10,7 @@ The latest models can be found on HuggingFace:
 
 Make sure you have `llama-cpp-python>=0.2.29` in order to run these models.
 
-Old Models:
+Old Models:  
 3B v1 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v1-GGUF
 
 The main difference between the 2 models (besides parameter count) is the training data. The 1B model is ONLY trained on the synthetic dataset provided in this project, while the 3B model is trained on a mixture of this synthetic dataset, and the cleaned Stanford Alpaca dataset.
@@ -63,7 +63,7 @@ The 3B model was trained as a LoRA on an RTX 3090 (24GB) using the following set
 
 ```
 python3 train.py \
-    --run_name home-llm-rev11_1 \
+    --run_name home-3b \
     --base_model microsoft/phi-2 \
     --add_pad_token \
     --add_chatml_tokens \
@@ -74,10 +74,24 @@ python3 train.py \
     --save_steps 1000 \
     --micro_batch_size 2 --gradient_checkpointing \
     --ctx_size 2048 \
-    --use_lora --lora_rank 32 --lora_alpha 64 --lora_modules fc1,fc2,Wqkv,out_proj --lora_modules_to_save wte,lm_head.linear --lora_merge
+    --use_lora --lora_rank 32 --lora_alpha 64 --lora_modules fc1,fc2,q_proj,v_proj,dense --lora_modules_to_save embed_tokens,lm_head --lora_merge
 ```
 
 The 1B model was trained as a full fine-tuning on on an RTX 3090 (24GB). Training took approximately 1.5 hours.
+
+```
+python3 train.py \
+    --run_name home-1b \
+    --base_model microsoft/phi-1_5 \
+    --add_pad_token \
+    --add_chatml_tokens \
+    --bf16 \
+    --train_dataset data/home_assistant_train.json \
+    --test_dataset data/home_assistant_test.json \
+    --learning_rate 1e-5 \
+    --micro_batch_size 4 --gradient_checkpointing \
+    --ctx_size 2048
+```
 
 ## Home Assistant Component
 In order to integrate with Home Assistant, we provide a `custom_component` that exposes the locally running LLM as a "conversation agent" that can be interacted with using a chat interface as well as integrate with Speech-to-Text and Text-to-Speech addons to enable interacting with the model by speaking.  
@@ -174,6 +188,7 @@ It is highly recommend to set up text-generation-webui on a separate machine tha
 ## Version History
 | Version | Description                                                                                                                                    |
 | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| v0.2.4  | Fix API key auth on model load for text-generation-webui, and add support for Ollama API backend                                               |
 | v0.2.3  | Fix API key auth, Support chat completion endpoint, and refactor to make it easier to add more remote backends                                 |
 | v0.2.2  | Fix options window after upgrade, fix training script for new Phi model format, and release new models                                         |
 | v0.2.1  | Properly expose generation parameters for each backend, handle config entry updates without reloading, support remote backends with an API key |
