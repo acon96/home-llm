@@ -8,3 +8,4 @@ data/*.json
 main.log
 .venv
 *.xlsx
+notes.txt
