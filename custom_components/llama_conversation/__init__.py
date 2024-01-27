@@ -237,6 +237,8 @@ class LLaMAAgent(AbstractConversationAgent):
         raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
         refresh_system_prompt = self.entry.options.get(CONF_REFRESH_SYSTEM_PROMPT, DEFAULT_REFRESH_SYSTEM_PROMPT)
         service_call_regex = self.entry.options.get(CONF_SERVICE_CALL_REGEX, DEFAULT_SERVICE_CALL_REGEX)
+        extra_attributes_to_expose = self.entry.options \
+            .get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE)
 
         try:
             service_call_pattern = re.compile(service_call_regex)
@@ -319,24 +321,37 @@ class LLaMAAgent(AbstractConversationAgent):
                     service = json_output["service"]
                     entity = json_output["target_device"]
                     domain, service = tuple(service.split("."))
+                    extra_arguments = { k: v for k, v in json_output.items() if k not in [ "service", "target_device" ] }
                 except Exception:
                     try:
                         service = line.split("(")[0]
                         entity = line.split("(")[1][:-1]
                         domain, service = tuple(service.split("."))
+                        extra_arguments = {}
                     except Exception:
                         to_say += f" Failed to parse call from '{line}'!"
                         continue
+
+                # fix certain arguments
+                # make sure brightness is 0-255 and not a percentage
+                if "brightness" in extra_arguments and 0.0 < extra_arguments["brightness"] < 1.0:
+                    extra_arguments["brightness"] = int(extra_arguments["brightness"] * 255)
 
                 # only acknowledge requests to exposed entities
                 if entity not in exposed_entities:
                     to_say += f" Can't find device '{entity}'!"
                 else:
+                    # copy arguments to service call
+                    service_data = {ATTR_ENTITY_ID: entity}
+                    for attr in extra_attributes_to_expose:
+                        if attr in extra_arguments.keys():
+                            service_data[attr] = extra_arguments[attr]
+                    
                     try:
                         await self.hass.services.async_call(
                             domain,
                             service,
-                            service_data={ATTR_ENTITY_ID: entity},
+                            service_data=service_data,
                             blocking=True,
                         )
                     except Exception as err:
@@ -407,7 +422,7 @@ class LLaMAAgent(AbstractConversationAgent):
 
                 value = attributes[attribute_name]
                 if value is not None:
-                    if attribute_name == "current_temperature":
+                    if attribute_name == "temperature":
                         value = int(value)
                         if value > 50:
                             value = f"{value}F"
@@ -419,6 +434,8 @@ class LLaMAAgent(AbstractConversationAgent):
                         value = f"vol={int(value*100)}"
                     elif attribute_name == "brightness":
                         value = f"{int(value/255*100)}%"
+                    elif attribute_name == "humidity":
+                        value = f"{value}%"
 
                     result = result + ";" + str(value)
             return result

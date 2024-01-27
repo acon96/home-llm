@@ -136,7 +136,7 @@ def STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(*, chat_model=None, downloaded_model_q
         }
     )
 
-def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, chat_model=None, use_chat_endpoint=None, webui_preset=None, webui_chat_mode=None):
+def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, chat_model=None, use_chat_endpoint=None, webui_preset="", webui_chat_mode=""):
 
     extra1, extra2 = ({}, {})
     default_port = DEFAULT_PORT
@@ -144,7 +144,7 @@ def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, ch
     if backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI: 
         extra1[vol.Optional(CONF_TEXT_GEN_WEBUI_PRESET, default=webui_preset)] = str
         extra1[vol.Optional(CONF_TEXT_GEN_WEBUI_CHAT_MODE, default=webui_chat_mode)] = SelectSelector(SelectSelectorConfig(
-            options=[TEXT_GEN_WEBUI_CHAT_MODE_CHAT, TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT, TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT],
+            options=["", TEXT_GEN_WEBUI_CHAT_MODE_CHAT, TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT, TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT],
             translation_key=CONF_TEXT_GEN_WEBUI_CHAT_MODE,
             multiple=False,
             mode=SelectSelectorMode.DROPDOWN,
@@ -485,7 +485,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
     ) -> FlowResult:
         errors = {}
         backend_type = self.model_config[CONF_BACKEND_TYPE]
-        schema = STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI)
+        schema = STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type)
 
         if user_input:
             try:
@@ -499,7 +499,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                     if error_reason:
                         errors["base"] = error_reason
                         schema = STEP_REMOTE_SETUP_DATA_SCHEMA(
-                            True,
+                            backend_type,
                             host=user_input[CONF_HOST],
                             port=user_input[CONF_PORT],
                             chat_model=user_input[CONF_CHAT_MODEL],
