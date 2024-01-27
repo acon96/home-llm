@@ -189,6 +189,7 @@ It is highly recommend to set up text-generation-webui on a separate machine tha
 ## Version History
 | Version | Description                                                                                                                                    |
 | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| v0.2.5  | Fix Ollama max tokens parameter, add parameters to function calling for dataset + component, & model update                                    |
 | v0.2.4  | Fix API key auth on model load for text-generation-webui, and add support for Ollama API backend                                               |
 | v0.2.3  | Fix API key auth, Support chat completion endpoint, and refactor to make it easier to add more remote backends                                 |
 | v0.2.2  | Fix options window after upgrade, fix training script for new Phi model format, and release new models                                         |
