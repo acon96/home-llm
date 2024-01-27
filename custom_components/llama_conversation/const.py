@@ -49,7 +49,7 @@ PROMPT_TEMPLATE_DESCRIPTIONS = {
     PROMPT_TEMPLATE_CHATML: {
         "system": { "prefix": "<|im_start|>system\n", "suffix": "<|im_end|>" },
         "user": { "prefix": "<|im_start|>user\n", "suffix": "<|im_end|>" },
-        "assistant": { "prefix": "<|im_start|>assistant\n", "suffix": "" },
+        "assistant": { "prefix": "<|im_start|>assistant\n", "suffix": "<|im_end|>" },
         "generation_prompt": "<|im_start|>assistant"
     },
     PROMPT_TEMPLATE_ALPACA: {
