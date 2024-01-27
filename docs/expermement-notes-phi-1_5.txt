@@ -307,11 +307,11 @@ home-1b-rev6_2 = Home-1B-v2-GGUF
   - 2000: 0.8852541519879215
   - Final (2048): 
 
-home-3b-v3-rev2 = Home-3B-v2_alpaca-GGUF
+home-3b-v3-rev2 = Home-3B-v2-GGUF
 - dataset size: xl + alpaca
 - evaluation results: 0.8731756416708606
 
-Home-3B-v2_ha-GGUF
+Home-3B-v2-GGUF:ha_only
 - dataset size: large
 - evaluation results: FAILED (again.....)
 
@@ -328,11 +328,3 @@ OpenOrca Slim Deduped (363k): https://huggingface.co/datasets/Open-Orca/SlimOrca
 ## DPO
 Intel Orca DPO Pairs: https://huggingface.co/datasets/Intel/orca_dpo_pairs
 Huggingface Ultrachat: https://huggingface.co/datasets/HuggingFaceH4/ultrafeedback_binarized
-
-----------------------------------------------------------------------------------------------------
-python3 evaluate.py home-1b-rev6_2/checkpoint-400 --batch-size 10 && \
-  python3 evaluate.py home-1b-rev6_2/checkpoint-800 --batch-size 10  && \
-  python3 evaluate.py home-1b-rev6_2/checkpoint-1200 --batch-size 10 && \
-  python3 evaluate.py home-1b-rev6_2/checkpoint-1600 --batch-size 10 && \
-  python3 evaluate.py home-1b-rev6_2/checkpoint-2000 --batch-size 10 && \
-  python3 evaluate.py home-1b-rev6_2 --batch-size 10
