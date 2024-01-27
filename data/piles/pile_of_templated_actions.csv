@@ -193,21 +193,31 @@ climate,set_hvac_mode,"Switch the system to cooling mode.","Switching to cooling
 climate,set_hvac_mode,"Can we set the HVAC to heat?","Setting the HVAC to heat.",8
 climate,set_hvac_mode,"Change the HVAC to automatic.","Changing HVAC to automatic mode.",8
 light,turn_on,"Set the brightness of <device_name> to <brightness>%.","Setting the brightness of <device_name> to <brightness>%.",8
-light,turn_on,"Can you make <device_name> <color>?","Turning <device_name> <color>.",8
-light,turn_on,"Change the color of <device_name> to <color>.","Changing the color of <device_name> to <color>.",8
 light,turn_on,"Dim <device_name> to <brightness> percent brightness.","Dimming <device_name> to <brightness>% brightness.",8
-light,turn_on,"Please set <device_name> to a <color> color.","Setting <device_name> to a <color> color.",8
 light,turn_on,"Brighten <device_name> to <brightness>.","Brightening <device_name> to <brightness>%.",8
-light,turn_on,"Turn <device_name> <color>.","Turning <device_name> <color>.",8
-light,turn_on,"I want <device_name> at a <color> setting.","Setting <device_name> to a <color>.",8
-light,turn_on,"Set <device_name> to a <color> color.","Setting <device_name> to a <color> color.",8
-light,turn_on,"Adjust <device_name> brightness to <brightness>.","Adjusting <device_name> brightness to <brightness>%.",8
-light,turn_on,"Increase <device_name>'s brightness to <brightness>.","Increasing <device_name>'s brightness to <brightness>%.",8
-light,turn_on,"Lower the brightness of <device_name> to <brightness>.","Lowering the brightness of <device_name> to <brightness>%.",8
+light,turn_on,"Adjust <device_name> brightness to <brightness>.","Adjusting <device_name> brightness to <brightness>.",8
+light,turn_on,"Increase <device_name>'s brightness to <brightness>.","Increasing <device_name>'s brightness to <brightness>.",8
+light,turn_on,"Lower the brightness of <device_name> to <brightness>.","Lowering the brightness of <device_name> to <brightness>.",8
 light,turn_on,"Can you set <device_name>'s brightness level to <brightness> percent?","Setting <device_name>'s brightness level to <brightness>%.",8
 light,turn_on,"I'd like <device_name> at <brightness> percent brightness, please.","Setting <device_name> to <brightness>% brightness.",8
+light,turn_on,"Can you make <device_name> <color>?","Turning <device_name> <color>.",8
+light,turn_on,"Change the color of <device_name> to <color>.","Changing the color of <device_name> to <color>.",8
 light,turn_on,"Change <device_name> to a <color> hue.","Changing <device_name> to a <color> hue.",8
 light,turn_on,"Set <device_name> to be <color>.","Setting <device_name> to be <color>.",8
 light,turn_on,"I want <device_name> to be <color>, please.","Setting <device_name> to be <color>.",8
 light,turn_on,"Can you make <device_name> shine in <color>?","Making <device_name> shine in <color>.",8
 light,turn_on,"Turn <device_name> to a <color> shade.","Turning <device_name> to a <color> shade.",8
+light,turn_on,"Turn <device_name> <color>.","Turning <device_name> <color>.",8
+light,turn_on,"I want <device_name> at a <color> setting.","Setting <device_name> to a <color>.",8
+light,turn_on,"Set <device_name> to a <color> color.","Setting <device_name> to a <color> color.",8
+light,turn_on,"Please set <device_name> to a <color> color.","Setting <device_name> to a <color> color.",8
+light,turn_on,"Make <device_name> glow <color>.","Making <device_name> glow <color>.",8
+light,turn_on,"Could you turn <device_name> to <color>?","Turning <device_name> to <color>.",8
+light,turn_on,"Please change <device_name> to <color>.","Changing <device_name> to <color>.",8
+light,turn_on,"Adjust <device_name> to <color> color.","Adjusting <device_name> to <color> color.",8
+light,turn_on,"Switch <device_name> color to <color>.","Switching <device_name> color to <color>.",8
+light,turn_on,"Can <device_name> be <color> now?","Setting <device_name> to be <color>.",8
+light,turn_on,"Let's have <device_name> in <color>.","Setting <device_name> in <color>.",8
+light,turn_on,"I'd like <device_name> to change to <color>.","Changing <device_name> to <color>.",8
+light,turn_on,"Can <device_name> display a <color> light?","Making <device_name> display a <color> light.",8
+light,turn_on,"Set <device_name> color to <color>, please.","Setting <device_name> color to <color>.",8

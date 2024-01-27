@@ -6,12 +6,13 @@ The "Home" models are a fine tuning of the Phi model series from Microsoft.  The
 
 The latest models can be found on HuggingFace:  
 3B v2 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v2-GGUF  
-1B v1 (Based on Phi-1.5): https://huggingface.co/acon96/Home-1B-v1-GGUF  
+1B v2 (Based on Phi-1.5): https://huggingface.co/acon96/Home-1B-v2-GGUF  
 
 Make sure you have `llama-cpp-python>=0.2.29` in order to run these models.
 
 Old Models:  
-3B v1 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v1-GGUF
+3B v1 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v1-GGUF  
+1B v1 (Based on Phi-1.5): https://huggingface.co/acon96/Home-1B-v1-GGUF  
 
 The main difference between the 2 models (besides parameter count) is the training data. The 1B model is ONLY trained on the synthetic dataset provided in this project, while the 3B model is trained on a mixture of this synthetic dataset, and the cleaned Stanford Alpaca dataset.
 
@@ -23,11 +24,12 @@ Example "system" prompt:
 ```
 <|im_start|>system
 You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed with the information provided only.
-Services: light.turn_off, light.turn_on, fan.turn_on, fan.turn_off
+Services: light.turn_off(), light.turn_on(brightness,rgb_color), fan.turn_on(), fan.turn_off()
 Devices:
-light.office 'Office Light' = on
+light.office 'Office Light' = on;80%
 fan.office 'Office fan' = off
-light.kitchen 'Kitchen Light' = on<|im_end|>
+light.kitchen 'Kitchen Light' = on;80%;red
+light.bedroom 'Bedroom Light' = off<|im_end|>
 ```
 
 For more about how the model is prompted see [./docs/Model Prompting.md]
@@ -69,11 +71,11 @@ python3 train.py \
     --add_chatml_tokens \
     --bf16 \
     --train_dataset data/home_assistant_alpaca_merged_train.json \
-    --test_dataset data/home_assistant_alpaca_merged_test.json \
     --learning_rate 1e-5 \
     --save_steps 1000 \
     --micro_batch_size 2 --gradient_checkpointing \
     --ctx_size 2048 \
+    --group_by_length \
     --use_lora --lora_rank 32 --lora_alpha 64 --lora_modules fc1,fc2,q_proj,v_proj,dense --lora_modules_to_save embed_tokens,lm_head --lora_merge
 ```
 
@@ -87,7 +89,6 @@ python3 train.py \
     --add_chatml_tokens \
     --bf16 \
     --train_dataset data/home_assistant_train.json \
-    --test_dataset data/home_assistant_test.json \
     --learning_rate 1e-5 \
     --micro_batch_size 4 --gradient_checkpointing \
     --ctx_size 2048
