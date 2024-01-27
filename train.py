@@ -17,12 +17,12 @@ Phi Modules: fc1,fc2,q_proj,v_proj,k_proj,dense,embed_tokens,lm_head
 
 """
 python3 train.py \
-    --run_name home-3b-v3-rev2 \
+    --run_name Home-3B-v2_ha-GGUF \
     --base_model microsoft/phi-2 \
     --add_pad_token \
     --add_chatml_tokens \
     --bf16 \
-    --train_dataset data/home_assistant_alpaca_merged_train.json \
+    --train_dataset data/home_assistant_train.json \
     --learning_rate 1e-5 \
     --save_steps 1000 \
     --micro_batch_size 2 --gradient_checkpointing \
@@ -345,7 +345,7 @@ tokenized_train_dataset = datasets["train"].map(tokenize, batched=True).remove_c
 if training_run_args.test_dataset:
     tokenized_test_dataset = datasets["test"].map(tokenize, batched=True).remove_columns(["text"])
 
-tokens_in_train_set = sum(1 for example in tokenized_train_dataset["input_ids"] for token in example if token != tokenizer.pad_token_id)
+tokens_in_train_set = sum(len(example) for example in tokenized_train_dataset["input_ids"])
 print(f"Train dataset has {int(tokens_in_train_set / 1000000)}M tokens")
 
 data_collator = DataCollatorForSupervisedFineTuning(tokenizer=tokenizer)

@@ -297,7 +297,7 @@ home-1b-rev6_1
   - 2000: 0.8551803091013166
   - Final (2322): 0.8586147681740126
 
-home-1b-rev6_2
+home-1b-rev6_2 = Home-1B-v2-GGUF
 - dataset size: large (change brightness back to percentages; increase color references by ~2x)
 - evaluation results: 
   - 400: 0.7856064418721691
@@ -307,9 +307,13 @@ home-1b-rev6_2
   - 2000: 0.8852541519879215
   - Final (2048): 
 
-home-3b-v3-rev2
+home-3b-v3-rev2 = Home-3B-v2_alpaca-GGUF
 - dataset size: xl + alpaca
-- evaluation results: train failed (need to run again without evaluate turned on)
+- evaluation results: 0.8731756416708606
+
+Home-3B-v2_ha-GGUF
+- dataset size: large
+- evaluation results: FAILED (again.....)
 
 # Datasets
 
