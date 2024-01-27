@@ -45,9 +45,16 @@ def closest_color(requested_color):
 class DeviceType:
     name: str
     possible_states: list[(str, float)]
-    services: list[str]
+    services: dict[str, list]
 
-    def get_random_state(self, **kwargs):
+    def get_all_services(self, extra_exposed_attributes):
+        result = []
+        for service in self.services.keys():
+            args = set(extra_exposed_attributes).intersection(self.services[service])
+            result.append(f"{self.name}.{service}({','.join(args)})")
+        return result
+
+    def get_random_state(self, extra_exposed_attributes=[]):
         states = [ x[0] for x in self.possible_states ]
         weights = [ x[1] for x in self.possible_states ]
         return random.choices(states, weights=weights, k=1)[0]
@@ -59,46 +66,62 @@ class LightDeviceType(DeviceType):
                 (STATE_ON, 0.5),
                 (STATE_OFF, 0.5)
             ],
-            services=[
-                "turn_on",
-                "turn_off",
-                "toggle"
-            ],
+            services={
+                "turn_on": [ "rgb_color", "brightness" ],
+                "turn_off": [],
+                "toggle": []
+            },
         )
 
-    def get_random_state(self, force_rgb=False, force_brightness=False, **kwargs):
-        state = super().get_random_state()
+    def get_random_state(self, extra_exposed_attributes=[]):
+        state = super().get_random_state(extra_exposed_attributes=extra_exposed_attributes)
 
-        if random.random() < 0.05 or force_rgb:
+        if random.random() < 0.5 and "rgb_color" in extra_exposed_attributes:
             random_rgb = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
             state = state + ";" + closest_color(random_rgb) + " " + str(random_rgb)
 
-        if random.random() < 0.3 or force_brightness:
+        if random.random() < 0.7 and "brightness" in extra_exposed_attributes:
             state = state + ";" + str(random.randint(0, 100)) + "%"
 
         return state
     
 class ClimateDeviceType(DeviceType):
     def __init__(self):
-        super().__init__("climate", [], [
-            "turn_on",
-            "turn_off",
-            "toggle",
-            "set_temperature",
-            "set_humidity",
-            "set_fan_mode",
-            "set_hvac_mode",
-            "set_preset_mode"
-        ])
+        super().__init__("climate", [], {
+            "turn_on": [],
+            "turn_off": [],
+            "toggle": [],
+            "set_temperature": ["temperature"],
+            "set_humidity": ["humidity"],
+            "set_fan_mode": ["fan_mode"],
+            "set_hvac_mode": ["hvac_mode"],
+            "set_preset_mode": ["preset_mode"]
+        })
 
-    def get_random_state(self, **kwargs):
-        hvac = random.choice(["heat", "cool", "heat_cool", "off", "auto", "fan_only"])
-        fan = random.choice(["On Low", "On High", "Auto Low", "Auto High", "Off"])
-        if random.random() > 0.5:
-            temp = str(random.randint(60, 80)) + "F"
-        else:
-            temp = str(random.randint(15, 25)) + "C"
-        return f"{hvac};{fan};{temp}"
+    def get_random_state(self, extra_exposed_attributes=[]):
+        """state;fan_mode;temperature;humidity"""
+        state = random.choice(["heat", "cool", "heat_cool", "off", "auto", "fan_only"])
+
+        if "fan_mode" in extra_exposed_attributes:
+            state = state  + ";" + random.choice(["On Low", "On High", "Auto Low", "Auto High", "Off"])
+        if "temperature" in extra_exposed_attributes:
+            if random.random() > 0.5:
+                state = state + ";" + str(random.randint(60, 80)) + "F"
+            else:
+                state = state + ";" + str(random.randint(15, 25)) + "C"
+        if "humidity" in extra_exposed_attributes:
+            state = state + ";" + str(random.randint(10, 90)) + "%"
+
+        if "preset_mode" in extra_exposed_attributes:
+            # if it is not "on a preset" then don't add the mode
+            random_mode = random.choice(["home", "eco", "away", "auto", None, None, None])
+            if random_mode:
+                state = state + ";" + random_mode
+
+        return state
+    
+with open("piles/pile_of_media_names.csv") as f:
+    pile_of_media_names = [ x.strip() for x in f.readlines() ]
 
 class MediaPlayerDeviceType(DeviceType):
     def __init__(self):
@@ -110,31 +133,29 @@ class MediaPlayerDeviceType(DeviceType):
             (STATE_PAUSED, 0.05),
             (STATE_STANDBY, 0.05),
             (STATE_BUFFERING, 0.01),
-        ], [
-            "turn_on",
-            "turn_off",
-            "toggle",
-            "volume_up",
-            "volume_down",
-            "volume_mute",
-            "media_play_pause",
-            "media_play",
-            "media_pause",
-            "media_stop",
-            "media_next_track",
-            "media_previous_track"
-        ])
+        ], {
+            "turn_on": [],
+            "turn_off": [],
+            "toggle": [],
+            "volume_up": [],
+            "volume_down": [],
+            "volume_mute": [],
+            "media_play_pause": [],
+            "media_play": [],
+            "media_pause": [],
+            "media_stop": [],
+            "media_next_track": [],
+            "media_previous_track": []
+        })
+        
 
-        with open("piles/pile_of_media_names.csv") as f:
-            self.media_names = [ x.strip() for x in f.readlines() ]
+    def get_random_state(self, extra_exposed_attributes=[]):
+        state = super().get_random_state(extra_exposed_attributes=extra_exposed_attributes)
 
-    def get_random_state(self, **kwargs):
-        state = super().get_random_state()
+        if "media_title" in extra_exposed_attributes and state in [STATE_PLAYING, STATE_PAUSED, STATE_BUFFERING, STATE_ON]:
+            state = state + ";" + random.choice(pile_of_media_names)
 
-        if state in [STATE_PLAYING, STATE_PAUSED, STATE_BUFFERING, STATE_ON]:
-            state = state + ";" + random.choice(self.media_names)
-
-        if state != STATE_OFF:
+        if "volume_level" in extra_exposed_attributes and state != STATE_OFF:
             state = state + ";vol=" + str(round(random.random(), 2))
         return state
 
@@ -146,11 +167,11 @@ SUPPORTED_DEVICES = {
             (STATE_ON, 0.5),
             (STATE_OFF, 0.5)
         ],
-        services=[
-            "turn_on",
-            "turn_off",
-            "toggle"
-        ],
+        services={
+            "turn_on": [],
+            "turn_off": [],
+            "toggle": []
+        },
     ),
     "fan": DeviceType(
         name="fan",
@@ -158,13 +179,13 @@ SUPPORTED_DEVICES = {
             (STATE_ON, 0.5),
             (STATE_OFF, 0.5)
         ],
-        services=[
-            "turn_on",
-            "turn_off",
-            "toggle",
-            "increase_speed",
-            "decrease_speed",
-        ],
+        services={
+            "turn_on": [],
+            "turn_off": [],
+            "toggle": [],
+            "increase_speed": [],
+            "decrease_speed": [],
+        },
     ),
     "garage_door": DeviceType(
         name="garage_door",
@@ -174,12 +195,12 @@ SUPPORTED_DEVICES = {
             (STATE_OPENING, 0.01),
             (STATE_CLOSING, 0.01)
         ],
-        services=[
-            "open_cover",
-            "close_cover",
-            "stop_cover",
-            "toggle",
-        ],
+        services={
+            "open_cover": [],
+            "close_cover": [],
+            "stop_cover": [],
+            "toggle": [],
+        },
     ),
     "blinds": DeviceType(
         name="blinds",
@@ -189,12 +210,12 @@ SUPPORTED_DEVICES = {
             (STATE_OPENING, 0.01),
             (STATE_CLOSING, 0.01)
         ],
-        services=[
-            "open_cover",
-            "close_cover",
-            "stop_cover",
-            "toggle",
-        ],
+        services={
+            "open_cover": [],
+            "close_cover": [],
+            "stop_cover": [],
+            "toggle": [],
+        },
     ),
     "lock": DeviceType(
         name="lock",
@@ -202,10 +223,10 @@ SUPPORTED_DEVICES = {
             (STATE_LOCKED, 0.5),
             (STATE_UNLOCKED, 0.5),
         ],
-        services=[
-            "lock",
-            "unlock",
-        ],
+        services={
+            "lock": [],
+            "unlock": [],
+        },
     ),
     "media_player": MediaPlayerDeviceType(),
     "climate": ClimateDeviceType()
@@ -282,6 +303,9 @@ def random_device_list(max_devices: int, avoid_device_names: list[str]):
     device_types = set()
     device_list = []
     device_lines = []
+    # TODO: randomly pick attributes for this list
+    extra_exposed_attributes = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "media_title", "volume_level"]
+
     while len(device_list) < num_devices:
         choice = random.choice(possible_choices)
         if choice["device_name"] in device_list:
@@ -296,7 +320,7 @@ def random_device_list(max_devices: int, avoid_device_names: list[str]):
             if avoid_climate and device_type == "climate":
                 continue
 
-            state = SUPPORTED_DEVICES[device_type].get_random_state()
+            state = SUPPORTED_DEVICES[device_type].get_random_state(extra_exposed_attributes=extra_exposed_attributes)
             device_lines.append(format_device_line(
                 device_name=device_name,
                 friendly_name=friendly_name,
@@ -308,7 +332,7 @@ def random_device_list(max_devices: int, avoid_device_names: list[str]):
             print(f"bad device name: {choice}")
             print(repr(ex))
 
-    return device_lines, list(device_types)
+    return device_lines, list(device_types), list(extra_exposed_attributes)
 
 def generate_static_example(action: dict, max_devices: int = 32):
     question = action["english_phrase"]
@@ -317,11 +341,12 @@ def generate_static_example(action: dict, max_devices: int = 32):
     service_name = f"{device_type}.{action['service_name']}"
     friendly_name = target_device.split(".")[1].replace("_", " ")
 
-    device_list, device_types = random_device_list(max_devices=max_devices, avoid_device_names=[target_device])
+    device_list, device_types, extra_exposed_attributes = random_device_list(
+        max_devices=max_devices, avoid_device_names=[target_device])
 
     # insert our target device somewhere random in the list
     index = random.randint(0, len(device_list))
-    state = SUPPORTED_DEVICES[device_type].get_random_state()
+    state = SUPPORTED_DEVICES[device_type].get_random_state(extra_exposed_attributes=extra_exposed_attributes)
 
     device_list.insert(index, format_device_line(
         device_name=target_device,
@@ -332,7 +357,7 @@ def generate_static_example(action: dict, max_devices: int = 32):
     # gather a list of all available services
     available_services = []
     for x in set(device_types + [device_type]):
-        available_services.extend([ f"{x}.{y}" for y in SUPPORTED_DEVICES[x].services ])
+        available_services.extend(SUPPORTED_DEVICES[x].get_all_services(extra_exposed_attributes))
 
     return {
         "states": device_list,
@@ -355,17 +380,23 @@ def generate_templated_example(template: dict, max_devices: int = 32):
         device_dict["type"] = device_type
         chosen_devices.append(device_dict)
 
-    device_list, device_types = random_device_list(max_devices=max_devices, avoid_device_names=[d["device_name"] for d in chosen_devices])
+    device_list, device_types, extra_exposed_attributes = random_device_list(
+        max_devices=max_devices, avoid_device_names=[d["device_name"] for d in chosen_devices])
 
     # insert our target device somewhere random in the list
     for device_dict in chosen_devices:
         index = random.randint(0, len(device_list))
-        state_kwargs = {}
-        if "<brightness>" in question_template:
-            state_kwargs["force_brightness"] = True
-        if "<color>" in question_template:
-            state_kwargs["force_rgb"] = True
-        state = SUPPORTED_DEVICES[device_dict["type"]].get_random_state(**state_kwargs)
+        if "<brightness>" in question_template and "brightness" not in extra_exposed_attributes:
+            extra_exposed_attributes.append("brightness")
+        if "<color>" in question_template and "rgb_color" not in extra_exposed_attributes:
+            extra_exposed_attributes.append("rgb_color")
+        if ("<temp_f>" in question_template or "<temp_c>" in question_template) \
+            and "temperature" not in extra_exposed_attributes:
+            extra_exposed_attributes.append("temperature")
+        if "<humidity>" in question_template and "humidity" not in extra_exposed_attributes:
+            extra_exposed_attributes.append("humidity")
+
+        state = SUPPORTED_DEVICES[device_dict["type"]].get_random_state(extra_exposed_attributes=extra_exposed_attributes)
         device_name = device_dict["device_name"]
         friendly_name = device_dict["description"]
 
@@ -375,10 +406,10 @@ def generate_templated_example(template: dict, max_devices: int = 32):
             state=state
         ))
 
-    # gather a list of all available services
+    # gather a list of all available services with arguments
     available_services = []
     for x in set(device_types + template_device_types):
-        available_services.extend([ f"{x}.{y}" for y in SUPPORTED_DEVICES[x].services ])
+        available_services.extend(SUPPORTED_DEVICES[x].get_all_services(extra_exposed_attributes))
 
     # generate the question
     if len(template_device_types) == 1:
@@ -416,11 +447,17 @@ def generate_templated_example(template: dict, max_devices: int = 32):
             service_calls = [ { **call, "humidity": humidity} for call in service_calls ]
 
     if any(["light" in service for service in service_names ]):
+        if "<brightness_pct>" in question:
+            brightness_pct = random.randint(0, 100)
+            question = question.replace("<brightness_pct>", str(brightness_pct))
+            answer = answer.replace("<brightness_pct>", str(brightness_pct))
+            service_calls = [ { **call, "brightness": int(255 * (brightness_pct / 100))} for call in service_calls ]
+
         if "<brightness>" in question:
-            brightness = random.randint(0, 100)
+            brightness = random.randint(0, 255)
             question = question.replace("<brightness>", str(brightness))
             answer = answer.replace("<brightness>", str(brightness))
-            service_calls = [ { **call, "brightness_pct": brightness} for call in service_calls ]
+            service_calls = [ { **call, "brightness": brightness } for call in service_calls ]
 
         if "<color>" in question:
             random_rgb = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
@@ -450,7 +487,7 @@ def generate_status_request(template: dict, max_devices: int = 32):
     chosen_device = random.choice(stacks_of_device_names[device_type])
 
     # build a random list of devices
-    device_list, device_types = random_device_list(max_devices=max_devices, avoid_device_names=[ chosen_device["device_name"] ])
+    device_list, device_types, extra_exposed_attributes = random_device_list(max_devices=max_devices, avoid_device_names=[ chosen_device["device_name"] ])
 
     # insert our target device somewhere random in the list
     index = random.randint(0, len(device_list))
@@ -487,16 +524,20 @@ def generate_status_request(template: dict, max_devices: int = 32):
 
     if device_type == "media_player":
         volume = random.randint(0, 100)
+        random_media = random.choice(pile_of_media_names)
 
         answer = answer.replace("<volume>", str(volume) + "%")
         state_name = state_name.replace("<volume>", str(volume) + "%")
+
+        answer = answer.replace("<media>", random_media)
+        state_name = state_name.replace("<media>", random_media)
 
     device_list.insert(index, f"{chosen_device['device_name']} = {state_name}")
 
     # gather a list of all available services
     available_services = []
     for x in set(device_types + [device_type]):
-        available_services.extend([ f"{x}.{y}" for y in SUPPORTED_DEVICES[x].services ])
+        available_services.extend(SUPPORTED_DEVICES[x].get_all_services(extra_exposed_attributes))
 
     return {
         "states": device_list,
@@ -510,8 +551,6 @@ def format_example(example):
     sys_prompt = "You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed or answer the following question with the information provided only."
     services_block = "Services: " + ", ".join(sorted(example["available_services"]))
     states_block = "Devices:\n" + "\n".join(example["states"])
-    # question = "Request:\n" + example["question"]
-    # answers = "Response:\n" + " ".join(example["answers"])
     question = example["question"]
     answers = " ".join(example["answers"])
 
@@ -572,11 +611,12 @@ def format_alpaca(example):
 
     answer = example["output"]
 
-    device_list, device_types = random_device_list(max_devices=32, avoid_device_names=[])
+    device_list, device_types, extra_exposed_attributes = random_device_list(
+        max_devices=32, avoid_device_names=[])
 
     available_services = []
     for x in device_types:
-        available_services.extend([ f"{x}.{y}" for y in SUPPORTED_DEVICES[x].services ])
+        available_services.extend(SUPPORTED_DEVICES[x].get_all_services(extra_exposed_attributes))
 
     text = format_example(example={
         "states": device_list,
