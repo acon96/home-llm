@@ -447,17 +447,11 @@ def generate_templated_example(template: dict, max_devices: int = 32):
             service_calls = [ { **call, "humidity": humidity} for call in service_calls ]
 
     if any(["light" in service for service in service_names ]):
-        if "<brightness_pct>" in question:
-            brightness_pct = random.randint(0, 100)
-            question = question.replace("<brightness_pct>", str(brightness_pct))
-            answer = answer.replace("<brightness_pct>", str(brightness_pct))
-            service_calls = [ { **call, "brightness": int(255 * (brightness_pct / 100))} for call in service_calls ]
-
         if "<brightness>" in question:
-            brightness = random.randint(0, 255)
+            brightness = random.randint(0, 100)
             question = question.replace("<brightness>", str(brightness))
             answer = answer.replace("<brightness>", str(brightness))
-            service_calls = [ { **call, "brightness": brightness } for call in service_calls ]
+            service_calls = [ { **call, "brightness": round(brightness / 100, 2) } for call in service_calls ]
 
         if "<color>" in question:
             random_rgb = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
@@ -661,6 +655,7 @@ def main():
     train_size_group.add_argument('--small', action='store_const', const='small', dest='size')
     train_size_group.add_argument('--medium', action='store_const', const='medium', dest='size')
     train_size_group.add_argument('--large', action='store_const', const='large', dest='size')
+    train_size_group.add_argument('--xl', action='store_const', const='xl', dest='size')
 
     args = parser.parse_args()
 
@@ -674,6 +669,8 @@ def main():
             generate_example_file("home_assistant_train", 42, static_factor=5, template_factor=15, status_request_factor=12)
         elif args.size == "large":
             generate_example_file("home_assistant_train", 42, static_factor=5, template_factor=20, status_request_factor=15)
+        elif args.size == "xl":
+            generate_example_file("home_assistant_train", 42, static_factor=7, template_factor=25, status_request_factor=18)
         else:
             raise Exception(f"Unrecognized dataset size: {args.size}")
     if args.test:

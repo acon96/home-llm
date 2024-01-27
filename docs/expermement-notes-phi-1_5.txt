@@ -283,9 +283,33 @@ home-3b-v3-rev1
 - dataset size: large
 - evaluation results: 0.9091954022988505
 
-home-3b-v3-rev2
-- dataset size: large + alpaca
+home-1b-rev6
+- dataset size: large (fixed templates + function calling arguments; brightness is broken)
+- evaluation results: 0.8254149971379507
+
+home-1b-rev6_1
+- dataset size: xl (fixed templates + function calling arguments; 0-255 brightness is broken)
 - evaluation results: 
+  - 400: 0.7240984544934173
+  - 800: 0.8311390955924441
+  - 1200: 0.8471665712650257
+  - 1600: 0.8597595878649112
+  - 2000: 0.8551803091013166
+  - Final (2322): 0.8586147681740126
+
+home-1b-rev6_2
+- dataset size: large (change brightness back to percentages; increase color references by ~2x)
+- evaluation results: 
+  - 400: 0.7856064418721691
+  - 800: 0.864116759
+  - 1200: 0.882234524
+  - 1600: 0.885254152
+  - 2000: 0.8852541519879215
+  - Final (2048): 
+
+home-3b-v3-rev2
+- dataset size: xl + alpaca
+- evaluation results: train failed (need to run again without evaluate turned on)
 
 # Datasets
 
@@ -302,11 +326,9 @@ Intel Orca DPO Pairs: https://huggingface.co/datasets/Intel/orca_dpo_pairs
 Huggingface Ultrachat: https://huggingface.co/datasets/HuggingFaceH4/ultrafeedback_binarized
 
 ----------------------------------------------------------------------------------------------------
-python3 evaluate.py home-1b-rev5_2/checkpoint-600 --batch-size 12 && \
-  python3 evaluate.py home-1b-rev5_2/checkpoint-800 --batch-size 12  && \
-  python3 evaluate.py home-1b-rev5_2/checkpoint-1000 --batch-size 12 && \
-  python3 evaluate.py home-1b-rev5_2/checkpoint-1200 --batch-size 12 && \
-  python3 evaluate.py home-1b-rev5_2/checkpoint-1400 --batch-size 12 && \
-  python3 evaluate.py home-1b-rev5_2/checkpoint-1600 --batch-size 12 && \
-  python3 evaluate.py home-1b-rev5_2/checkpoint-1800 --batch-size 12 && \
-  python3 evaluate.py home-1b-rev5_2 --batch-size 12
+python3 evaluate.py home-1b-rev6_2/checkpoint-400 --batch-size 10 && \
+  python3 evaluate.py home-1b-rev6_2/checkpoint-800 --batch-size 10  && \
+  python3 evaluate.py home-1b-rev6_2/checkpoint-1200 --batch-size 10 && \
+  python3 evaluate.py home-1b-rev6_2/checkpoint-1600 --batch-size 10 && \
+  python3 evaluate.py home-1b-rev6_2/checkpoint-2000 --batch-size 10 && \
+  python3 evaluate.py home-1b-rev6_2 --batch-size 10
