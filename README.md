@@ -203,12 +203,12 @@ The RPI4 4GB that I have was sitting right at 1.5 tokens/sec for prompt eval and
 It is highly recommend to set up text-generation-webui on a separate machine that can take advantage of a GPU.
 
 ## Version History
-| Version | Description                                                                                                                                    |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| v0.2.5  | Fix Ollama max tokens parameter, add parameters to function calling for dataset + component, & model update                                    |
-| v0.2.4  | Fix API key auth on model load for text-generation-webui, and add support for Ollama API backend                                               |
-| v0.2.3  | Fix API key auth, Support chat completion endpoint, and refactor to make it easier to add more remote backends                                 |
-| v0.2.2  | Fix options window after upgrade, fix training script for new Phi model format, and release new models                                         |
-| v0.2.1  | Properly expose generation parameters for each backend, handle config entry updates without reloading, support remote backends with an API key |
-| v0.2    | Bug fixes, support more backends, support for climate + switch devices, JSON style function calling with parameters, GBNF grammars             |
-| v0.1    | Initial Release                                                                                                                                |
+| Version | Description                                                                                                                                                                                      |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| v0.2.5  | Fix Ollama max tokens parameter, fix GGUF download from Hugging Face, update included llama-cpp-python to 0.2.32, and add parameters to function calling for dataset + component, & model update |
+| v0.2.4  | Fix API key auth on model load for text-generation-webui, and add support for Ollama API backend                                                                                                 |
+| v0.2.3  | Fix API key auth, Support chat completion endpoint, and refactor to make it easier to add more remote backends                                                                                   |
+| v0.2.2  | Fix options window after upgrade, fix training script for new Phi model format, and release new models                                                                                           |
+| v0.2.1  | Properly expose generation parameters for each backend, handle config entry updates without reloading, support remote backends with an API key                                                   |
+| v0.2    | Bug fixes, support more backends, support for climate + switch devices, JSON style function calling with parameters, GBNF grammars                                                               |
+| v0.1    | Initial Release                                                                                                                                                                                  |
