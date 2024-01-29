@@ -11,6 +11,9 @@ import os
 import json
 import webcolors
 
+import voluptuous as vol
+from collections.abc import Iterable
+
 import homeassistant.components.conversation as ha_conversation
 from homeassistant.components.conversation import ConversationInput, ConversationResult, AbstractConversationAgent
 from homeassistant.components.conversation.const import DOMAIN as CONVERSATION_DOMAIN
@@ -169,6 +172,24 @@ def closest_color(requested_color):
         min_colors[(rd + gd + bd)] = name
     return min_colors[min(min_colors.keys())]
 
+def flatten_schema(schema):
+    flattened = []
+    def _flatten(current_schema, prefix=''):
+        if isinstance(current_schema, vol.Schema):
+            if isinstance(current_schema.schema, vol.validators._WithSubValidators):
+                for subval in current_schema.schema.validators:
+                    _flatten(subval, prefix)
+            else:
+                for key, val in current_schema.schema.items():
+                    _flatten(val, prefix + str(key) + '/')
+        elif isinstance(current_schema, vol.validators._WithSubValidators):
+            for subval in current_schema.validators:
+                _flatten(subval, prefix)
+        elif callable(current_schema):
+            flattened.append(prefix[:-1] if prefix else prefix)
+    _flatten(schema)
+    return flattened
+
 class LLaMAAgent(AbstractConversationAgent):
     """Local LLaMA conversation agent."""
 
@@ -216,6 +237,8 @@ class LLaMAAgent(AbstractConversationAgent):
         raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
         refresh_system_prompt = self.entry.options.get(CONF_REFRESH_SYSTEM_PROMPT, DEFAULT_REFRESH_SYSTEM_PROMPT)
         service_call_regex = self.entry.options.get(CONF_SERVICE_CALL_REGEX, DEFAULT_SERVICE_CALL_REGEX)
+        extra_attributes_to_expose = self.entry.options \
+            .get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE)
 
         try:
             service_call_pattern = re.compile(service_call_regex)
@@ -298,24 +321,37 @@ class LLaMAAgent(AbstractConversationAgent):
                     service = json_output["service"]
                     entity = json_output["target_device"]
                     domain, service = tuple(service.split("."))
+                    extra_arguments = { k: v for k, v in json_output.items() if k not in [ "service", "target_device" ] }
                 except Exception:
                     try:
                         service = line.split("(")[0]
                         entity = line.split("(")[1][:-1]
                         domain, service = tuple(service.split("."))
+                        extra_arguments = {}
                     except Exception:
                         to_say += f" Failed to parse call from '{line}'!"
                         continue
+
+                # fix certain arguments
+                # make sure brightness is 0-255 and not a percentage
+                if "brightness" in extra_arguments and 0.0 < extra_arguments["brightness"] < 1.0:
+                    extra_arguments["brightness"] = int(extra_arguments["brightness"] * 255)
 
                 # only acknowledge requests to exposed entities
                 if entity not in exposed_entities:
                     to_say += f" Can't find device '{entity}'!"
                 else:
+                    # copy arguments to service call
+                    service_data = {ATTR_ENTITY_ID: entity}
+                    for attr in extra_attributes_to_expose:
+                        if attr in extra_arguments.keys():
+                            service_data[attr] = extra_arguments[attr]
+                    
                     try:
                         await self.hass.services.async_call(
                             domain,
                             service,
-                            service_data={ATTR_ENTITY_ID: entity},
+                            service_data=service_data,
                             blocking=True,
                         )
                     except Exception as err:
@@ -386,7 +422,7 @@ class LLaMAAgent(AbstractConversationAgent):
 
                 value = attributes[attribute_name]
                 if value is not None:
-                    if attribute_name == "current_temperature":
+                    if attribute_name == "temperature":
                         value = int(value)
                         if value > 50:
                             value = f"{value}F"
@@ -396,6 +432,10 @@ class LLaMAAgent(AbstractConversationAgent):
                         value = F"{closest_color(value)} {value}"
                     elif attribute_name == "volume_level":
                         value = f"vol={int(value*100)}"
+                    elif attribute_name == "brightness":
+                        value = f"{int(value/255*100)}%"
+                    elif attribute_name == "humidity":
+                        value = f"{value}%"
 
                     result = result + ";" + str(value)
             return result
@@ -407,10 +447,10 @@ class LLaMAAgent(AbstractConversationAgent):
         service_dict = self.hass.services.async_services()
         all_services = []
         for domain in domains:
-            # all_services.extend(service_dict.get(domain, {}).keys())
-            all_services.extend(
-                [f"{domain}.{name}" for name in service_dict.get(domain, {}).keys()]
-            )
+            for name, service in service_dict.get(domain, {}).items():
+                args = flatten_schema(service.schema)
+                args_to_expose = set(args).intersection(extra_attributes_to_expose)
+                all_services.append(f"{domain}.{name}({','.join(args_to_expose)})")
         formatted_services = ", ".join(all_services)
 
         return template.Template(prompt_template, self.hass).async_render(
@@ -744,7 +784,7 @@ class OllamaAPIAgent(LLaMAAgent):
             "options": {
                 "top_p": top_p,
                 "temperature": temperature,
-                "num_ctx": max_tokens,
+                "num_predict": max_tokens,
             }   
         }
         

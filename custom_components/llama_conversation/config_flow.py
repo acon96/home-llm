@@ -11,7 +11,7 @@ from typing import Any
 from abc import ABC, abstractmethod
 from importlib.metadata import version
 
-from huggingface_hub import hf_hub_download
+from huggingface_hub import hf_hub_download, HfFileSystem
 
 import voluptuous as vol
 
@@ -136,7 +136,7 @@ def STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(*, chat_model=None, downloaded_model_q
         }
     )
 
-def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, chat_model=None, use_chat_endpoint=None, webui_preset=None, webui_chat_mode=None):
+def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, chat_model=None, use_chat_endpoint=None, webui_preset="", webui_chat_mode=""):
 
     extra1, extra2 = ({}, {})
     default_port = DEFAULT_PORT
@@ -144,7 +144,7 @@ def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, ch
     if backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI: 
         extra1[vol.Optional(CONF_TEXT_GEN_WEBUI_PRESET, default=webui_preset)] = str
         extra1[vol.Optional(CONF_TEXT_GEN_WEBUI_CHAT_MODE, default=webui_chat_mode)] = SelectSelector(SelectSelectorConfig(
-            options=[TEXT_GEN_WEBUI_CHAT_MODE_CHAT, TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT, TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT],
+            options=["", TEXT_GEN_WEBUI_CHAT_MODE_CHAT, TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT, TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT],
             translation_key=CONF_TEXT_GEN_WEBUI_CHAT_MODE,
             multiple=False,
             mode=SelectSelectorMode.DROPDOWN,
@@ -170,15 +170,19 @@ def download_model_from_hf(
     model_name: str, quantization_type: str, storage_folder: str
 ):
     try:
-        expected_filename = (
-            model_name.split("/")[1].removesuffix("-GGUF") + f".{quantization_type}.gguf"
-        )
+        fs = HfFileSystem()
+        potential_files = [ f for f in fs.glob(f"{model_name}/*.gguf") ]
+        wanted_file = [f for f in potential_files if (f".{quantization_type.lower()}." in f or f".{quantization_type.upper()}." in f)]
+
+        if len(wanted_file) != 1:
+            raise Exception(f"The quantization '{quantization_type}' does not exist in the HF repo for {model_name}")
+
         os.makedirs(storage_folder, exist_ok=True)
 
         return hf_hub_download(
             repo_id=model_name,
             repo_type="model",
-            filename=expected_filename,
+            filename=wanted_file[0].removeprefix(model_name + "/"),
             resume_download=True,
             cache_dir=storage_folder,
         )
@@ -446,6 +450,8 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             )
 
         download_result = user_input["result"]
+        self.download_task = None
+
         if isinstance(download_result, Exception):
             _LOGGER.info("Failed to download model: %s", repr(download_result))
             self.download_error = download_result
@@ -485,7 +491,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
     ) -> FlowResult:
         errors = {}
         backend_type = self.model_config[CONF_BACKEND_TYPE]
-        schema = STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI)
+        schema = STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type)
 
         if user_input:
             try:
@@ -499,7 +505,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                     if error_reason:
                         errors["base"] = error_reason
                         schema = STEP_REMOTE_SETUP_DATA_SCHEMA(
-                            True,
+                            backend_type,
                             host=user_input[CONF_HOST],
                             port=user_input[CONF_PORT],
                             chat_model=user_input[CONF_CHAT_MODEL],

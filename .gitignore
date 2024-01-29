@@ -7,3 +7,5 @@ data/*.json
 *.pyc
 main.log
 .venv
+*.xlsx
+notes.txt

@@ -3,8 +3,10 @@
 import math
 import copy
 import torch
+import numpy as np
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer, \
     PreTrainedTokenizerFast, HfArgumentParser, GPTQConfig, AutoConfig
+from transformers.trainer_utils import EvalPrediction
 from datasets import load_dataset
 from dataclasses import dataclass, field
 from typing import Dict, Optional, Sequence
@@ -15,13 +17,12 @@ Phi Modules: fc1,fc2,q_proj,v_proj,k_proj,dense,embed_tokens,lm_head
 
 """
 python3 train.py \
-    --run_name home-3b-v2-rev3 \
+    --run_name Home-3B-v2_ha-GGUF \
     --base_model microsoft/phi-2 \
     --add_pad_token \
     --add_chatml_tokens \
     --bf16 \
-    --train_dataset data/home_assistant_alpaca_merged_train.json \
-    --test_dataset data/home_assistant_alpaca_merged_test.json \
+    --train_dataset data/home_assistant_train.json \
     --learning_rate 1e-5 \
     --save_steps 1000 \
     --micro_batch_size 2 --gradient_checkpointing \
@@ -31,7 +32,7 @@ python3 train.py \
 
 """
 python3 train.py \
-    --run_name home-1b-rev4 \
+    --run_name home-1b-rev6 \
     --base_model microsoft/phi-1_5 \
     --add_pad_token \
     --add_chatml_tokens \
@@ -40,7 +41,7 @@ python3 train.py \
     --test_dataset data/home_assistant_test.json \
     --learning_rate 1e-5 \
     --micro_batch_size 4 --gradient_checkpointing \
-    --ctx_size 2048
+    --ctx_size 2048 --save_steps 200
 """
 
 """
@@ -56,21 +57,23 @@ python3 train.py \
 @dataclass
 class TrainingRunArguments:
     run_name: str = field(metadata={"help": "The folder to save the output model under"})
-    train_dataset: str = field(metadata={"help": "The JSON file containing the training dataset"})
-    test_dataset: str = field(metadata={"help": "The JSON file containing the evaluation dataset"})
     base_model: str = field(metadata={"help": "The base model to load for fine-tuning"})
+    train_dataset: str = field(metadata={"help": "The JSON file containing the training dataset"})
+    test_dataset: str = field(default=None, metadata={"help": "The JSON file containing the evaluation dataset"})
     ctx_size: int = field(default=2048, metadata={"help": "The number of tokens to pad & truncate the input examples to"})
     bf16: bool = field(default=False, metadata={"help": "If set, the model will the loaded and trained in bf16 instead of fp16"})
     batch_size: int = field(default=8, metadata={"help": "The simulated 'batch size' that we will train on. will tweak gradient accumulations steps"})
     micro_batch_size: int = field(default=2, metadata={"help": "The actual batch size that will fit into VRAM on this machine"})
+    eval_batch_size: int = field(default=1, metadata={"help": "The batch size for generation used while performing evaluation"})
     epochs: int = field(default=1, metadata={"help": "The number of times to train the model on each example"})
     learning_rate: float = field(default=1e-5, metadata={"help": "The starting learning rate (speed at which the model trains)"})
     learning_rate_schedule: str = field(default="cosine", metadata={"help": "How fast the learning rate is reduced during training"})
     weight_decay: float = field(default=0.1, metadata={"help": ""})
     gradient_clip: float = field(default=1.0, metadata={"help": ""})
     resume_from_checkpoint: str = field(default="", metadata={"help": "The name of the checkpoint to resume training from"})
-    eval_steps: int = field(default=100, metadata={"help": "The number of steps in between evaluations of the model"})
+    eval_steps: int = field(default=200, metadata={"help": "The number of steps in between evaluations of the model; set to -1 to evaluate every epoch"})
     save_steps: int = field(default=-1, metadata={"help": "The number of steps in between model checkpoints; set to -1 to save every epoch"})
+    save_total_limit: int = field(default=1, metadata={"help": "The number of recent checkpoints of the model to save (not including the final model)"})
     group_by_length: bool = field(default=False, metadata={"help": "If enabled, the training data will be grouped by length to optimize use of padding"})
     
     # Quantization
@@ -99,8 +102,6 @@ training_run_args, _ = parser.parse_args_into_dataclasses(return_remaining_strin
 if sum([training_run_args.load_in_8bit, training_run_args.load_in_4bit, training_run_args.load_as_gptq]) > 1:
     raise Exception("Please select exactly one of 'load_in_8bit', 'load_in_4bit', or 'load_as_gptq")
 
-# TODO: write a proper evaluation script
-
 print(f"Loading model '{training_run_args.base_model}'...")
 
 model_kwargs = {}
@@ -118,6 +119,7 @@ else:
     model_kwargs["torch_dtype"] = torch.float16
 
 # model_kwargs["resid_pdrop"] = 0.0
+# model_kwargs["revision"] = "accfee56d8988cae60915486310362db5831b1bd"
 
 def find_max_vram(min_buffer_mib=800):
     total_mem = (torch.cuda.get_device_properties(0).total_memory / (1024 * 1024))
@@ -136,10 +138,11 @@ model = AutoModelForCausalLM.from_pretrained(
     max_memory=find_max_vram(),
     **model_kwargs
 )
-tokenizer = AutoTokenizer.from_pretrained(training_run_args.base_model, trust_remote_code=True, use_fast=False)
+tokenizer = AutoTokenizer.from_pretrained(training_run_args.base_model, trust_remote_code=True)
 
 if training_run_args.add_pad_token:
     tokenizer.add_special_tokens({'pad_token': '<|pad|>'})
+    model.config.pad_token_id = tokenizer.pad_token_id
 
 if training_run_args.add_chatml_tokens:
     tokenizer.add_special_tokens({
@@ -149,6 +152,8 @@ if training_run_args.add_chatml_tokens:
 
     model.config.bos_token_id = tokenizer.bos_token_id
     model.config.eos_token_id = tokenizer.eos_token_id
+
+    # TODO: add chatml template to tokenizer for auto-formatting
 
 embeddings_len = math.ceil(len(tokenizer) / 32) * 32
 if model.get_input_embeddings().num_embeddings < embeddings_len:
@@ -183,31 +188,37 @@ if training_run_args.use_lora:
 base_dir = "loras" if training_run_args.use_lora else "models"
 model_dir = f"./{base_dir}/{training_run_args.run_name}"
 
-# TODO: eval is broken (returning NaN for loss)
+training_kwargs = {}
+
+if training_run_args.test_dataset:
+    training_kwargs.update({
+        "per_device_eval_batch_size": training_run_args.eval_batch_size,
+        "evaluation_strategy": ("steps" if training_run_args.eval_steps != -1 else "epoch"),
+        "eval_steps": (training_run_args.eval_steps if training_run_args.eval_steps != -1 else None),
+        "bf16_full_eval": training_run_args.bf16,
+    })
+
 training_args = TrainingArguments(
     per_device_train_batch_size=training_run_args.micro_batch_size,
-    # per_device_eval_batch_size=training_run_args.micro_batch_size,
     gradient_accumulation_steps=training_run_args.batch_size//training_run_args.micro_batch_size,
     gradient_checkpointing=training_run_args.gradient_checkpointing,
-    # weight_decay=training_run_args.weight_decay,
-    # max_grad_norm=training_run_args.gradient_clip,
-    # evaluation_strategy="steps",
-    # eval_steps=training_run_args.eval_steps,
+    weight_decay=training_run_args.weight_decay,
+    max_grad_norm=training_run_args.gradient_clip,
     save_strategy=("steps" if training_run_args.save_steps != -1 else "epoch"),
     save_steps=(training_run_args.save_steps if training_run_args.save_steps != -1 else None),
     save_safetensors=True,
     logging_steps=5, 
     output_dir=model_dir,
     num_train_epochs=training_run_args.epochs,
-    save_total_limit=1,
-    # dataloader_pin_memory=False,
+    save_total_limit=training_run_args.save_total_limit,
     report_to="tensorboard",
     learning_rate=training_run_args.learning_rate,
     lr_scheduler_type=training_run_args.learning_rate_schedule,
     log_level="info",
     bf16=training_run_args.bf16,
-    # bf16_full_eval=training_run_args.bf16,
-    group_by_length=training_run_args.group_by_length
+    group_by_length=training_run_args.group_by_length,
+    **training_kwargs,
+    # include_inputs_for_metrics=True,
 )
 
 class DataCollatorForSupervisedFineTuning(object):
@@ -315,7 +326,10 @@ class DataCollatorForSupervisedFineTuning(object):
         )
 
 print("Loading dataset...")
-datasets = load_dataset("json", data_files={ "train": training_run_args.train_dataset, "test": training_run_args.test_dataset })
+data_files = { "train": training_run_args.train_dataset }
+if training_run_args.test_dataset:
+    data_files["test"] = training_run_args.test_dataset
+datasets = load_dataset("json", data_files=data_files)
 
 def tokenize(example):
     return tokenizer(
@@ -326,18 +340,24 @@ def tokenize(example):
     )
 
 print("Tokenizing datasets...")
+tokenized_test_dataset = None
 tokenized_train_dataset = datasets["train"].map(tokenize, batched=True).remove_columns(["text"])
-tokenized_test_dataset = datasets["test"].map(tokenize, batched=True).remove_columns(["text"])
+if training_run_args.test_dataset:
+    tokenized_test_dataset = datasets["test"].map(tokenize, batched=True).remove_columns(["text"])
+
+tokens_in_train_set = sum(len(example) for example in tokenized_train_dataset["input_ids"])
+print(f"Train dataset has {int(tokens_in_train_set / 1000000)}M tokens")
 
 data_collator = DataCollatorForSupervisedFineTuning(tokenizer=tokenizer)
 
 import random
 from torch.utils.data import SequentialSampler, Subset, RandomSampler
 class RandomEvalSubsetTrainer(Trainer):
-    def __init__(self, random_eval_sample_pct=0.1, *args, **kwargs):
+    def __init__(self, random_eval_sample_pct=0.1, learning_rate_overshoot=1.15, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.random_eval_sample_pct = random_eval_sample_pct
         self.evaluate_full_dataset = False
+        self.learning_rate_overshoot = learning_rate_overshoot
 
     def evaluate_all(self):
         self.evaluate_full_dataset = True
@@ -359,13 +379,34 @@ class RandomEvalSubsetTrainer(Trainer):
             return super()._get_train_sampler()
         
         return RandomSampler(self.train_dataset, generator=torch.Generator(device='cpu'))
+    
+    def create_scheduler(self, num_training_steps: int, optimizer: torch.optim.Optimizer = None):
+        """
+        Saw this in the chinchilla paper. It says not to go over 25% overshoot
+        Should speed up training by skipping the final fine tuning part that doesn't affect accuracy much
+        """
+        return super().create_scheduler(int(num_training_steps * self.learning_rate_overshoot), optimizer=optimizer)
+    
+def compute_metrics(pred: EvalPrediction):
+    inputs = pred.inputs
+    label_ids = pred.label_ids
+    logits = pred.predictions
+
+    return {"accuracy": 1.0 }
+
+def preprocess_logits_for_metrics(logits, labels):
+    """https://discuss.huggingface.co/t/cuda-out-of-memory-when-using-trainer-with-compute-metrics/2941/22"""
+    pred_ids = torch.argmax(logits, dim=-1)
+    return pred_ids, labels
 
 trainer = RandomEvalSubsetTrainer(
     model=model,
     args=training_args,
     train_dataset=tokenized_train_dataset,
-    # eval_dataset=tokenized_test_dataset,
+    eval_dataset=tokenized_test_dataset,
     data_collator=data_collator,
+    # compute_metrics=compute_metrics,
+    # preprocess_logits_for_metrics=preprocess_logits_for_metrics,
 )
 
 tensorboard_process = None

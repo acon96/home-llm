@@ -23,10 +23,10 @@ RUN \
         python3-venv \
         python3-pip \
     \
-    && git clone https://github.com/oobabooga/text-generation-webui.git ${APP_DIR} --branch snapshot-2024-01-21 \
+    && git clone https://github.com/oobabooga/text-generation-webui.git ${APP_DIR} --branch snapshot-2024-01-28 \
     && python3 -m pip install torch torchvision torchaudio py-cpuinfo==9.0.0 \
     && python3 -m pip install -r ${APP_DIR}/requirements_cpu_only_noavx2.txt -r ${APP_DIR}/extensions/openai/requirements.txt llama-cpp-python \
-    && python3 -m pip install llama-cpp-python==0.2.29 \
+    && python3 -m pip install llama-cpp-python==0.2.32 \
     && apt-get purge -y --auto-remove \
         git \
         build-essential \
