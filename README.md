@@ -8,11 +8,16 @@ The latest models can be found on HuggingFace:
 3B v2 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v2-GGUF  
 1B v2 (Based on Phi-1.5): https://huggingface.co/acon96/Home-1B-v2-GGUF  
 
-Make sure you have `llama-cpp-python>=0.2.29` in order to run these models.
+<details>
 
-Old Models:  
+<summary>Old Models</summary>  
+
 3B v1 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v1-GGUF  
 1B v1 (Based on Phi-1.5): https://huggingface.co/acon96/Home-1B-v1-GGUF  
+
+</details>
+
+Make sure you have `llama-cpp-python>=0.2.29` in order to run these models.
 
 The main difference between the 2 models (besides parameter count) is the training data. The 1B model is ONLY trained on the synthetic dataset provided in this project, while the 3B model is trained on a mixture of this synthetic dataset, and the cleaned Stanford Alpaca dataset.
 
@@ -32,7 +37,7 @@ light.kitchen 'Kitchen Light' = on;80%;red
 light.bedroom 'Bedroom Light' = off<|im_end|>
 ```
 
-For more about how the model is prompted see [./docs/Model Prompting.md]
+For more about how the model is prompted see [Model Prompting](/docs/Model%20Prompting.md)
 
 Output from the model will consist of a response that should be relayed back to the user, along with an optional code block that will invoke different Home Assistant "services". The output format from the model for function calling is as follows:
 
@@ -63,6 +68,9 @@ The supported entity types are: light, fan, cover, lock, media_player, climate, 
 ### Training
 The 3B model was trained as a LoRA on an RTX 3090 (24GB) using the following settings for the custom training script. The embedding weights were "saved" and trained normally along with the rank matricies in order to train the newly added tokens to the embeddings. The full model is merged together at the end. Training took approximately 10 hours.
 
+<details>
+<summary>Training Arguments</summary>
+
 ```
 python3 train.py \
     --run_name home-3b \
@@ -79,7 +87,12 @@ python3 train.py \
     --use_lora --lora_rank 32 --lora_alpha 64 --lora_modules fc1,fc2,q_proj,v_proj,dense --lora_modules_to_save embed_tokens,lm_head --lora_merge
 ```
 
-The 1B model was trained as a full fine-tuning on on an RTX 3090 (24GB). Training took approximately 1.5 hours.
+</details>
+
+The 1B model was trained as a full fine-tuning on on an RTX 3090 (24GB). Training took approximately 2.5 hours.
+
+<details>
+<summary>Training Arguments</summary>
 
 ```
 python3 train.py \
@@ -93,6 +106,9 @@ python3 train.py \
     --micro_batch_size 4 --gradient_checkpointing \
     --ctx_size 2048
 ```
+
+</details>
+<br/>
 
 ## Home Assistant Component
 In order to integrate with Home Assistant, we provide a `custom_component` that exposes the locally running LLM as a "conversation agent" that can be interacted with using a chat interface as well as integrate with Speech-to-Text and Text-to-Speech addons to enable interacting with the model by speaking.  
@@ -142,7 +158,7 @@ You need the following settings in order to configure the "remote" backend:
 
 With the remote text-generation-webui backend, the component will validate that the selected model is available for use and will ensure it is loaded remotely. The Generic OpenAI compatible version does NOT do any validation or model loading.
 
-**Setting up with LocalAI**:
+**Setting up with LocalAI**:  
 If you are an existing LocalAI user or would like to use LocalAI as your backend, please refer to [this](https://io.midori-ai.xyz/howtos/setup-with-ha/) website which has instructions on how to setup LocalAI to work with Home-LLM including automatic installation of the latest version of the the Home-LLM model. The auto-installer (LocalAI Manager) will automatically download and setup LocalAI and/or the model of your choice and automatically create the necessary template files for the model to work with this integration.
 
 ### Configuring the component as a Conversation Agent
@@ -187,11 +203,12 @@ The RPI4 4GB that I have was sitting right at 1.5 tokens/sec for prompt eval and
 It is highly recommend to set up text-generation-webui on a separate machine that can take advantage of a GPU.
 
 ## Version History
-| Version | Description                                                                                                                                    |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| v0.2.4  | Fix API key auth on model load for text-generation-webui, and add support for Ollama API backend                                               |
-| v0.2.3  | Fix API key auth, Support chat completion endpoint, and refactor to make it easier to add more remote backends                                 |
-| v0.2.2  | Fix options window after upgrade, fix training script for new Phi model format, and release new models                                         |
-| v0.2.1  | Properly expose generation parameters for each backend, handle config entry updates without reloading, support remote backends with an API key |
-| v0.2    | Bug fixes, support more backends, support for climate + switch devices, JSON style function calling with parameters, GBNF grammars             |
-| v0.1    | Initial Release                                                                                                                                |
+| Version | Description                                                                                                                                                                                      |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| v0.2.5  | Fix Ollama max tokens parameter, fix GGUF download from Hugging Face, update included llama-cpp-python to 0.2.32, and add parameters to function calling for dataset + component, & model update |
+| v0.2.4  | Fix API key auth on model load for text-generation-webui, and add support for Ollama API backend                                                                                                 |
+| v0.2.3  | Fix API key auth, Support chat completion endpoint, and refactor to make it easier to add more remote backends                                                                                   |
+| v0.2.2  | Fix options window after upgrade, fix training script for new Phi model format, and release new models                                                                                           |
+| v0.2.1  | Properly expose generation parameters for each backend, handle config entry updates without reloading, support remote backends with an API key                                                   |
+| v0.2    | Bug fixes, support more backends, support for climate + switch devices, JSON style function calling with parameters, GBNF grammars                                                               |
+| v0.1    | Initial Release                                                                                                                                                                                  |

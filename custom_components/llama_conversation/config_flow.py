@@ -11,7 +11,7 @@ from typing import Any
 from abc import ABC, abstractmethod
 from importlib.metadata import version
 
-from huggingface_hub import hf_hub_download
+from huggingface_hub import hf_hub_download, HfFileSystem
 
 import voluptuous as vol
 
@@ -170,15 +170,19 @@ def download_model_from_hf(
     model_name: str, quantization_type: str, storage_folder: str
 ):
     try:
-        expected_filename = (
-            model_name.split("/")[1].removesuffix("-GGUF") + f".{quantization_type}.gguf"
-        )
+        fs = HfFileSystem()
+        potential_files = [ f for f in fs.glob(f"{model_name}/*.gguf") ]
+        wanted_file = [f for f in potential_files if (f".{quantization_type.lower()}." in f or f".{quantization_type.upper()}." in f)]
+
+        if len(wanted_file) != 1:
+            raise Exception(f"The quantization '{quantization_type}' does not exist in the HF repo for {model_name}")
+
         os.makedirs(storage_folder, exist_ok=True)
 
         return hf_hub_download(
             repo_id=model_name,
             repo_type="model",
-            filename=expected_filename,
+            filename=wanted_file[0].removeprefix(model_name + "/"),
             resume_download=True,
             cache_dir=storage_folder,
         )
@@ -446,6 +450,8 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             )
 
         download_result = user_input["result"]
+        self.download_task = None
+
         if isinstance(download_result, Exception):
             _LOGGER.info("Failed to download model: %s", repr(download_result))
             self.download_error = download_result
