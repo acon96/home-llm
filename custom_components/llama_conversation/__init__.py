@@ -179,9 +179,12 @@ def flatten_schema(schema):
             if isinstance(current_schema.schema, vol.validators._WithSubValidators):
                 for subval in current_schema.schema.validators:
                     _flatten(subval, prefix)
-            else:
+            elif isinstance(current_schema.schema, dict):
                 for key, val in current_schema.schema.items():
                     _flatten(val, prefix + str(key) + '/')
+            else:
+                # what other types to we need to support????
+                _LOGGER.debug(f"hit unknown schema type while flattening at {prefix}: {current_schema.schema}")
         elif isinstance(current_schema, vol.validators._WithSubValidators):
             for subval in current_schema.validators:
                 _flatten(subval, prefix)
