@@ -5,7 +5,7 @@ import random
 from dataclasses import dataclass
 from datasets import load_dataset, concatenate_datasets
 from difflib import SequenceMatcher
-from typing import Final, Any
+from typing import Final, Any, Callable
 from tqdm import tqdm
 import webcolors
 
@@ -541,7 +541,7 @@ def generate_status_request(template: dict, max_devices: int = 32):
         "service_calls": []
     }
 
-def format_example(example):
+def format_example_raw_chatml(example):
     sys_prompt = "You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed or answer the following question with the information provided only."
     services_block = "Services: " + ", ".join(sorted(example["available_services"]))
     states_block = "Devices:\n" + "\n".join(example["states"])
@@ -566,10 +566,36 @@ def format_example(example):
     # replace aliases with their actual values
     result = result.replace("blinds.", "cover.")
     result = result.replace("garage_door.", "cover.")
-    return result
+    return { "text": result }
+
+def format_example_sharegpt(example):
+    sys_prompt = "You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed or answer the following question with the information provided only."
+    services_block = "Services: " + ", ".join(sorted(example["available_services"]))
+    states_block = "Devices:\n" + "\n".join(example["states"])
+    question = example["question"]
+    answers = " ".join(example["answers"])
+
+    assistant_block = answers
+    if len(example["service_calls"]) > 0:
+        json_calls = [ json.dumps(x) for x in example["service_calls"] ]
+        code_block = "\n```homeassistant\n" + "\n".join(json_calls) + "\n```"
+        assistant_block = assistant_block + code_block
+
+    # replace aliases with their actual values
+    assistant_block = assistant_block.replace("blinds.", "cover.").replace("garage_door.", "cover.")
+    states_block = states_block.replace("blinds.", "cover.").replace("garage_door.", "cover.")
+    services_block = services_block.replace("blinds.", "cover.").replace("garage_door.", "cover.")
+
+    conversation = [
+        { "from": "system", "value": "\n".join([ sys_prompt, services_block, states_block ])},
+        { "from": "user", "value": question },
+        { "from": "assistant", "value": assistant_block },
+    ]
+    
+    return { "conversations": conversation }
 
 
-def generate_example_file(filename: str, seed: int, *, static_factor: int, template_factor: int, status_request_factor: int):
+def generate_example_file(filename: str, seed: int, format_func: Callable, *, static_factor: int, template_factor: int, status_request_factor: int):
     random.seed(seed)
 
     print("Generating...")
@@ -577,10 +603,10 @@ def generate_example_file(filename: str, seed: int, *, static_factor: int, templ
     def run_factor_times(func, examples, data, factor):
         if factor >= 1:
             for i in range(factor):
-                examples.append({ "text": format_example(func(data)) })
+                examples.append(format_func(func(data)))
         else:
             if random.random() < factor:
-                examples.append({ "text": format_example(func(data)) })
+                examples.append(format_func(func(data)))
     
     generated_examples = []
     for action in tqdm(pile_of_device_actions):
@@ -598,7 +624,7 @@ def generate_example_file(filename: str, seed: int, *, static_factor: int, templ
 
     print("Done!")
 
-def format_alpaca(example):
+def format_alpaca(example, format_func: Callable):
     question = example["instruction"]
     if "input" in example and example["input"]:
         question = question = "\n" + example["input"]
@@ -612,7 +638,7 @@ def format_alpaca(example):
     for x in device_types:
         available_services.extend(SUPPORTED_DEVICES[x].get_all_services(extra_exposed_attributes))
 
-    text = format_example(example={
+    text = format_func(example={
         "states": device_list,
         "available_services": list(available_services),
         "question": question,
@@ -626,7 +652,7 @@ def format_alpaca(example):
 
     return result
 
-def merge_with_dataset(dataset_name, seed, outupt_name, format_function, dataset_column_names):
+def merge_with_dataset(dataset_name, seed, outupt_name, format_function, dataset_column_names, format_func):
     alpaca_dataset = load_dataset(dataset_name)["train"].train_test_split(test_size=0.1)
     home_assistant_dataset = load_dataset("json", data_files={  "train": "home_assistant_train.json", "test": "home_assistant_test.json" })
 
@@ -659,27 +685,29 @@ def main():
 
     args = parser.parse_args()
 
+    format_func = format_example_raw_chatml
+
     if args.sample:
         generate_example_file("sample", 42, static_factor=1, template_factor=1, status_request_factor=1)
     if args.train:
         # TODO: add small, medium, large cli clags
         if args.size == "small":
-            generate_example_file("home_assistant_train", 42, static_factor=1, template_factor=10, status_request_factor=8)
+            generate_example_file("home_assistant_train", 42, format_func, static_factor=1, template_factor=10, status_request_factor=8)
         elif args.size == "medium":
-            generate_example_file("home_assistant_train", 42, static_factor=5, template_factor=15, status_request_factor=12)
+            generate_example_file("home_assistant_train", 42, format_func, static_factor=5, template_factor=15, status_request_factor=12)
         elif args.size == "large":
-            generate_example_file("home_assistant_train", 42, static_factor=5, template_factor=20, status_request_factor=15)
+            generate_example_file("home_assistant_train", 42, format_func, static_factor=5, template_factor=20, status_request_factor=15)
         elif args.size == "xl":
-            generate_example_file("home_assistant_train", 42, static_factor=7, template_factor=25, status_request_factor=18)
+            generate_example_file("home_assistant_train", 42, format_func, static_factor=7, template_factor=25, status_request_factor=18)
         else:
             raise Exception(f"Unrecognized dataset size: {args.size}")
     if args.test:
-        generate_example_file("home_assistant_test", 12345, static_factor=0.25, template_factor=3, status_request_factor=2)
+        generate_example_file("home_assistant_test", 12345, format_func, static_factor=0.25, template_factor=3, status_request_factor=2)
 
     if args.merge == "alpaca":
-        merge_with_dataset("yahma/alpaca-cleaned", 42, "alpaca", format_alpaca, ["input", "output", "instruction"])
+        merge_with_dataset("yahma/alpaca-cleaned", 42, "alpaca", format_alpaca, ["input", "output", "instruction"], format_func)
     elif args.merge == "wizardlm70k":
-        merge_with_dataset("WizardLM/WizardLM_evol_instruct_70k", 42, "wizardlm70k", format_alpaca, ["output", "instruction"])
+        merge_with_dataset("WizardLM/WizardLM_evol_instruct_70k", 42, "wizardlm70k", format_alpaca, ["output", "instruction"], format_func)
 
 if __name__ == "__main__":
     main()

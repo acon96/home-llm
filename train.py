@@ -46,6 +46,19 @@ python3 train.py \
 
 """
 python3 train.py \
+    --run_name stablehome-1_6b-rev1 \
+    --base_model stabilityai/stablelm-2-zephyr-1_6b \
+    --bf16 \
+    --train_dataset data/home_assistant_train.json \
+    --test_dataset data/home_assistant_test.json \
+    --learning_rate 1e-5 \
+    --micro_batch_size 4 --gradient_checkpointing \
+    --ctx_size 2048 --save_steps 200
+
+"""
+
+"""
+python3 train.py \
     --run_name home-7b-rev2 \
     --base_model TheBloke/Llama-2-7B-GPTQ \
     --train_dataset data/home_assistant_train.json \
