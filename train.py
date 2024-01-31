@@ -3,7 +3,7 @@
 import math
 import copy
 import torch
-import numpy as np
+import os
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer, \
     PreTrainedTokenizerFast, HfArgumentParser, GPTQConfig, AutoConfig
 from transformers.trainer_utils import EvalPrediction
@@ -386,6 +386,28 @@ class RandomEvalSubsetTrainer(Trainer):
         Should speed up training by skipping the final fine tuning part that doesn't affect accuracy much
         """
         return super().create_scheduler(int(num_training_steps * self.learning_rate_overshoot), optimizer=optimizer)
+    
+    def _load_from_checkpoint(self, resume_from_checkpoint, model=None):
+        super()._load_from_checkpoint(resume_from_checkpoint, model=model)
+
+        # load the "saved" weights over top of the existing model
+        if training_run_args.lora_modules_to_save != None:
+            if model is None:
+                model = self.model
+
+            saved_weights_file = os.path.join(resume_from_checkpoint, "lora_saved_weights.pt")
+            saved_weights_checkpoint = torch.load(saved_weights_file)
+            model.load_state_dict(saved_weights_checkpoint, strict=False)
+
+    def _save_optimizer_and_scheduler(self, output_dir):
+        # need to save any "saved" weights here
+        if training_run_args.lora_modules_to_save != None:
+            saved_weights_file = os.path.join(output_dir, "lora_saved_weights.pt")
+            modules_to_save = training_run_args.lora_modules_to_save.split(",")
+            trainable_params = {name: param for name, param in model.named_parameters() if name in modules_to_save}
+            torch.save(trainable_params, saved_weights_file)
+
+        super()._save_optimizer_and_scheduler(output_dir)
     
 def compute_metrics(pred: EvalPrediction):
     inputs = pred.inputs
