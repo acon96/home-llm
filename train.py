@@ -7,9 +7,9 @@ import os
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer, \
     PreTrainedTokenizerFast, HfArgumentParser, GPTQConfig, AutoConfig
 from transformers.trainer_utils import EvalPrediction
-from datasets import load_dataset
+from datasets import load_dataset, Dataset
 from dataclasses import dataclass, field
-from typing import Dict, Optional, Sequence
+from typing import Dict, Optional, Sequence, Sized, Iterator
 
 """
 Phi Modules: fc1,fc2,q_proj,v_proj,k_proj,dense,embed_tokens,lm_head
@@ -352,7 +352,36 @@ data_collator = DataCollatorForSupervisedFineTuning(tokenizer=tokenizer)
 
 import random
 from torch.utils.data import SequentialSampler, Subset, RandomSampler
-class RandomEvalSubsetTrainer(Trainer):
+
+class RandomSamplerWithLargestFirst(RandomSampler):
+    """The idea here is to force pytorch to allocate the largest buffer that it needs up front and then do the rest of the training using the random sampler"""
+
+    def __init__(self, data_source: Dataset, replacement: bool = False,
+                 num_samples: Optional[int] = None, generator=None):
+        super().__init__(data_source=data_source, replacement=replacement, num_samples=num_samples, generator=generator)
+
+        longest = None
+        longest_len = -1
+        for num, example in enumerate(data_source["input_ids"]):
+            example_len = len(example)
+            if example_len > longest_len:
+                longest = num
+                longest_len = example_len
+        self.longest_example = longest
+
+    def __iter__(self) -> Iterator[int]:
+        yield self.longest_example
+
+        it = super().__iter__()
+        while True:
+            try:
+                yield next(it)
+            except StopIteration:
+                break
+
+
+class CustomTrainer(Trainer):
+    """Implement different training tweaks"""
     def __init__(self, random_eval_sample_pct=0.1, learning_rate_overshoot=1.15, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.random_eval_sample_pct = random_eval_sample_pct
@@ -384,7 +413,8 @@ class RandomEvalSubsetTrainer(Trainer):
         if self.args.group_by_length:
             return super()._get_train_sampler()
         
-        return RandomSampler(self.train_dataset, generator=torch.Generator(device='cpu'))
+        # return RandomSampler(self.train_dataset, generator=torch.Generator(device='cpu'))
+        return RandomSamplerWithLargestFirst(self.train_dataset, generator=torch.Generator(device='cpu'))
     
     def create_scheduler(self, num_training_steps: int, optimizer: torch.optim.Optimizer = None):
         """
@@ -427,7 +457,7 @@ def preprocess_logits_for_metrics(logits, labels):
     pred_ids = torch.argmax(logits, dim=-1)
     return pred_ids, labels
 
-trainer = RandomEvalSubsetTrainer(
+trainer = CustomTrainer(
     model=model,
     args=training_args,
     train_dataset=tokenized_train_dataset,
