@@ -364,6 +364,12 @@ class RandomEvalSubsetTrainer(Trainer):
         super().evaluate()
         self.evaluate_full_dataset = False
 
+    def evaluate(self, *args, **kwargs):
+        result = super().evaluate(*args, **kwargs)
+        torch.cuda.memory.empty_cache() # clear the irregularly sized memory allocations used for evaluation
+        return result
+
+
     # Randomly sample the eval dataset
     def _get_eval_sampler(self, eval_dataset):
         if self.evaluate_full_dataset:
