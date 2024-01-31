@@ -182,9 +182,6 @@ def flatten_schema(schema):
             elif isinstance(current_schema.schema, dict):
                 for key, val in current_schema.schema.items():
                     _flatten(val, prefix + str(key) + '/')
-            else:
-                # what other types to we need to support????
-                _LOGGER.debug(f"hit unknown schema type while flattening at {prefix}: {current_schema.schema}")
         elif isinstance(current_schema, vol.validators._WithSubValidators):
             for subval in current_schema.validators:
                 _flatten(subval, prefix)
@@ -650,8 +647,6 @@ class TextGenerationWebuiAgent(GenericOpenAIAPIAgent):
             else:
                 _LOGGER.info(f"Model is not {self.model_name} loaded on the remote backend. Loading it now...")
             
-            
-            
             load_result = requests.post(
                 f"{self.api_host}/v1/internal/model/load",
                 json={
@@ -678,7 +673,6 @@ class TextGenerationWebuiAgent(GenericOpenAIAPIAgent):
             if preset:
                 request_params["character"] = preset
         elif chat_mode == TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT:
-            # TODO: handle uppercase properly?
             request_params["instruction_template"] = self.entry.options.get(CONF_PROMPT_TEMPLATE, DEFAULT_PROMPT_TEMPLATE)
 
         return endpoint, request_params
