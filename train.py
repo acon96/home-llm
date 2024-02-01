@@ -105,6 +105,7 @@ class TrainingRunArguments:
 
     add_pad_token: bool = field(default=False, metadata={"help": "If set, a pad token will be added to the tokenizer's vocabulary"})
     add_chatml_tokens: bool = field(default=False, metadata={"help": "If set, tokens for the ChatML format will be added specifically"})
+    add_chatml_prompt_template: bool = field(default=False, metadata={"help": "If set, the ChatML prompt template will be set as the model's Jinja2 template"})
     gradient_checkpointing: bool = field(default=False, metadata={"help": "Enables gradient checkpointing which saves quite a lot of VRAM"})
 
     run_tensorboard: bool = field(default=False, metadata={"help": "If set, will tensorboard in the background to monitor training progress"})
@@ -166,7 +167,15 @@ if training_run_args.add_chatml_tokens:
     model.config.bos_token_id = tokenizer.bos_token_id
     model.config.eos_token_id = tokenizer.eos_token_id
 
-    # TODO: add chatml template to tokenizer for auto-formatting
+if training_run_args.add_chatml_prompt_template:
+    tokenizer.default_chat_template = (
+        "{% for message in messages %}"
+        "{{'<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n'}}"
+        "{% endfor %}"
+        "{% if add_generation_prompt %}"
+        "{{ '<|im_start|>assistant\n' }}"
+        "{% endif %}"
+    )
 
 embeddings_len = math.ceil(len(tokenizer) / 32) * 32
 if model.get_input_embeddings().num_embeddings < embeddings_len:
@@ -344,7 +353,7 @@ if training_run_args.test_dataset:
     data_files["test"] = training_run_args.test_dataset
 datasets = load_dataset("json", data_files=data_files)
 
-def tokenize(example):
+def tokenize_raw_example(example):
     return tokenizer(
         text=example["text"],
         max_length=training_run_args.ctx_size,
@@ -352,11 +361,29 @@ def tokenize(example):
         add_special_tokens=False,
     )
 
+def tokenize_sharegpt_example(example):
+    conversation = [ { "role": x["from"], "content": x["value"] } for x in example["conversation"]]
+    return tokenizer.apply_chat_template(
+        conversation=conversation,
+        max_length=training_run_args.ctx_size,
+        truncation=True,
+    )
+
 print("Tokenizing datasets...")
+
+if "text" in datasets["train"].column_names:
+    tokenize_function = tokenize_raw_example
+    columns_to_remove = ["text"]
+elif "conversation" in datasets["train"].column_names:
+    tokenize_function = tokenize_sharegpt_example
+    columns_to_remove = ["conversation"]
+else:
+    raise Exception("Unknown dataset input format (not raw corpus or sharegpt)")
+
 tokenized_test_dataset = None
-tokenized_train_dataset = datasets["train"].map(tokenize, batched=True).remove_columns(["text"])
+tokenized_train_dataset = datasets["train"].map(tokenize_function, batched=True).remove_columns(columns_to_remove)
 if training_run_args.test_dataset:
-    tokenized_test_dataset = datasets["test"].map(tokenize, batched=True).remove_columns(["text"])
+    tokenized_test_dataset = datasets["test"].map(tokenize_function, batched=True).remove_columns(columns_to_remove)
 
 tokens_in_train_set = sum(len(example) for example in tokenized_train_dataset["input_ids"])
 print(f"Train dataset has {int(tokens_in_train_set / 1000000)}M tokens")

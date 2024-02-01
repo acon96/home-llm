@@ -4,6 +4,7 @@ core/
 config/
 .DS_Store
 data/*.json
+data/*.jsonl
 *.pyc
 main.log
 .venv

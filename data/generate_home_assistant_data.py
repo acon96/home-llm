@@ -542,6 +542,7 @@ def generate_status_request(template: dict, max_devices: int = 32):
     }
 
 def format_example_raw_chatml(example):
+    """Don't use this one anymore"""
     sys_prompt = "You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed or answer the following question with the information provided only."
     services_block = "Services: " + ", ".join(sorted(example["available_services"]))
     states_block = "Devices:\n" + "\n".join(example["states"])
@@ -619,8 +620,11 @@ def generate_example_file(filename: str, seed: int, format_func: Callable, *, st
         run_factor_times(generate_status_request, generated_examples, status_request, status_request_factor)
 
     print(f"Generated {len(generated_examples)} examples. Saving...")
-    with open(f"{filename}.json", "w") as f:
-        json.dump(generated_examples, f, indent=4)
+    
+    with open(f"{filename}.jsonl", "w") as f:
+        for item in generated_examples:
+            json_record = json.dumps(item)
+            f.write(json_record + '\n')
 
     print("Done!")
 
@@ -654,7 +658,7 @@ def format_alpaca(example, format_func: Callable):
 
 def merge_with_dataset(dataset_name, seed, outupt_name, format_function, dataset_column_names, format_func):
     alpaca_dataset = load_dataset(dataset_name)["train"].train_test_split(test_size=0.1)
-    home_assistant_dataset = load_dataset("json", data_files={  "train": "home_assistant_train.json", "test": "home_assistant_test.json" })
+    home_assistant_dataset = load_dataset("json", data_files={  "train": "home_assistant_train.jsonl", "test": "home_assistant_test.jsonl" })
 
     random.seed(seed)
 
@@ -663,8 +667,8 @@ def merge_with_dataset(dataset_name, seed, outupt_name, format_function, dataset
     combined_dataset_train = concatenate_datasets([home_assistant_dataset["train"], alpaca_dataset["train"]]).shuffle(seed=42)
     combined_dataset_test = concatenate_datasets([home_assistant_dataset["test"], alpaca_dataset["test"]]).shuffle(seed=42)
 
-    combined_dataset_train.to_json(f"home_assistant_{outupt_name}_merged_train.json")
-    combined_dataset_test.to_json(f"home_assistant_{outupt_name}_merged_test.json")
+    combined_dataset_train.to_json(f"home_assistant_{outupt_name}_merged_train.jsonl")
+    combined_dataset_test.to_json(f"home_assistant_{outupt_name}_merged_test.jsonl")
 
 
 # TODO: add examples for ambiguous requests. asking a clarifying question
@@ -677,18 +681,29 @@ def main():
     parser.add_argument("--test", action="store_true", help="Set this flag to enable generation of the train dataset..")
     parser.add_argument("--train", action="store_true", help="Set this flag to enable generation of the train dataset.")
     parser.add_argument("--merge", help="Set this flag to merge the generated datasets with the specified dataset.")
+
     train_size_group = parser.add_mutually_exclusive_group()
     train_size_group.add_argument('--small', action='store_const', const='small', dest='size')
     train_size_group.add_argument('--medium', action='store_const', const='medium', dest='size')
     train_size_group.add_argument('--large', action='store_const', const='large', dest='size')
     train_size_group.add_argument('--xl', action='store_const', const='xl', dest='size')
 
+    dataset_format_group = parser.add_mutually_exclusive_group()
+    dataset_format_group.add_argument('--raw_corpus', action='store_const', const='raw', dest='format')
+    dataset_format_group.add_argument('--sharegpt', action='store_const', const='sharegpt', dest='format')
+
     args = parser.parse_args()
 
-    format_func = format_example_raw_chatml
+    if not args.sample and not args.train and not args.test and not args.merge:
+        parser.print_usage()
+    
+    if not args.format or args.format == "raw":
+        format_func = format_example_raw_chatml
+    elif args.format == "sharegpt":
+        format_func = format_example_sharegpt
 
     if args.sample:
-        generate_example_file("sample", 42, static_factor=1, template_factor=1, status_request_factor=1)
+        generate_example_file("sample", 42, format_func, static_factor=1, template_factor=1, status_request_factor=1)
     if args.train:
         # TODO: add small, medium, large cli clags
         if args.size == "small":
