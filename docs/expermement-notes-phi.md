@@ -327,3 +327,18 @@ Missing a lot of earlier 3B training results (not sure where they are)
 ### Home-3B-v2-GGUF:ha_only
 - dataset size: large
 - evaluation results: FAILED (again.....)
+
+
+## Potential Other Datasets to Use
+
+### SFT
+Alpaca: https://huggingface.co/datasets/yahma/alpaca-cleaned
+Alpaca (Translated): https://huggingface.co/datasets/saillab/taco-datasets
+WizardLM 200k: https://huggingface.co/datasets/WizardLM/WizardLM_evol_instruct_V2_196k
+WizardLM 70k: https://huggingface.co/datasets/WizardLM/WizardLM_evol_instruct_70k
+Huggingface Ultrachat 200k: https://huggingface.co/datasets/HuggingFaceH4/ultrachat_200k
+OpenOrca Slim Deduped (363k): https://huggingface.co/datasets/Open-Orca/SlimOrca-Dedup
+
+### DPO
+Intel Orca DPO Pairs: https://huggingface.co/datasets/Intel/orca_dpo_pairs
+Huggingface Ultrachat: https://huggingface.co/datasets/HuggingFaceH4/ultrafeedback_binarized
