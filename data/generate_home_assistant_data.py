@@ -1,7 +1,10 @@
 import argparse
 import json
 import csv
+import pandas
+import numpy as np
 import random
+import re
 from dataclasses import dataclass
 from datasets import load_dataset, concatenate_datasets
 from difflib import SequenceMatcher
@@ -253,19 +256,37 @@ with open("piles/pile_of_templated_actions.csv") as f:
 
     pile_of_templated_actions = processed_pile_of_templated_actions
 
-with open("piles/pile_of_device_actions.csv") as f:
+with open("piles/pile_of_specific_actions.csv") as f:
     reader = csv.DictReader(f)
-    pile_of_device_actions = list(reader)
+    pile_of_specific_actions = list(reader)
 
-with open("piles/pile_of_responses.csv") as f:
-    reader = csv.DictReader(f)
-    raw_pile_of_responses = list(reader)
+pile_of_responses = pandas.read_csv("piles/pile_of_responses.csv")
 
-    pile_of_responses = {}
-    for raw in raw_pile_of_responses:
-        if raw["device_type"] not in pile_of_responses:
-            pile_of_responses[raw["device_type"]] = {}    
-        pile_of_responses[raw["device_type"]][raw["service"]] = [ raw["response_1"], raw["response_2"], raw["response_3"] ]
+var_pattern = re.compile("<(.*?)>")
+def get_included_vars(response: str):
+    result = []
+    for var in var_pattern.findall(response):
+        if var == "device_name":
+            continue
+        result.append(var)
+
+    return ",".join(sorted(result))
+
+pile_of_responses["contains_vars"] = pile_of_responses["response"].apply(get_included_vars)
+
+def get_random_response(*, service: str, language: str, persona: str, required_vars: list[str], short: bool) -> str:
+    
+    possible_results = pile_of_responses.loc[(pile_of_responses['service']==service) & 
+                          (pile_of_responses['language']==language) & 
+                          (pile_of_responses['persona']==persona) &
+                          (pile_of_responses['short']==(1 if short else 0)) &
+                          (pile_of_responses['contains_vars']==",".join(sorted(required_vars)))
+                        ]
+    
+    if len(possible_results) == 0:
+        raise Exception(f"No responses matched the provided filters: {service}, {language}, {persona}, {required_vars}, {short}")
+    
+    return possible_results.sample()["response"].values[0]
 
 with open("piles/pile_of_status_requests.csv") as f:
     reader = csv.DictReader(f)
@@ -336,10 +357,10 @@ def random_device_list(max_devices: int, avoid_device_names: list[str]):
 
 def generate_static_example(action: dict, max_devices: int = 32):
     question = action["english_phrase"]
-    target_device = action["device_name"]
-    device_type = target_device.split(".")[0]
-    service_name = f"{device_type}.{action['service_name']}"
-    friendly_name = target_device.split(".")[1].replace("_", " ")
+    device_type = service_name.split(".")[0]
+    service_name = action["service_name"]
+    target_device = f"{device_type}.{action['device_name']}"
+    friendly_name = target_device.split(".")[1].replace("_", " ").title()
 
     device_list, device_types, extra_exposed_attributes = random_device_list(
         max_devices=max_devices, avoid_device_names=[target_device])
@@ -359,11 +380,19 @@ def generate_static_example(action: dict, max_devices: int = 32):
     for x in set(device_types + [device_type]):
         available_services.extend(SUPPORTED_DEVICES[x].get_all_services(extra_exposed_attributes))
 
+    response = get_random_response(
+        service=action["service_name"],
+        language="en",
+        persona="assistant",
+        required_vars=[],
+        short=False
+    ).lower()
+
     return {
         "states": device_list,
         "available_services": list(available_services),
         "question": question.lower(),
-        "answers": [ random.choice(pile_of_responses[device_type][action["service_name"]]).lower() ],
+        "answers": [ response ],
         "service_calls": [ { "service": service_name, "target_device": target_device } ]
     }
 
@@ -371,7 +400,6 @@ def generate_templated_example(template: dict, max_devices: int = 32):
     template_device_types: list[str] = template["device_type"].split("|")
     service_names: list[str] = [ f"{x}.{y}" for x, y in zip(template_device_types, template["service"].split("|")) ]
     question_template: str = template["english_phrase"]
-    answer_template: str = template["assistant_response"]
 
     # choose a random device for this template
     chosen_devices = []
@@ -411,11 +439,17 @@ def generate_templated_example(template: dict, max_devices: int = 32):
     for x in set(device_types + template_device_types):
         available_services.extend(SUPPORTED_DEVICES[x].get_all_services(extra_exposed_attributes))
 
-    # generate the question
+    # pick an appropriate response and generate the question
     if len(template_device_types) == 1:
+        # TODO: pick correct resonse here (also probaly need to pass in language and persona)
+        answer_template: str = get_random_response(
+            service=service_name
+        )
+
         question = question_template.replace("<device_name>", chosen_devices[0]["description"])
         answer = answer_template.replace("<device_name>", chosen_devices[0]["description"])
     else:
+        # TODO: pick correct resonse here (also probaly need to pass in language and persona)
         question = question_template
         answer = answer_template
         for i in range(len(template_device_types)):
@@ -598,6 +632,7 @@ def format_example_sharegpt(example):
 
 def generate_example_file(filename: str, seed: int, format_func: Callable, *, static_factor: int, template_factor: int, status_request_factor: int):
     random.seed(seed)
+    np.random.seed(seed)
 
     print("Generating...")
 
@@ -610,7 +645,7 @@ def generate_example_file(filename: str, seed: int, format_func: Callable, *, st
                 examples.append(format_func(func(data)))
     
     generated_examples = []
-    for action in tqdm(pile_of_device_actions):
+    for action in tqdm(pile_of_specific_actions):
         run_factor_times(generate_static_example, generated_examples, action, static_factor)
 
     for templated_action in tqdm(pile_of_templated_actions):
@@ -661,6 +696,7 @@ def merge_with_dataset(dataset_name, seed, outupt_name, format_function, dataset
     home_assistant_dataset = load_dataset("json", data_files={  "train": "home_assistant_train.jsonl", "test": "home_assistant_test.jsonl" })
 
     random.seed(seed)
+    np.random.seed(seed)
 
     alpaca_dataset = alpaca_dataset.map(format_function).remove_columns(dataset_column_names)
 

@@ -4,3 +4,4 @@ datasets
 peft
 bitsandbytes
 webcolors
+pandas

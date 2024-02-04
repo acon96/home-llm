@@ -220,4 +220,4 @@ light,turn_on,"Can <device_name> be <color> now?",8
 light,turn_on,"Let's have <device_name> in <color>.",8
 light,turn_on,"I'd like <device_name> to change to <color>.",8
 light,turn_on,"Can <device_name> display a <color> light?",8
-light,turn_on,"Set <device_name> color to <color>,8
+light,turn_on,"Set <device_name> color to <color>",8
