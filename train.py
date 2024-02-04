@@ -12,7 +12,14 @@ from dataclasses import dataclass, field
 from typing import Dict, Optional, Sequence, Sized, Iterator
 
 """
-Phi Modules: fc1,fc2,q_proj,v_proj,k_proj,dense,embed_tokens,lm_head
+Phi Modules: 
+- MLP: fc1,fc2
+- MHA: q_proj,v_proj,k_proj,dense
+- Embeddings: embed_tokens (input) lm_head (output)
+StableLM Modules: 
+- MLP: up_proj,down_proj,gate_proj
+- MHA: q_proj,v_proj,k_proj,o_proj
+- Embeddings: embed_tokens (input) lm_head (output)
 """
 
 """
@@ -22,7 +29,7 @@ python3 train.py \
     --add_pad_token \
     --add_chatml_tokens \
     --bf16 \
-    --train_dataset data/home_assistant_train.json \
+    --train_dataset data/home_assistant_train.jsonl \
     --learning_rate 1e-5 \
     --save_steps 1000 \
     --micro_batch_size 2 --gradient_checkpointing \
@@ -37,8 +44,8 @@ python3 train.py \
     --add_pad_token \
     --add_chatml_tokens \
     --bf16 \
-    --train_dataset data/home_assistant_train.json \
-    --test_dataset data/home_assistant_test.json \
+    --train_dataset data/home_assistant_train.jsonl \
+    --test_dataset data/home_assistant_test.jsonl \
     --learning_rate 1e-5 \
     --micro_batch_size 4 --gradient_checkpointing \
     --ctx_size 2048 --save_steps 200
@@ -49,10 +56,9 @@ python3 train.py \
     --run_name stablehome-1_6b-rev1 \
     --base_model stabilityai/stablelm-2-zephyr-1_6b \
     --bf16 \
-    --train_dataset data/home_assistant_train.json \
-    --test_dataset data/home_assistant_test.json \
+    --train_dataset data/home_assistant_train.jsonl \
     --learning_rate 1e-5 \
-    --micro_batch_size 4 --gradient_checkpointing \
+    --micro_batch_size 2 --gradient_checkpointing \
     --ctx_size 2048 --save_steps 200
 
 """
@@ -61,8 +67,8 @@ python3 train.py \
 python3 train.py \
     --run_name home-7b-rev2 \
     --base_model TheBloke/Llama-2-7B-GPTQ \
-    --train_dataset data/home_assistant_train.json \
-    --test_dataset data/home_assistant_test.json \
+    --train_dataset data/home_assistant_train.jsonl \
+    --test_dataset data/home_assistant_test.jsonl \
     --load_as_gptq --use_lora --gradient_checkpointing \
     --add_pad_token --bf16 --micro_batch_size 4 --learning_rate 2e-5
 """
@@ -134,6 +140,7 @@ else:
 
 # model_kwargs["resid_pdrop"] = 0.0
 # model_kwargs["revision"] = "accfee56d8988cae60915486310362db5831b1bd"
+model_kwargs["use_cache"] = False
 
 def find_max_vram(min_buffer_mib=800):
     total_mem = (torch.cuda.get_device_properties(0).total_memory / (1024 * 1024))
@@ -168,7 +175,7 @@ if training_run_args.add_chatml_tokens:
     model.config.eos_token_id = tokenizer.eos_token_id
 
 if training_run_args.add_chatml_prompt_template:
-    tokenizer.default_chat_template = (
+    tokenizer.chat_template = (
         "{% for message in messages %}"
         "{{'<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n'}}"
         "{% endfor %}"
@@ -253,16 +260,12 @@ class DataCollatorForSupervisedFineTuning(object):
     prefix_ids: list[int]
     suffix_ids: list[int]
 
-    def __init__(self, 
-                 *,
-                 tokenizer: AutoTokenizer,
-                 response_prefix: str = "<|im_start|>assistant", 
-                 response_suffix: str = "<|im_end|>",
-                 ):
+    def __init__(self, *, tokenizer: AutoTokenizer):
         
         self.tokenizer = tokenizer
-        self.response_prefix = response_prefix
-        self.response_suffix = response_suffix
+        assistant_prompt = tokenizer.apply_chat_template(conversation=[{"role": "assistant", "content":  r"%%%%%%%%%%%%%%%%"}], tokenize=False).split( r"%%%%%%%%%%%%%%%%")
+        self.response_prefix = assistant_prompt[0]
+        self.response_suffix = assistant_prompt[1]
 
         self.prefix_ids = self.tokenizer(self.response_prefix, add_special_tokens=False)["input_ids"]
         self.suffix_ids = self.tokenizer(self.response_suffix, add_special_tokens=False)["input_ids"]
@@ -353,30 +356,35 @@ if training_run_args.test_dataset:
     data_files["test"] = training_run_args.test_dataset
 datasets = load_dataset("json", data_files=data_files)
 
-def tokenize_raw_example(example):
+def tokenize_raw_example(batch):
     return tokenizer(
-        text=example["text"],
+        text=batch["text"],
         max_length=training_run_args.ctx_size,
         truncation=True,
         add_special_tokens=False,
     )
 
-def tokenize_sharegpt_example(example):
-    conversation = [ { "role": x["from"], "content": x["value"] } for x in example["conversation"]]
-    return tokenizer.apply_chat_template(
-        conversation=conversation,
-        max_length=training_run_args.ctx_size,
-        truncation=True,
-    )
+def tokenize_sharegpt_example(batch):
+    # TODO: figure out how to properly batch this
+    result = []
+    for example in batch["conversations"]:
+        conversation = [ { "role": x["from"], "content": x["value"] }  for x in example ]
+        result.append(tokenizer.apply_chat_template(
+            conversation=conversation,
+            max_length=training_run_args.ctx_size,
+            truncation=True,
+        ))
+
+    return {"input_ids": result}
 
 print("Tokenizing datasets...")
 
 if "text" in datasets["train"].column_names:
     tokenize_function = tokenize_raw_example
     columns_to_remove = ["text"]
-elif "conversation" in datasets["train"].column_names:
+elif "conversations" in datasets["train"].column_names:
     tokenize_function = tokenize_sharegpt_example
-    columns_to_remove = ["conversation"]
+    columns_to_remove = ["conversations"]
 else:
     raise Exception("Unknown dataset input format (not raw corpus or sharegpt)")
 
@@ -484,18 +492,6 @@ class CustomTrainer(Trainer):
             torch.save(trainable_params, saved_weights_file)
 
         super()._save_optimizer_and_scheduler(output_dir)
-    
-def compute_metrics(pred: EvalPrediction):
-    inputs = pred.inputs
-    label_ids = pred.label_ids
-    logits = pred.predictions
-
-    return {"accuracy": 1.0 }
-
-def preprocess_logits_for_metrics(logits, labels):
-    """https://discuss.huggingface.co/t/cuda-out-of-memory-when-using-trainer-with-compute-metrics/2941/22"""
-    pred_ids = torch.argmax(logits, dim=-1)
-    return pred_ids, labels
 
 trainer = CustomTrainer(
     model=model,
@@ -503,8 +499,6 @@ trainer = CustomTrainer(
     train_dataset=tokenized_train_dataset,
     eval_dataset=tokenized_test_dataset,
     data_collator=data_collator,
-    # compute_metrics=compute_metrics,
-    # preprocess_logits_for_metrics=preprocess_logits_for_metrics,
 )
 
 tensorboard_process = None
@@ -523,7 +517,8 @@ try:
     else:
         trainer.train()
 
-    # trainer.evaluate_all()
+    if training_run_args.train_dataset:
+        trainer.evaluate_all()
 
     if training_run_args.use_lora and training_run_args.lora_merge:
         trainer.save_model() # save lora
