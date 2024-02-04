@@ -1,34 +1,303 @@
-"service","device_type","response_1","response_2","response_3"
-"turn_on","light","Turning on the light for you.","Sure, I'll turn on the light now.","I'll go ahead and turn the light on."
-"turn_off","light","Turning off the light as requested.","I'll switch off the light for you.","Sure, turning off the light."
-"toggle","light","Toggling the light for you.","Switching the light's state now.","I'll toggle the light for you."
-"turn_on","fan","Turning on the fan for you.","I'll get the fan going for you.","Sure, turning on the fan now."
-"turn_off","fan","Switching off the fan as requested.","I'll turn off the fan for you.","Okay, turning off the fan."
-"toggle","fan","I'll toggle the fan's state for you.","Toggling the fan now.","Switching the fan's state for you."
-"increase_speed","fan","Increasing the fan speed for you.","Sure, speeding up the fan now.","I'll go ahead and make the fan faster."
-"decrease_speed","fan","Reducing the fan speed as you requested.","I'll slow down the fan for you.","Sure, decreasing the fan speed."
-"open","garage_door","Opening the garage door for you.","Sure, I'll open the garage door.","I'll go ahead and open the garage door."
-"close","garage_door","Closing the garage door as requested.","I'll shut the garage door for you.","Sure, closing the garage door."
-"stop","garage_door","Stopping the garage door now.","I'll stop the garage door for you.","Sure, I'll halt the garage door movement."
-"toggle","garage_door","Toggling the garage door state for you.","I'll switch the garage door's state now.","Switching the garage door's state for you."
-"open","blinds","Opening the blinds for you.","I'll go ahead and open the blinds.","Sure, opening the blinds now."
-"close","blinds","Closing the blinds as you requested.","I'll close the blinds for you.","Sure, closing the blinds."
-"stop","blinds","Stopping the blinds now.","I'll stop the blinds for you.","Sure, halting the blinds movement."
-"toggle","blinds","Toggling the blinds state for you.","Switching the blinds' state now.","I'll toggle the blinds for you."
-"turn_on","media_player","Turning on the media player for you.","I'll get the media player going.","Sure, activating the media player."
-"turn_off","media_player","Turning off the media player as requested.","I'll switch off the media player.","Sure, deactivating the media player."
-"toggle","media_player","Toggling the media player for you.","Switching the media player's state.","I'll toggle the media player."
-"volume_up","media_player","Increasing the volume for you.","Sure, turning up the volume now.","I'll go ahead and raise the volume."
-"volume_down","media_player","Reducing the volume as you requested.","I'll turn down the volume for you.","Sure, lowering the volume."
-"volume_mute","media_player","Muting the volume for you.","I'll mute the media player now.","Sure, muting the volume."
-"media_play_pause","media_player","Toggling play/pause on the media player.","Switching between play and pause.","I'll toggle between play and pause for you."
-"media_play","media_player","Starting media playback.","I'll start playing the media for you.","Sure, beginning playback."
-"media_pause","media_player","Pausing the media playback.","I'll pause the media for you.","Sure, pausing playback."
-"media_stop","media_player","Stopping the media playback.","I'll stop the media for you.","Sure, halting playback."
-"media_next_track","media_player","Skipping to the next track.","I'll go to the next track for you.","Sure, moving to the next track."
-"media_previous_track","media_player","Going back to the previous track.","I'll return to the previous track for you.","Sure, reverting to the previous track."
-"lock","lock","Locking the door for you.","I'll go ahead and lock the door.","Sure, securing the lock."
-"unlock","lock","Unlocking the door as you requested.","I'll unlock the door for you.","Sure, unlocking the door."
-"turn_on","switch","Turning on the switch for you.","Sure, I'll turn on the light now.","I'll go ahead and turn the switch on."
-"turn_off","switch","Turning off the switch as requested.","I'll switch off the device for you.","Sure, turning off the switch."
-"toggle","switch","Toggling the switch for you.","Changing the switch's state now.","I'll toggle the switch for you."
+device_type,service,response,short
+blinds,open,Opening the blinds for you.,0
+blinds,open,I'll go ahead and open the blinds.,0
+blinds,open,"Sure, opening the blinds now.",0
+blinds,close,Closing the blinds as you requested.,0
+blinds,close,I'll close the blinds for you.,0
+blinds,close,"Sure, closing the blinds.",0
+blinds,stop,Stopping the blinds now.,0
+blinds,stop,I'll stop the blinds for you.,0
+blinds,stop,"Sure, halting the blinds movement.",0
+blinds,toggle,Toggling the blinds state for you.,0
+blinds,toggle,Switching the blinds' state now.,0
+blinds,toggle,I'll toggle the blinds for you.,0
+blinds,open,Lifting <device_name> blinds as requested,0
+blinds,open,Opening <device_name> now,0
+blinds,open,Raising <device_name> for you,0
+blinds,stop,Freezing <device_name> position,0
+blinds,stop,Halting <device_name> now,0
+blinds,stop,Stopping <device_name> operation,0
+blinds,open,Raising <device_name>,0
+blinds,close,Closing <device_name> for you,0
+blinds,close,Lowering <device_name> now,0
+blinds,close,Shutting <device_name> as requested,0
+blinds,close,Lowering <device_name>,0
+blinds,toggle,Flipping <device_name> state now,0
+blinds,toggle,Switching <device_name> state as requested,0
+blinds,toggle,Toggling <device_name> for you,0
+blinds,toggle,Toggling <device_name>,0
+climate,set_humidity,Increasing humidity to <humidity>.,0
+climate,set_humidity,Setting humidity to <humidity> percent.,0
+climate,set_humidity,Adjusting humidity to <humidity>%.,0
+climate,set_fan_mode,Setting the fan to high speed.,0
+climate,set_fan_mode,Putting the fan on low.,0
+climate,set_fan_mode,Changing the fan to medium setting.,0
+climate,set_hvac_mode,Switching to cooling mode.,0
+climate,set_hvac_mode,Setting the HVAC to heat.,0
+climate,set_hvac_mode,Changing HVAC to automatic mode.,0
+climate,set_temperature,Setting temperature to <temp_f> degrees.,0
+climate,set_temperature,Changing temperature to <temp_c> Celsius.,0
+climate,set_temperature,Setting the room to <temp_f> degrees Fahrenheit.,0
+climate,set_temperature,Adjusting temperature to <temp_f> degrees Fahrenheit.,0
+climate,set_temperature,Setting the room to <temp_c> degrees Celsius for cooler temperature.,0
+climate,set_temperature,"Making it warmer, setting temperature to <temp_f> degrees.",0
+climate,set_temperature,Lowering the temperature to <temp_c> Celsius.,0
+climate,set_temperature,Raising the temperature to <temp_f> degrees Fahrenheit.,0
+fan,turn_on,Turning on the fan for you.,0
+fan,turn_on,I'll get the fan going for you.,0
+fan,turn_on,"Sure, turning on the fan now.",0
+fan,turn_off,Switching off the fan as requested.,0
+fan,turn_off,I'll turn off the fan for you.,0
+fan,turn_off,"Okay, turning off the fan.",0
+fan,toggle,I'll toggle the fan's state for you.,0
+fan,toggle,Toggling the fan now.,0
+fan,toggle,Switching the fan's state for you.,0
+fan,increase_speed,Increasing the fan speed for you.,0
+fan,increase_speed,"Sure, speeding up the fan now.",0
+fan,increase_speed,I'll go ahead and make the fan faster.,0
+fan,decrease_speed,Reducing the fan speed as you requested.,0
+fan,decrease_speed,I'll slow down the fan for you.,0
+fan,decrease_speed,"Sure, decreasing the fan speed.",0
+fan,toggle,Flipping <device_name> state for you,0
+fan,toggle,Switching <device_name> state as requested,0
+fan,toggle,Toggling <device_name> now,0
+fan,turn_on,Activating <device_name> now,0
+fan,turn_on,Starting <device_name> for you,0
+fan,turn_on,"Certainly, starting <device_name>",0
+fan,turn_on,Turning on <device_name>,0
+fan,turn_on,Starting <device_name>,0
+fan,turn_off,Deactivating <device_name> as requested,0
+fan,turn_off,Stopping <device_name> for you,0
+fan,turn_off,"Certainly, stopping <device_name>",0
+fan,turn_off,Turning off <device_name>,0
+fan,decrease_speed,Reducing speed of <device_name>,0
+fan,decrease_speed,Lowering speed of <device_name> as requested,0
+fan,decrease_speed,Slowing down <device_name> for you,0
+fan,increase_speed,Increasing speed of <device_name>,0
+fan,increase_speed,Ramping up <device_name> speed now,0
+fan,increase_speed,Speeding up <device_name> for you,0
+fan,increase_speed,Increasing speed of <device_name>,0
+fan,decrease_speed,Reducing speed of <device_name>,0
+garage_door,open,Opening the garage door for you.,0
+garage_door,open,"Sure, I'll open the garage door.",0
+garage_door,open,I'll go ahead and open the garage door.,0
+garage_door,close,Closing the garage door as requested.,0
+garage_door,close,I'll shut the garage door for you.,0
+garage_door,close,"Sure, closing the garage door.",0
+garage_door,stop,Stopping the garage door now.,0
+garage_door,stop,I'll stop the garage door for you.,0
+garage_door,stop,"Sure, I'll halt the garage door movement.",0
+garage_door,toggle,Toggling the garage door state for you.,0
+garage_door,toggle,I'll switch the garage door's state now.,0
+garage_door,toggle,Switching the garage door's state for you.,0
+garage_door,open,Lifting <device_name> for you,0
+garage_door,open,Opening <device_name> now,0
+garage_door,open,Raising <device_name> as requested,0
+garage_door,stop,Freezing <device_name> position now,0
+garage_door,stop,"Certainly, halting <device_name>",0
+garage_door,stop,Halting <device_name> operation,0
+garage_door,open,Opening <device_name>,0
+garage_door,stop,Stopping <device_name>,0
+garage_door,close,Closing <device_name> now,0
+garage_door,close,Lowering <device_name> for you,0
+garage_door,close,Shutting <device_name> as requested,0
+garage_door,close,Closing <device_name>,0
+garage_door,toggle,Flipping <device_name> state now,0
+garage_door,toggle,Switching <device_name> state as requested,0
+garage_door,toggle,Toggling <device_name> for you,0
+garage_door,toggle,Toggling <device_name>,0
+light,turn_on,Turning on the light for you.,0
+light,turn_on,"Sure, I'll turn on the light now.",0
+light,turn_on,I'll go ahead and turn the light on.,0
+light,turn_off,Turning off the light as requested.,0
+light,turn_off,I'll switch off the light for you.,0
+light,turn_off,"Sure, turning off the light.",0
+light,toggle,Toggling the light for you.,0
+light,toggle,Switching the light's state now.,0
+light,toggle,I'll toggle the light for you.,0
+light,toggle,Flipping the <device_name> state,0
+light,toggle,Switching <device_name> state as requested,0
+light,toggle,Toggling <device_name> for you,0
+light,toggle,Toggling <device_name>,0
+light,turn_on,Activation of <device_name> in progress,0
+light,turn_on,"Certainly, turning on <device_name> now",0
+light,turn_on,Switching on <device_name> for you,0
+light,turn_on,Turning on <device_name>,0
+light,turn_on,Activating <device_name>,0
+light,turn_on,Setting the brightness of <device_name> to <brightness>%.,0
+light,turn_on,Dimming <device_name> to <brightness>% brightness.,0
+light,turn_on,Brightening <device_name> to <brightness>%.,0
+light,turn_on,Adjusting <device_name> brightness to <brightness>.,0
+light,turn_on,Increasing <device_name>'s brightness to <brightness>.,0
+light,turn_on,Lowering the brightness of <device_name> to <brightness>.,0
+light,turn_on,Setting <device_name>'s brightness level to <brightness>%.,0
+light,turn_on,Setting <device_name> to <brightness>% brightness.,0
+light,turn_on,Turning <device_name> <color>.,0
+light,turn_on,Changing the color of <device_name> to <color>.,0
+light,turn_on,Changing <device_name> to a <color> hue.,0
+light,turn_on,Setting <device_name> to be <color>.,0
+light,turn_on,Setting <device_name> to be <color>.,0
+light,turn_on,Making <device_name> shine in <color>.,0
+light,turn_on,Turning <device_name> to a <color> shade.,0
+light,turn_on,Turning <device_name> <color>.,0
+light,turn_on,Setting <device_name> to a <color>.,0
+light,turn_on,Setting <device_name> to a <color> color.,0
+light,turn_on,Setting <device_name> to a <color> color.,0
+light,turn_on,Making <device_name> glow <color>.,0
+light,turn_on,Turning <device_name> to <color>.,0
+light,turn_on,Changing <device_name> to <color>.,0
+light,turn_on,Adjusting <device_name> to <color> color.,0
+light,turn_on,Switching <device_name> color to <color>.,0
+light,turn_on,Setting <device_name> to be <color>.,0
+light,turn_on,Setting <device_name> in <color>.,0
+light,turn_on,Changing <device_name> to <color>.,0
+light,turn_on,Making <device_name> display a <color> light.,0
+light,turn_on,Setting <device_name> color to <color>.,0
+light,turn_off,Deactivating <device_name> as requested,0
+light,turn_off,Switching off <device_name> now,0
+light,turn_off,"Sure, turning off <device_name>",0
+light,turn_off,Turning off <device_name>,0
+light,turn_off,Deactivating <device_name>,0
+lock,lock,Locking the door for you.,0
+lock,lock,I'll go ahead and lock the door.,0
+lock,lock,"Sure, securing the lock.",0
+lock,unlock,Unlocking the door as you requested.,0
+lock,unlock,I'll unlock the door for you.,0
+lock,unlock,"Sure, unlocking the door.",0
+lock,lock,Engaging lock on <device_name>,0
+lock,lock,Locking <device_name> now,0
+lock,lock,Securing <device_name> for you,0
+lock,lock,Locking <device_name>,0
+lock,lock,Securing <device_name>,0
+lock,unlock,Disengaging lock on <device_name>,0
+lock,unlock,Unlocking <device_name> now,0
+lock,unlock,Unsecuring <device_name> for you,0
+lock,unlock,Unlocking <device_name>,0
+media_player,turn_on,Turning on the media player for you.,0
+media_player,turn_on,I'll get the media player going.,0
+media_player,turn_on,"Sure, activating the media player.",0
+media_player,turn_off,Turning off the media player as requested.,0
+media_player,turn_off,I'll switch off the media player.,0
+media_player,turn_off,"Sure, deactivating the media player.",0
+media_player,toggle,Toggling the media player for you.,0
+media_player,toggle,Switching the media player's state.,0
+media_player,toggle,I'll toggle the media player.,0
+media_player,volume_up,Increasing the volume for you.,0
+media_player,volume_up,"Sure, turning up the volume now.",0
+media_player,volume_up,I'll go ahead and raise the volume.,0
+media_player,volume_down,Reducing the volume as you requested.,0
+media_player,volume_down,I'll turn down the volume for you.,0
+media_player,volume_down,"Sure, lowering the volume.",0
+media_player,volume_mute,Muting the volume for you.,0
+media_player,volume_mute,I'll mute the media player now.,0
+media_player,volume_mute,"Sure, muting the volume.",0
+media_player,media_play_pause,Toggling play/pause on the media player.,0
+media_player,media_play_pause,Switching between play and pause.,0
+media_player,media_play_pause,I'll toggle between play and pause for you.,0
+media_player,media_play,Starting media playback.,0
+media_player,media_play,I'll start playing the media for you.,0
+media_player,media_play,"Sure, beginning playback.",0
+media_player,media_pause,Pausing the media playback.,0
+media_player,media_pause,I'll pause the media for you.,0
+media_player,media_pause,"Sure, pausing playback.",0
+media_player,media_stop,Stopping the media playback.,0
+media_player,media_stop,I'll stop the media for you.,0
+media_player,media_stop,"Sure, halting playback.",0
+media_player,media_next_track,Skipping to the next track.,0
+media_player,media_next_track,I'll go to the next track for you.,0
+media_player,media_next_track,"Sure, moving to the next track.",0
+media_player,media_previous_track,Going back to the previous track.,0
+media_player,media_previous_track,I'll return to the previous track for you.,0
+media_player,media_previous_track,"Sure, reverting to the previous track.",0
+media_player,volume_up,Increasing <device_name>'s volume.,0
+media_player,volume_up,Turning up <device_name> a bit.,0
+media_player,volume_up,Making <device_name> louder.,0
+media_player,media_play,Starting playback on <device_name>.,0
+media_player,media_play,Playing <device_name> now.,0
+media_player,media_play,Playing media on <device_name>.,0
+media_player,media_stop,Stopping <device_name> completely.,0
+media_player,media_stop,Stopping playback on <device_name>.,0
+media_player,media_stop,Ending session on <device_name>.,0
+media_player,volume_down,Lowering <device_name>'s volume.,0
+media_player,volume_down,Decreasing <device_name>'s volume.,0
+media_player,volume_down,Turning down <device_name>.,0
+media_player,volume_mute,Muting <device_name>.,0
+media_player,volume_mute,Silencing <device_name>.,0
+media_player,volume_mute,Muting <device_name> now.,0
+media_player,media_pause,Pausing <device_name>.,0
+media_player,media_pause,Pausing <device_name> now.,0
+media_player,media_pause,Holding playback on <device_name>.,0
+media_player,media_next_track,Skipping to next track on <device_name>.,0
+media_player,media_next_track,Advancing to the next song on <device_name>.,0
+media_player,media_next_track,Skipping this track on <device_name>.,0
+media_player,media_previous_track,Going back to previous track on <device_name>.,0
+media_player,media_previous_track,Rewinding to the previous song on <device_name>.,0
+media_player,media_previous_track,Going back a track on <device_name>.,0
+switch,turn_on,Turning on the switch for you.,0
+switch,turn_on,"Sure, I'll turn on the light now.",0
+switch,turn_on,I'll go ahead and turn the switch on.,0
+switch,turn_off,Turning off the switch as requested.,0
+switch,turn_off,I'll switch off the device for you.,0
+switch,turn_off,"Sure, turning off the switch.",0
+switch,toggle,Toggling the switch for you.,0
+switch,toggle,Changing the switch's state now.,0
+switch,toggle,I'll toggle the switch for you.,0
+switch,toggle,Toggling <device_name>.,0
+switch,toggle,"Yes, toggling <device_name>.",0
+switch,toggle,"Yes, I can toggle <device_name>.",0
+switch,toggle,Toggling <device_name> as requested.,0
+switch,toggle,Changing the state of <device_name>.,0
+switch,toggle,Quickly toggling <device_name>.,0
+switch,turn_on,Turning on <device_name> now.,0
+switch,turn_on,I'm turning on <device_name>.,0
+switch,turn_on,Activating <device_name>.,0
+switch,turn_on,"Sure, turning <device_name> on.",0
+switch,turn_on,Switching on <device_name> right away.,0
+switch,turn_on,"Sure, lighting up <device_name> now.",0
+switch,turn_on,Turning <device_name> on as needed.,0
+switch,turn_off,Switching off <device_name>.,0
+switch,turn_off,Turning off <device_name>.,0
+switch,turn_off,Deactivating <device_name>.,0
+switch,turn_off,"Okay, turning <device_name> off.",0
+switch,turn_off,"Okay, I'm turning off <device_name>.",0
+switch,turn_off,Shutting off <device_name> for bedtime.,0
+switch,turn_off,Turning off <device_name> now.,0
+blinds,close,shutting <device_name>,1
+blinds,close,lowering <device_name>,1
+blinds,close,closing <device_name>,1
+blinds,open,raising <device_name>,1
+blinds,open,lifting <device_name>,1
+blinds,open,opening <device_name>,1
+fan,decrease_speed,slowing down <device_name>,1
+fan,decrease_speed,reducing speed of <device_name>,1
+fan,decrease_speed,reducing <device_name>,1
+fan,increase_speed,speeding up <device_name>,1
+fan,increase_speed,increasing speed of <device_name>,1
+fan,increase_speed,ramping up <device_name>,1
+fan,toggle,toggling <device_name>,1
+fan,toggle,flipping <device_name>,1
+fan,turn_off,stopping <device_name>,1
+fan,turn_off,turning off <device_name>,1
+fan,turn_off,deactivating <device_name>,1
+fan,turn_on,starting <device_name>,1
+fan,turn_on,activating <device_name>,1
+garage_door,close,shutting <device_name>,1
+garage_door,close,deactivating <device_name>,1
+garage_door,close,closing <device_name>,1
+garage_door,open,opening <device_name>,1
+garage_door,open,lifting <device_name>,1
+garage_door,stop,stopping <device_name>,1
+light,toggle,toggling <device_name>,1
+light,toggle,flipping <device_name>,1
+light,turn_off,turning off <device_name>,1
+light,turn_off,deactivating <device_name>,1
+light,turn_off,lowering <device_name>,1
+light,turn_off,switching off <device_name>,1
+light,turn_on,turning on <device_name>,1
+light,turn_on,activating <device_name>,1
+light,turn_on,switching on <device_name>,1
+light,turn_on,turning on both <device_name>,1
+lock,lock,securing <device_name>,1
+lock,lock,locking <device_name>,1
+lock,unlock,unlocking <device_name>,1
+lock,unlock,unsecuring <device_name>,1

@@ -675,6 +675,7 @@ def merge_with_dataset(dataset_name, seed, outupt_name, format_function, dataset
 # TODO: make more randomized names for devices (random words or people's names)
 # TODO: answer questions about more than one thing in the state list at once
 # TODO: add examples for rooms/groups of devices. i.e. "turn off all the lights in the kitchen"
+# TODO: add personas for responses. different system prompts should invoke different response tones (pirate, robot, and mean)
 def main():
     parser = argparse.ArgumentParser(description="Generate the full dataset from the CSV piles")
     parser.add_argument("--sample", action="store_true", help="Set this flag to enable generation of the train dataset.")
@@ -705,7 +706,6 @@ def main():
     if args.sample:
         generate_example_file("sample", 42, format_func, static_factor=1, template_factor=1, status_request_factor=1)
     if args.train:
-        # TODO: add small, medium, large cli clags
         if args.size == "small":
             generate_example_file("home_assistant_train", 42, format_func, static_factor=1, template_factor=10, status_request_factor=8)
         elif args.size == "medium":
