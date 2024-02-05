@@ -19,46 +19,15 @@ When doing this, you can host the model yourself and point the add-on at machine
 
 - Supported version of HomeAssistant. (at time of writing this is `2024.1.6`)
 - [HACs](https://hacs.xyz/docs/setup/download/) (if you want to install it that way)
-- For Manual install, SSH or Web Terminal access to your HomeAssistant instance.
-- `llama-cpp-python>=0.2.29` and SSH access (If you don't provide your own LLM api)
+- SSH or Web Terminal access to your HomeAssistant instance: if you want to use builtin llama-cpp or perform manual install
 
 ## 🏃 Getting Started
 
 Installing and configuration HomeLLM will involve several steps: 
 
-1. ⬇️ Decide on Direct Backend or API Backend.
 1. 💾 Install the HomeLLM component.
 2. ⚙️ Choose and Configure a Backend
 3. 🗣️ Configure the Voice Assistant
-
-### ⬇️ Install `llama-cpp-python`
-
-> ℹ️ llama.cpp vs api
->
-> This only applies to you if you don't want to spin up your own llm api server and
-> instead just want it to be abstracted away as an implementation detail.
->
-> If you want to interact with the model in other ways, skip installing `llama-cpp-python` and look at the options below that provide an api server.
-
-In order to run a model directly as part of your Home Assistant installation, you will need to install one of the pre-build wheels because there are no existing musllinux wheels for the package. Compatible wheels for x86_x64 and arm64 are provided in the [dist](./dist) folder. Copy the `*.whl` files to the `custom_components/llama_conversation/` folder. They will be installed while setting up the component.
-
-Obtain terminal access to the HomeAssistant instance and create some prerequisite folders. We'll download a set of prebundled python wheel files.
-
-```console
-mkdir -p /config/custom_components/llama_conversation
-cd /config/custom_components/llama_conversation
-
-wget https://github.com/acon96/home-llm/raw/develop/dist/llama_cpp_python-0.2.38-cp311-cp311-musllinux_1_2_aarch64.whl
-wget https://github.com/acon96/home-llm/raw/develop/dist/llama_cpp_python-0.2.38-cp311-cp311-musllinux_1_2_x86_64.whl
-```
-
-> ❔ 🤔 How to get Terminal Access?
-> 
-> There'll be many ways, but for the sake of simplicity you can try out these 
-> addons: 
-> 
-> - https://github.com/hassio-addons/repository?tab=readme-ov-file#-studio-code-server
-> - https://github.com/hassio-addons/repository?tab=readme-ov-file#-advanced-ssh--web-terminal
 
 
 ### 💾 🚕 Install HomeLMM with HACs
@@ -89,7 +58,10 @@ A "LLaMA Conversation" device should show up in the `Settings > Devices and Serv
 
 ### ⚙️ Configuration and Setup
 
-Once you can see the "LLaMA Conversation" device as shown above, you can install the integration.
+Decide if you want to have your model served by an api or not: 
+
+- ✖️: continue on.
+- ✔️ then follow instructions below on [`llama-cpp-python`](#llama-cpp-python)
 
 1. `Settings > Devices and Services`.
 2. Click the `Add Integration` button in the bottom right of the screen.
@@ -130,6 +102,34 @@ In order for any entities be available to the agent, you must "expose" them firs
 
 
 ## Technical Details
+
+
+### `llama-cpp-python`
+
+This only applies to you if you don't want to spin up your own llm api server and instead just want it to be abstracted away as an implementation detail.
+
+Once this is done, the backend setup process for the LLaMa.cpp options will handle installing the appropriate `*.whl` file.
+
+In order to run a model directly as part of your Home Assistant installation, you will need to install one of the pre-build wheels because there are no existing musllinux wheels for the package. Compatible wheels for x86_x64 and arm64 are provided in the [dist](./dist) folder. Copy the `*.whl` files to the `custom_components/llama_conversation/` folder. They will be installed while setting up the component.
+
+Obtain terminal access to the HomeAssistant instance and create some prerequisite folders. We'll download a set of prebundled python wheel files.
+
+```console
+mkdir -p /config/custom_components/llama_conversation
+cd /config/custom_components/llama_conversation
+
+wget https://github.com/acon96/home-llm/raw/develop/dist/llama_cpp_python-0.2.38-cp311-cp311-musllinux_1_2_aarch64.whl
+wget https://github.com/acon96/home-llm/raw/develop/dist/llama_cpp_python-0.2.38-cp311-cp311-musllinux_1_2_x86_64.whl
+```
+
+> ❔ 🤔 How to get Terminal Access?
+> 
+> There'll be many ways, but for the sake of simplicity you can try out these 
+> addons: 
+> 
+> - https://github.com/hassio-addons/repository?tab=readme-ov-file#-studio-code-server
+> - https://github.com/hassio-addons/repository?tab=readme-ov-file#-advanced-ssh--web-terminal
+
 
 
 ### Constrained Grammar
