@@ -64,7 +64,7 @@ Once you have HACs installed, this button will help you add the repository to HA
 1. [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?category=Integration&repository=home-llm&owner=acon96)
 2. Restart Home Assistant
 
-The "LLaMA Conversation" integration should show up in the `Settings > Devices and Services > [Devices]` tab now:
+A "LLaMA Conversation" device should show up in the `Settings > Devices and Services > [Devices]` tab now:
 ![image](https://github.com/acon96/home-llm/assets/61225/4427e362-e443-4796-bee8-5bdda18305d0)
 
 
@@ -75,48 +75,18 @@ The "LLaMA Conversation" integration should show up in the `Settings > Devices a
 3. Copy the `custom_components/llama_conversation` folder from this repo to `config/custom_components/llama_conversation` on your Home Assistant machine.
 4. Restart Home Assistant: `Developer Tools -> Services -> Run` : `homeassistant.restart`
 
-The "LLaMA Conversation" integration should show up in the `Settings > Devices and Services > [Devices]` tab now:
+A "LLaMA Conversation" device should show up in the `Settings > Devices and Services > [Devices]` tab now:
 ![image](https://github.com/acon96/home-llm/assets/61225/4427e362-e443-4796-bee8-5bdda18305d0)
 
 
 ### ⚙️ Configuration and Setup
 
-When setting up the component, there are 4 different "backend" options to choose from:
+Once you can see the "LLaMA Conversation" device as shown above, you can install the integration.
 
-a. Llama.cpp with a model from HuggingFace
-b. Llama.cpp with a locally provided model
-c. A remote instance of text-generation-webui
-d. A generic OpenAI API compatible interface; *should* be compatible with LocalAI, LM Studio, and all other OpenAI compatible backends
-
-See [docs/Backend Configuration.md](/docs/Backend%20Configuration.md) for more info.
-
-#### a. Installing llama-cpp-python for local model usage
-
-In order to run a model directly as part of your Home Assistant installation, you will need to install one of the pre-build wheels because there are no existing musllinux wheels for the package. Compatible wheels for x86_x64 and arm64 are provided in the [dist](./dist) folder. Copy the `*.whl` files to the `custom_components/llama_conversation/` folder. They will be installed while setting up the component.
-
-#### b. Setting up the Llama.cpp backend with a model from HuggingFace
-
-You need the following settings to configure the local backend from HuggingFace:
-1. Model Name: the name of the model in the form `repo/model-name`. The repo MUST contain a GGUF quantized model.
-2. Model Quantization: The quantization level to download. Pick from the list. Higher quantizations use more RAM but have higher quality responses.
-
-#### c. Setting up the Llama.cpp backend with a locally downloaded model
-
-You need the following settings to configure the local backend from HuggingFace:
-1. Model File Name: the file name where Home Assistant can access the model to load. Most likely a sub-path of `/config` or `/media` or wherever you copied the model file to.
-
-#### d. Setting up the "remote" backends
-
-You need the following settings in order to configure the "remote" backend:
-1. Hostname: the host of the machine where text-generation-webui API is hosted. If you are using the provided add-on then the hostname is `local-text-generation-webui` or `f459db47-text-generation-webui` depending on how the addon was installed.
-2. Port: the port for accessing the text-generation-webui API. NOTE: this is not the same as the UI port. (Usually 5000)
-3. Name of the Model: This name must EXACTLY match the name as it appears in `text-generation-webui`
-
-With the remote text-generation-webui backend, the component will validate that the selected model is available for use and will ensure it is loaded remotely. The Generic OpenAI compatible version does NOT do any validation or model loading.
-
-**Setting up with LocalAI**:  
-If you are an existing LocalAI user or would like to use LocalAI as your backend, please refer to [this](https://io.midori-ai.xyz/howtos/setup-with-ha/) website which has instructions on how to setup LocalAI to work with Home-LLM including automatic installation of the latest version of the the Home-LLM model. The auto-installer (LocalAI Manager) will automatically download and setup LocalAI and/or the model of your choice and automatically create the necessary template files for the model to work with this integration.
-
+1. `Settings > Devices and Services`.
+2. Click the `Add Integration` button in the bottom right of the screen.
+3. Filter the list of "brand names" for llama, and "LLaMa Conversation" should remain.
+4. Choose and configure the backend. [More info 👇](#configure-backend)
 
 ### 🗣️ Configuring the component as a Conversation Agent
 
@@ -269,6 +239,48 @@ python3 train.py \
 
 </details>
 <br/>
+
+
+### Backend Configuration
+
+![image](https://github.com/airtonix/home-llm/assets/61225/6f5d9748-5bfc-47ce-8abc-4f07d389a73f)
+
+When setting up the component, there are 4 different "backend" options to choose from:
+
+a. Llama.cpp with a model from HuggingFace
+b. Llama.cpp with a locally provided model
+c. A remote instance of text-generation-webui
+d. A generic OpenAI API compatible interface; *should* be compatible with LocalAI, LM Studio, and all other OpenAI compatible backends
+
+See [docs/Backend Configuration.md](/docs/Backend%20Configuration.md) for more info.
+
+#### a. Installing llama-cpp-python for local model usage
+
+In order to run a model directly as part of your Home Assistant installation, you will need to install one of the pre-build wheels because there are no existing musllinux wheels for the package. Compatible wheels for x86_x64 and arm64 are provided in the [dist](./dist) folder. Copy the `*.whl` files to the `custom_components/llama_conversation/` folder. They will be installed while setting up the component.
+
+#### b. Setting up the Llama.cpp backend with a model from HuggingFace
+
+You need the following settings to configure the local backend from HuggingFace:
+1. Model Name: the name of the model in the form `repo/model-name`. The repo MUST contain a GGUF quantized model.
+2. Model Quantization: The quantization level to download. Pick from the list. Higher quantizations use more RAM but have higher quality responses.
+
+#### c. Setting up the Llama.cpp backend with a locally downloaded model
+
+You need the following settings to configure the local backend from HuggingFace:
+1. Model File Name: the file name where Home Assistant can access the model to load. Most likely a sub-path of `/config` or `/media` or wherever you copied the model file to.
+
+#### d. Setting up the "remote" backends
+
+You need the following settings in order to configure the "remote" backend:
+1. Hostname: the host of the machine where text-generation-webui API is hosted. If you are using the provided add-on then the hostname is `local-text-generation-webui` or `f459db47-text-generation-webui` depending on how the addon was installed.
+2. Port: the port for accessing the text-generation-webui API. NOTE: this is not the same as the UI port. (Usually 5000)
+3. Name of the Model: This name must EXACTLY match the name as it appears in `text-generation-webui`
+
+With the remote text-generation-webui backend, the component will validate that the selected model is available for use and will ensure it is loaded remotely. The Generic OpenAI compatible version does NOT do any validation or model loading.
+
+**Setting up with LocalAI**:  
+If you are an existing LocalAI user or would like to use LocalAI as your backend, please refer to [this](https://io.midori-ai.xyz/howtos/setup-with-ha/) website which has instructions on how to setup LocalAI to work with Home-LLM including automatic installation of the latest version of the the Home-LLM model. The auto-installer (LocalAI Manager) will automatically download and setup LocalAI and/or the model of your choice and automatically create the necessary template files for the model to work with this integration.
+
 
 
 
