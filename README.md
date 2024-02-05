@@ -17,11 +17,10 @@ When doing this, you can host the model yourself and point the add-on at machine
 
 ## Requirements
 
-- supported version of HomeAssistant
-- `llama-cpp-python>=0.2.29`
+- Supported version of HomeAssistant. (at time of writing this is `2024.1.6`)
 - [HACs](https://hacs.xyz/docs/setup/download/) (if you want to install it that way)
-- SSH or Web Terminal access to your HomeAssistant instance.
-
+- For Manual install, SSH or Web Terminal access to your HomeAssistant instance.
+- `llama-cpp-python>=0.2.29` and SSH access (If you don't provide your own LLM api)
 
 ## 🏃 Getting Started
 
