@@ -27,12 +27,21 @@ When doing this, you can host the model yourself and point the add-on at machine
 
 Installing and configuration HomeLLM will involve several steps: 
 
-1. ⬇️ Install `llama-cpp-python`
-2. 💾 Install the HomeLLM component
-3. ⚙️ Choose and Configure a Backend
+1. ⬇️ Decide on Direct Backend or API Backend.
+1. 💾 Install the HomeLLM component.
+2. ⚙️ Choose and Configure a Backend
 3. 🗣️ Configure the Voice Assistant
 
 ### ⬇️ Install `llama-cpp-python`
+
+> ℹ️ llama.cpp vs api
+>
+> This only applies to you if you don't want to spin up your own llm api server and
+> instead just want it to be abstracted away as an implementation detail.
+>
+> If you want to interact with the model in other ways, skip installing `llama-cpp-python` and look at the options below that provide an api server.
+
+In order to run a model directly as part of your Home Assistant installation, you will need to install one of the pre-build wheels because there are no existing musllinux wheels for the package. Compatible wheels for x86_x64 and arm64 are provided in the [dist](./dist) folder. Copy the `*.whl` files to the `custom_components/llama_conversation/` folder. They will be installed while setting up the component.
 
 Obtain terminal access to the HomeAssistant instance and create some prerequisite folders. We'll download a set of prebundled python wheel files.
 
@@ -87,6 +96,11 @@ Once you can see the "LLaMA Conversation" device as shown above, you can install
 2. Click the `Add Integration` button in the bottom right of the screen.
 3. Filter the list of "brand names" for llama, and "LLaMa Conversation" should remain.
 4. Choose and configure the backend. [More info 👇](#configure-backend)
+    1. Using builtin llama.cpp with hugging face
+    2. Using builtin llama.cpp with existing model file
+    3. using text-generation-webui api
+    4. using generic openapi compatiable api
+    5. using ollama api
 
 ### 🗣️ Configuring the component as a Conversation Agent
 
@@ -245,31 +259,35 @@ python3 train.py \
 
 ![image](https://github.com/airtonix/home-llm/assets/61225/6f5d9748-5bfc-47ce-8abc-4f07d389a73f)
 
-When setting up the component, there are 4 different "backend" options to choose from:
+When setting up the component, there are 5 different "backend" options to choose from:
 
 a. Llama.cpp with a model from HuggingFace
 b. Llama.cpp with a locally provided model
 c. A remote instance of text-generation-webui
 d. A generic OpenAI API compatible interface; *should* be compatible with LocalAI, LM Studio, and all other OpenAI compatible backends
+e. Ollama api
 
 See [docs/Backend Configuration.md](/docs/Backend%20Configuration.md) for more info.
 
-#### a. Installing llama-cpp-python for local model usage
 
-In order to run a model directly as part of your Home Assistant installation, you will need to install one of the pre-build wheels because there are no existing musllinux wheels for the package. Compatible wheels for x86_x64 and arm64 are provided in the [dist](./dist) folder. Copy the `*.whl` files to the `custom_components/llama_conversation/` folder. They will be installed while setting up the component.
+#### Llama.cpp Backend with a model from HuggingFace
 
-#### b. Setting up the Llama.cpp backend with a model from HuggingFace
+This is option A
 
 You need the following settings to configure the local backend from HuggingFace:
 1. Model Name: the name of the model in the form `repo/model-name`. The repo MUST contain a GGUF quantized model.
 2. Model Quantization: The quantization level to download. Pick from the list. Higher quantizations use more RAM but have higher quality responses.
 
-#### c. Setting up the Llama.cpp backend with a locally downloaded model
+#### Llama.cpp Backend with a locally downloaded model
+
+This is option B
 
 You need the following settings to configure the local backend from HuggingFace:
 1. Model File Name: the file name where Home Assistant can access the model to load. Most likely a sub-path of `/config` or `/media` or wherever you copied the model file to.
 
-#### d. Setting up the "remote" backends
+#### Remote Backends
+
+This is effectively options C, D and E
 
 You need the following settings in order to configure the "remote" backend:
 1. Hostname: the host of the machine where text-generation-webui API is hosted. If you are using the provided add-on then the hostname is `local-text-generation-webui` or `f459db47-text-generation-webui` depending on how the addon was installed.
@@ -280,8 +298,6 @@ With the remote text-generation-webui backend, the component will validate that 
 
 **Setting up with LocalAI**:  
 If you are an existing LocalAI user or would like to use LocalAI as your backend, please refer to [this](https://io.midori-ai.xyz/howtos/setup-with-ha/) website which has instructions on how to setup LocalAI to work with Home-LLM including automatic installation of the latest version of the the Home-LLM model. The auto-installer (LocalAI Manager) will automatically download and setup LocalAI and/or the model of your choice and automatically create the necessary template files for the model to work with this integration.
-
-
 
 
 ### Running the text-generation-webui add-on
