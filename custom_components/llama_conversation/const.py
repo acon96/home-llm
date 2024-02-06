@@ -84,6 +84,7 @@ CONF_OPENAI_API_KEY = "openai_api_key"
 CONF_TEXT_GEN_WEBUI_ADMIN_KEY = "text_generation_webui_admin_key"
 CONF_REFRESH_SYSTEM_PROMPT = "refresh_prompt_per_tern"
 CONF_REMEMBER_CONVERSATION = "remember_conversation"
+CONF_REMEMBER_NUM_INTERACTIONS = "remember_num_interactions"
 DEFAULT_REFRESH_SYSTEM_PROMPT = True
 DEFAULT_REMEMBER_CONVERSATION = True
 CONF_SERVICE_CALL_REGEX = "service_call_regex"

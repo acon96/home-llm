@@ -55,6 +55,7 @@ from .const import (
     CONF_TEXT_GEN_WEBUI_PRESET,
     CONF_REFRESH_SYSTEM_PROMPT,
     CONF_REMEMBER_CONVERSATION,
+    CONF_REMEMBER_NUM_INTERACTIONS,
     CONF_OPENAI_API_KEY,
     CONF_TEXT_GEN_WEBUI_ADMIN_KEY,
     CONF_SERVICE_CALL_REGEX,
@@ -633,6 +634,10 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
             description={"suggested_value": options.get(CONF_REMEMBER_CONVERSATION)},
             default=DEFAULT_REMEMBER_CONVERSATION,
         ): bool,
+        vol.Optional(
+            CONF_REMEMBER_NUM_INTERACTIONS,
+            description={"suggested_value": options.get(CONF_REMEMBER_NUM_INTERACTIONS)},
+        ): int,
     }
 
     if is_local_backend(backend_type):

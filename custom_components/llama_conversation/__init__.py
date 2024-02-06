@@ -55,6 +55,7 @@ from .const import (
     CONF_TEXT_GEN_WEBUI_ADMIN_KEY,
     CONF_REFRESH_SYSTEM_PROMPT,
     CONF_REMEMBER_CONVERSATION,
+    CONF_REMEMBER_NUM_INTERACTIONS,
     CONF_SERVICE_CALL_REGEX,
     CONF_REMOTE_USE_CHAT_ENDPOINT,
     CONF_TEXT_GEN_WEBUI_CHAT_MODE,
@@ -239,6 +240,7 @@ class LLaMAAgent(AbstractConversationAgent):
         raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
         refresh_system_prompt = self.entry.options.get(CONF_REFRESH_SYSTEM_PROMPT, DEFAULT_REFRESH_SYSTEM_PROMPT)
         remember_conversation = self.entry.options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION)
+        remember_num_interactions = self.entry.options.get(CONF_REMEMBER_NUM_INTERACTIONS, False)
         service_call_regex = self.entry.options.get(CONF_SERVICE_CALL_REGEX, DEFAULT_SERVICE_CALL_REGEX)
         extra_attributes_to_expose = self.entry.options \
             .get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE)
@@ -308,6 +310,9 @@ class LLaMAAgent(AbstractConversationAgent):
 
         conversation.append({"role": "assistant", "message": response})
         if remember_conversation:
+            if remember_num_interactions and len(conversation) > remember_num_interactions * 2:
+                for i in range(0,2):
+                    conversation.pop(0)
             self.history[conversation_id] = conversation
 
         exposed_entities = list(self._async_get_exposed_entities()[0].keys())
