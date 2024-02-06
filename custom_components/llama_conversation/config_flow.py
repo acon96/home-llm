@@ -54,6 +54,7 @@ from .const import (
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
     CONF_TEXT_GEN_WEBUI_PRESET,
     CONF_REFRESH_SYSTEM_PROMPT,
+    CONF_REMEMBER_CONVERSATION,
     CONF_OPENAI_API_KEY,
     CONF_TEXT_GEN_WEBUI_ADMIN_KEY,
     CONF_SERVICE_CALL_REGEX,
@@ -74,6 +75,7 @@ from .const import (
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
     DEFAULT_REFRESH_SYSTEM_PROMPT,
+    DEFAULT_REMEMBER_CONVERSATION,
     DEFAULT_SERVICE_CALL_REGEX,
     DEFAULT_OPTIONS,
     DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
@@ -625,6 +627,11 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
             CONF_REFRESH_SYSTEM_PROMPT,
             description={"suggested_value": options.get(CONF_REFRESH_SYSTEM_PROMPT)},
             default=DEFAULT_REFRESH_SYSTEM_PROMPT,
+        ): bool,
+        vol.Required(
+            CONF_REMEMBER_CONVERSATION,
+            description={"suggested_value": options.get(CONF_REMEMBER_CONVERSATION)},
+            default=DEFAULT_REMEMBER_CONVERSATION,
         ): bool,
     }
 

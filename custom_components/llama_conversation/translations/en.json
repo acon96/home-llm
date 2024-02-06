@@ -65,6 +65,7 @@
                     "text_generation_webui_admin_key": "Admin Key",
                     "service_call_regex": "Service Call Regex",
                     "refresh_prompt_per_tern": "Refresh System Prompt Every Turn",
+                    "remember_conversation": "Remember conversation",
                     "text_generation_webui_preset": "Generation Preset/Character Name",
                     "remote_use_chat_endpoint": "Use chat completions endpoint",
                     "text_generation_webui_chat_mode": "Chat Mode"

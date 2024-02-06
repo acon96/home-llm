@@ -54,6 +54,7 @@ from .const import (
     CONF_OPENAI_API_KEY,
     CONF_TEXT_GEN_WEBUI_ADMIN_KEY,
     CONF_REFRESH_SYSTEM_PROMPT,
+    CONF_REMEMBER_CONVERSATION,
     CONF_SERVICE_CALL_REGEX,
     CONF_REMOTE_USE_CHAT_ENDPOINT,
     CONF_TEXT_GEN_WEBUI_CHAT_MODE,
@@ -68,6 +69,7 @@ from .const import (
     DEFAULT_PROMPT_TEMPLATE,
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_REFRESH_SYSTEM_PROMPT,
+    DEFAULT_REMEMBER_CONVERSATION,
     DEFAULT_SERVICE_CALL_REGEX,
     DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
     DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
@@ -236,6 +238,7 @@ class LLaMAAgent(AbstractConversationAgent):
 
         raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
         refresh_system_prompt = self.entry.options.get(CONF_REFRESH_SYSTEM_PROMPT, DEFAULT_REFRESH_SYSTEM_PROMPT)
+        remember_conversation = self.entry.options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION)
         service_call_regex = self.entry.options.get(CONF_SERVICE_CALL_REGEX, DEFAULT_SERVICE_CALL_REGEX)
         extra_attributes_to_expose = self.entry.options \
             .get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE)
@@ -279,6 +282,8 @@ class LLaMAAgent(AbstractConversationAgent):
             
             if len(conversation) == 0:
                 conversation.append(system_prompt)
+                if remember_conversation:
+                    self.history[conversation_id] = conversation
             else:
                 conversation[0] = system_prompt
 
@@ -302,7 +307,8 @@ class LLaMAAgent(AbstractConversationAgent):
             )
 
         conversation.append({"role": "assistant", "message": response})
-        self.history[conversation_id] = conversation
+        if remember_conversation:
+            self.history[conversation_id] = conversation
 
         exposed_entities = list(self._async_get_exposed_entities()[0].keys())
         
