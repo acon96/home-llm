@@ -94,6 +94,7 @@ class TrainingRunArguments:
     save_steps: int = field(default=-1, metadata={"help": "The number of steps in between model checkpoints; set to -1 to save every epoch"})
     save_total_limit: int = field(default=1, metadata={"help": "The number of recent checkpoints of the model to save (not including the final model)"})
     group_by_length: bool = field(default=False, metadata={"help": "If enabled, the training data will be grouped by length to optimize use of padding"})
+    pre_allocate_cuda_buffers: bool = field(default=True, metadata={"help": "If enabled, runs a forward and backward pass on the model before training to force pytorch to allocate the correct size CUDA buffers up front"})
     
     # Quantization
     load_in_8bit: bool = field(default=False, metadata={"help": "Set to load the base model in 8-bit mode using bitsandbytes"})
@@ -441,10 +442,10 @@ class CustomTrainer(Trainer):
         super().evaluate()
         self.evaluate_full_dataset = False
 
-    def evaluate(self, *args, **kwargs):
-        result = super().evaluate(*args, **kwargs)
-        torch.cuda.memory.empty_cache() # clear the irregularly sized memory allocations used for evaluation
-        return result
+    # def evaluate(self, *args, **kwargs):
+    #     result = super().evaluate(*args, **kwargs)
+    #     torch.cuda.memory.empty_cache() # clear the irregularly sized memory allocations used for evaluation
+    #     return result
 
 
     # Randomly sample the eval dataset
@@ -461,8 +462,8 @@ class CustomTrainer(Trainer):
         if self.args.group_by_length:
             return super()._get_train_sampler()
         
-        # return RandomSampler(self.train_dataset, generator=torch.Generator(device='cpu'))
-        return RandomSamplerWithLargestFirst(self.train_dataset, generator=torch.Generator(device='cpu'))
+        return RandomSampler(self.train_dataset, generator=torch.Generator(device='cpu'))
+        # return RandomSamplerWithLargestFirst(self.train_dataset, generator=torch.Generator(device='cpu'))
     
     def create_scheduler(self, num_training_steps: int, optimizer: torch.optim.Optimizer = None):
         """
@@ -509,6 +510,16 @@ if training_run_args.run_tensorboard:
     import subprocess, atexit
     tensorboard_process = subprocess.Popen(["tensorboard", "--logdir", model_dir])
     atexit.register(kill_tensorboard)
+
+# pre-allocate cuda buffers by running a forwards and backwards pass at max context size
+if training_run_args.pre_allocate_cuda_buffers:
+    inputs = tokenizer([""] * training_args.per_device_train_batch_size, return_tensors="pt", max_length=training_run_args.ctx_size, padding="max_length", truncation=True)
+    inputs = {k: v.to(model.device) for k, v in inputs.items()}
+    with torch.no_grad():
+        outputs = model(**inputs)
+        loss = outputs.loss if isinstance(outputs, dict) else outputs[0]
+    loss.backward()
+    model.zero_grad()
 
 try:
     checkpoint = training_run_args.resume_from_checkpoint
