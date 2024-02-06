@@ -29,12 +29,12 @@ blinds.toggle,Toggling <device_name>,en,assistant,0
 climate.set_humidity,Increasing humidity to <humidity>.,en,assistant,0
 climate.set_humidity,Setting humidity to <humidity> percent.,en,assistant,0
 climate.set_humidity,Adjusting humidity to <humidity>%.,en,assistant,0
-climate.set_fan_mode,Setting the fan to high speed.,en,assistant,0
-climate.set_fan_mode,Putting the fan on low.,en,assistant,0
-climate.set_fan_mode,Changing the fan to medium setting.,en,assistant,0
-climate.set_hvac_mode,Switching to cooling mode.,en,assistant,0
-climate.set_hvac_mode,Setting the HVAC to heat.,en,assistant,0
-climate.set_hvac_mode,Changing HVAC to automatic mode.,en,assistant,0
+climate.set_fan_mode,Setting the fan to <fan_mode> speed.,en,assistant,0
+climate.set_fan_mode,Putting the fan on <fan_mode>.,en,assistant,0
+climate.set_fan_mode,Changing the fan to <fan_mode> setting.,en,assistant,0
+climate.set_hvac_mode,Switching to <hvac_mode> mode.,en,assistant,0
+climate.set_hvac_mode,Setting the HVAC to <hvac_mode>.,en,assistant,0
+climate.set_hvac_mode,Changing HVAC to <hvac_mode> mode.,en,assistant,0
 climate.set_temperature,Setting temperature to <temp_f> degrees.,en,assistant,0
 climate.set_temperature,Changing temperature to <temp_c> Celsius.,en,assistant,0
 climate.set_temperature,Setting the room to <temp_f> degrees Fahrenheit.,en,assistant,0

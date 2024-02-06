@@ -179,19 +179,17 @@ climate,set_temperature,"Set the temperature to <temp_f> degrees.",8
 climate,set_temperature,"Can you change the temperature to <temp_c> Celsius?",8
 climate,set_temperature,"I'd like the room at <temp_f> degrees Fahrenheit,8
 climate,set_temperature,"Please adjust the temperature to <temp_f> degrees.",8
-climate,set_temperature,"I want the room cooler,8
-climate,set_temperature,"Make it warmer,8
 climate,set_temperature,"Can you lower the temperature to <temp_c>?",8
-climate,set_temperature,"Raise the temperature to <temp_f> degrees,8
+climate,set_temperature,"Raise the temperature to <temp_f> degrees",8
 climate,set_humidity,"Increase the humidity to <humidity>.",8
 climate,set_humidity,"Set the humidity level to <humidity> percent.",8
 climate,set_humidity,"Can you adjust the humidity to <humidity> percent?",8
-climate,set_fan_mode,"Set the fan to high speed.",8
-climate,set_fan_mode,"Please put the fan on low.",8
-climate,set_fan_mode,"Change the fan setting to medium.",8
-climate,set_hvac_mode,"Switch the system to cooling mode.",8
-climate,set_hvac_mode,"Can we set the HVAC to heat?",8
-climate,set_hvac_mode,"Change the HVAC to automatic.",8
+climate,set_fan_mode,"Set the climate fan to <fan_mode> speed.",8
+climate,set_fan_mode,"Please put the climate fan on <fan_mode>.",8
+climate,set_fan_mode,"Change the air conditioning fan to <fan_mode>.",8
+climate,set_hvac_mode,"Switch the system to <hvac_mode> mode.",8
+climate,set_hvac_mode,"Can we set the HVAC to <hvac_mode>?",8
+climate,set_hvac_mode,"Change the HVAC to <hvac_mode>.",8
 light,turn_on,"Set the brightness of <device_name> to <brightness>%.",8
 light,turn_on,"Dim <device_name> to <brightness> percent brightness.",8
 light,turn_on,"Brighten <device_name> to <brightness>.",8
@@ -199,12 +197,12 @@ light,turn_on,"Adjust <device_name> brightness to <brightness>.",8
 light,turn_on,"Increase <device_name>'s brightness to <brightness>.",8
 light,turn_on,"Lower the brightness of <device_name> to <brightness>.",8
 light,turn_on,"Can you set <device_name>'s brightness level to <brightness> percent?",8
-light,turn_on,"I'd like <device_name> at <brightness> percent brightness,8
+light,turn_on,"I'd like <device_name> at <brightness> percent brightness",8
 light,turn_on,"Can you make <device_name> <color>?",8
 light,turn_on,"Change the color of <device_name> to <color>.",8
 light,turn_on,"Change <device_name> to a <color> hue.",8
 light,turn_on,"Set <device_name> to be <color>.",8
-light,turn_on,"I want <device_name> to be <color>,8
+light,turn_on,"I want <device_name> to be <color>"",8
 light,turn_on,"Can you make <device_name> shine in <color>?",8
 light,turn_on,"Turn <device_name> to a <color> shade.",8
 light,turn_on,"Turn <device_name> <color>.",8

@@ -274,7 +274,9 @@ def get_included_vars(response: str):
 
 pile_of_responses["contains_vars"] = pile_of_responses["response"].apply(get_included_vars)
 
-def get_random_response(*, service: str, language: str, persona: str, required_vars: list[str], short: bool) -> str:
+def get_random_response(*, service: str, language: str, persona: str, question_template: str, short: bool) -> str:
+
+    required_vars = list(set([var for var in var_pattern.findall(question_template) if "device_name" not in var]))
     
     possible_results = pile_of_responses.loc[(pile_of_responses['service']==service) & 
                           (pile_of_responses['language']==language) & 
@@ -284,7 +286,7 @@ def get_random_response(*, service: str, language: str, persona: str, required_v
                         ]
     
     if len(possible_results) == 0:
-        raise Exception(f"No responses matched the provided filters: {service}, {language}, {persona}, {required_vars}, {short}")
+        raise Exception(f"No responses matched the provided filters: {service}, {language}, {persona}, {question_template}, {short}")
     
     return possible_results.sample()["response"].values[0]
 
@@ -355,10 +357,10 @@ def random_device_list(max_devices: int, avoid_device_names: list[str]):
 
     return device_lines, list(device_types), list(extra_exposed_attributes)
 
-def generate_static_example(action: dict, max_devices: int = 32):
+def generate_static_example(action: dict, language: str, persona: str, max_devices: int = 32):
     question = action["english_phrase"]
-    device_type = service_name.split(".")[0]
     service_name = action["service_name"]
+    device_type = service_name.split(".")[0]
     target_device = f"{device_type}.{action['device_name']}"
     friendly_name = target_device.split(".")[1].replace("_", " ").title()
 
@@ -384,9 +386,11 @@ def generate_static_example(action: dict, max_devices: int = 32):
         service=action["service_name"],
         language="en",
         persona="assistant",
-        required_vars=[],
+        question_template="",
         short=False
     ).lower()
+
+    response = response.replace("<device_name>", friendly_name)
 
     return {
         "states": device_list,
@@ -396,7 +400,7 @@ def generate_static_example(action: dict, max_devices: int = 32):
         "service_calls": [ { "service": service_name, "target_device": target_device } ]
     }
 
-def generate_templated_example(template: dict, max_devices: int = 32):
+def generate_templated_example(template: dict, language: str, persona: str, max_devices: int = 32):
     template_device_types: list[str] = template["device_type"].split("|")
     service_names: list[str] = [ f"{x}.{y}" for x, y in zip(template_device_types, template["service"].split("|")) ]
     question_template: str = template["english_phrase"]
@@ -423,6 +427,8 @@ def generate_templated_example(template: dict, max_devices: int = 32):
             extra_exposed_attributes.append("temperature")
         if "<humidity>" in question_template and "humidity" not in extra_exposed_attributes:
             extra_exposed_attributes.append("humidity")
+        if "<fan_mode>" in question_template and "fan_mode" not in extra_exposed_attributes:
+            extra_exposed_attributes.append("fan_mode")
 
         state = SUPPORTED_DEVICES[device_dict["type"]].get_random_state(extra_exposed_attributes=extra_exposed_attributes)
         device_name = device_dict["device_name"]
@@ -442,19 +448,32 @@ def generate_templated_example(template: dict, max_devices: int = 32):
     # pick an appropriate response and generate the question
     if len(template_device_types) == 1:
         # TODO: pick correct resonse here (also probaly need to pass in language and persona)
-        answer_template: str = get_random_response(
-            service=service_name
+        answer_template = get_random_response(
+            service=service_names[0],
+            language=language,
+            persona=persona,
+            question_template=question_template,
+            short=False
         )
 
         question = question_template.replace("<device_name>", chosen_devices[0]["description"])
         answer = answer_template.replace("<device_name>", chosen_devices[0]["description"])
-    else:
-        # TODO: pick correct resonse here (also probaly need to pass in language and persona)
+    else:        
         question = question_template
-        answer = answer_template
+        answers = []
         for i in range(len(template_device_types)):
             question = question.replace(f"<device_name{(i + 1)}>", chosen_devices[i]["description"])
-            answer = answer.replace(f"<device_name{(i + 1)}>", chosen_devices[i]["description"])
+            answer = get_random_response(
+                service=service_names[i],
+                language=language,
+                persona=persona,
+                question_template=question_template,
+                short=True
+            )
+            answers.append(answer.replace(f"<device_name>", chosen_devices[i]["description"]))
+
+        # TODO: support different "and" words per language
+        answer = " and ".join(answers)
 
     # generate the list of service calls and answers
     service_calls = []
@@ -462,6 +481,18 @@ def generate_templated_example(template: dict, max_devices: int = 32):
         service_calls.append({ "service": service, "target_device": device_dict["device_name"] })
 
     if any(["climate" in service for service in service_names ]):
+        if "<hvac_mode>" in question:
+            hvac_mode = random.choice(["heat", "cool", "heat_cool", "off", "auto", "fan_only"])
+            question = question.replace("<hvac_mode>", hvac_mode)
+            answer = answer.replace("<hvac_mode>", hvac_mode)
+            service_calls = [ { **call, "hvac_mode": hvac_mode} for call in service_calls ]
+
+        if "<fan_mode>" in question:
+            fan_mode = random.choice(["On Low", "On High", "Auto Low", "Auto High", "Off"])
+            question = question.replace("<fan_mode>", fan_mode)
+            answer = answer.replace("<fan_mode>", fan_mode)
+            service_calls = [ { **call, "fan_mode": fan_mode} for call in service_calls ]
+
         if "<temp_f>" in question:
             temp_f = random.randint(60, 80)
             question = question.replace("<temp_f>", str(temp_f))
@@ -505,7 +536,7 @@ def generate_templated_example(template: dict, max_devices: int = 32):
         "service_calls": service_calls
     }
 
-def generate_status_request(template: dict, max_devices: int = 32):
+def generate_status_request(template: dict, language: str, persona: str, max_devices: int = 32):
     device_type: str = template["device_type"]
     state_name: str = template["state"]
     question_template: str = template["english_phrase"]
@@ -630,7 +661,7 @@ def format_example_sharegpt(example):
     return { "conversations": conversation }
 
 
-def generate_example_file(filename: str, seed: int, format_func: Callable, *, static_factor: int, template_factor: int, status_request_factor: int):
+def generate_example_file(filename: str, seed: int, format_func: Callable, language: str, persona: str, *, static_factor: int, template_factor: int, status_request_factor: int):
     random.seed(seed)
     np.random.seed(seed)
 
@@ -639,10 +670,10 @@ def generate_example_file(filename: str, seed: int, format_func: Callable, *, st
     def run_factor_times(func, examples, data, factor):
         if factor >= 1:
             for i in range(factor):
-                examples.append(format_func(func(data)))
+                examples.append(format_func(func(data, language, persona)))
         else:
             if random.random() < factor:
-                examples.append(format_func(func(data)))
+                examples.append(format_func(func(data, language, persona)))
     
     generated_examples = []
     for action in tqdm(pile_of_specific_actions):
@@ -731,6 +762,9 @@ def main():
 
     args = parser.parse_args()
 
+    language = "en"
+    persona = "assistant"
+
     if not args.sample and not args.train and not args.test and not args.merge:
         parser.print_usage()
     
@@ -740,20 +774,20 @@ def main():
         format_func = format_example_sharegpt
 
     if args.sample:
-        generate_example_file("sample", 42, format_func, static_factor=1, template_factor=1, status_request_factor=1)
+        generate_example_file("sample", 42, format_func, language, persona, static_factor=1, template_factor=1, status_request_factor=1)
     if args.train:
         if args.size == "small":
-            generate_example_file("home_assistant_train", 42, format_func, static_factor=1, template_factor=10, status_request_factor=8)
+            generate_example_file("home_assistant_train", 42, format_func, language, persona, static_factor=1, template_factor=10, status_request_factor=8)
         elif args.size == "medium":
-            generate_example_file("home_assistant_train", 42, format_func, static_factor=5, template_factor=15, status_request_factor=12)
+            generate_example_file("home_assistant_train", 42, format_func, language, persona, static_factor=5, template_factor=15, status_request_factor=12)
         elif args.size == "large":
-            generate_example_file("home_assistant_train", 42, format_func, static_factor=5, template_factor=20, status_request_factor=15)
+            generate_example_file("home_assistant_train", 42, format_func, language, persona, static_factor=5, template_factor=20, status_request_factor=15)
         elif args.size == "xl":
-            generate_example_file("home_assistant_train", 42, format_func, static_factor=7, template_factor=25, status_request_factor=18)
+            generate_example_file("home_assistant_train", 42, format_func, language, persona, static_factor=7, template_factor=25, status_request_factor=18)
         else:
             raise Exception(f"Unrecognized dataset size: {args.size}")
     if args.test:
-        generate_example_file("home_assistant_test", 12345, format_func, static_factor=0.25, template_factor=3, status_request_factor=2)
+        generate_example_file("home_assistant_test", 12345, format_func, language, persona, static_factor=0.25, template_factor=3, status_request_factor=2)
 
     if args.merge == "alpaca":
         merge_with_dataset("yahma/alpaca-cleaned", 42, "alpaca", format_alpaca, ["input", "output", "instruction"], format_func)
