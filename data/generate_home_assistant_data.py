@@ -294,6 +294,10 @@ with open("piles/pile_of_status_requests.csv") as f:
     reader = csv.DictReader(f)
     pile_of_status_requests = list(reader)
 
+with open("piles/pile_of_system_prompts.csv") as f:
+    reader = csv.DictReader(f)
+    pile_of_system_prompts = { line["persona"]: line["prompt"] for line in reader }
+
 def format_device_line(*, device_name: str, friendly_name: str, state: str):
     return (f"{device_name} '{friendly_name}' = {state}")
 
@@ -606,9 +610,9 @@ def generate_status_request(template: dict, language: str, persona: str, max_dev
         "service_calls": []
     }
 
-def format_example_raw_chatml(example):
+def format_example_raw_chatml(example, persona):
     """Don't use this one anymore"""
-    sys_prompt = "You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed or answer the following question with the information provided only."
+    sys_prompt = pile_of_system_prompts[persona]
     services_block = "Services: " + ", ".join(sorted(example["available_services"]))
     states_block = "Devices:\n" + "\n".join(example["states"])
     question = example["question"]
@@ -634,8 +638,8 @@ def format_example_raw_chatml(example):
     result = result.replace("garage_door.", "cover.")
     return { "text": result }
 
-def format_example_sharegpt(example):
-    sys_prompt = "You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed or answer the following question with the information provided only."
+def format_example_sharegpt(example, persona):
+    sys_prompt = pile_of_system_prompts[persona]
     services_block = "Services: " + ", ".join(sorted(example["available_services"]))
     states_block = "Devices:\n" + "\n".join(example["states"])
     question = example["question"]
@@ -670,10 +674,10 @@ def generate_example_file(filename: str, seed: int, format_func: Callable, langu
     def run_factor_times(func, examples, data, factor):
         if factor >= 1:
             for i in range(factor):
-                examples.append(format_func(func(data, language, persona)))
+                examples.append(format_func(func(data, language, persona), persona))
         else:
             if random.random() < factor:
-                examples.append(format_func(func(data, language, persona)))
+                examples.append(format_func(func(data, language, persona), persona))
     
     generated_examples = []
     for action in tqdm(pile_of_specific_actions):
