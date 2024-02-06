@@ -261,7 +261,7 @@ class LLaMAAgent(AbstractConversationAgent):
 
         if user_input.conversation_id in self.history:
             conversation_id = user_input.conversation_id
-            conversation = self.history[conversation_id]            
+            conversation = self.history[conversation_id] if remember_conversation else [self.history[conversation_id][0]]
         else:
             conversation_id = ulid.ulid()
             conversation = []
