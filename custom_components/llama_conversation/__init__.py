@@ -284,7 +284,7 @@ class LLaMAAgent(AbstractConversationAgent):
             
             if len(conversation) == 0:
                 conversation.append(system_prompt)
-                if remember_conversation:
+                if not remember_conversation:
                     self.history[conversation_id] = conversation
             else:
                 conversation[0] = system_prompt
@@ -310,9 +310,9 @@ class LLaMAAgent(AbstractConversationAgent):
 
         conversation.append({"role": "assistant", "message": response})
         if remember_conversation:
-            if remember_num_interactions and len(conversation) > remember_num_interactions * 2:
+            if remember_num_interactions and len(conversation) > (remember_num_interactions * 2) + 1:
                 for i in range(0,2):
-                    conversation.pop(0)
+                    conversation.pop(1)
             self.history[conversation_id] = conversation
 
         exposed_entities = list(self._async_get_exposed_entities()[0].keys())
