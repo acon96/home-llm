@@ -82,6 +82,7 @@
                 "vicuna": "Vicuna",
                 "alpaca": "Alpaca",
                 "mistral": "Mistral",
+                "zephyr": "Zephyr",
                 "no_prompt_template": "None"
             }
         },

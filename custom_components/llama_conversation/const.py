@@ -45,6 +45,7 @@ PROMPT_TEMPLATE_VICUNA = "vicuna"
 PROMPT_TEMPLATE_MISTRAL = "mistral"
 PROMPT_TEMPLATE_LLAMA2 = "llama2"
 PROMPT_TEMPLATE_NONE = "no_prompt_template"
+PROMPT_TEMPLATE_ZEPHYR = "zephyr"
 DEFAULT_PROMPT_TEMPLATE = PROMPT_TEMPLATE_CHATML
 PROMPT_TEMPLATE_DESCRIPTIONS = {
     PROMPT_TEMPLATE_CHATML: {
@@ -76,6 +77,12 @@ PROMPT_TEMPLATE_DESCRIPTIONS = {
         "user": { "prefix": "[INST]", "suffix": "[/INST]" },
         "assistant": { "prefix": "", "suffix": "</s>" },
         "generation_prompt": ""
+    },
+    PROMPT_TEMPLATE_ZEPHYR: {
+        "system": { "prefix": "<|system|>\n", "suffix": "<|endoftext|>" },
+        "user": { "prefix": "<|user|>\n", "suffix": "<|endoftext|>" },
+        "assistant": { "prefix": "<|assistant|>\n", "suffix": "<|endoftext|>" },
+        "generation_prompt": "<|assistant|>\n"
     }
 }
 CONF_USE_GBNF_GRAMMAR = "gbnf_grammar"
