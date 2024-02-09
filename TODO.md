@@ -18,10 +18,11 @@
     - Ollama  
     - support chat completions API (might fix Ollama + adds support for text-gen-ui characters)
 - [x] more config options for prompt template (allow other than chatml)  
-- [ ] publish snapshot of dataset on HF  
+- [x] publish snapshot of dataset on HF  
 - [ ] figure out DPO for refusals + fixing incorrect entity id  
 - [ ] mixtral + prompting (no fine tuning)  
 - [ ] use varied system prompts to add behaviors  
+- [ ] setup github actions to build wheels that are optimized for RPIs
 
 ## more complicated ideas
 - [ ] "context requests"  

@@ -34,6 +34,7 @@ CONF_DOWNLOADED_MODEL_FILE = "downloaded_model_file"
 DEFAULT_DOWNLOADED_MODEL_FILE = ""
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = "5000"
+DEFAULT_SSL = False
 CONF_EXTRA_ATTRIBUTES_TO_EXPOSE = "extra_attributes_to_expose"
 DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "media_title", "volume_level"]
 GBNF_GRAMMAR_FILE = "output.gbnf"
@@ -44,6 +45,7 @@ PROMPT_TEMPLATE_VICUNA = "vicuna"
 PROMPT_TEMPLATE_MISTRAL = "mistral"
 PROMPT_TEMPLATE_LLAMA2 = "llama2"
 PROMPT_TEMPLATE_NONE = "no_prompt_template"
+PROMPT_TEMPLATE_ZEPHYR = "zephyr"
 DEFAULT_PROMPT_TEMPLATE = PROMPT_TEMPLATE_CHATML
 PROMPT_TEMPLATE_DESCRIPTIONS = {
     PROMPT_TEMPLATE_CHATML: {
@@ -75,6 +77,12 @@ PROMPT_TEMPLATE_DESCRIPTIONS = {
         "user": { "prefix": "[INST]", "suffix": "[/INST]" },
         "assistant": { "prefix": "", "suffix": "</s>" },
         "generation_prompt": ""
+    },
+    PROMPT_TEMPLATE_ZEPHYR: {
+        "system": { "prefix": "<|system|>\n", "suffix": "<|endoftext|>" },
+        "user": { "prefix": "<|user|>\n", "suffix": "<|endoftext|>" },
+        "assistant": { "prefix": "<|assistant|>\n", "suffix": "<|endoftext|>" },
+        "generation_prompt": "<|assistant|>\n"
     }
 }
 CONF_USE_GBNF_GRAMMAR = "gbnf_grammar"
@@ -83,7 +91,10 @@ CONF_TEXT_GEN_WEBUI_PRESET = "text_generation_webui_preset"
 CONF_OPENAI_API_KEY = "openai_api_key"
 CONF_TEXT_GEN_WEBUI_ADMIN_KEY = "text_generation_webui_admin_key"
 CONF_REFRESH_SYSTEM_PROMPT = "refresh_prompt_per_tern"
+CONF_REMEMBER_CONVERSATION = "remember_conversation"
+CONF_REMEMBER_NUM_INTERACTIONS = "remember_num_interactions"
 DEFAULT_REFRESH_SYSTEM_PROMPT = True
+DEFAULT_REMEMBER_CONVERSATION = True
 CONF_SERVICE_CALL_REGEX = "service_call_regex"
 DEFAULT_SERVICE_CALL_REGEX = r"```homeassistant\n([\S \t\n]*?)```"
 CONF_REMOTE_USE_CHAT_ENDPOINT = "remote_use_chat_endpoint"
@@ -106,6 +117,7 @@ DEFAULT_OPTIONS = types.MappingProxyType(
         CONF_USE_GBNF_GRAMMAR: DEFAULT_USE_GBNF_GRAMMAR,
         CONF_EXTRA_ATTRIBUTES_TO_EXPOSE: DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
         CONF_REFRESH_SYSTEM_PROMPT: DEFAULT_REFRESH_SYSTEM_PROMPT,
+        CONF_REMEMBER_CONVERSATION: DEFAULT_REMEMBER_CONVERSATION,
         CONF_SERVICE_CALL_REGEX: DEFAULT_SERVICE_CALL_REGEX,
         CONF_REMOTE_USE_CHAT_ENDPOINT: DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
         CONF_TEXT_GEN_WEBUI_CHAT_MODE: DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,

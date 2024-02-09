@@ -65,6 +65,9 @@ If Mary is 7 years old, then you are 10 years old (7+3=10).<|im_end|>
 The synthetic dataset is aimed at covering basic day to day operations in home assistant such as turning devices on and off.
 The supported entity types are: light, fan, cover, lock, media_player, climate, switch
 
+The dataset is available on HuggingFace: https://huggingface.co/datasets/acon96/Home-Assistant-Requests  
+The source for the dataset is in the [data](/data) of this repository.
+
 ### Training
 The 3B model was trained as a LoRA on an RTX 3090 (24GB) using the following settings for the custom training script. The embedding weights were "saved" and trained normally along with the rank matricies in order to train the newly added tokens to the embeddings. The full model is merged together at the end. Training took approximately 10 hours.
 
@@ -205,6 +208,7 @@ It is highly recommend to set up text-generation-webui on a separate machine tha
 ## Version History
 | Version | Description                                                                                                                                                                                      |
 | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| v0.2.6  | Bug fixes, add options for limiting chat history, HTTPS endpoint support, added zephyr prompt format.                                                                                            |
 | v0.2.5  | Fix Ollama max tokens parameter, fix GGUF download from Hugging Face, update included llama-cpp-python to 0.2.32, and add parameters to function calling for dataset + component, & model update |
 | v0.2.4  | Fix API key auth on model load for text-generation-webui, and add support for Ollama API backend                                                                                                 |
 | v0.2.3  | Fix API key auth, Support chat completion endpoint, and refactor to make it easier to add more remote backends                                                                                   |

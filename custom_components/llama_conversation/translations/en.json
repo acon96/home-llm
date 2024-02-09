@@ -29,6 +29,7 @@
                     "host": "API Hostname",
                     "huggingface_model": "Model Name",
                     "port": "API Port",
+                    "ssl": "Use HTTPS",
                     "openai_api_key": "API Key",
                     "text_generation_webui_admin_key": "Admin Key",
                     "text_generation_webui_preset": "Generation Preset/Character Name",
@@ -65,6 +66,8 @@
                     "text_generation_webui_admin_key": "Admin Key",
                     "service_call_regex": "Service Call Regex",
                     "refresh_prompt_per_tern": "Refresh System Prompt Every Turn",
+                    "remember_conversation": "Remember conversation",
+                    "remember_num_interactions": "Number of past interactions to remember",
                     "text_generation_webui_preset": "Generation Preset/Character Name",
                     "remote_use_chat_endpoint": "Use chat completions endpoint",
                     "text_generation_webui_chat_mode": "Chat Mode"
@@ -79,6 +82,7 @@
                 "vicuna": "Vicuna",
                 "alpaca": "Alpaca",
                 "mistral": "Mistral",
+                "zephyr": "Zephyr",
                 "no_prompt_template": "None"
             }
         },
