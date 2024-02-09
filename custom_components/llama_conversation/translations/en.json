@@ -29,6 +29,7 @@
                     "host": "API Hostname",
                     "huggingface_model": "Model Name",
                     "port": "API Port",
+                    "ssl": "Use HTTPS",
                     "openai_api_key": "API Key",
                     "text_generation_webui_admin_key": "Admin Key",
                     "text_generation_webui_preset": "Generation Preset/Character Name",

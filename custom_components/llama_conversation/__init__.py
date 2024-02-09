@@ -21,7 +21,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_should_expose,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, MATCH_ALL
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_SSL, MATCH_ALL
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -556,8 +556,7 @@ class GenericOpenAIAPIAgent(LLaMAAgent):
     model_name: str
 
     def _load_model(self, entry: ConfigEntry) -> None:
-        # TODO: https
-        self.api_host = f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
+        self.api_host = f"{'https' if entry.data[CONF_SSL] else 'http'}://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
         self.api_key = entry.data.get(CONF_OPENAI_API_KEY)
         self.model_name = entry.data.get(CONF_CHAT_MODEL)
 
@@ -747,8 +746,7 @@ class OllamaAPIAgent(LLaMAAgent):
     model_name: str
 
     def _load_model(self, entry: ConfigEntry) -> None:
-        # TODO: https
-        self.api_host = f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
+        self.api_host = f"{'https' if entry.data[CONF_SSL] else 'http'}://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
         self.api_key = entry.data.get(CONF_OPENAI_API_KEY)
         self.model_name = entry.data.get(CONF_CHAT_MODEL)
 

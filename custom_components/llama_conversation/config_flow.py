@@ -19,7 +19,7 @@ from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.requirements import pip_kwargs
 from homeassistant.util.package import install_package, is_installed
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.data_entry_flow import (
     AbortFlow,
     FlowHandler,
@@ -64,6 +64,7 @@ from .const import (
     DEFAULT_CHAT_MODEL,
     DEFAULT_HOST,
     DEFAULT_PORT,
+    DEFAULT_SSL,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
@@ -139,7 +140,7 @@ def STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(*, chat_model=None, downloaded_model_q
         }
     )
 
-def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, chat_model=None, use_chat_endpoint=None, webui_preset="", webui_chat_mode=""):
+def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, ssl=None, chat_model=None, use_chat_endpoint=None, webui_preset="", webui_chat_mode=""):
 
     extra1, extra2 = ({}, {})
     default_port = DEFAULT_PORT
@@ -161,6 +162,7 @@ def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, ch
         {
             vol.Required(CONF_HOST, default=host if host else DEFAULT_HOST): str,
             vol.Required(CONF_PORT, default=port if port else default_port): str,
+            vol.Required(CONF_SSL, default=ssl if ssl else DEFAULT_SSL): bool,
             vol.Required(CONF_CHAT_MODEL, default=chat_model if chat_model else DEFAULT_CHAT_MODEL): str,
             vol.Required(CONF_REMOTE_USE_CHAT_ENDPOINT, default=use_chat_endpoint if use_chat_endpoint else DEFAULT_REMOTE_USE_CHAT_ENDPOINT): bool,
             **extra1,
@@ -472,7 +474,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                 headers["Authorization"] = f"Bearer {api_key}"
 
             models_result = requests.get(
-                f"http://{self.model_config[CONF_HOST]}:{self.model_config[CONF_PORT]}/v1/internal/model/list",
+                f"{'https' if self.model_config[CONF_SSL] else 'http'}://{self.model_config[CONF_HOST]}:{self.model_config[CONF_PORT]}/v1/internal/model/list",
                 headers=headers
             )
             models_result.raise_for_status()
@@ -511,6 +513,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                             backend_type,
                             host=user_input[CONF_HOST],
                             port=user_input[CONF_PORT],
+                            ssl=user_input[CONF_SSL],
                             chat_model=user_input[CONF_CHAT_MODEL],
                             use_chat_endpoint=user_input[CONF_REMOTE_USE_CHAT_ENDPOINT],
                             webui_preset=user_input.get(CONF_TEXT_GEN_WEBUI_PRESET),
