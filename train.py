@@ -4,6 +4,8 @@ import math
 import copy
 import torch
 import os
+import random
+from torch.utils.data import SequentialSampler, Subset, RandomSampler
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer, \
     PreTrainedTokenizerFast, HfArgumentParser, GPTQConfig, AutoConfig
 from transformers.trainer_utils import EvalPrediction
@@ -53,14 +55,27 @@ python3 train.py \
 
 """
 python3 train.py \
-    --run_name stablehome-1_6b-rev1 \
+    --run_name stablehome-1_6b-rev2 \
     --base_model stabilityai/stablelm-2-zephyr-1_6b \
     --bf16 \
     --train_dataset data/home_assistant_train.jsonl \
+    --test_dataset data/home_assistant_test.jsonl \
     --learning_rate 1e-5 \
     --micro_batch_size 2 --gradient_checkpointing \
-    --ctx_size 2048 --save_steps 200
+    --ctx_size 2048 --save_steps 200 --save_total_limit 6
+"""
 
+"""
+python3 train.py \
+    --run_name stablehome-3b-rev1 \
+    --base_model stabilityai/stablelm-zephyr-3b \
+    --bf16 \
+    --train_dataset data/home_assistant_train.jsonl \
+    --test_dataset data/home_assistant_test.jsonl \
+    --learning_rate 1e-5 \
+    --micro_batch_size 2 --gradient_checkpointing \
+    --ctx_size 2048 \
+    --use_lora --lora_rank 32 --lora_alpha 64 --lora_modules up_proj,down_proj,q_proj,v_proj,o_proj --lora_modules_to_save embed_tokens,lm_head --lora_merge
 """
 
 """
@@ -394,40 +409,11 @@ tokenized_train_dataset = datasets["train"].map(tokenize_function, batched=True)
 if training_run_args.test_dataset:
     tokenized_test_dataset = datasets["test"].map(tokenize_function, batched=True).remove_columns(columns_to_remove)
 
-tokens_in_train_set = sum(len(example) for example in tokenized_train_dataset["input_ids"])
-print(f"Train dataset has {int(tokens_in_train_set / 1000000)}M tokens")
+example_lengths = [ len(example) for example in tokenized_train_dataset["input_ids"] ]
+tokens_in_train_set, longest_example = sum(example_lengths), max(example_lengths)
+print(f"Train dataset has {int(tokens_in_train_set / 1000000)}M tokens. Longest Example: {longest_example} tokens")
 
 data_collator = DataCollatorForSupervisedFineTuning(tokenizer=tokenizer)
-
-import random
-from torch.utils.data import SequentialSampler, Subset, RandomSampler
-
-class RandomSamplerWithLargestFirst(RandomSampler):
-    """The idea here is to force pytorch to allocate the largest buffer that it needs up front and then do the rest of the training using the random sampler"""
-
-    def __init__(self, data_source: Dataset, replacement: bool = False,
-                 num_samples: Optional[int] = None, generator=None):
-        super().__init__(data_source=data_source, replacement=replacement, num_samples=num_samples, generator=generator)
-
-        longest = None
-        longest_len = -1
-        for num, example in enumerate(data_source["input_ids"]):
-            example_len = len(example)
-            if example_len > longest_len:
-                longest = num
-                longest_len = example_len
-        self.longest_example = longest
-
-    def __iter__(self) -> Iterator[int]:
-        yield self.longest_example
-
-        it = super().__iter__()
-        while True:
-            try:
-                yield next(it)
-            except StopIteration:
-                break
-
 
 class CustomTrainer(Trainer):
     """Implement different training tweaks"""
@@ -441,12 +427,6 @@ class CustomTrainer(Trainer):
         self.evaluate_full_dataset = True
         super().evaluate()
         self.evaluate_full_dataset = False
-
-    # def evaluate(self, *args, **kwargs):
-    #     result = super().evaluate(*args, **kwargs)
-    #     torch.cuda.memory.empty_cache() # clear the irregularly sized memory allocations used for evaluation
-    #     return result
-
 
     # Randomly sample the eval dataset
     def _get_eval_sampler(self, eval_dataset):
@@ -463,7 +443,6 @@ class CustomTrainer(Trainer):
             return super()._get_train_sampler()
         
         return RandomSampler(self.train_dataset, generator=torch.Generator(device='cpu'))
-        # return RandomSamplerWithLargestFirst(self.train_dataset, generator=torch.Generator(device='cpu'))
     
     def create_scheduler(self, num_training_steps: int, optimizer: torch.optim.Optimizer = None):
         """
@@ -471,28 +450,6 @@ class CustomTrainer(Trainer):
         Should speed up training by skipping the final fine tuning part that doesn't affect accuracy much
         """
         return super().create_scheduler(int(num_training_steps * self.learning_rate_overshoot), optimizer=optimizer)
-    
-    def _load_from_checkpoint(self, resume_from_checkpoint, model=None):
-        super()._load_from_checkpoint(resume_from_checkpoint, model=model)
-
-        # load the "saved" weights over top of the existing model
-        if training_run_args.lora_modules_to_save != None:
-            if model is None:
-                model = self.model
-
-            saved_weights_file = os.path.join(resume_from_checkpoint, "lora_saved_weights.pt")
-            saved_weights_checkpoint = torch.load(saved_weights_file)
-            model.load_state_dict(saved_weights_checkpoint, strict=False)
-
-    def _save_optimizer_and_scheduler(self, output_dir):
-        # need to save any "saved" weights here
-        if training_run_args.lora_modules_to_save != None:
-            saved_weights_file = os.path.join(output_dir, "lora_saved_weights.pt")
-            modules_to_save = training_run_args.lora_modules_to_save.split(",")
-            trainable_params = {name: param for name, param in model.named_parameters() if name in modules_to_save}
-            torch.save(trainable_params, saved_weights_file)
-
-        super()._save_optimizer_and_scheduler(output_dir)
 
 trainer = CustomTrainer(
     model=model,
@@ -511,15 +468,17 @@ if training_run_args.run_tensorboard:
     tensorboard_process = subprocess.Popen(["tensorboard", "--logdir", model_dir])
     atexit.register(kill_tensorboard)
 
-# pre-allocate cuda buffers by running a forwards and backwards pass at max context size
-if training_run_args.pre_allocate_cuda_buffers:
-    inputs = tokenizer([""] * training_args.per_device_train_batch_size, return_tensors="pt", max_length=training_run_args.ctx_size, padding="max_length", truncation=True)
-    inputs = {k: v.to(model.device) for k, v in inputs.items()}
-    with torch.no_grad():
-        outputs = model(**inputs)
-        loss = outputs.loss if isinstance(outputs, dict) else outputs[0]
-    loss.backward()
-    model.zero_grad()
+# pre-allocate cuda buffers by running a forwards and backwards pass with the largest possible example length
+# the trainer dumps the cuda buffers before we start... need to figure out how to disable that
+# if training_run_args.pre_allocate_cuda_buffers:
+#     print("Allocating CUDA buffers...")
+#     inputs = tokenizer([""] * training_args.per_device_train_batch_size, return_tensors="pt", max_length=longest_example, padding="max_length", truncation=True)
+#     inputs = {k: v.to(model.device) for k, v in inputs.items()}
+#     inputs["labels"] = inputs["input_ids"]
+#     outputs = model(**inputs)
+#     loss = outputs.loss if isinstance(outputs, dict) else outputs[0]
+#     loss.backward()
+#     model.zero_grad()
 
 try:
     checkpoint = training_run_args.resume_from_checkpoint
