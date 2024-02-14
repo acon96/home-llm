@@ -274,6 +274,9 @@ def get_included_vars(response: str):
 
 pile_of_responses["contains_vars"] = pile_of_responses["response"].apply(get_included_vars)
 
+class NoResponseAvailableException(Exception):
+    pass
+
 def get_random_response(*, service: str, language: str, persona: str, question_template: str, short: bool) -> str:
 
     required_vars = list(set([var for var in var_pattern.findall(question_template) if "device_name" not in var]))
@@ -286,7 +289,7 @@ def get_random_response(*, service: str, language: str, persona: str, question_t
                         ]
     
     if len(possible_results) == 0:
-        raise Exception(f"No responses matched the provided filters: {service}, {language}, {persona}, {question_template}, {short}")
+        raise NoResponseAvailableException(f"No responses matched the provided filters: {service}, {language}, {persona}, {required_vars}, {short}")
     
     return possible_results.sample()["response"].values[0]
 
@@ -388,8 +391,8 @@ def generate_static_example(action: dict, language: str, persona: str, max_devic
 
     response = get_random_response(
         service=action["service_name"],
-        language="en",
-        persona="assistant",
+        language=language,
+        persona=persona,
         question_template="",
         short=False
     ).lower()
@@ -665,13 +668,13 @@ def format_example_sharegpt(example, persona):
     return { "conversations": conversation }
 
 
-def generate_example_file(filename: str, seed: int, format_func: Callable, language: str, persona: str, *, static_factor: int, template_factor: int, status_request_factor: int):
+def generate_example_file(filename: str, seed: int, format_func: Callable, languages: list[str], personas: list[str], *, static_factor: int, template_factor: int, status_request_factor: int):
     random.seed(seed)
     np.random.seed(seed)
 
     print("Generating...")
 
-    def run_factor_times(func, examples, data, factor):
+    def run_factor_times(func, examples, data, language, persona, factor):
         if factor >= 1:
             for i in range(factor):
                 examples.append(format_func(func(data, language, persona), persona))
@@ -680,14 +683,23 @@ def generate_example_file(filename: str, seed: int, format_func: Callable, langu
                 examples.append(format_func(func(data, language, persona), persona))
     
     generated_examples = []
-    for action in tqdm(pile_of_specific_actions):
-        run_factor_times(generate_static_example, generated_examples, action, static_factor)
 
-    for templated_action in tqdm(pile_of_templated_actions):
-        run_factor_times(generate_templated_example, generated_examples, templated_action, template_factor)
+    for lang in languages:
+        for person in personas:
+            for action in tqdm(pile_of_specific_actions):
+                try:
+                    run_factor_times(generate_static_example, generated_examples, action, lang, person, static_factor)
+                except NoResponseAvailableException as ex:
+                    print(ex)
+
+            for templated_action in tqdm(pile_of_templated_actions):
+                try:
+                    run_factor_times(generate_templated_example, generated_examples, templated_action, lang, person, template_factor)
+                except NoResponseAvailableException as ex:
+                    print(ex)
 
     for status_request in tqdm(pile_of_status_requests):
-        run_factor_times(generate_status_request, generated_examples, status_request, status_request_factor)
+        run_factor_times(generate_status_request, generated_examples, status_request, "en", "assistant", status_request_factor)
 
     print(f"Generated {len(generated_examples)} examples. Saving...")
     
@@ -766,8 +778,8 @@ def main():
 
     args = parser.parse_args()
 
-    language = "en"
-    persona = "assistant"
+    languages = ["en"]
+    personas = ["assistant", "pirate", "robot"]
 
     if not args.sample and not args.train and not args.test and not args.merge:
         parser.print_usage()
@@ -778,20 +790,20 @@ def main():
         format_func = format_example_sharegpt
 
     if args.sample:
-        generate_example_file("sample", 42, format_func, language, persona, static_factor=1, template_factor=1, status_request_factor=1)
+        generate_example_file("sample", 42, format_func, languages, personas, static_factor=1, template_factor=1, status_request_factor=1)
     if args.train:
         if args.size == "small":
-            generate_example_file("home_assistant_train", 42, format_func, language, persona, static_factor=1, template_factor=10, status_request_factor=8)
+            generate_example_file("home_assistant_train", 42, format_func, languages, personas, static_factor=1, template_factor=10, status_request_factor=8)
         elif args.size == "medium":
-            generate_example_file("home_assistant_train", 42, format_func, language, persona, static_factor=5, template_factor=15, status_request_factor=12)
+            generate_example_file("home_assistant_train", 42, format_func, languages, personas, static_factor=5, template_factor=15, status_request_factor=12)
         elif args.size == "large":
-            generate_example_file("home_assistant_train", 42, format_func, language, persona, static_factor=5, template_factor=20, status_request_factor=15)
+            generate_example_file("home_assistant_train", 42, format_func, languages, personas, static_factor=5, template_factor=20, status_request_factor=15)
         elif args.size == "xl":
-            generate_example_file("home_assistant_train", 42, format_func, language, persona, static_factor=7, template_factor=25, status_request_factor=18)
+            generate_example_file("home_assistant_train", 42, format_func, languages, personas, static_factor=7, template_factor=25, status_request_factor=18)
         else:
             raise Exception(f"Unrecognized dataset size: {args.size}")
     if args.test:
-        generate_example_file("home_assistant_test", 12345, format_func, language, persona, static_factor=0.25, template_factor=3, status_request_factor=2)
+        generate_example_file("home_assistant_test", 12345, format_func, languages, personas, static_factor=0.25, template_factor=1, status_request_factor=2)
 
     if args.merge == "alpaca":
         merge_with_dataset("yahma/alpaca-cleaned", 42, "alpaca", format_alpaca, ["input", "output", "instruction"], format_func)

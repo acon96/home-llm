@@ -4,6 +4,7 @@ import argparse, os, re, json
 import torch
 from datasets import load_dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
+from peft import PeftConfig, PeftModel
 from tqdm import tqdm
 
 CTX_SIZE = 2048
@@ -23,8 +24,10 @@ def main():
     parser.add_argument("model")
     parser.add_argument("--dataset_file", default="./data/home_assistant_test.jsonl")
     parser.add_argument("--batch-size", default=8)
+    parser.add_argument("--lora", default=False,action='store_const', const=True)
 
     args = parser.parse_args()
+    lora_folder = f"./loras/{args.model}"
     model_folder = f"./models/{args.model}"
 
     dataset = load_dataset("json", data_files={ "train": args.dataset_file })["train"]
@@ -40,9 +43,31 @@ def main():
     service_call_regex = re.compile(r"```homeassistant\n([\S \t\n]*?)```")
 
     torch.set_default_device("cuda")
-    print(f"Loading model from {model_folder}...")
-    trained_model = AutoModelForCausalLM.from_pretrained(model_folder, trust_remote_code=True, torch_dtype=torch.bfloat16) #, code_revision="834565c23f9b28b96ccbeabe614dd906b6db551a")
-    trained_tokenizer = AutoTokenizer.from_pretrained(model_folder, trust_remote_code=True, padding_side='left')
+    
+    if args.lora:
+        adapter_config = PeftConfig.from_pretrained(lora_folder)
+        base_model_name = adapter_config.base_model_name_or_path
+        print(f"Loading lora from {lora_folder} ({base_model_name})...")
+
+        base_model = AutoModelForCausalLM.from_pretrained(
+            base_model_name,
+            trust_remote_code=True,
+            torch_dtype=torch.bfloat16,
+        )
+        trained_tokenizer = AutoTokenizer.from_pretrained(base_model_name, trust_remote_code=True, padding_side='left')
+
+        trained_model =  PeftModel.from_pretrained(base_model, lora_folder, trust_remote_code=True, torch_dtype=torch.bfloat16)
+
+        output_folder = lora_folder
+    else:
+        print(f"Loading model from {model_folder}...")
+        trained_model = AutoModelForCausalLM.from_pretrained(
+            model_folder,
+            trust_remote_code=True,
+            torch_dtype=torch.bfloat16,
+        )
+        trained_tokenizer = AutoTokenizer.from_pretrained(model_folder, trust_remote_code=True, padding_side='left')
+        output_folder = model_folder
 
     trained_model.generation_config = GenerationConfig(
         max_new_tokens=128,
@@ -140,7 +165,7 @@ def main():
     print(f"Final Accuracy Rating: {accuracy*100:.2f}%")
     print(f"Color Mismatches: {color_mismatches}")
 
-    with open(os.path.join(model_folder, "eval_results.json"), "w") as f:
+    with open(os.path.join(output_folder, "eval_results.json"), "w") as f:
         json.dump({
             "possible_answers": total_answers,
             "correct_answers": correct_answers,

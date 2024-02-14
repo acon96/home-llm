@@ -36,3 +36,8 @@ Supported datasets right now are:
 - `wizardlm70k`
 
 Please note that the supported datasets all have different licenses. Be aware that the license of the resulting data mixture might be different that the license of this dataset alone.
+
+## Adding new Home Assistant functionality
+Adding new functionality to the model is done by providing examples of a user asking the assistant for the 
+
+## Adding a new personality

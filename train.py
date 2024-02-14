@@ -67,15 +67,16 @@ python3 train.py \
 
 """
 python3 train.py \
-    --run_name stablehome-3b-rev1 \
+    --run_name stablehome-3b-rev3 \
     --base_model stabilityai/stablelm-zephyr-3b \
     --bf16 \
     --train_dataset data/home_assistant_train.jsonl \
     --test_dataset data/home_assistant_test.jsonl \
     --learning_rate 1e-5 \
-    --micro_batch_size 2 --gradient_checkpointing \
+    --micro_batch_size 4 --gradient_checkpointing \
     --ctx_size 2048 \
-    --use_lora --lora_rank 32 --lora_alpha 64 --lora_modules up_proj,down_proj,q_proj,v_proj,o_proj --lora_modules_to_save embed_tokens,lm_head --lora_merge
+    --save_steps 400 --save_total_limit 20 \
+    --use_lora --lora_rank 64 --lora_alpha 128 --lora_modules up_proj,down_proj,q_proj,v_proj,o_proj --lora_merge
 """
 
 """
@@ -262,6 +263,7 @@ training_args = TrainingArguments(
     log_level="info",
     bf16=training_run_args.bf16,
     group_by_length=training_run_args.group_by_length,
+    skip_memory_metrics=True,
     **training_kwargs,
     # include_inputs_for_metrics=True,
 )
