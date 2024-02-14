@@ -11,6 +11,8 @@ There are multiple backends to choose for running the model that the Home Assist
 | Additional attribute to expose in the context | Extra attributes that will be exposed to the model via the `{{ devices }}` template variable |  |
 | Service Call Regex | The regular expression used to extract service calls from the model response; should contain 1 repeated capture group |  |
 | Refresh System Prompt Every Turn | Flag to update the system prompt with updated device states on every chat turn. Disabling can significantly improve agent response times when using a backend that supports prefix caching (Llama.cpp) | Enabled |
+| Remember conversation | Flag to remember the conversation history (excluding system prompt) in the model context. | Enabled |
+| Number of past interactions to remember | If `Remember conversation` is enabled, number of user-assistant interaction pairs to keep in history. |  |
 
 # Llama.cpp
 For details about the sampling parameters, see here: https://github.com/oobabooga/text-generation-webui/wiki/03-%E2%80%90-Parameters-Tab#parameters-description

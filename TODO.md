@@ -22,6 +22,7 @@
 - [ ] figure out DPO for refusals + fixing incorrect entity id  
 - [ ] mixtral + prompting (no fine tuning)  
 - [ ] use varied system prompts to add behaviors  
+- [ ] setup github actions to build wheels that are optimized for RPIs
 
 ## more complicated ideas
 - [ ] "context requests"  

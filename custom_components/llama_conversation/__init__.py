@@ -21,7 +21,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_should_expose,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, MATCH_ALL
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_SSL, MATCH_ALL
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -54,6 +54,8 @@ from .const import (
     CONF_OPENAI_API_KEY,
     CONF_TEXT_GEN_WEBUI_ADMIN_KEY,
     CONF_REFRESH_SYSTEM_PROMPT,
+    CONF_REMEMBER_CONVERSATION,
+    CONF_REMEMBER_NUM_INTERACTIONS,
     CONF_SERVICE_CALL_REGEX,
     CONF_REMOTE_USE_CHAT_ENDPOINT,
     CONF_TEXT_GEN_WEBUI_CHAT_MODE,
@@ -68,6 +70,7 @@ from .const import (
     DEFAULT_PROMPT_TEMPLATE,
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_REFRESH_SYSTEM_PROMPT,
+    DEFAULT_REMEMBER_CONVERSATION,
     DEFAULT_SERVICE_CALL_REGEX,
     DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
     DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
@@ -179,7 +182,7 @@ def flatten_schema(schema):
             if isinstance(current_schema.schema, vol.validators._WithSubValidators):
                 for subval in current_schema.schema.validators:
                     _flatten(subval, prefix)
-            else:
+            elif isinstance(current_schema.schema, dict):
                 for key, val in current_schema.schema.items():
                     _flatten(val, prefix + str(key) + '/')
         elif isinstance(current_schema, vol.validators._WithSubValidators):
@@ -236,6 +239,8 @@ class LLaMAAgent(AbstractConversationAgent):
 
         raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
         refresh_system_prompt = self.entry.options.get(CONF_REFRESH_SYSTEM_PROMPT, DEFAULT_REFRESH_SYSTEM_PROMPT)
+        remember_conversation = self.entry.options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION)
+        remember_num_interactions = self.entry.options.get(CONF_REMEMBER_NUM_INTERACTIONS, False)
         service_call_regex = self.entry.options.get(CONF_SERVICE_CALL_REGEX, DEFAULT_SERVICE_CALL_REGEX)
         extra_attributes_to_expose = self.entry.options \
             .get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE)
@@ -256,7 +261,7 @@ class LLaMAAgent(AbstractConversationAgent):
 
         if user_input.conversation_id in self.history:
             conversation_id = user_input.conversation_id
-            conversation = self.history[conversation_id]            
+            conversation = self.history[conversation_id] if remember_conversation else [self.history[conversation_id][0]]
         else:
             conversation_id = ulid.ulid()
             conversation = []
@@ -279,6 +284,8 @@ class LLaMAAgent(AbstractConversationAgent):
             
             if len(conversation) == 0:
                 conversation.append(system_prompt)
+                if not remember_conversation:
+                    self.history[conversation_id] = conversation
             else:
                 conversation[0] = system_prompt
 
@@ -302,7 +309,11 @@ class LLaMAAgent(AbstractConversationAgent):
             )
 
         conversation.append({"role": "assistant", "message": response})
-        self.history[conversation_id] = conversation
+        if remember_conversation:
+            if remember_num_interactions and len(conversation) > (remember_num_interactions * 2) + 1:
+                for i in range(0,2):
+                    conversation.pop(1)
+            self.history[conversation_id] = conversation
 
         exposed_entities = list(self._async_get_exposed_entities()[0].keys())
         
@@ -545,8 +556,7 @@ class GenericOpenAIAPIAgent(LLaMAAgent):
     model_name: str
 
     def _load_model(self, entry: ConfigEntry) -> None:
-        # TODO: https
-        self.api_host = f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
+        self.api_host = f"{'https' if entry.data[CONF_SSL] else 'http'}://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
         self.api_key = entry.data.get(CONF_OPENAI_API_KEY)
         self.model_name = entry.data.get(CONF_CHAT_MODEL)
 
@@ -647,8 +657,6 @@ class TextGenerationWebuiAgent(GenericOpenAIAPIAgent):
             else:
                 _LOGGER.info(f"Model is not {self.model_name} loaded on the remote backend. Loading it now...")
             
-            
-            
             load_result = requests.post(
                 f"{self.api_host}/v1/internal/model/load",
                 json={
@@ -675,7 +683,6 @@ class TextGenerationWebuiAgent(GenericOpenAIAPIAgent):
             if preset:
                 request_params["character"] = preset
         elif chat_mode == TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT:
-            # TODO: handle uppercase properly?
             request_params["instruction_template"] = self.entry.options.get(CONF_PROMPT_TEMPLATE, DEFAULT_PROMPT_TEMPLATE)
 
         return endpoint, request_params
@@ -739,8 +746,7 @@ class OllamaAPIAgent(LLaMAAgent):
     model_name: str
 
     def _load_model(self, entry: ConfigEntry) -> None:
-        # TODO: https
-        self.api_host = f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
+        self.api_host = f"{'https' if entry.data[CONF_SSL] else 'http'}://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
         self.api_key = entry.data.get(CONF_OPENAI_API_KEY)
         self.model_name = entry.data.get(CONF_CHAT_MODEL)
 
