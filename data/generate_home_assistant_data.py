@@ -738,7 +738,7 @@ def format_alpaca(example, format_func: Callable):
 
     return result
 
-def merge_with_dataset(dataset_name, seed, outupt_name, format_function, dataset_column_names, format_func):
+def merge_with_dataset(dataset_name, seed, output_name, format_function, dataset_column_names, format_func):
     alpaca_dataset = load_dataset(dataset_name)["train"].train_test_split(test_size=0.1)
     home_assistant_dataset = load_dataset("json", data_files={  "train": "home_assistant_train.jsonl", "test": "home_assistant_test.jsonl" })
 
@@ -750,8 +750,8 @@ def merge_with_dataset(dataset_name, seed, outupt_name, format_function, dataset
     combined_dataset_train = concatenate_datasets([home_assistant_dataset["train"], alpaca_dataset["train"]]).shuffle(seed=42)
     combined_dataset_test = concatenate_datasets([home_assistant_dataset["test"], alpaca_dataset["test"]]).shuffle(seed=42)
 
-    combined_dataset_train.to_json(f"home_assistant_{outupt_name}_merged_train.jsonl")
-    combined_dataset_test.to_json(f"home_assistant_{outupt_name}_merged_test.jsonl")
+    combined_dataset_train.to_json(f"home_assistant_{output_name}_merged_train.jsonl")
+    combined_dataset_test.to_json(f"home_assistant_{output_name}_merged_test.jsonl")
 
 
 # TODO: add examples for ambiguous requests. asking a clarifying question
@@ -759,6 +759,7 @@ def merge_with_dataset(dataset_name, seed, outupt_name, format_function, dataset
 # TODO: answer questions about more than one thing in the state list at once
 # TODO: add examples for rooms/groups of devices. i.e. "turn off all the lights in the kitchen"
 # TODO: add personas for responses. different system prompts should invoke different response tones (pirate, robot, and mean)
+# TODO: add time, weather, and calendar/reminders (next 3 events?)
 def main():
     parser = argparse.ArgumentParser(description="Generate the full dataset from the CSV piles")
     parser.add_argument("--sample", action="store_true", help="Set this flag to enable generation of the train dataset.")
