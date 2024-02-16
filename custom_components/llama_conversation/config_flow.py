@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import time
 import os
+import sys
 import logging
 import requests
 import platform
@@ -197,6 +198,7 @@ def install_llama_cpp_python(config_dir: str):
             platform_suffix = "aarch64"
         folder = os.path.dirname(__file__)
         potential_wheels = sorted([ path for path in os.listdir(folder) if path.endswith(f"{platform_suffix}.whl") ], reverse=True)
+        potential_wheels = [ wheel for wheel in potential_wheels if f"cp{sys.version_info.major}{sys.version_info.minor}" in wheel ]
         if len(potential_wheels) == 0:
             # someone who is better at async can figure out why this is necessary
             time.sleep(0.5)
@@ -204,6 +206,9 @@ def install_llama_cpp_python(config_dir: str):
             if is_installed("llama-cpp-python"):
                 _LOGGER.info("llama-cpp-python is already installed")
                 return True
+            
+            _LOGGER.error(f"Error installing llama-cpp-python. Could not find any wheels that match the following filters. platform: {platform_suffix}, python version: {sys.version_info.major}.{sys.version_info.minor}")
+            _LOGGER.error(f"Make sure that the correct .whl file is located in config/custom_components/llama_conversation/*")
             return Exception("missing_wheels")
         
         latest_wheel = potential_wheels[0]
