@@ -1,373 +1,679 @@
 device_name,english_phrase,service_name
-blinds.kitchen,"Could you raise the kitchen blinds",open
-blinds.kitchen,"Lower the kitchen blinds",close
-blinds.kitchen,"Stop the kitchen blinds where they are",stop
-blinds.kitchen,"Switch the state of the kitchen blinds",toggle
-blinds.living_room,"Close the living room blinds",close
-blinds.living_room,"Open the living room blinds",open
-blinds.living_room,"Stop adjusting the living room blinds",stop
-blinds.living_room,"Toggle the living room blinds",toggle
-blinds.master_bedroom,"Lift the master bedroom blinds",open
-blinds.master_bedroom,"Please halt the master bedroom blinds",stop
-blinds.master_bedroom,"Reverse the master bedroom blinds",toggle
-blinds.master_bedroom,"Shut the master bedroom blinds",close
-fan.attic_1,"Disable the attic fan",turn_off
-fan.attic_1,"Increase speed of the attic fan",increase_speed
-fan.attic_1,"Slow down the attic fan",decrease_speed
-fan.attic_1,"Slow down the attic fan",decrease_speed
-fan.attic_1,"Turn down the attic fan",decrease_speed
-fan.attic_2,"Toggle the attic fan",toggle
-fan.attic_2,"Toggle the attic fan",toggle
-fan.attic,"Accelerate the fan in the attic",increase_speed
-fan.attic,"Change the fan status in the attic",toggle
-fan.attic,"Slow down the fan in the attic",decrease_speed
-fan.basement,"Toggle the basement fan",toggle
-fan.basement,"Toggle the basement fan",toggle
-fan.bathroom,"Activate the bathroom fan",turn_on
-fan.bathroom,"Turn on the bathroom fan",turn_on
-fan.bathroom,"Turn on the bathroom fan",turn_on
-fan.bedroom_master,"Activate the master bedroom fan",turn_on
-fan.bedroom_master,"Deactivate the master bedroom fan",turn_off
-fan.bedroom_master,"Ramp up the master bedroom fan speed",increase_speed
-fan.bedroom_master,"Slow down the master bedroom fan",decrease_speed
-fan.bedroom_master,"Switch the state of the master bedroom fan",toggle
-fan.bedroom,"Toggle the bedroom fan",toggle
-fan.bedroom,"Toggle the bedroom fan",toggle
-fan.bedroom,"Toggle the bedroom fan",toggle
-fan.dining_area,"Please switch off the dining area fan",turn_off
-fan.dining_area,"Please switch on the dining area fan",turn_on
-fan.dining_room,"Switch off the dining room fan",turn_off
-fan.dining_table_above,"Please toggle the fan above the dining table",toggle
-fan.driveway,"Flip the driveway fan",toggle
-fan.garage,"Flip the fan in the garage",toggle
-fan.garage,"Shut down the garage fan",turn_off
-fan.garage,"Switch off the garage fan",turn_off
-fan.garage,"Switch off the garage fan",turn_off
-fan.garage,"Turn down the fan in the garage",decrease_speed
-fan.garage,"Turn on the garage fan",turn_on
-fan.garage,"Turn up the fan in the garage",increase_speed
-fan.guest_room,"Can you toggle the fan in the guest room",toggle
-fan.guest_room,"Decrease the fan speed in the guest room",decrease_speed
-fan.guest_room,"Increase the fan speed in the guest room",increase_speed
-fan.guest_room,"Switch off the guest room fan",turn_off
-fan.hallway,"Boost the fan speed in the hallway",increase_speed
-fan.hallway,"Enable the hallway fan",turn_on
-fan.hallway,"Lower the fan speed in the hallway",decrease_speed
-fan.hallway,"Switch the state of the fan in the hallway",toggle
-fan.kitchen,"Enable the kitchen fan",turn_on
-fan.kitchen,"Slow down the kitchen fan",decrease_speed
-fan.kitchen,"Slow down the kitchen fan",decrease_speed
-fan.kitchen,"Switch off the kitchen fan",turn_off
-fan.kitchen,"Switch off the kitchen fan",turn_off
-fan.kitchen,"Toggle the kitchen fan",toggle
-fan.kitchen,"Turn down the kitchen fan",decrease_speed
-fan.living_room,"Decrease the speed of the living room fan",decrease_speed
-fan.living_room,"Increase the speed of the living room fan",increase_speed
-fan.living_room,"Start the living room fan",turn_on
-fan.living_room,"Toggle the fan in the living room",toggle
-fan.living_room,"Turn down the living room fan",decrease_speed
-fan.living_room,"Turn off the living room fan",turn_off
-fan.living_room,"Turn off the living room fan",turn_off
-fan.living_room,"Turn on the living room fan",turn_on
-fan.living_room,"Turn on the living room fan",turn_on
-fan.office,"Could you disable the office fan",turn_off
-fan.office,"Could you enable the office fan",turn_on
-fan.office,"Toggle the office fan",toggle
-fan.office,"Toggle the office fan",toggle
-fan.office,"Toggle the office fan",toggle
-fan.office,"Turn off the office fan",turn_off
-fan.office,"Turn off the office fan",turn_off
-fan.outdoor,"Toggle the outdoor fan",toggle
-fan.patio,"Turn off the patio fan",turn_off
-fan.pool,"Change the status of the pool fan",toggle
-fan.shed,"Switch the shed fan on or off",toggle
-fan.study,"Activate the study fan",turn_on
-fan.study,"Alter the fan state in the study",toggle
-fan.study,"Ramp up the fan speed in the study",increase_speed
-fan.study,"Reduce the fan speed in the study",decrease_speed
-fan.study,"Switch off the study fan",turn_off
-fan.study,"Switch on the study fan",turn_on
-fan.study,"Turn off the study fan",turn_off
-fan.study,"Turn off the study fan",turn_off
-garage_door.basement,"Please raise the basement garage door",open
-garage_door.bike_storage,"Activate the bike storage garage",open
-garage_door.bike_storage,"Deactivate the bike storage garage",close
-garage_door.main,"Close the main garage door",close
-garage_door.main,"Open the main garage door",open
-garage_door.main,"Stop the main garage door",stop
-garage_door.main,"Toggle the main garage door",toggle
-garage_door.one_car,"Make sure the one car garage is closed",close
-garage_door.side,"Could you lift the side garage door",open
-garage_door.side,"Halt the side garage door",stop
-garage_door.side,"Lower the side garage door",close
-garage_door.side,"Switch the state of the side garage door",toggle
-garage_door.two_car,"Open the two car garage",open
-light.attic,"Change the light status in the attic",toggle
-light.bathroom_1,"Could you illuminate the bathroom",turn_on
-light.bathroom_1,"Please extinguish the bathroom light",turn_off
-light.bathroom,"Activate the bathroom light",turn_on
-light.bathroom,"Switch off the bathroom light",turn_off
-light.bathroom,"Turn off the bathroom light",turn_off
-light.bathroom,"Turn off the bathroom light",turn_off
-light.bathroom,"Turn off the bathroom light",turn_off
-light.bedroom_1,"Activate the bedroom light",turn_on
-light.bedroom_1,"Deactivate the bedroom light",turn_off
-light.bedroom_1,"Toggle the bedroom light",toggle
-light.bedroom_2,"Switch off the bedroom light",turn_off
-light.dining_room_1,"Activate the lights in the dining room",turn_on
-light.dining_room,"Activate the dining room light",turn_on
-light.dining_room,"Switch off the dining room light",turn_off
-light.dining_room,"Switch off the dining room light",turn_off
-light.dining_room,"Switch off the dining room light",turn_off
-light.dining_room,"Switch off the dining room light",turn_off
-light.dining_room,"Turn off the dining room light",turn_off
-light.dining_table_above,"Please toggle the light above the dining table",toggle
-light.driveway,"Flip the driveway light",toggle
-light.driveway,"Turn on the driveway light",turn_on
-light.garage,"Activate the garage light",turn_on
-light.garage,"Activate the garage light",turn_on
-light.garage,"Flip the light in the garage",toggle
-light.garage,"Switch on the garage light",turn_on
-light.garage,"Switch on the garage light",turn_on
-light.garden_1,"Deactivate the garden light",turn_off
-light.garden_1,"Switch on the garden light",turn_on
-light.garden_1,"Turn on the garden light",turn_on
-light.garden_2,"Activate the garden light",turn_on
-light.garden,"Switch on the garden light",turn_on
-light.guest_room,"Could you toggle the light in the guest room",toggle
-light.guest_room,"Deactivate the guest room light",turn_off
-light.guest_room,"Switch off the guest room light",turn_off
-light.guest_room,"Switch on the guest room light",turn_on
-light.guest_room,"Toggle the guest room light",toggle
-light.hallway,"Switch off the hallway light",turn_off
-light.hallway,"Switch the state of the light in the hallway",toggle
-light.hallway,"Toggle the hallway light",toggle
-light.hallway,"Turn off the hallway light",turn_off
-light.hallway,"Turn on the hallway light",turn_on
-light.kitchen_1,"Switch on the kitchen lights",turn_on
-light.kitchen_1,"Toggle the kitchen light",toggle
-light.kitchen_1,"Turn on the kitchen light",turn_on
-light.kitchen_2,"Switch off the kitchen light",turn_off
-light.kitchen_2,"Toggle the kitchen light",toggle
-light.kitchen_counter,"Switch off the kitchen counter light",turn_off
-light.kitchen_counter,"Switch on the kitchen counter light",turn_on
-light.living_room_1,"Switch off the living room light",turn_off
-light.living_room,"Turn off the living room light",turn_off
-light.living_room,"Turn on the living room light",turn_on
-light.master_bedroom_1,"Deactivate the master bedroom light",turn_off
-light.master_bedroom_1,"Please activate the master bedroom light",turn_on
-light.master_bedroom_lamp,"Turn off the light in the bedroom",turn_off
-light.office_1,"Enable the office light",turn_on
-light.office,"Deactivate the office light",turn_off
-light.office,"Toggle the office light",toggle
-light.outdoor,"Toggle the outdoor light",toggle
-light.patio,"Deactivate the patio light",turn_off
-light.patio,"Disable the patio light",turn_off
-light.patio,"Enable the patio light",turn_on
-light.patio,"Switch on the patio light",turn_on
-light.patio,"Toggle the patio light",toggle
-light.patio,"Turn on the patio light",turn_on
-light.patio,"Turn on the patio light",turn_on
-light.pool,"Activate the pool light",turn_on
-light.pool,"Change the status of the pool light",toggle
-light.pool,"Turn off the pool light",turn_off
-light.pool,"Turn on the pool light",turn_on
-light.shed,"Activate the shed light",turn_on
-light.shed,"Activate the shed light",turn_on
-light.shed,"Switch on the shed light",turn_on
-light.shed,"Switch the shed light on or off",toggle
-light.study,"Activate the study light",turn_on
-light.study,"Alter the light state in the study",toggle
-light.study,"Toggle the study light",toggle
-light.study,"Toggle the study light",toggle
-light.study,"Turn off the study light",turn_off
-light.study,"Turn off the study light",turn_off
-light.dining_room_chandelier,"Turn on the dining room light",turn_on
-light.chandelier_front_hallway,"Hey can you turn on the front hallway chandelier",turn_on
-lock.back_door,"Could you disengage the back door lock",unlock
-lock.back_door,"Engage the back door lock",lock
-lock.bike_storage,"Disengage the lock on the bike storage",unlock
-lock.front_door,"Lock the front door",lock
-lock.front_door,"Unlock the front door",unlock
-lock.nursery,"Can you secure the nursery door",lock
-lock.office,"Please lock the office",lock
-lock.office,"Please unlock the office",unlock
-lock.tool_shed,"Unlock the tool shed",unlock
-lock.wine_cellar,"Could you lock the wine cellar",lock
-lock.front_door,"Please lock the front door.",lock
-lock.back_door,"Can you unlock the back door?",unlock
-lock.garage_door,"I need the garage door locked.",lock
+blinds.kitchen,Could you raise the kitchen blinds,open
+blinds.kitchen,Lower the kitchen blinds,close
+blinds.kitchen,Stop the kitchen blinds where they are,stop
+blinds.kitchen,Switch the state of the kitchen blinds,toggle
+blinds.living_room,Close the living room blinds,close
+blinds.living_room,Open the living room blinds,open
+blinds.living_room,Stop adjusting the living room blinds,stop
+blinds.living_room,Toggle the living room blinds,toggle
+blinds.master_bedroom,Lift the master bedroom blinds,open
+blinds.master_bedroom,Please halt the master bedroom blinds,stop
+blinds.master_bedroom,Reverse the master bedroom blinds,toggle
+blinds.master_bedroom,Shut the master bedroom blinds,close
+fan.attic_1,Disable the attic fan,turn_off
+fan.attic_1,Increase speed of the attic fan,increase_speed
+fan.attic_1,Slow down the attic fan,decrease_speed
+fan.attic_1,Slow down the attic fan,decrease_speed
+fan.attic_1,Turn down the attic fan,decrease_speed
+fan.attic_2,Toggle the attic fan,toggle
+fan.attic_2,Toggle the attic fan,toggle
+fan.attic,Accelerate the fan in the attic,increase_speed
+fan.attic,Change the fan status in the attic,toggle
+fan.attic,Slow down the fan in the attic,decrease_speed
+fan.basement,Toggle the basement fan,toggle
+fan.basement,Toggle the basement fan,toggle
+fan.bathroom,Activate the bathroom fan,turn_on
+fan.bathroom,Turn on the bathroom fan,turn_on
+fan.bathroom,Turn on the bathroom fan,turn_on
+fan.bedroom_master,Activate the master bedroom fan,turn_on
+fan.bedroom_master,Deactivate the master bedroom fan,turn_off
+fan.bedroom_master,Ramp up the master bedroom fan speed,increase_speed
+fan.bedroom_master,Slow down the master bedroom fan,decrease_speed
+fan.bedroom_master,Switch the state of the master bedroom fan,toggle
+fan.bedroom,Toggle the bedroom fan,toggle
+fan.bedroom,Toggle the bedroom fan,toggle
+fan.bedroom,Toggle the bedroom fan,toggle
+fan.dining_area,Please switch off the dining area fan,turn_off
+fan.dining_area,Please switch on the dining area fan,turn_on
+fan.dining_room,Switch off the dining room fan,turn_off
+fan.dining_table_above,Please toggle the fan above the dining table,toggle
+fan.driveway,Flip the driveway fan,toggle
+fan.garage,Flip the fan in the garage,toggle
+fan.garage,Shut down the garage fan,turn_off
+fan.garage,Switch off the garage fan,turn_off
+fan.garage,Switch off the garage fan,turn_off
+fan.garage,Turn down the fan in the garage,decrease_speed
+fan.garage,Turn on the garage fan,turn_on
+fan.garage,Turn up the fan in the garage,increase_speed
+fan.guest_room,Can you toggle the fan in the guest room,toggle
+fan.guest_room,Decrease the fan speed in the guest room,decrease_speed
+fan.guest_room,Increase the fan speed in the guest room,increase_speed
+fan.guest_room,Switch off the guest room fan,turn_off
+fan.hallway,Boost the fan speed in the hallway,increase_speed
+fan.hallway,Enable the hallway fan,turn_on
+fan.hallway,Lower the fan speed in the hallway,decrease_speed
+fan.hallway,Switch the state of the fan in the hallway,toggle
+fan.kitchen,Enable the kitchen fan,turn_on
+fan.kitchen,Slow down the kitchen fan,decrease_speed
+fan.kitchen,Slow down the kitchen fan,decrease_speed
+fan.kitchen,Switch off the kitchen fan,turn_off
+fan.kitchen,Switch off the kitchen fan,turn_off
+fan.kitchen,Toggle the kitchen fan,toggle
+fan.kitchen,Turn down the kitchen fan,decrease_speed
+fan.living_room,Decrease the speed of the living room fan,decrease_speed
+fan.living_room,Increase the speed of the living room fan,increase_speed
+fan.living_room,Start the living room fan,turn_on
+fan.living_room,Toggle the fan in the living room,toggle
+fan.living_room,Turn down the living room fan,decrease_speed
+fan.living_room,Turn off the living room fan,turn_off
+fan.living_room,Turn off the living room fan,turn_off
+fan.living_room,Turn on the living room fan,turn_on
+fan.living_room,Turn on the living room fan,turn_on
+fan.office,Could you disable the office fan,turn_off
+fan.office,Could you enable the office fan,turn_on
+fan.office,Toggle the office fan,toggle
+fan.office,Toggle the office fan,toggle
+fan.office,Toggle the office fan,toggle
+fan.office,Turn off the office fan,turn_off
+fan.office,Turn off the office fan,turn_off
+fan.outdoor,Toggle the outdoor fan,toggle
+fan.patio,Turn off the patio fan,turn_off
+fan.pool,Change the status of the pool fan,toggle
+fan.shed,Switch the shed fan on or off,toggle
+fan.study,Activate the study fan,turn_on
+fan.study,Alter the fan state in the study,toggle
+fan.study,Ramp up the fan speed in the study,increase_speed
+fan.study,Reduce the fan speed in the study,decrease_speed
+fan.study,Switch off the study fan,turn_off
+fan.study,Switch on the study fan,turn_on
+fan.study,Turn off the study fan,turn_off
+fan.study,Turn off the study fan,turn_off
+garage_door.basement,Please raise the basement garage door,open
+garage_door.bike_storage,Activate the bike storage garage,open
+garage_door.bike_storage,Deactivate the bike storage garage,close
+garage_door.main,Close the main garage door,close
+garage_door.main,Open the main garage door,open
+garage_door.main,Stop the main garage door,stop
+garage_door.main,Toggle the main garage door,toggle
+garage_door.one_car,Make sure the one car garage is closed,close
+garage_door.side,Could you lift the side garage door,open
+garage_door.side,Halt the side garage door,stop
+garage_door.side,Lower the side garage door,close
+garage_door.side,Switch the state of the side garage door,toggle
+garage_door.two_car,Open the two car garage,open
+light.attic,Change the light status in the attic,toggle
+light.bathroom_1,Could you illuminate the bathroom,turn_on
+light.bathroom_1,Please extinguish the bathroom light,turn_off
+light.bathroom,Activate the bathroom light,turn_on
+light.bathroom,Switch off the bathroom light,turn_off
+light.bathroom,Turn off the bathroom light,turn_off
+light.bathroom,Turn off the bathroom light,turn_off
+light.bathroom,Turn off the bathroom light,turn_off
+light.bedroom_1,Activate the bedroom light,turn_on
+light.bedroom_1,Deactivate the bedroom light,turn_off
+light.bedroom_1,Toggle the bedroom light,toggle
+light.bedroom_2,Switch off the bedroom light,turn_off
+light.dining_room_1,Activate the lights in the dining room,turn_on
+light.dining_room,Activate the dining room light,turn_on
+light.dining_room,Switch off the dining room light,turn_off
+light.dining_room,Switch off the dining room light,turn_off
+light.dining_room,Switch off the dining room light,turn_off
+light.dining_room,Switch off the dining room light,turn_off
+light.dining_room,Turn off the dining room light,turn_off
+light.dining_table_above,Please toggle the light above the dining table,toggle
+light.driveway,Flip the driveway light,toggle
+light.driveway,Turn on the driveway light,turn_on
+light.garage,Activate the garage light,turn_on
+light.garage,Activate the garage light,turn_on
+light.garage,Flip the light in the garage,toggle
+light.garage,Switch on the garage light,turn_on
+light.garage,Switch on the garage light,turn_on
+light.garden_1,Deactivate the garden light,turn_off
+light.garden_1,Switch on the garden light,turn_on
+light.garden_1,Turn on the garden light,turn_on
+light.garden_2,Activate the garden light,turn_on
+light.garden,Switch on the garden light,turn_on
+light.guest_room,Could you toggle the light in the guest room,toggle
+light.guest_room,Deactivate the guest room light,turn_off
+light.guest_room,Switch off the guest room light,turn_off
+light.guest_room,Switch on the guest room light,turn_on
+light.guest_room,Toggle the guest room light,toggle
+light.hallway,Switch off the hallway light,turn_off
+light.hallway,Switch the state of the light in the hallway,toggle
+light.hallway,Toggle the hallway light,toggle
+light.hallway,Turn off the hallway light,turn_off
+light.hallway,Turn on the hallway light,turn_on
+light.kitchen_1,Switch on the kitchen lights,turn_on
+light.kitchen_1,Toggle the kitchen light,toggle
+light.kitchen_1,Turn on the kitchen light,turn_on
+light.kitchen_2,Switch off the kitchen light,turn_off
+light.kitchen_2,Toggle the kitchen light,toggle
+light.kitchen_counter,Switch off the kitchen counter light,turn_off
+light.kitchen_counter,Switch on the kitchen counter light,turn_on
+light.living_room_1,Switch off the living room light,turn_off
+light.living_room,Turn off the living room light,turn_off
+light.living_room,Turn on the living room light,turn_on
+light.master_bedroom_1,Deactivate the master bedroom light,turn_off
+light.master_bedroom_1,Please activate the master bedroom light,turn_on
+light.master_bedroom_lamp,Turn off the light in the bedroom,turn_off
+light.office_1,Enable the office light,turn_on
+light.office,Deactivate the office light,turn_off
+light.office,Toggle the office light,toggle
+light.outdoor,Toggle the outdoor light,toggle
+light.patio,Deactivate the patio light,turn_off
+light.patio,Disable the patio light,turn_off
+light.patio,Enable the patio light,turn_on
+light.patio,Switch on the patio light,turn_on
+light.patio,Toggle the patio light,toggle
+light.patio,Turn on the patio light,turn_on
+light.patio,Turn on the patio light,turn_on
+light.pool,Activate the pool light,turn_on
+light.pool,Change the status of the pool light,toggle
+light.pool,Turn off the pool light,turn_off
+light.pool,Turn on the pool light,turn_on
+light.shed,Activate the shed light,turn_on
+light.shed,Activate the shed light,turn_on
+light.shed,Switch on the shed light,turn_on
+light.shed,Switch the shed light on or off,toggle
+light.study,Activate the study light,turn_on
+light.study,Alter the light state in the study,toggle
+light.study,Toggle the study light,toggle
+light.study,Toggle the study light,toggle
+light.study,Turn off the study light,turn_off
+light.study,Turn off the study light,turn_off
+light.dining_room_chandelier,Turn on the dining room light,turn_on
+light.chandelier_front_hallway,Hey can you turn on the front hallway chandelier,turn_on
+lock.back_door,Could you disengage the back door lock,unlock
+lock.back_door,Engage the back door lock,lock
+lock.bike_storage,Disengage the lock on the bike storage,unlock
+lock.front_door,Lock the front door,lock
+lock.front_door,Unlock the front door,unlock
+lock.nursery,Can you secure the nursery door,lock
+lock.office,Please lock the office,lock
+lock.office,Please unlock the office,unlock
+lock.tool_shed,Unlock the tool shed,unlock
+lock.wine_cellar,Could you lock the wine cellar,lock
+lock.front_door,Please lock the front door.,lock
+lock.back_door,Can you unlock the back door?,unlock
+lock.garage_door,I need the garage door locked.,lock
 lock.patio_door,"Unlock the patio door, please.",unlock
-lock.main_gate,"Ensure the main gate is locked.",lock
-lock.kitchen_window,"Open the lock on the kitchen window.",unlock
-lock.office_door,"Can we lock the office door?",lock
-lock.bedroom_window,"Bedroom window needs to be unlocked.",unlock
-lock.basement_door,"Lock up the basement door.",lock
-lock.bathroom_window,"Could you unlock the bathroom window?",unlock
-lock.garden_gate,"Please secure the garden gate.",lock
-lock.rooftop_door,"Open the rooftop door lock.",unlock
-lock.cellar_door,"Cellar door should be locked now.",lock
-lock.pool_gate,"I'd like the pool gate unlocked.",unlock
-lock.shed_door,"Ensure the shed door is securely locked.",lock
-lock.balcony_door,"Unlock the balcony door for me.",unlock
-lock.laundry_room_door,"Can you lock the laundry room door?",lock
-lock.nursery_door,"The nursery door needs to be unlocked.",unlock
-lock.guest_room_door,"Please lock the guest room door.",lock
-lock.side_entrance,"Unlock our side entrance.",unlock
-lock.fence_gate,"Make sure the fence gate is locked.",lock
-lock.garage_side_door,"Garage side door should be unlocked.",unlock
-lock.attic_door,"Attic door needs locking.",lock
-lock.fire_escape,"Can you unlock the fire escape?",unlock
-lock.storage_room_door,"Please lock the storage room door.",lock
-lock.boathouse_door,"Unlock the boathouse door.",unlock
-lock.carport_gate,"Carport gate needs to be locked.",lock
-lock.backyard_gate,"Can we have the backyard gate unlocked?",unlock
-lock.front_porch_door,"Lock the front porch door.",lock
-lock.back_terrace_door,"Open the lock on the back terrace door.",unlock
-lock.wine_cellar,"Ensure the wine cellar is locked.",lock
-lock.sunroom_door,"Please unlock the sunroom door.",unlock
-lock.home_office,"I'd like the home office locked up.",lock
-lock.playroom_door,"Can you unlock the playroom door?",unlock
-lock.art_studio,"The art studio should be locked.",lock
+lock.main_gate,Ensure the main gate is locked.,lock
+lock.kitchen_window,Open the lock on the kitchen window.,unlock
+lock.office_door,Can we lock the office door?,lock
+lock.bedroom_window,Bedroom window needs to be unlocked.,unlock
+lock.basement_door,Lock up the basement door.,lock
+lock.bathroom_window,Could you unlock the bathroom window?,unlock
+lock.garden_gate,Please secure the garden gate.,lock
+lock.rooftop_door,Open the rooftop door lock.,unlock
+lock.cellar_door,Cellar door should be locked now.,lock
+lock.pool_gate,I'd like the pool gate unlocked.,unlock
+lock.shed_door,Ensure the shed door is securely locked.,lock
+lock.balcony_door,Unlock the balcony door for me.,unlock
+lock.laundry_room_door,Can you lock the laundry room door?,lock
+lock.nursery_door,The nursery door needs to be unlocked.,unlock
+lock.guest_room_door,Please lock the guest room door.,lock
+lock.side_entrance,Unlock our side entrance.,unlock
+lock.fence_gate,Make sure the fence gate is locked.,lock
+lock.garage_side_door,Garage side door should be unlocked.,unlock
+lock.attic_door,Attic door needs locking.,lock
+lock.fire_escape,Can you unlock the fire escape?,unlock
+lock.storage_room_door,Please lock the storage room door.,lock
+lock.boathouse_door,Unlock the boathouse door.,unlock
+lock.carport_gate,Carport gate needs to be locked.,lock
+lock.backyard_gate,Can we have the backyard gate unlocked?,unlock
+lock.front_porch_door,Lock the front porch door.,lock
+lock.back_terrace_door,Open the lock on the back terrace door.,unlock
+lock.wine_cellar,Ensure the wine cellar is locked.,lock
+lock.sunroom_door,Please unlock the sunroom door.,unlock
+lock.home_office,I'd like the home office locked up.,lock
+lock.playroom_door,Can you unlock the playroom door?,unlock
+lock.art_studio,The art studio should be locked.,lock
 lock.music_room,"Unlock the music room, please.",unlock
-lock.home_gym,"Lock the home gym door.",lock
-lock.cinema_room,"Cinema room needs to be unlocked.",unlock
-lock.library_door,"Please lock the library door.",lock
-lock.conservatory,"Can the conservatory be unlocked?",unlock
-media_player.kitchen,"Could you start the media in the kitchen",turn_on
-media_player.kitchen,"Play the previous track in the kitchen",media_previous_track
-media_player.kitchen,"Please raise the volume in the kitchen",volume_up
-media_player.living_room,"Activate the media in the living room",turn_on
-media_player.living_room,"Mute the media player in the living room",volume_mute
-media_player.living_room,"Skip to the next track in the living room",media_next_track
-media_player.living_room,"Turn up the volume in the living room",volume_up
-media_player.master_bedroom,"Can you increase the volume on the master bedroom media player",volume_up
-media_player.master_bedroom,"Pause the media in the master bedroom",media_pause
-media_player.master_bedroom,"Turn on the master bedroom media player",turn_on
-media_player.nursery,"Please play the media in the nursery",media_play
-media_player.nursery,"Stop the media in the nursery",media_stop
-media_player.nursery,"Turn down the volume in the nursery",volume_down
-media_player.office,"Can you decrease the volume in the office",volume_down
-media_player.living_room_tv,"Please turn on the living room TV.",turn_on
-media_player.kitchen_radio,"Switch off the kitchen radio.",turn_off
-media_player.bedroom_speaker,"Can you increase the volume in the bedroom?",volume_up
-media_player.office_sound_system,"Lower the volume in the office.",volume_down
-media_player.garage_stereo,"Mute the stereo in the garage.",volume_mute
-media_player.patio_speaker,"Start playing music on the patio speaker.",media_play
-media_player.bathroom_audio,"Pause the bathroom audio.",media_pause
-media_player.guest_room_media,"Stop the guest room media player.",media_stop
-media_player.basement_home_theater,"Skip to the next track in the basement.",media_next_track
-media_player.nursery_lullaby,"Go back to the previous lullaby in the nursery.",media_previous_track
-media_player.deck_music_system,"Turn on the deck's music system.",turn_on
-media_player.lounge_entertainment,"Switch off the lounge entertainment center.",turn_off
-media_player.dining_area_jukebox,"Increase the jukebox volume in the dining area.",volume_up
-media_player.game_room_speakers,"Turn down the game room speakers.",volume_down
-media_player.library_soundbar,"Mute the soundbar in the library.",volume_mute
-media_player.sunroom_stereo,"Play the stereo in the sunroom.",media_play
-media_player.loft_tv,"Pause the TV in the loft.",media_pause
-media_player.poolside_media,"Stop the poolside media system.",media_stop
-media_player.gym_music_player,"Skip to the next song in the gym.",media_next_track
-media_player.study_room_radio,"Go back to the previous station in the study room.",media_previous_track
-media_player.backyard_speakers,"Turn on the backyard speakers.",turn_on
-media_player.entryway_echo,"Turn off the Echo in the entryway.",turn_off
-media_player.rooftop_deck_audio,"Raise the rooftop audio volume.",volume_up
-media_player.workshop_sound_system,"Lower the sound system volume in the workshop.",volume_down
-media_player.art_studio_player,"Mute the media player in the art studio.",volume_mute
-media_player.kids_room_storyteller,"Start the storyteller in the kids' room.",media_play
-media_player.laundry_room_radio,"Pause the radio in the laundry room.",media_pause
-media_player.balcony_speakers,"Stop the balcony speakers.",media_stop
-media_player.yoga_room_music,"Next track for the yoga room music.",media_next_track
-media_player.conservatory_cd_player,"Previous track on the conservatory CD player.",media_previous_track
-media_player.foyer_sound_system,"Power on the foyer sound system.",turn_on
-media_player.wine_cellar_speakers,"Power off the speakers in the wine cellar.",turn_off
-media_player.greenhouse_radio,"Increase the greenhouse radio volume.",volume_up
-media_player.attic_audio_system,"Decrease attic audio system volume.",volume_down
-media_player.boathouse_stereo,"Mute the stereo in the boathouse.",volume_mute
-media_player.cellar_jukebox,"Play the jukebox in the cellar.",media_play
-media_player.corridor_intercom,"Pause the corridor intercom.",media_pause
-media_player.porch_sound_system,"Stop the porch sound system.",media_stop
-media_player.garden_music,"Next track for the garden music.",media_next_track
-media_player.driveway_speakers,"Previous track on the driveway speakers.",media_previous_track
-media_player.hallway_audio,"Switch on the hallway audio system.",turn_on
-media_player.mudroom_media_player,"Switch off the mudroom media player.",turn_off
-media_player.utility_room_radio,"Turn up the utility room radio.",volume_up
-media_player.shed_sound_system,"Turn down the shed sound system.",volume_down
-media_player.treehouse_speakers,"Mute the treehouse speakers.",volume_mute
-switch.philips_hue_living_room,"Turn on the living room lights.",turn_on
-switch.belkin_wemo_garage,"Turn off the garage switch.",turn_off
-switch.tp_link_kasa_porch,"Toggle the porch lights.",toggle
-switch.legrand_radiant_kitchen,"Turn on the kitchen lights.",turn_on
-switch.lutron_caseta_bedroom,"Turn off the bedroom lights.",turn_off
-switch.ge_z_wave_bathroom,"Turn on the bathroom fan.",turn_on
-switch.honeywell_home_office,"Toggle the office lights.",toggle
-switch.samsung_smartthings_security,"Turn off the security system.",turn_off
-switch.eve_energy_balcony,"Turn on the balcony lighting.",turn_on
-switch.fibaro_pool,"Turn off the pool lights.",turn_off
-switch.nest_thermostat_terrace,"Turn on the terrace thermostat.",turn_on
-switch.ecobee_garden,"Turn off the garden lights.",turn_off
-switch.sonoff_dining_room,"Toggle the dining room lights.",toggle
-switch.wink_relay_driveway,"Turn on the driveway lights.",turn_on
-switch.insteon_patio,"Turn off the patio lights.",turn_off
-switch.sengled_deck,"Turn on the deck lighting.",turn_on
-switch.osram_hallway,"Toggle the hallway lights.",toggle
-switch.yeelight_sunroom,"Turn off the sunroom lights.",turn_off
-switch.gosund_attic,"Turn on the attic light switch.",turn_on
-switch.meross_walkway,"Turn off the walkway lighting.",turn_off
-switch.koogeek_basement,"Toggle the basement lights.",toggle
-switch.nanoleaf_stairway,"Turn on the stairway lights.",turn_on
-switch.xiaomi_bedside,"Turn off the bedside lamp.",turn_off
-switch.arlo_floodlights,"Toggle the security floodlights.",toggle
-switch.wyze_study,"Turn on the study room lights.",turn_on
-switch.ikea_guest_room,"Turn off the guest room lights.",turn_off
-switch.netatmo_front_yard,"Turn on the front yard lighting.",turn_on
-switch.tuya_shed,"Turn off the shed light switch.",turn_off
-switch.broadlink_kitchenette,"Toggle the kitchenette lights.",toggle
-switch.moeshouse_gym,"Turn on the gym lighting.",turn_on
-switch.hue_bedroom_2,"Turn off the second bedroom lights.",turn_off
-switch.wemo_laundry_room,"Turn on the laundry room lights.",turn_on
-switch.kasa_living_room,"Toggle the living room lights.",toggle
-switch.radiant_office,"Turn off the office lights.",turn_off
-switch.caseta_hallway_2,"Turn on the second hallway lights.",turn_on
-switch.z_wave_guest_bathroom,"Turn off the guest bathroom fan.",turn_off
-switch.home_office_dimmer,"Toggle the home office dimmer.",toggle
-switch.security_camera_light,"Turn on the security camera light.",turn_on
-switch.patio_heater_switch,"Turn off the patio heater.",turn_off
-switch.kitchen_under_cabinet,"Toggle the kitchen under cabinet lights.",toggle
-switch.hallway_dimmer,"Could you dim the hallway lights?",turn_on
-switch.kitchen_fan,"Please turn off the kitchen fan.",turn_off
-switch.garden_spotlights,"Activate the garden spotlights.",turn_on
-switch.poolside_lanterns,"Deactivate the poolside lanterns.",turn_off
-switch.front_porch_sensor,"Engage the front porch sensor light.",turn_on
-switch.backyard_floodlight,"Can you shut off the backyard floodlight?",turn_off
-switch.staircase_light_strip,"Could you light up the staircase light strip?",turn_on
-switch.laundry_area,"Please switch off the laundry area lights.",turn_off
-switch.office_desk_lamp,"Illuminate the desk lamp in my office.",turn_on
-switch.basement_sconces,"Can we turn down the basement sconces?",turn_off
-switch.library_ceiling,"Engage the ceiling lights in the library.",turn_on
+lock.home_gym,Lock the home gym door.,lock
+lock.cinema_room,Cinema room needs to be unlocked.,unlock
+lock.library_door,Please lock the library door.,lock
+lock.conservatory,Can the conservatory be unlocked?,unlock
+media_player.kitchen,Could you start the media in the kitchen,turn_on
+media_player.kitchen,Play the previous track in the kitchen,media_previous_track
+media_player.kitchen,Please raise the volume in the kitchen,volume_up
+media_player.living_room,Activate the media in the living room,turn_on
+media_player.living_room,Mute the media player in the living room,volume_mute
+media_player.living_room,Skip to the next track in the living room,media_next_track
+media_player.living_room,Turn up the volume in the living room,volume_up
+media_player.master_bedroom,Can you increase the volume on the master bedroom media player,volume_up
+media_player.master_bedroom,Pause the media in the master bedroom,media_pause
+media_player.master_bedroom,Turn on the master bedroom media player,turn_on
+media_player.nursery,Please play the media in the nursery,media_play
+media_player.nursery,Stop the media in the nursery,media_stop
+media_player.nursery,Turn down the volume in the nursery,volume_down
+media_player.office,Can you decrease the volume in the office,volume_down
+media_player.living_room_tv,Please turn on the living room TV.,turn_on
+media_player.kitchen_radio,Switch off the kitchen radio.,turn_off
+media_player.bedroom_speaker,Can you increase the volume in the bedroom?,volume_up
+media_player.office_sound_system,Lower the volume in the office.,volume_down
+media_player.garage_stereo,Mute the stereo in the garage.,volume_mute
+media_player.patio_speaker,Start playing music on the patio speaker.,media_play
+media_player.bathroom_audio,Pause the bathroom audio.,media_pause
+media_player.guest_room_media,Stop the guest room media player.,media_stop
+media_player.basement_home_theater,Skip to the next track in the basement.,media_next_track
+media_player.nursery_lullaby,Go back to the previous lullaby in the nursery.,media_previous_track
+media_player.deck_music_system,Turn on the deck's music system.,turn_on
+media_player.lounge_entertainment,Switch off the lounge entertainment center.,turn_off
+media_player.dining_area_jukebox,Increase the jukebox volume in the dining area.,volume_up
+media_player.game_room_speakers,Turn down the game room speakers.,volume_down
+media_player.library_soundbar,Mute the soundbar in the library.,volume_mute
+media_player.sunroom_stereo,Play the stereo in the sunroom.,media_play
+media_player.loft_tv,Pause the TV in the loft.,media_pause
+media_player.poolside_media,Stop the poolside media system.,media_stop
+media_player.gym_music_player,Skip to the next song in the gym.,media_next_track
+media_player.study_room_radio,Go back to the previous station in the study room.,media_previous_track
+media_player.backyard_speakers,Turn on the backyard speakers.,turn_on
+media_player.entryway_echo,Turn off the Echo in the entryway.,turn_off
+media_player.rooftop_deck_audio,Raise the rooftop audio volume.,volume_up
+media_player.workshop_sound_system,Lower the sound system volume in the workshop.,volume_down
+media_player.art_studio_player,Mute the media player in the art studio.,volume_mute
+media_player.kids_room_storyteller,Start the storyteller in the kids' room.,media_play
+media_player.laundry_room_radio,Pause the radio in the laundry room.,media_pause
+media_player.balcony_speakers,Stop the balcony speakers.,media_stop
+media_player.yoga_room_music,Next track for the yoga room music.,media_next_track
+media_player.conservatory_cd_player,Previous track on the conservatory CD player.,media_previous_track
+media_player.foyer_sound_system,Power on the foyer sound system.,turn_on
+media_player.wine_cellar_speakers,Power off the speakers in the wine cellar.,turn_off
+media_player.greenhouse_radio,Increase the greenhouse radio volume.,volume_up
+media_player.attic_audio_system,Decrease attic audio system volume.,volume_down
+media_player.boathouse_stereo,Mute the stereo in the boathouse.,volume_mute
+media_player.cellar_jukebox,Play the jukebox in the cellar.,media_play
+media_player.corridor_intercom,Pause the corridor intercom.,media_pause
+media_player.porch_sound_system,Stop the porch sound system.,media_stop
+media_player.garden_music,Next track for the garden music.,media_next_track
+media_player.driveway_speakers,Previous track on the driveway speakers.,media_previous_track
+media_player.hallway_audio,Switch on the hallway audio system.,turn_on
+media_player.mudroom_media_player,Switch off the mudroom media player.,turn_off
+media_player.utility_room_radio,Turn up the utility room radio.,volume_up
+media_player.shed_sound_system,Turn down the shed sound system.,volume_down
+media_player.treehouse_speakers,Mute the treehouse speakers.,volume_mute
+switch.philips_hue_living_room,Turn on the living room lights.,turn_on
+switch.belkin_wemo_garage,Turn off the garage switch.,turn_off
+switch.tp_link_kasa_porch,Toggle the porch lights.,toggle
+switch.legrand_radiant_kitchen,Turn on the kitchen lights.,turn_on
+switch.lutron_caseta_bedroom,Turn off the bedroom lights.,turn_off
+switch.ge_z_wave_bathroom,Turn on the bathroom fan.,turn_on
+switch.honeywell_home_office,Toggle the office lights.,toggle
+switch.samsung_smartthings_security,Turn off the security system.,turn_off
+switch.eve_energy_balcony,Turn on the balcony lighting.,turn_on
+switch.fibaro_pool,Turn off the pool lights.,turn_off
+switch.nest_thermostat_terrace,Turn on the terrace thermostat.,turn_on
+switch.ecobee_garden,Turn off the garden lights.,turn_off
+switch.sonoff_dining_room,Toggle the dining room lights.,toggle
+switch.wink_relay_driveway,Turn on the driveway lights.,turn_on
+switch.insteon_patio,Turn off the patio lights.,turn_off
+switch.sengled_deck,Turn on the deck lighting.,turn_on
+switch.osram_hallway,Toggle the hallway lights.,toggle
+switch.yeelight_sunroom,Turn off the sunroom lights.,turn_off
+switch.gosund_attic,Turn on the attic light switch.,turn_on
+switch.meross_walkway,Turn off the walkway lighting.,turn_off
+switch.koogeek_basement,Toggle the basement lights.,toggle
+switch.nanoleaf_stairway,Turn on the stairway lights.,turn_on
+switch.xiaomi_bedside,Turn off the bedside lamp.,turn_off
+switch.arlo_floodlights,Toggle the security floodlights.,toggle
+switch.wyze_study,Turn on the study room lights.,turn_on
+switch.ikea_guest_room,Turn off the guest room lights.,turn_off
+switch.netatmo_front_yard,Turn on the front yard lighting.,turn_on
+switch.tuya_shed,Turn off the shed light switch.,turn_off
+switch.broadlink_kitchenette,Toggle the kitchenette lights.,toggle
+switch.moeshouse_gym,Turn on the gym lighting.,turn_on
+switch.hue_bedroom_2,Turn off the second bedroom lights.,turn_off
+switch.wemo_laundry_room,Turn on the laundry room lights.,turn_on
+switch.kasa_living_room,Toggle the living room lights.,toggle
+switch.radiant_office,Turn off the office lights.,turn_off
+switch.caseta_hallway_2,Turn on the second hallway lights.,turn_on
+switch.z_wave_guest_bathroom,Turn off the guest bathroom fan.,turn_off
+switch.home_office_dimmer,Toggle the home office dimmer.,toggle
+switch.security_camera_light,Turn on the security camera light.,turn_on
+switch.patio_heater_switch,Turn off the patio heater.,turn_off
+switch.kitchen_under_cabinet,Toggle the kitchen under cabinet lights.,toggle
+switch.hallway_dimmer,Could you dim the hallway lights?,turn_on
+switch.kitchen_fan,Please turn off the kitchen fan.,turn_off
+switch.garden_spotlights,Activate the garden spotlights.,turn_on
+switch.poolside_lanterns,Deactivate the poolside lanterns.,turn_off
+switch.front_porch_sensor,Engage the front porch sensor light.,turn_on
+switch.backyard_floodlight,Can you shut off the backyard floodlight?,turn_off
+switch.staircase_light_strip,Could you light up the staircase light strip?,turn_on
+switch.laundry_area,Please switch off the laundry area lights.,turn_off
+switch.office_desk_lamp,Illuminate the desk lamp in my office.,turn_on
+switch.basement_sconces,Can we turn down the basement sconces?,turn_off
+switch.library_ceiling,Engage the ceiling lights in the library.,turn_on
 switch.sunroom_blinds,"I'd like the sunroom blinds closed, please.",turn_off
 switch.guest_bathroom,"Light up the guest bathroom, please.",turn_on
-switch.patio_string_lights,"Switch off the string lights on the patio.",turn_off
-switch.kitchen_island,"Disable the kitchen island lights.",turn_off
-switch.entryway_chandelier,"Illuminate the entryway chandelier.",turn_on
-switch.garage_worklight,"Can we power down the garage worklight?",turn_off
-switch.bedroom_track_lighting,"Brighten the bedroom track lighting.",turn_on
-switch.home_cinema,"Please turn off the home cinema lights.",turn_off
-switch.balcony_mood_lighting,"Activate the mood lighting on the balcony.",turn_on
-switch.dining_room_dimmer,"Set the dining room lights to off.",turn_off
-switch.playroom_nightlight,"Can you turn on the playroom nightlight?",turn_on
-switch.art_studio_spots,"Please disable the art studio spotlights.",turn_off
-switch.foyer_wall_sconce,"Light up the foyer wall sconce.",turn_on
-switch.back_entry,"Shut down the back entry lights.",turn_off
-switch.corridor_track,"Brighten up the corridor track lights.",turn_on
+switch.patio_string_lights,Switch off the string lights on the patio.,turn_off
+switch.kitchen_island,Disable the kitchen island lights.,turn_off
+switch.entryway_chandelier,Illuminate the entryway chandelier.,turn_on
+switch.garage_worklight,Can we power down the garage worklight?,turn_off
+switch.bedroom_track_lighting,Brighten the bedroom track lighting.,turn_on
+switch.home_cinema,Please turn off the home cinema lights.,turn_off
+switch.balcony_mood_lighting,Activate the mood lighting on the balcony.,turn_on
+switch.dining_room_dimmer,Set the dining room lights to off.,turn_off
+switch.playroom_nightlight,Can you turn on the playroom nightlight?,turn_on
+switch.art_studio_spots,Please disable the art studio spotlights.,turn_off
+switch.foyer_wall_sconce,Light up the foyer wall sconce.,turn_on
+switch.back_entry,Shut down the back entry lights.,turn_off
+switch.corridor_track,Brighten up the corridor track lights.,turn_on
 switch.veranda_fairy_lights,"Switch off the veranda fairy lights, please.",turn_off
-switch.master_suite,"Set the master suite to nighttime mode.",turn_on
-switch.walk_in_closet,"Disable the walk-in closet lights.",turn_off
-switch.roof_deck,"Engage the roof deck lighting.",turn_on
-switch.bathroom_mirror,"Can you turn off the bathroom mirror light?",turn_off
-switch.storage_room,"Please power down the storage room lights.",turn_off
-switch.wine_cellar,"Illuminate the wine cellar.",turn_on
-switch.conservation_area,"Deactivate the conservation area lighting.",turn_off
-switch.gym_ceiling,"Light up the gym ceiling lights.",turn_on
-switch.hobby_room,"Could we turn off the hobby room lights?",turn_off
-switch.front_lawn,"Activate the front lawn spotlights.",turn_on
-switch.rear_terrace,"Can you dim the lights on the rear terrace?",turn_off
+switch.master_suite,Set the master suite to nighttime mode.,turn_on
+switch.walk_in_closet,Disable the walk-in closet lights.,turn_off
+switch.roof_deck,Engage the roof deck lighting.,turn_on
+switch.bathroom_mirror,Can you turn off the bathroom mirror light?,turn_off
+switch.storage_room,Please power down the storage room lights.,turn_off
+switch.wine_cellar,Illuminate the wine cellar.,turn_on
+switch.conservation_area,Deactivate the conservation area lighting.,turn_off
+switch.gym_ceiling,Light up the gym ceiling lights.,turn_on
+switch.hobby_room,Could we turn off the hobby room lights?,turn_off
+switch.front_lawn,Activate the front lawn spotlights.,turn_on
+switch.rear_terrace,Can you dim the lights on the rear terrace?,turn_off
+vacuum.kitchen,Please turn on the kitchen vacuum.,start
+vacuum.living_room,Could you please activate the living room vacuum?,start
+vacuum.dining_room,The dining room vacuum needs to be started.,start
+vacuum.bedroom1,Let's start the vacuum in bedroom one.,start
+vacuum.bedroom2,Can you please turn on the vacuum for bedroom two?,start
+vacuum.study,The study vacuum should be activated.,start
+vacuum.library,May I ask you to start the library vacuum?,start
+vacuum.office,Please initiate the office vacuum.,start
+vacuum.entrance_hall,Could you please turn on the entrance hall vacuum?,start
+vacuum.sunroom,The sunroom vacuum needs to be started.,start
+vacuum.patio,Let's activate the patio vacuum.,start
+vacuum.garage,"Can we clean up the garage, please?",start
+vacuum.workshop,May I request you to turn on the workshop vacuum?,start
+vacuum.utility_room,Please clean the utility room.,start
+vacuum.mud_room,Could you please clean up the mud room?,start
+vacuum.powder_room,The powder room needs to be cleaned.,start
+vacuum.hallway,Let's turn on the hallway vacuum.,start
+vacuum.staircase,Can we please start the staircase vacuum?,start
+vacuum.balcony,May I ask you to clean the balcony?,start
+vacuum.roof_deck,Please roof deck is dirty.,start
+vacuum.attic,Let's start the attic vacuum.,start
+vacuum.basement,"Can we turn on the basement vacuum, please?",start
+vacuum.pool_area,The pool area vacuum needs to be started.,start
+vacuum.garden,Could you please activate the garden vacuum?,start
+vacuum.terrace,May I request you to start the terrace vacuum?,start
+vacuum.porch,Please initiate the porch vacuum.,start
+vacuum.shed,"Can we turn on the shed vacuum, please?",start
+vacuum.workshop2,The second workshop is pretty dirty right now.,start
+vacuum.studio,May I ask you to start the studio vacuum?,start
+vacuum.greenhouse,Please initiate the greenhouse vacuum.,start
+vacuum.potting_shed,"Can we turn on the potting shed vacuum, please?",start
+vacuum.summer_house,The summer house vacuum needs to be started.,start
+vacuum.garage2,Let's start the second garage vacuum.,start
+vacuum.tool_shed,May I request you to activate the tool shed vacuum?,start
+vacuum.barn,Could we please turn on the barn vacuum?,start
+vacuum.wine_cellar,The wine cellar should be cleaned.,start
+vacuum.storage_room,Let's initiate the storage room cleanup.,start
+vacuum.greenhouse2,May I ask you to activate the second greenhouse vacuum?,start
+vacuum.boat_house,Please turn on the boat house vacuum.,start
+vacuum.marina,Could we please start the marina vacuum?,start
+vacuum.bb8,Turn on BB8.,start
+vacuum.c3po,Can you start C3PO?,start
+vacuum.hal,Please turn on Hal.,start
+vacuum.r2d2,Can you tell R2D2 to clean up?,start
+todo.groceries,Add milk to my groceries list.,add_item
+todo.household_supplies,Could you please add eggs to my household supplies list?,add_item
+todo.electronics,I would like you to add a new printer to the electronics list.,add_item
+todo.clothing,Kindly add a shirt to the clothing list for me.,add_item
+todo.office_supplies,Could you please add paper clips to the office supplies list?,add_item
+todo.personal_care,I would appreciate it if you could add toothpaste to my personal care list.,add_item
+todo.technology,I'd like you to add a new phone to the technology list.,add_item
+todo.gifts,Could you please add a gift card to the gifts list?,add_item
+todo.books,I would like you to add a novel to the books list.,add_item
+todo.music,Could you please add Halsey's new album to my music list?,add_item
+todo.movies,Could you kindly add Batman Begins to the movies list for me?,add_item
+todo.travel,I would appreciate it if you could add Scotland to the travel list.,add_item
+todo.education,I'd like you to add a language course to the education list.,add_item
+todo.health,Could you please add a doctor's appointment to my health list?,add_item
+todo.finance,"I would like you to add ""Pay Power Bill"" to the finance list.",add_item
+todo.shopping_list,Could you please add bread to the shopping list?,add_item
+todo.household_supplies_list,"Could you kindly add a ""Walnut Credenza"" to the projects list?",add_item
+todo.electronics_list,I would like you to add a new laptop to the electronics list.,add_item
+todo.clothing_list,Kindly add pants to the clothing list for me.,add_item
+todo.office_supplies_list,Could you please add staples to the office supplies list?,add_item
+todo.personal_care_list,I would appreciate it if you could add razorblades to my personal care list.,add_item
+todo.technology_list,I'd like you to add a new computer to the technology list.,add_item
+todo.gifts_list,Could you please add a socks to the gifts list?,add_item
+todo.books_list,"I would like you to add ""Treasure Island"" to the books list.",add_item
+todo.music_list,Could you please add Taylor Swift's new album to my music list?,add_item
+todo.movies_list,Could you kindly add Pulp Fiction to the movies list for me?,add_item
+todo.travel_list,I would appreciate it if you could add Japan to the travel list.,add_item
+todo.education_list,I'd like you to add a language course to the education list.,add_item
+todo.health_list,Could you please add a doctor's appointment to my health list?,add_item
+todo.finance_list,"I would like you to add ""Pay Phone Bill"" to the finance list.",add_item
+todo.grocery_list,"Could you please add ""Vinegar"" to the shopping list?",add_item
+todo.projects,"Could you kindly add a ""Maple Bench"" to the projects list?",add_item
+input_select.nature_sounds,"Could you set the nature sounds to ""thunderstorm"", please?",select_option
+input_select.people,"Can you set the people select to ""John""?",select_option
+input_select.who_cooks,Can you change who cooks to Paulus please?,select_option
+input_select.living_room_scene,Change the living room scene to Movie Time.,select_option
+input_select.alarm_status,"Set the alarm status to ""Armed"".",select_option
+input_select.roof_light_preset,"Change the roof light preset to ""Candy Cane"".",select_option
+input_select.roof_light_preset,"Please set ""Halloween"" for the roof light preset"".",select_option
+input_select.roof_light_preset,"Turn the roof light preset to ""Twinkle"".",select_option
+input_select.nature_sounds,"Turn ""off"" the nature sounds.",select_option
+input_select.nature_sounds,"Set nature sounds to ""Windy Mountain"".",select_option
+timer.pomodoro,Please set my pomodoro timer for 20 minutes.,start
+timer.kitchen,Turn on the kitchen timer for 8 minutes.,start
+timer.work,Set the work timer for 10 minutes.,start
+timer.laundry,Start the laundry timer for an hour.,start
+timer.cooking,Set a 30 second cooking timer.,start
+timer.pomodoro,Cancel the pomodoro timer.,cancel
+timer.kitchen,Please stop my kitchen timer.,cancel
+timer.work,Turn off the work timer.,cancel
+timer.laundry,Please shut off the laundry timer.,cancel
+timer.cooking,The cooking timer is no longer needed.,cancel
+light.bar_light,Please switch off the bar light,turn_off
+light.bar_light,Turn off bar light,turn_off
+light.bar_light,Turn off the bar light,turn_off
+light.dining_room_light,Deactivate dining room light,turn_off
+light.dining_room_light,Shut off dining room light,turn_off
+light.dining_room_light,Toggle the dining room light,turn_off
+light.front_light,Can we power down the front light?,turn_off
+light.front_light,Can we turn down the front light?,turn_off
+light.front_light,Can you turn off the lights on the front?,turn_off
+light.gym_light,Can you shut off the gym light?,turn_off
+light.gym_light,Can you turn off the gym light?,turn_off
+light.gym_light,Could we turn off the gym lights?,turn_off
+light.island_light,Could you disable the island light,turn_off
+light.island_light,Deactivate the island light,turn_off
+light.island_light,Deactivate the island area lighting.,turn_off
+light.kitchen_light,Deactivate the kitchen light,turn_off
+light.kitchen_light,Deactivate the lights at the kitchen.,turn_off
+light.kitchen_light,Disable the lights in the kitchen.,turn_off
+light.living_room_light,living room light off,turn_off
+light.living_room_light,Disable the living room lights.,turn_off
+light.living_room_light,Please disable the living room light.,turn_off
+light.main_basement_light,Please extinguish the main basement light,turn_off
+light.main_basement_light,Please power down the lights in the main basement.,turn_off
+light.main_basement_light,Please switch off the main basement light,turn_off
+light.man_cave_light,Please switch off the man cave area lights.,turn_off
+light.man_cave_light,Please turn off the man cave lights.,turn_off
+light.man_cave_light,Please turn off the man cave light.,turn_off
+light.master_bedroom_light,Power off the lights in the master bedroom.,turn_off
+light.master_bedroom_light,Set the master bedroom lights to off.,turn_off
+light.master_bedroom_light,Shut down the master bedroom lights.,turn_off
+light.pool_table_light,Shut down the pool table light,turn_off
+light.pool_table_light,Switch off the pool table light,turn_off
+light.pool_table_light,Switch off the pool table light please,turn_off
+light.pool_table_light,Switch off the pool table light now,turn_off
+light.pool_table_light,Switch off the pool table lights,turn_off
+light.pool_table_light,Switch off the light in the pool table,turn_off
+light.pool_table_light,Switch off the pool table light,turn_off
+light.pool_table_light,Turn off the pool table light,turn_off
+light.pool_table_light,Turn off the pool table light please,turn_off
+light.pool_table_light,Turn off the pool table light now,turn_off
+light.pool_table_light,You can turn off the pool table light now,turn_off
+light.pool_table_light,Turn off the pool table lights.,turn_off
+light.pool_table_light,Turn off the pool table light please.,turn_off
+light.pool_table_light,Turn off the pool table light,turn_off
+light.pool_table_light,Turn off the light in the pool table.,turn_off
+light.pool_table_light,Turn off the pool table light,turn_off
+light.pool_table_light,Turn off the light in the pool table,turn_off
+light.pool_table_light,Turn the pool table light off,turn_off
+light.porch_light,Please switch off the porch light,turn_off
+light.porch_light,Turn off porch light,turn_off
+light.porch_light,Turn off the porch light,turn_off
+light.porch_light,Deactivate porch light,turn_off
+light.porch_light,Shut off porch light,turn_off
+light.porch_light,Toggle the porch light,turn_off
+light.porch_light,Can we power down the porch light?,turn_off
+light.porch_light,Can we turn down the porch light?,turn_off
+light.porch_light,Can you turn off the lights on the porch?,turn_off
+light.porch_light,Can you shut off the porch light?,turn_off
+light.porch_light,Can you turn off the porch light?,turn_off
+light.porch_light,Could we turn off the porch lights?,turn_off
+light.porch_light,Could you disable the porch light,turn_off
+light.porch_light,Deactivate the porch light,turn_off
+light.porch_light,Deactivate the porch area lighting.,turn_off
+light.porch_light,Deactivate the porch light,turn_off
+light.porch_light,Deactivate the light on the porch,turn_off
+light.porch_light,Deactivate the porch light,turn_off
+light.porch_light,Deactivate the porch light,turn_off
+light.porch_light,Deactivate the porch light,turn_off
+light.porch_light,Deactivate the lights at the porch.,turn_off
+light.porch_light,Disable the lights in the porch.,turn_off
+light.porch_light,porch light off,turn_off
+light.porch_light,Disable the porch lights.,turn_off
+light.porch_light,Please disable the porch light.,turn_off
+light.porch_light,Please extinguish the porch light,turn_off
+light.porch_light,Please power down the lights in the porch.,turn_off
+light.porch_light,Please switch off the porch light,turn_off
+light.porch_light,Please switch off the porch area lights.,turn_off
+light.porch_light,Please turn off the porch lights.,turn_off
+light.porch_light,Please turn off the porch light.,turn_off
+light.porch_light,Power off the lights in the porch.,turn_off
+light.porch_light,Set the porch lights to off.,turn_off
+light.porch_light,Shut down the porch lights.,turn_off
+light.porch_light,Shut down the porch light,turn_off
+light.porch_light,Switch off the porch light,turn_off
+light.porch_light,Switch off the porch light please,turn_off
+light.porch_light,Switch off the porch light now,turn_off
+light.porch_light,Switch off the porch lights,turn_off
+light.porch_light,Switch off the light in the porch,turn_off
+light.porch_light,Switch off the porch light,turn_off
+light.porch_light,Turn off the porch light,turn_off
+light.porch_light,Turn off the porch light please,turn_off
+light.porch_light,Turn off the porch light now,turn_off
+light.porch_light,You can turn off the porch light now,turn_off
+light.porch_light,Turn off the porch lights.,turn_off
+light.porch_light,Turn off the porch light please.,turn_off
+light.porch_light,Turn off the porch light,turn_off
+light.porch_light,Turn off the light in the porch.,turn_off
+light.porch_light,Turn off the porch light,turn_off
+light.porch_light,Turn off the light in the porch,turn_off
+light.porch_light,Turn the porch light off,turn_off
+light.shower_light,Please switch off the shower light,turn_off
+light.shower_light,Turn off shower light,turn_off
+light.shower_light,Turn off the shower light,turn_off
+light.shower_light,Deactivate shower light,turn_off
+light.shower_light,Shut off shower light,turn_off
+light.stair_light,stair light off,turn_off
+light.stair_light,Disable the stair lights.,turn_off
+light.stair_light,Shut off stairwell light,turn_off
+light.stair_light,Toggle the stairwell light,turn_off
+light.stair_light,Can we power down the stairwell light?,turn_off
+light.roof_light,Please switch off the roof light,turn_off
+light.roof_light,Turn off roof light,turn_off
+light.roof_light,Turn off the roof light,turn_off
+light.walkway_light,Shut down the walkway lights.,turn_off
+light.walkway_light,Turn off the walkway light,turn_off
+light.walkway_light,Turn the walkway light off,turn_off
+light.Bobs_lamp,Please switch off Bob's light,turn_off
+light.janets_lamp,Turn off Janet's light,turn_off
+light.ruths_lamp,Please switch off Ruth's lamp,turn_off
+light.colins_lamp,Turn off Colin's lamp,turn_off
+light.neenas_lamp,Turn off Neena's lamp,turn_off
+light.roberts_lamp,Deactivate Robert's lamp,turn_off
+light.paulus_lamp,Shut off Paulus' lamp,turn_off
+light.peters_lamp,Toggle Peter's lamp,turn_off
+light.angelas_lamp,Can we power down Angela's lamp?,turn_off
+light.entry_lamp,Please switch off entry lamp,turn_off
+light.entry_lamp,Turn off entry lamp,turn_off
+light.entry_lamp,Please extinguish entryway lamp,turn_off
+light.entry_lamp,Please switch off entryway lamp,turn_off
+light.entry_lamp,Please switch off entryway area lamps.,turn_off
+light.entry_lamp,Deactivate entrance light,turn_off
+light.bar_light,Illuminate the light in my bar.,turn_on
+light.bar_light,Illuminate the bar.,turn_on
+light.bar_light,Bar light on,turn_on
+light.bar_light,Light up the bar.,turn_on
+light.dining_room_light,Activate the lights in the dining room,turn_on
+light.dining_room_light,Enable the dining room light please,turn_on
+light.dining_room_light,Engage the lights in the dining room.,turn_on
+light.front_light,Activate the front light please,turn_on
+light.front_light,Please activate the front light,turn_on
+light.front_light,Activate the front light now,turn_on
+light.gym_light,Turn on the gym light please,turn_on
+light.gym_light,Turn the gym light on,turn_on
+light.gym_light,gym light on,turn_on
+light.island_light,Turn the island light on,turn_on
+light.island_light,island light on,turn_on
+light.island_light,Switch on the island light,turn_on
+light.kitchen_light,kitchen light on,turn_on
+light.kitchen_light,Switch on the kitchen light,turn_on
+light.kitchen_light,Hey can you turn on the kitchen light,turn_on
+light.living_room_light,Turn on the living room lights.,turn_on
+light.living_room_light,Turn on the living room lights please.,turn_on
+light.living_room_light,Please turn on the living room lights.,turn_on
+light.living_room_light,Turn on the living room lighting.,turn_on
+light.main_basement_light,Turn on the main basement light,turn_on
+light.main_basement_light,Turn on main basement light,turn_on
+light.man_cave_light,Activate the man cave man cave light.,turn_on
+light.man_cave_light,Activate the lights in the man cave,turn_on
+light.man_cave_light,Could you light up the man cave?,turn_on
+light.man_cave_light,Enable the man cave light,turn_on
+light.master_bedroom_light,Could you illuminate the master bedroom,turn_on
+light.pool_table_bar_light,pool table bar light on,turn_on
+light.pool_table_bar_light,Switch on the pool table bar light,turn_on
+light.pool_table_bar_light,Can you turn on the pool table bar light?,turn_on
+light.pool_table_light,Enable the pool table light please,turn_on
+light.porch_light,Turn on porch light,turn_on
+light.porch_light,Can you turn on the porch light?,turn_on
+light.porch_light,Could you turn on the porch light please?,turn_on
+light.shower_light,Turn on the shower light,turn_on
+light.shower_light,Turn on shower light,turn_on
+light.shower_light,Activate the shower light,turn_on
+light.shower_light,Could you illuminate the shower please,turn_on
+light.shower_light,Turn on the lights at the shower,turn_on
+light.shower_light,Light up the shower please,turn_on
+light.shower_light,Turn on the shower light please,turn_on
+light.shower_light,Turn the shower light on,turn_on
+light.shower_light,shower light on,turn_on
+light.stair_light,Activate the stair light please,turn_on
+light.stair_light,Please activate the stair light,turn_on
+light.stair_light,Can you light up the stairwell please?,turn_on
+light.stair_light,Please activate the stairwell light,turn_on
+light.stair_light,Please switch on the stairwell area light,turn_on
+light.roof_light,Please turn on the roof light.,turn_on
+light.roof_light,Switch on the roof light please,turn_on
+light.roof_light,Can you turn on the light in the roof?,turn_on
+light.walkway_light,Please activate the walkway light,turn_on
+light.walkway_light,Please switch on the walkway area light,turn_on
+light.walkway_light,Turn on the walkway lighting.,turn_on
+light.freds_lamp,Turn on Fred's light,turn_on
+light.colins_lamp,Turn on Colin's light,turn_on
+light.roberts_lamp,Activate Robert's light,turn_on
+light.pierres_lamp,Turn on Pierre's light please,turn_on
+light.jennifers_lamp,Turn Jenn's light on,turn_on
+light.julias_lamp,Julia's light on,turn_on
+light.neenas_lamp,Switch on Neena's light,turn_on
+light.patricks_lamp,Can you turn on Patrick's light?,turn_on
+light.sams_lamp,Light up Sam's.,turn_on
+light.johns_lamp,Brighten up John's light.,turn_on
+light.jordans_lamp,Engage Jordan's lighting.,turn_on
+light.lebrons_lamp,Light up Lebron's lights.,turn_on
+light.angies_lamp,Can you turn on Angie's lamp?,turn_on
+light.louis_lamp,Could you turn on Louis' lamp please?,turn_on
+light.katniss_lamp,Could you enable Katniss' lamp,turn_on
+light.waynes_lamp,Enable Wayne's lamp,turn_on
+light.samuels_lamp,Enable Samuel's lamp please,turn_on
+light.entry_lamp,Turn on entry lamp,turn_on
+light.entry_lamp,Please activate entryway lamp,turn_on
+light.entry_lamp,Please switch on entryway area lamp,turn_on
+light.entry_lamp,Turn on entrance light,turn_on
+light.entry_lamp,Turn on entrance lighting.,turn_on
