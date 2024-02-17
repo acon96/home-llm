@@ -15,6 +15,7 @@ import webcolors
 # #### STATES ####
 STATE_ON: Final = "on"
 STATE_OFF: Final = "off"
+STATE_ACTIVE: Final = "active"
 STATE_UNKNOWN: Final = "unknown"
 STATE_OPEN: Final = "open"
 STATE_OPENING: Final = "opening"
@@ -33,6 +34,9 @@ STATE_JAMMED: Final = "jammed"
 STATE_UNAVAILABLE: Final = "unavailable"
 STATE_OK: Final = "ok"
 STATE_PROBLEM: Final = "problem"
+STATE_CLEANING: Final = "cleaning"
+STATE_DOCKED: Final = "docked"
+STATE_RETURNING: Final = "returning"
 
 def closest_color(requested_color):
     min_colors = {}
@@ -120,6 +124,31 @@ class ClimateDeviceType(DeviceType):
             random_mode = random.choice(["home", "eco", "away", "auto", None, None, None])
             if random_mode:
                 state = state + ";" + random_mode
+
+        return state
+    
+class TimerDeviceType(DeviceType):
+    def __init__(self):
+        super().__init__(
+            name="timer",
+            possible_states=[
+                (STATE_IDLE, 0.2),
+                (STATE_ACTIVE, 0.6),
+                (STATE_PAUSED, 0.1),
+            ],
+            services={
+                "start": ["duration"],
+                "pause": [],
+                "cancel": [],
+            },
+        )
+
+    def get_random_state(self, extra_exposed_attributes=[]):
+        state = super().get_random_state(extra_exposed_attributes=extra_exposed_attributes)
+
+        if random.random() < 0.5 and "rgb_color" in extra_exposed_attributes:
+            random_rgb = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+            state = state + ";" + closest_color(random_rgb) + " " + str(random_rgb)
 
         return state
     
@@ -232,7 +261,24 @@ SUPPORTED_DEVICES = {
         },
     ),
     "media_player": MediaPlayerDeviceType(),
-    "climate": ClimateDeviceType()
+    "climate": ClimateDeviceType(),
+    "vacuum": DeviceType(
+        name="vacuum",
+        possible_states=[
+            (STATE_CLEANING, 0.2),
+            (STATE_DOCKED, 0.6),
+            (STATE_RETURNING, 0.1),
+            (STATE_IDLE, 0.05),
+            (STATE_PAUSED, 0.05),
+        ],
+        services={
+            "start": [],
+            "pause": [],
+            "stop": [],
+            "return_to_base": [],
+        },
+    ),
+    "timer": TimerDeviceType(),
 }
 
 stacks_of_device_names = { x: [] for x in SUPPORTED_DEVICES.keys() }
@@ -334,7 +380,7 @@ def random_device_list(max_devices: int, avoid_device_names: list[str]):
     device_list = []
     device_lines = []
     # TODO: randomly pick attributes for this list
-    extra_exposed_attributes = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "media_title", "volume_level"]
+    extra_exposed_attributes = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "media_title", "volume_level", "duration", "item"]
 
     while len(device_list) < num_devices:
         choice = random.choice(possible_choices)
