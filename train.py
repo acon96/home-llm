@@ -67,7 +67,7 @@ python3 train.py \
 
 """
 python3 train.py \
-    --run_name stablehome-3b-rev3 \
+    --run_name stablehome-3b-rev4 \
     --base_model stabilityai/stablelm-zephyr-3b \
     --bf16 \
     --train_dataset data/home_assistant_train.jsonl \

@@ -37,8 +37,25 @@ Supported datasets right now are:
 
 Please note that the supported datasets all have different licenses. Be aware that the license of the resulting data mixture might be different that the license of this dataset alone.
 
-## Adding new Home Assistant functionality
-TODO:
-
 ## Adding a new personality
-TODO:
+In order to add a new personality, you need to define a new system prompt and new set of responses for the assistant. The system prompt is the description of the assistant's behavior that occurs at the start of the context. The responses are what is said back to the user when performing a task. The model should stil respond with the correct service call no matter what the assistant's response is. The list of system prompts are stored in `pile_of_system_prompts.csv`, and the list of responses are stored in `pile_of_responses.csv`
+
+There are 2 columns in `pile_of_system_prompts.csv`:
+- `persona`: the name of the persona
+- `prompt`: the system prompt to use for that persona. Recommended to put this in quotes in case the prompt also has commas in it
+
+The response pile is a CSV with the following headers: `service,response,language,persona,short`
+- `service`: the service name that we are responding to. Make sure you cover enough different services so that the model can learn how to respond in all situations.
+- `resposne`: the text of the repsonse. Recommended to put this in quotes in case the response also has commas in it
+- `language`: the language code of the response (currently only `en` is supported)
+- `persona`: the name of the persona the response belongs to. Use the name of your persona here
+- `short`: either 0 or 1. If it is 1 then the response is considered "short', and can be combined together with other "short" repsonses using "and". These are used for examples where there are multiple service calls
+
+Generating the full dataset using the python script will print out a warning for any responses that are missing for a persona
+
+## Adding new Home Assistant functionality
+TODO
+<!-- In order to add new home assistant device types, you will need to add data to a handful of piles, as well as make small modifications to the `generate_home_assistant_data.py` script.
+1. Add 15-30 new device names with the new type to the `pile_of_device_names.csv`. This should be an entity_id and a 'friendly name'
+2. Add 
+ -->

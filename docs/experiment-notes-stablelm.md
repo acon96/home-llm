@@ -66,3 +66,8 @@
   - 3600: 0.963314358001265
   - 4000: 0.9614168247944339
   - Final: 0.9538266919671095
+
+# rev4
+- lora rank: 64, alpha: 128
+- dataset size: large (with new device types)
++ evaluation results:
