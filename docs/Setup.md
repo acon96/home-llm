@@ -1,5 +1,9 @@
 # Setup Instructions
 
+1. [Home Assistant Component](#home-assistant-component)
+2. [Configuring the LLM as a Conversation Agent](#configuring-as-a-conversation-agent)
+3. [Setting up the text-generation-webui Addon](#text-generation-webui-add-on)
+
 ## Home Assistant Component
 ### Requirements
 
@@ -42,14 +46,14 @@ You must configure at least one model by configuring the integration.
 1. `Settings > Devices and Services`.
 2. Click the `Add Integration` button in the bottom right of the screen.
 3. Filter the list of "brand names" for llama, and "LLaMa Conversation" should remain.
-4. Choose and configure the backend. [More info 👇](#configure-backend)
+4. Choose the backend you will be using to host the model:
     1. Using builtin llama.cpp with hugging face
     2. Using builtin llama.cpp with existing model file
     3. using text-generation-webui api
     4. using generic openapi compatiable api
     5. using ollama api
 
-### `llama-cpp-python` Wheel Installation
+### llama-cpp-python Wheel Installation
 
 If you plan on running the model locally on the same hardware as your Home Assistant server, then the recommended way to run the model is to use Llama.cpp. Unfortunately there are not pre-build wheels for this package for the musllinux runtime that Home Assistant Docker images use. To get around this, we provide compatible wheels for x86_x64 and arm64 in the [dist](./dist) folder. 
 
@@ -57,16 +61,16 @@ Download the `*.whl` file that matches your hardware and then copy the `*.whl` f
 
 | wheel | platform | home assistant version |
 | --- | --- | --- |
-| llama_cpp_python-{version}-cp311-cp311-musllinux_1_2_aarch64.whl | AARCH64 (RPi 4 and 5) | `2024.1.4` and older |
+| llama_cpp_python-{version}-cp311-cp311-musllinux_1_2_aarch64.whl | aarch64 (RPi 4 and 5) | `2024.1.4` and older |
 | llama_cpp_python-{version}-cp311-cp311-musllinux_1_2_x86_64.whl | x86_64 (Intel + AMD) | `2024.1.4` and older |
-| llama_cpp_python-{version}-cp312-cp312-musllinux_1_2_aarch64.whl | AARCH64 (RPi 4 and 5) | `2024.2.0` and newer |
+| llama_cpp_python-{version}-cp312-cp312-musllinux_1_2_aarch64.whl | aarch64 (RPi 4 and 5) | `2024.2.0` and newer |
 | llama_cpp_python-{version}-cp312-cp312-musllinux_1_2_x86_64.whl | x86_64 (Intel + AMD) | `2024.2.0` and newer |
 
 ### Constrained Grammar
 
 When running the model locally with [Llama.cpp], the component also constrains the model output using a GBNF grammar.
 This forces the model to provide valid output no matter what since its outputs are constrained to valid JSON every time.
-This helps the model perform significantly better at lower quantization levels where it would previously generate syntax errors.
+This helps the model perform significantly better at lower quantization levels where it would previously generate syntax errors. It is recommended to turn this on when using the component as it will reduce the incorrect output from the model.
 
 For more information See [output.gbnf](./custom_components/llama_conversation/output.gbnf) for the existing grammar.
 
@@ -77,11 +81,11 @@ For more information See [output.gbnf](./custom_components/llama_conversation/ou
 
 When setting up the component, there are 5 different "backend" options to choose from:
 
-a. Llama.cpp with a model from HuggingFace
-b. Llama.cpp with a locally provided model
-c. A remote instance of text-generation-webui
-d. A generic OpenAI API compatible interface; *should* be compatible with LocalAI, LM Studio, and all other OpenAI compatible backends
-e. Ollama api
+a. Llama.cpp with a model from HuggingFace  
+b. Llama.cpp with a locally provided model  
+c. A remote instance of text-generation-webui  
+d. A generic OpenAI API compatible interface; *should* be compatible with LocalAI, LM Studio, and all other OpenAI compatible backends  
+e. Ollama api  
 
 See [docs/Backend Configuration.md](/docs/Backend%20Configuration.md) for more info.
 
@@ -90,31 +94,42 @@ See [docs/Backend Configuration.md](/docs/Backend%20Configuration.md) for more i
 This is option A
 
 You need the following settings to configure the local backend from HuggingFace:
-1. Model Name: the name of the model in the form `repo/model-name`. The repo MUST contain a GGUF quantized model.
-2. Model Quantization: The quantization level to download. Pick from the list. Higher quantizations use more RAM but have higher quality responses.
+1. **Model Name**: the name of the model in the form `repo/model-name`. The repo MUST contain a GGUF quantized model.
+2. **Model Quantization**: The quantization level to download. Pick from the list. Higher quantizations use more RAM but have higher quality responses.
 
 #### Llama.cpp Backend with a locally downloaded model
 
 This is option B
 
 You need the following settings to configure the local backend from HuggingFace:
-1. Model File Name: the file name where Home Assistant can access the model to load. Most likely a sub-path of `/config` or `/media` or wherever you copied the model file to.
+1. **Model File Name**: the file name where Home Assistant can access the model to load. Most likely a sub-path of `/config` or `/media` or wherever you copied the model file to.
 
 #### Remote Backends
 
 This is options C, D and E
 
 You need the following settings in order to configure the "remote" backend:
-1. Hostname: the host of the machine where text-generation-webui API is hosted. If you are using the provided add-on then the hostname is `local-text-generation-webui` or `f459db47-text-generation-webui` depending on how the addon was installed.
-2. Port: the port for accessing the text-generation-webui API. NOTE: this is not the same as the UI port. (Usually 5000)
-3. Name of the Model: This name must EXACTLY match the name as it appears in `text-generation-webui`
+1. **Hostname**: the host of the machine where text-generation-webui API is hosted. If you are using the provided add-on then the hostname is `local-text-generation-webui` or `f459db47-text-generation-webui` depending on how the addon was installed.
+2. **Port**: the port for accessing the text-generation-webui API. NOTE: this is not the same as the UI port. (Usually 5000)
+3. **Name of the Model**: This name must EXACTLY match the name as it appears in `text-generation-webui`
 
 With the remote text-generation-webui backend, the component will validate that the selected model is available for use and will ensure it is loaded remotely. The Generic OpenAI compatible version does NOT do any validation or model loading.
 
 **Setting up with LocalAI**:  
 If you are an existing LocalAI user or would like to use LocalAI as your backend, please refer to [this](https://io.midori-ai.xyz/howtos/setup-with-ha/) website which has instructions on how to setup LocalAI to work with Home-LLM including automatic installation of the latest version of the the Home-LLM model. The auto-installer (LocalAI Manager) will automatically download and setup LocalAI and/or the model of your choice and automatically create the necessary template files for the model to work with this integration.
 
-### 🗣️ Configuring the component as a Conversation Agent
+## Configuring as a Conversation Agent
+
+> 🛑 ✋🏻 Security Warning 
+> 
+> Any devices that you select to be exposed to the model will be added as 
+> context and potentially have their state changed by the model.
+> 
+> Only expose devices that you want the model modifying the state of.
+>
+> The model may occasionally hallucinate and issue commands to the wrong device!
+> 
+> Use At Your Own Risk
 
 1. Navigate to `Settings` -> `Voice Assistants`
 2. Select `+ Add Assistant`
@@ -130,16 +145,9 @@ In order for any entities be available to the agent, you must "expose" them firs
 2. Select "+ Expose Entities" in the bottom right
 3. Check any entities you would like to be exposed to the conversation agent.
 
-> 🛑 ✋🏻 Security Warning 
-> 
-> Any devices that you select to be exposed to the model will be added as 
-> context and potentially have their state changed by the model.
-> 
-> Only expose devices that you want the model modifying the state of.
->
-> The model may occasionally hallucinate and issue commands to the wrong device!
-> 
-> Use.At.Your.Own.Risk 💣 
+> Note:
+> When exposing entities to the model, you are adding tokens to the model's context. If you exceed the context length of the model, then your interactions with the model will fail due to the instructions being dropped out of the context's sliding window.  
+> It is recommended to only expose a maximum of 32 entities to this conversation agent at this time.
 
 ## text-generation-webui add-on
 You can use this button to automatically download and build the addon for `oobabooga/text-generation-webui`
