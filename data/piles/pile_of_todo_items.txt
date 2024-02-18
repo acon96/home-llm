@@ -1,4 +1,3 @@
-english_todo
 Finalize the monthly budget report
 Schedule annual medical check-up
 Organize the garage

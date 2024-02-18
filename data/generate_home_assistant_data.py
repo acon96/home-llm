@@ -53,7 +53,7 @@ class DeviceType:
     name: str
     possible_states: list[(str, float)]
     services: dict[str, list]
-    random_parameter_generator: Optional[dict[str, Callable]]
+    random_parameter_generator: Optional[dict[str, Callable]] = None
 
     def get_all_services(self, extra_exposed_attributes):
         result = []
@@ -96,7 +96,7 @@ class LightDeviceType(DeviceType):
             state = state + ";" + closest_color(random_rgb) + " " + str(random_rgb)
 
         if random.random() < 0.7 and "brightness" in extra_exposed_attributes:
-            state = state + ";" + self.get_random_parameter("brightness") + "%"
+            state = state + ";" + str(self.get_random_parameter("brightness")) + "%"
 
         return state
     
@@ -117,12 +117,13 @@ class ClimateDeviceType(DeviceType):
             "temp_f": lambda: random.randint(60, 80),
             "temp_c": lambda: random.randint(15, 25),
             "humidity": lambda: random.randint(10, 90),
-            "preset_mode": lambda: random.choice(["home", "eco", "away", "auto"])
+            "preset_mode": lambda: random.choice(["home", "eco", "away", "auto"]),
+            "hvac_mode": lambda: random.choice(["heat", "cool", "heat_cool", "off", "auto", "fan_only"]),
         })
 
     def get_random_state(self, extra_exposed_attributes=[]):
         """state;fan_mode;temperature;humidity"""
-        state = random.choice(["heat", "cool", "heat_cool", "off", "auto", "fan_only"])
+        state = self.get_random_parameter("hvac_mode")
 
         if "fan_mode" in extra_exposed_attributes:
             state = state  + ";" + self.get_random_parameter("fan_mode")
@@ -144,8 +145,11 @@ with open("piles/pile_of_durations.csv") as f:
     reader = csv.DictReader(f)
     pile_of_durations = { x["duration"]: x["english_name"] for x in reader }
     
-with open("piles/pile_of_media_names.csv") as f:
+with open("piles/pile_of_media_names.txt") as f:
     pile_of_media_names = [ x.strip() for x in f.readlines() ]
+
+with open("piles/pile_of_todo_items.txt") as f:
+    pile_of_todo_items = [ x.strip() for x in f.readlines() ]
 
 class MediaPlayerDeviceType(DeviceType):
     def __init__(self):
@@ -172,18 +176,18 @@ class MediaPlayerDeviceType(DeviceType):
             "media_previous_track": []
         },
         random_parameter_generator={
-            "media_title": lambda: random.choice(pile_of_media_names),
-            "volume_level": lambda: str(round(random.random(), 2)),
+            "media": lambda: random.choice(pile_of_media_names),
+            "volume": lambda: round(random.random(), 2),
         })
 
     def get_random_state(self, extra_exposed_attributes=[]):
         state = super().get_random_state(extra_exposed_attributes=extra_exposed_attributes)
 
         if "media_title" in extra_exposed_attributes and state in [STATE_PLAYING, STATE_PAUSED, STATE_BUFFERING, STATE_ON]:
-            state = state + ";" + random.choice(pile_of_media_names)
+            state = state + ";" + self.get_random_parameter("media")
 
         if "volume_level" in extra_exposed_attributes and state != STATE_OFF:
-            state = state + ";vol=" + str(round(random.random(), 2))
+            state = state + ";vol=" + str(self.get_random_parameter("volume"))
         return state
 
 SUPPORTED_DEVICES = {
@@ -286,7 +290,20 @@ SUPPORTED_DEVICES = {
             "cancel": [],
         },
         random_parameter_generator={
-            "duration": lambda: random.choice(pile_of_durations.keys()),
+            "duration": lambda: random.choice(list(pile_of_durations.keys())),
+            "remaining": lambda: f"{random.randint(0, 3):02}:{random.randint(0, 60)}:{random.randint(0, 60)}"
+        }
+    ),
+    "todo": DeviceType(
+        name="timer",
+        possible_states=[ (f"{i}", (1/32)) for i in range(32) ],
+        services={
+            "add_item": ["item"],
+            "pause": [],
+            "cancel": [],
+        },
+        random_parameter_generator={
+            "todo": lambda: random.choice(pile_of_todo_items),
         }
     ),
 }
@@ -307,7 +324,11 @@ with open("piles/pile_of_templated_actions.csv") as f:
     pile_of_templated_actions = list(reader)
     processed_pile_of_templated_actions = []
     for action in pile_of_templated_actions:
-        for x in range(int(action["multiplier"])):
+        try:
+            multiplier = int(action["multiplier"])
+        except Exception:
+            raise Exception(f"line has a bad multiplier: {action}")
+        for x in range(multiplier):
             processed_pile_of_templated_actions.append(action)
 
     pile_of_templated_actions = processed_pile_of_templated_actions
@@ -345,7 +366,7 @@ def get_random_response(*, service: str, language: str, persona: str, question_t
                         ]
     
     if len(possible_results) == 0:
-        raise NoResponseAvailableException(f"No responses matched the provided filters: {service}, {language}, {persona}, {required_vars}, {short}")
+        raise NoResponseAvailableException(f"No responses matched the provided filters: {persona}, {service}, {language}, {required_vars}, {short}")
     
     return possible_results.sample()["response"].values[0]
 
@@ -390,7 +411,7 @@ def random_device_list(max_devices: int, avoid_device_names: list[str]):
     device_list = []
     device_lines = []
     # TODO: randomly pick attributes for this list
-    extra_exposed_attributes = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "media_title", "volume_level", "duration", "item"]
+    extra_exposed_attributes = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "media_title", "volume_level", "duration", "remaining", "item"]
 
     while len(device_list) < num_devices:
         choice = random.choice(possible_choices)
@@ -597,11 +618,19 @@ def generate_templated_example(template: dict, language: str, persona: str, max_
     if any(["timer" in service for service in service_names ]):
         timer_device_type = SUPPORTED_DEVICES["timer"]
         if "<duration>" in question:
-            duration = timer_device_type.get_random_state("duration")
+            duration = timer_device_type.get_random_parameter("duration")
             duration_name = pile_of_durations[duration]
             question = question.replace("<duration>", duration_name)
             answer = answer.replace("<duration>", duration_name)
             service_calls = [ { **call, "duration": str(duration) } for call in service_calls ]
+
+    if any(["todo" in service for service in service_names ]):
+        todo_device_type = SUPPORTED_DEVICES["todo"]
+        if "<todo>" in question:
+            todo = todo_device_type.get_random_parameter("todo")
+            question = question.replace("<todo>", todo)
+            answer = answer.replace("<todo>", todo)
+            service_calls = [ { **call, "item": todo } for call in service_calls ]
 
     return {
         "states": device_list,
@@ -632,24 +661,27 @@ def generate_status_request(template: dict, language: str, persona: str, max_dev
     
     # insert other templated variables
     if device_type == "climate":
-        temp_f = random.randint(60, 80)
+        climate_device_type = SUPPORTED_DEVICES["climate"]
+        temp_f = climate_device_type.get_random_parameter("temp_f")
         answer = answer.replace("<temp_f>", str(temp_f))
         state_name = state_name.replace("<temp_f>", str(temp_f))
 
-        temp_c = random.randint(15, 25)
+        temp_c = climate_device_type.get_random_parameter("temp_c")
         answer = answer.replace("<temp_c>", str(temp_c))
         state_name = state_name.replace("<temp_c>", str(temp_f))
 
-        humidity = random.randint(0, 20) * 5
+        humidity = climate_device_type.get_random_parameter("humidity")
         answer = answer.replace("<humidity>", str(humidity))
         state_name = state_name.replace("<humidity>", str(temp_f))
 
     if device_type == "light":
-        brightness = random.randint(0, 100)
+        light_device_type = SUPPORTED_DEVICES["light"]
+
+        brightness = light_device_type.get_random_parameter("brightness")
         answer = answer.replace("<brightness>", str(brightness))
         state_name = state_name.replace("<brightness>", str(brightness))
 
-        random_rgb = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        random_rgb = light_device_type.get_random_parameter("rgb_color")
         random_rgb_name = closest_color(random_rgb)
         actual_random_rgb = webcolors.name_to_rgb(random_rgb_name)
         actual_random_rgb = (actual_random_rgb.red, actual_random_rgb.green, actual_random_rgb.blue)
@@ -657,14 +689,27 @@ def generate_status_request(template: dict, language: str, persona: str, max_dev
         answer = answer.replace("<color>", str(random_rgb_name))
 
     if device_type == "media_player":
-        volume = random.randint(0, 100)
-        random_media = random.choice(pile_of_media_names)
+        media_player_device_type = SUPPORTED_DEVICES["media_player"]
+        volume = media_player_device_type.get_random_parameter("volume")
+        random_media = media_player_device_type.get_random_parameter("media")
 
         answer = answer.replace("<volume>", str(volume) + "%")
         state_name = state_name.replace("<volume>", str(volume) + "%")
 
         answer = answer.replace("<media>", random_media)
         state_name = state_name.replace("<media>", random_media)
+
+    if device_type == "timer":
+        timer_device_type = SUPPORTED_DEVICES["timer"]
+        duration = timer_device_type.get_random_parameter("duration")
+        duration_name = pile_of_durations[duration]
+        remaining = timer_device_type.get_random_parameter("remaining")
+
+        answer = answer.replace("<duration>", duration_name)
+        state_name = state_name.replace("<duration>", duration)
+
+        answer = answer.replace("<remaining>", remaining)
+        state_name = state_name.replace("<remaining>", remaining)
 
     device_list.insert(index, f"{chosen_device['device_name']} = {state_name}")
 
@@ -752,24 +797,29 @@ def generate_example_file(filename: str, seed: int, format_func: Callable, langu
     
     generated_examples = []
 
+    missing_responses = set()
+
     for lang in languages:
         for person in personas:
             for action in tqdm(pile_of_specific_actions):
                 try:
                     run_factor_times(generate_static_example, generated_examples, action, lang, person, static_factor)
                 except NoResponseAvailableException as ex:
-                    print(ex)
+                    missing_responses.add(str(ex))
 
             for templated_action in tqdm(pile_of_templated_actions):
                 try:
                     run_factor_times(generate_templated_example, generated_examples, templated_action, lang, person, template_factor)
                 except NoResponseAvailableException as ex:
-                    print(ex)
+                    missing_responses.add(str(ex))
 
     for status_request in tqdm(pile_of_status_requests):
         run_factor_times(generate_status_request, generated_examples, status_request, "en", "assistant", status_request_factor)
 
     print(f"Generated {len(generated_examples)} examples. Saving...")
+
+    for missing in sorted(missing_responses):
+        print(missing)
     
     with open(f"{filename}.jsonl", "w") as f:
         for item in generated_examples:

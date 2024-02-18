@@ -604,4 +604,57 @@ garage_door.close,"Closure protocol for <device_name> activated, beep boop.",en,
 garage_door.toggle,"Flipping state of <device_name> now, operational change.",en,robot,0
 garage_door.toggle,"Switching <device_name> state as per your command, beep boop.",en,robot,0
 garage_door.toggle,"Toggling <device_name> for optimal functionality, beep boop.",en,robot,0
-garage_door.toggle,"State alteration for <device_name> initiated, beep boop.",en,robot,0    
+garage_door.toggle,"State alteration for <device_name> initiated, beep boop.",en,robot,0
+vacuum.start,"Starting <device_name> cleaning now.",en,assistant,0
+vacuum.start,"<device_name> is set to start cleaning.",en,assistant,0
+vacuum.start,"Initiating <device_name>'s cleaning cycle.",en,assistant,0
+vacuum.start,"<device_name> will begin its cleaning task shortly.",en,assistant,0
+vacuum.start,"Commencing the cleaning process with <device_name>.",en,assistant,0
+vacuum.stop,"Cancelling <device_name>'s current job.",en,assistant,0
+vacuum.stop,"<device_name>'s operation has been stopped.",en,assistant,0
+vacuum.stop,"Halting <device_name> immediately.",en,assistant,0
+vacuum.stop,"<device_name> cleaning cancelled per your request.",en,assistant,0
+vacuum.stop,"Stopping <device_name>'s task as asked.",en,assistant,0
+vacuum.pause,"Pausing <device_name> for now.",en,assistant,0
+vacuum.pause,"<device_name>'s cleaning cycle is temporarily halted.",en,assistant,0
+vacuum.pause,"<device_name> is on a brief pause.",en,assistant,0
+vacuum.pause,"Holding <device_name>'s operation momentarily.",en,assistant,0
+vacuum.pause,"<device_name>'s activity is paused.",en,assistant,0
+vacuum.return_to_base,"Sending <device_name> back to its base.",en,assistant,0
+vacuum.return_to_base,"<device_name> is returning to its docking station.",en,assistant,0
+vacuum.return_to_base,"<device_name> heading back to recharge.",en,assistant,0
+vacuum.return_to_base,"Instructing <device_name> to return to base.",en,assistant,0
+vacuum.return_to_base,"<device_name> making its way back home.",en,assistant,0
+todo.add_item,"<todo> has been added to your todo list.",en,assistant,0
+todo.add_item,"Successfully added <todo> to your tasks.",en,assistant,0
+todo.add_item,"Your todo list now includes <todo>.",en,assistant,0
+todo.add_item,"<todo> is now on your list of things to do.",en,assistant,0
+todo.add_item,"I've put <todo> on your todo list.",en,assistant,0
+todo.add_item,"<todo> added to the list.",en,assistant,0
+todo.add_item,"Consider <todo> added to your tasks.",en,assistant,0
+todo.add_item,"Got it, <todo> is on your todo list now.",en,assistant,0
+todo.add_item,"<todo> has been successfully added to your list.",en,assistant,0
+timer.start,"Starting timer <device_name> for <duration>.",en,assistant,0
+timer.start,"Timer <device_name> set for <duration>.",en,assistant,0
+timer.start,"Countdown beginning for <duration>.",en,assistant,0
+timer.start,"<device_name> timer is now running for <duration>.",en,assistant,0
+timer.start,"Initiating a timer for <duration>.",en,assistant,0
+timer.start,"Your timer called <device_name> for <duration> starts now.",en,assistant,0
+timer.start,"Timer activated for <duration>.",en,assistant,0
+timer.start,"Commencing timer for a duration of <duration>.",en,assistant,0
+timer.start,"<duration> countdown has begun on timer <device_name>."
+timer.start,"Setting a timer for <duration>.",en,assistant,0
+timer.cancel,"Timer has been canceled.",en,assistant,0
+timer.cancel,"Successfully halted the timer.",en,assistant,0
+timer.cancel,"The timer has been cleared.",en,assistant,0
+timer.cancel,"Timer stopped successfully.",en,assistant,0
+timer.cancel,"Timer has been deactivated.",en,assistant,0
+timer.cancel,"No more timer running.",en,assistant,0
+timer.cancel,"Timer has been successfully canceled.",en,assistant,0
+timer.cancel,"<device_name>'s timer has been canceled.",en,assistant,0
+timer.cancel,"Your timer on <device_name> is now stopped.",en,assistant,0
+timer.cancel,"Timer cancellation for <device_name> confirmed.",en,assistant,0
+timer.cancel,"The timer on <device_name> has been cleared.",en,assistant,0
+timer.cancel,"Timer on <device_name> stopped successfully.",en,assistant,0
+timer.cancel,"Your running timer on <device_name> is now canceled.",en,assistant,0
+timer.cancel,"<device_name>'s timer has been deactivated.",en,assistant,0
