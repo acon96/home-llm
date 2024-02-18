@@ -219,3 +219,60 @@ light,turn_on,"Let's have <device_name> in <color>.",8
 light,turn_on,"I'd like <device_name> to change to <color>.",8
 light,turn_on,"Can <device_name> display a <color> light?",8
 light,turn_on,"Set <device_name> color to <color>",8
+vacuum,start,"Start cleaning with <device_name>.",2
+vacuum,start,"Begin vacuuming with <device_name>.",2
+vacuum,start,"Activate <device_name> to clean.",2
+vacuum,start,"Could you please start <device_name>?",2
+vacuum,start,"Hey, get <device_name> going, would you?",2
+vacuum,stop,"Stop <device_name>'s operation.",2
+vacuum,stop,"Please halt <device_name>'s current task",2
+vacuum,stop,"Please stop <device_name>",2
+vacuum,stop,"Can you make <device_name> stop?",2
+vacuum,stop,"Stop <device_name> from cleaning.",2
+vacuum,pause,"Freeze <device_name>'s current task.",2
+vacuum,pause,"Would you mind pausing <device_name> for a moment?",2
+vacuum,pause,"Hey, can we put <device_name> on pause, please?",2
+vacuum,pause,"Pause the <device_name> cleaning.",2
+vacuum,pause,"Pause <device_name>",2
+vacuum,return_to_base,"Send <device_name> back to its base.".2
+vacuum,return_to_base,"Please send <device_name> back to its base, if you would.",2
+vacuum,return_to_base,"Time to head home, <device_name>. Can you call it back?",2
+vacuum,return_to_base,"Direct <device_name> to dock.",2
+vacuum,return_to_base,"Return <device_name> to its charging station.",2
+todo,add_item,"Please add <item> to my <device_name>.",8
+todo,add_item,"Can you add <item> to the <device_name>?",8
+todo,add_item,"I need <item> added to my <device_name>.",8
+todo,add_item,"Go ahead and add <item> to the <device_name>.",8
+todo,add_item,"Could you please input <item> into my <device_name>?",8
+todo,add_item,"Kindly insert <item> onto the <device_name>.",8
+todo,add_item,"May I request that <item> be included in the <device_name>?",8
+todo,add_item,"It would be much appreciated if <item> could be put on the <device_name>.",8
+todo,add_item,"Shall we append <item> to my <device_name>?",8
+todo,add_item,""Let's add <item> to the <device_name>",8
+todo,add_item,"Could you place <item> onto my <device_name>?",8
+todo,add_item,"Will you be so kind as to incorporate <item> into the <device_name>?",8
+todo,add_item,"Is it possible to include <item> in the <device_name>?",8
+todo,add_item,"Could we add <item> to my <device_name>?",8
+input_select,select_option,"Set <device_name> to <option>.",8
+input_select,select_option,"Can you please modify <device_name> and select the <option>?",8
+input_select,select_option,"I'd like to request that <device_name> be configured with the setting <option>.",8
+input_select,select_option,"May I kindly ask you to set the configuration of <device_name> to <option>?",8
+input_select,select_option,"Please adjust the settings of <device_name> and choose the <option>.",8
+input_select,select_option,"Could we please change the mode of <device_name> to <option>?",8
+input_select,select_option,"Set the <option> on <device_name>.",8
+input_select,select_option,"I'd appreciate if you could update the settings for <device_name> and set it to the <option>.",8
+input_select,select_option,"May we make the following adjustment: configure <device_name> with the <option>?",8
+input_select,select_option,"Could you please make sure that <device_name> utilizes the setting <option>?",8
+input_select,select_option,"I'd like to request your assistance in setting <device_name> to <option>.",8
+input_select,select_option,"Set <device_name> to the <option> mode.",8
+input_select,select_option,"Can we please alter the configuration of <device_name> and select the <option>?",8
+timer,start,"Please set my <device_name> for <duration>.",8
+timer,start,"Turn on the <device_name> timer for <duration>.",8
+timer,start,"Set the <device_name> for <duration>.",8
+timer,start,"Start the <device_name> timer for <duration>.",8
+timer,start,"Set a <duration> <device_name>.",8
+timer,cancel,"Cancel the <device_name> timer.",8
+timer,cancel,"Please stop my <device_name>.",8
+timer,cancel,"Turn off the <device_name>.",8
+timer,cancel,"Please shut off the <device_name> timer.",8
+timer,cancel,"The <device_name> is no longer needed.",8

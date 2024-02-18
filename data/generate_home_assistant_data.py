@@ -8,7 +8,7 @@ import re
 from dataclasses import dataclass
 from datasets import load_dataset, concatenate_datasets
 from difflib import SequenceMatcher
-from typing import Final, Any, Callable
+from typing import Final, Any, Callable, Optional
 from tqdm import tqdm
 import webcolors
 
@@ -53,6 +53,7 @@ class DeviceType:
     name: str
     possible_states: list[(str, float)]
     services: dict[str, list]
+    random_parameter_generator: Optional[dict[str, Callable]]
 
     def get_all_services(self, extra_exposed_attributes):
         result = []
@@ -60,6 +61,9 @@ class DeviceType:
             args = set(extra_exposed_attributes).intersection(self.services[service])
             result.append(f"{self.name}.{service}({','.join(args)})")
         return result
+    
+    def get_random_parameter(self, param_name):
+        return self.random_parameter_generator[param_name]()
 
     def get_random_state(self, extra_exposed_attributes=[]):
         states = [ x[0] for x in self.possible_states ]
@@ -78,17 +82,21 @@ class LightDeviceType(DeviceType):
                 "turn_off": [],
                 "toggle": []
             },
+            random_parameter_generator={
+                "rgb_color": lambda: (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)),
+                "brightness": lambda: random.randint(0, 100),
+            }
         )
 
     def get_random_state(self, extra_exposed_attributes=[]):
         state = super().get_random_state(extra_exposed_attributes=extra_exposed_attributes)
 
         if random.random() < 0.5 and "rgb_color" in extra_exposed_attributes:
-            random_rgb = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+            random_rgb = self.get_random_parameter("rgb_color")
             state = state + ";" + closest_color(random_rgb) + " " + str(random_rgb)
 
         if random.random() < 0.7 and "brightness" in extra_exposed_attributes:
-            state = state + ";" + str(random.randint(0, 100)) + "%"
+            state = state + ";" + self.get_random_parameter("brightness") + "%"
 
         return state
     
@@ -103,6 +111,13 @@ class ClimateDeviceType(DeviceType):
             "set_fan_mode": ["fan_mode"],
             "set_hvac_mode": ["hvac_mode"],
             "set_preset_mode": ["preset_mode"]
+        },
+        random_parameter_generator={
+            "fan_mode": lambda: random.choice(["On Low", "On High", "Auto Low", "Auto High", "Off"]),
+            "temp_f": lambda: random.randint(60, 80),
+            "temp_c": lambda: random.randint(15, 25),
+            "humidity": lambda: random.randint(10, 90),
+            "preset_mode": lambda: random.choice(["home", "eco", "away", "auto"])
         })
 
     def get_random_state(self, extra_exposed_attributes=[]):
@@ -110,47 +125,24 @@ class ClimateDeviceType(DeviceType):
         state = random.choice(["heat", "cool", "heat_cool", "off", "auto", "fan_only"])
 
         if "fan_mode" in extra_exposed_attributes:
-            state = state  + ";" + random.choice(["On Low", "On High", "Auto Low", "Auto High", "Off"])
+            state = state  + ";" + self.get_random_parameter("fan_mode")
         if "temperature" in extra_exposed_attributes:
             if random.random() > 0.5:
-                state = state + ";" + str(random.randint(60, 80)) + "F"
+                state = state + ";" + str(self.get_random_parameter("temp_f")) + "F" 
             else:
-                state = state + ";" + str(random.randint(15, 25)) + "C"
+                state = state + ";" + str(self.get_random_parameter("temp_c")) + "C"
         if "humidity" in extra_exposed_attributes:
-            state = state + ";" + str(random.randint(10, 90)) + "%"
+            state = state + ";" + str(self.get_random_parameter("humidity")) + "%"
 
-        if "preset_mode" in extra_exposed_attributes:
+        if random.random() < 0.8 and "preset_mode" in extra_exposed_attributes:
             # if it is not "on a preset" then don't add the mode
-            random_mode = random.choice(["home", "eco", "away", "auto", None, None, None])
-            if random_mode:
-                state = state + ";" + random_mode
+            state = state + ";" + self.get_random_parameter("preset_mode")
 
         return state
     
-class TimerDeviceType(DeviceType):
-    def __init__(self):
-        super().__init__(
-            name="timer",
-            possible_states=[
-                (STATE_IDLE, 0.2),
-                (STATE_ACTIVE, 0.6),
-                (STATE_PAUSED, 0.1),
-            ],
-            services={
-                "start": ["duration"],
-                "pause": [],
-                "cancel": [],
-            },
-        )
-
-    def get_random_state(self, extra_exposed_attributes=[]):
-        state = super().get_random_state(extra_exposed_attributes=extra_exposed_attributes)
-
-        if random.random() < 0.5 and "rgb_color" in extra_exposed_attributes:
-            random_rgb = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-            state = state + ";" + closest_color(random_rgb) + " " + str(random_rgb)
-
-        return state
+with open("piles/pile_of_durations.csv") as f:
+    reader = csv.DictReader(f)
+    pile_of_durations = { x["duration"]: x["english_name"] for x in reader }
     
 with open("piles/pile_of_media_names.csv") as f:
     pile_of_media_names = [ x.strip() for x in f.readlines() ]
@@ -178,8 +170,11 @@ class MediaPlayerDeviceType(DeviceType):
             "media_stop": [],
             "media_next_track": [],
             "media_previous_track": []
+        },
+        random_parameter_generator={
+            "media_title": lambda: random.choice(pile_of_media_names),
+            "volume_level": lambda: str(round(random.random(), 2)),
         })
-        
 
     def get_random_state(self, extra_exposed_attributes=[]):
         state = super().get_random_state(extra_exposed_attributes=extra_exposed_attributes)
@@ -278,7 +273,22 @@ SUPPORTED_DEVICES = {
             "return_to_base": [],
         },
     ),
-    "timer": TimerDeviceType(),
+    "timer": DeviceType(
+        name="timer",
+        possible_states=[
+            (STATE_IDLE, 0.2),
+            (STATE_ACTIVE, 0.6),
+            (STATE_PAUSED, 0.1),
+        ],
+        services={
+            "start": ["duration"],
+            "pause": [],
+            "cancel": [],
+        },
+        random_parameter_generator={
+            "duration": lambda: random.choice(pile_of_durations.keys()),
+        }
+    ),
 }
 
 stacks_of_device_names = { x: [] for x in SUPPORTED_DEVICES.keys() }
@@ -482,6 +492,8 @@ def generate_templated_example(template: dict, language: str, persona: str, max_
             extra_exposed_attributes.append("humidity")
         if "<fan_mode>" in question_template and "fan_mode" not in extra_exposed_attributes:
             extra_exposed_attributes.append("fan_mode")
+        if "<duration>" in question_template and "duration" not in extra_exposed_attributes:
+            extra_exposed_attributes.append("duration")
 
         state = SUPPORTED_DEVICES[device_dict["type"]].get_random_state(extra_exposed_attributes=extra_exposed_attributes)
         device_name = device_dict["device_name"]
@@ -534,52 +546,62 @@ def generate_templated_example(template: dict, language: str, persona: str, max_
         service_calls.append({ "service": service, "target_device": device_dict["device_name"] })
 
     if any(["climate" in service for service in service_names ]):
+        climate_device_type = SUPPORTED_DEVICES["climate"]
         if "<hvac_mode>" in question:
-            hvac_mode = random.choice(["heat", "cool", "heat_cool", "off", "auto", "fan_only"])
+            hvac_mode = climate_device_type.get_random_parameter("hvac_mode")
             question = question.replace("<hvac_mode>", hvac_mode)
             answer = answer.replace("<hvac_mode>", hvac_mode)
             service_calls = [ { **call, "hvac_mode": hvac_mode} for call in service_calls ]
 
         if "<fan_mode>" in question:
-            fan_mode = random.choice(["On Low", "On High", "Auto Low", "Auto High", "Off"])
+            fan_mode = climate_device_type.get_random_parameter("fan_mode")
             question = question.replace("<fan_mode>", fan_mode)
             answer = answer.replace("<fan_mode>", fan_mode)
             service_calls = [ { **call, "fan_mode": fan_mode} for call in service_calls ]
 
         if "<temp_f>" in question:
-            temp_f = random.randint(60, 80)
+            temp_f = climate_device_type.get_random_parameter("temp_f")
             question = question.replace("<temp_f>", str(temp_f))
             answer = answer.replace("<temp_f>", str(temp_f))
             service_calls = [ { **call, "temperature": temp_f} for call in service_calls ]
 
         if "<temp_c>" in question:
-            temp_c = random.randint(15, 25)
+            temp_c = climate_device_type.get_random_parameter("temp_c")
             question = question.replace("<temp_c>", str(temp_c))
             answer = answer.replace("<temp_c>", str(temp_c))
             service_calls = [ { **call, "temperature": temp_c} for call in service_calls ]
 
         if "<humidity>" in question:
-            humidity = random.randint(0, 20) * 5
+            humidity = climate_device_type.get_random_parameter("humidity")
             question = question.replace("<humidity>", str(humidity))
             answer = answer.replace("<humidity>", str(humidity))
             service_calls = [ { **call, "humidity": humidity} for call in service_calls ]
 
     if any(["light" in service for service in service_names ]):
+        light_device_type = SUPPORTED_DEVICES["light"]
         if "<brightness>" in question:
-            brightness = random.randint(0, 100)
+            brightness = light_device_type.get_random_parameter("brightness")
             question = question.replace("<brightness>", str(brightness))
             answer = answer.replace("<brightness>", str(brightness))
             service_calls = [ { **call, "brightness": round(brightness / 100, 2) } for call in service_calls ]
 
         if "<color>" in question:
-            random_rgb = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+            random_rgb = light_device_type.get_random_parameter("rgb_color")
             random_rgb_name = closest_color(random_rgb)
             actual_random_rgb = webcolors.name_to_rgb(random_rgb_name)
             actual_random_rgb = (actual_random_rgb.red, actual_random_rgb.green, actual_random_rgb.blue)
             question = question.replace("<color>", str(random_rgb_name))
             answer = answer.replace("<color>", str(random_rgb_name))
             service_calls = [ { **call, "rgb_color": str(actual_random_rgb) } for call in service_calls ]
-        
+
+    if any(["timer" in service for service in service_names ]):
+        timer_device_type = SUPPORTED_DEVICES["timer"]
+        if "<duration>" in question:
+            duration = timer_device_type.get_random_state("duration")
+            duration_name = pile_of_durations[duration]
+            question = question.replace("<duration>", duration_name)
+            answer = answer.replace("<duration>", duration_name)
+            service_calls = [ { **call, "duration": str(duration) } for call in service_calls ]
 
     return {
         "states": device_list,

@@ -1,24 +1,18 @@
 """Config flow for Local LLaMA Conversation integration."""
 from __future__ import annotations
 
-import time
 import os
+import sys
 import logging
 import requests
-import platform
 from types import MappingProxyType
 from typing import Any
 from abc import ABC, abstractmethod
-from importlib.metadata import version
-
-from huggingface_hub import hf_hub_download, HfFileSystem
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
-from homeassistant.requirements import pip_kwargs
-from homeassistant.util.package import install_package, is_installed
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.data_entry_flow import (
     AbortFlow,
@@ -37,6 +31,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
 )
 
+from .utils import download_model_from_hf, install_llama_cpp_python
 from .const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -166,62 +161,6 @@ def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, ss
             **extra2
         }
     )
-
-def download_model_from_hf(
-    model_name: str, quantization_type: str, storage_folder: str
-):
-    try:
-        fs = HfFileSystem()
-        potential_files = [ f for f in fs.glob(f"{model_name}/*.gguf") ]
-        wanted_file = [f for f in potential_files if (f".{quantization_type.lower()}." in f or f".{quantization_type.upper()}." in f)]
-
-        if len(wanted_file) != 1:
-            raise Exception(f"The quantization '{quantization_type}' does not exist in the HF repo for {model_name}")
-
-        os.makedirs(storage_folder, exist_ok=True)
-
-        return hf_hub_download(
-            repo_id=model_name,
-            repo_type="model",
-            filename=wanted_file[0].removeprefix(model_name + "/"),
-            resume_download=True,
-            cache_dir=storage_folder,
-        )
-    except Exception as ex:
-        return ex
-
-def install_llama_cpp_python(config_dir: str):
-    try:
-        platform_suffix = platform.machine()
-        if platform_suffix == "arm64":
-            platform_suffix = "aarch64"
-        folder = os.path.dirname(__file__)
-        potential_wheels = sorted([ path for path in os.listdir(folder) if path.endswith(f"{platform_suffix}.whl") ], reverse=True)
-        if len(potential_wheels) == 0:
-            # someone who is better at async can figure out why this is necessary
-            time.sleep(0.5)
-
-            if is_installed("llama-cpp-python"):
-                _LOGGER.info("llama-cpp-python is already installed")
-                return True
-            return Exception("missing_wheels")
-        
-        latest_wheel = potential_wheels[0]
-        latest_version = latest_wheel.split("-")[1]
-
-        if not is_installed("llama-cpp-python") or version("llama-cpp-python") != latest_version:
-            _LOGGER.info("Installing llama-cpp-python from wheel")
-            _LOGGER.debug(f"Wheel location: {latest_wheel}")
-            return install_package(os.path.join(folder, latest_wheel), pip_kwargs(config_dir))
-        else:
-            # someone who is better at async can figure out why this is necessary
-            time.sleep(0.5)
-
-            _LOGGER.info("llama-cpp-python is already installed")
-            return True
-    except Exception as ex:
-        _LOGGER.exception("Install failed!")
-        return ex
 
 
 class BaseLlamaConversationConfigFlow(FlowHandler, ABC):

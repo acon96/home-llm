@@ -9,34 +9,19 @@ import requests
 import re
 import os
 import json
-import webcolors
-
-import voluptuous as vol
-from collections.abc import Iterable
 
 import homeassistant.components.conversation as ha_conversation
 from homeassistant.components.conversation import ConversationInput, ConversationResult, AbstractConversationAgent
 from homeassistant.components.conversation.const import DOMAIN as CONVERSATION_DOMAIN
-from homeassistant.components.homeassistant.exposed_entities import (
-    async_should_expose,
-)
+from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_SSL, MATCH_ALL
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceCall,
-    ServiceResponse,
-    SupportsResponse,
-)
-from homeassistant.exceptions import (
-    ConfigEntryNotReady,
-    HomeAssistantError,
-    TemplateError,
-)
-from homeassistant.helpers import config_validation as cv, intent, selector, template
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryError, TemplateError
+from homeassistant.helpers import config_validation as cv, intent, template
 from homeassistant.util import ulid
 
+from .utils import closest_color, flatten_vol_schema, install_llama_cpp_python
 from .const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -164,34 +149,6 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
     _LOGGER.debug("Migration to version %s successful", config_entry.version)
 
     return True
-
-def closest_color(requested_color):
-    min_colors = {}
-    for key, name in webcolors.CSS3_HEX_TO_NAMES.items():
-        r_c, g_c, b_c = webcolors.hex_to_rgb(key)
-        rd = (r_c - requested_color[0]) ** 2
-        gd = (g_c - requested_color[1]) ** 2
-        bd = (b_c - requested_color[2]) ** 2
-        min_colors[(rd + gd + bd)] = name
-    return min_colors[min(min_colors.keys())]
-
-def flatten_schema(schema):
-    flattened = []
-    def _flatten(current_schema, prefix=''):
-        if isinstance(current_schema, vol.Schema):
-            if isinstance(current_schema.schema, vol.validators._WithSubValidators):
-                for subval in current_schema.schema.validators:
-                    _flatten(subval, prefix)
-            elif isinstance(current_schema.schema, dict):
-                for key, val in current_schema.schema.items():
-                    _flatten(val, prefix + str(key) + '/')
-        elif isinstance(current_schema, vol.validators._WithSubValidators):
-            for subval in current_schema.validators:
-                _flatten(subval, prefix)
-        elif callable(current_schema):
-            flattened.append(prefix[:-1] if prefix else prefix)
-    _flatten(schema)
-    return flattened
 
 class LLaMAAgent(AbstractConversationAgent):
     """Local LLaMA conversation agent."""
@@ -459,7 +416,7 @@ class LLaMAAgent(AbstractConversationAgent):
         all_services = []
         for domain in domains:
             for name, service in service_dict.get(domain, {}).items():
-                args = flatten_schema(service.schema)
+                args = flatten_vol_schema(service.schema)
                 args_to_expose = set(args).intersection(extra_attributes_to_expose)
                 all_services.append(f"{domain}.{name}({','.join(args_to_expose)})")
         formatted_services = ", ".join(all_services)
@@ -488,7 +445,16 @@ class LocalLLaMAAgent(LLaMAAgent):
             raise Exception(f"Model was not found at '{self.model_path}'!")
 
         # don't import it until now because the wheel is installed by config_flow.py
-        module = importlib.import_module("llama_cpp")
+        try:
+            module = importlib.import_module("llama_cpp")
+        except ModuleNotFoundError:
+            # attempt to re-install llama-cpp-python if it was uninstalled for some reason
+            install_result = install_llama_cpp_python(self.hass.config.config_dir)
+            if not install_result == True:
+                raise ConfigEntryError("llama-cpp-python was not installed on startup and re-installing it led to an error!")
+            
+            module = importlib.import_module("llama_cpp")
+            
         Llama = getattr(module, "Llama")
         LlamaGrammar = getattr(module, "LlamaGrammar")
 

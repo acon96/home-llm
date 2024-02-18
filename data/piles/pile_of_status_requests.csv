@@ -242,3 +242,33 @@ media_player,playing;<media>;<volume>,"What's on <device_name> at the moment?","
 media_player,paused;<media>;<volume>,"I forgot what I paused on <device_name>, can you remind me?","You paused <media> on <device_name>, and the volume is set to <volume>."
 media_player,idle;<volume>,"Is <device_name> turned off or on?","<device_name> is on but idle, with volume at <volume>."
 media_player,playing;<media>;<volume>,"I'd like to know what's playing on <device_name>.","Currently, <media> is playing on <device_name> at volume level <volume>."
+vacuum,cleaning,Is the <device_name> vacuum running right now?,The vacuum is running.
+vacuum,cleaning,Is the <device_name> vacuum on?,It is. Your home is currently being cleaned.
+vacuum,cleaning,Is <device_name> cleaning?,"Yes, <device_name> is currently vacuuming."
+vacuum,cleaning,What is the <device_name> vacuum doing right now?,The <device_name> vacuum is currently cleaning the house.
+vacuum,cleaning,What is <device_name> doing right now?,<device_name> is currently cleaning.
+vacuum,docked,What is the <device_name> vacuum doing right now?,The <device_name> vacuum is currently docked.
+vacuum,docked,What is <device_name> doing right now?,<device_name> is currently docked.
+vacuum,docked,Is <device_name> on its base right now?,"Yes, <device_name> is at its base."
+vacuum,docked,Where is the <device_name> vacuum?,On its dock at the moment.
+vacuum,paused,What is the <device_name> vacuum doing right now?,The <device_name> vacuum is paused.
+vacuum,paused,What is <device_name> doing right now?,<device_name> is paused.
+vacuum,idle,What is the <device_name> vacuum doing right now?,The <device_name> vacuum is stopped.
+vacuum,idle,What is <device_name> doing right now?,<device_name> is stopped.
+vacuum,error,What is the <device_name> vacuum doing right now?,The <device_name> vacuum is stuck or having issues that need to be corrected.
+vacuum,error,What is <device_name> doing right now?,<device_name> is stuck or having issues.
+todo,1,How many items on on my <device_name> right now?,There is currently 1 item on your <device_name>.
+todo,2,How many things are on the <device_name> at the moment?,There are 2 things on the <device_name> currently.
+todo,3,What is the current number of items on your <device_name>?,"Yes, there are currently 3 items on your <device_name>."
+todo,4,How many objects are there on the <device_name> presently?,"Yes, there are 4 objects presently on the <device_name>."
+todo,5,Could you tell me how many pieces there are on the <device_name> at this time?,I can tell you that there are 5 pieces on the <device_name> at this time.
+todo,6,What's the count of items on the <device_name> now?,The count of items on the <device_name> now is 6.
+todo,7,How many units can be found on my <device_name> at the present moment?,You will find 7 units on my <device_name> at the present moment.
+todo,8,Could you inform me as to how many articles are located on the <device_name> right now?,I'd be happy to inform you that there are 8 articles located on the <device_name> right now.
+todo,9,Is it possible for you to disclose how many components there are on the <device_name> currently?,It is possible for me to disclose that there are 9 components on the <device_name> currently.
+todo,10,May I ask for the quantity of items on the <device_name> at present?,The quantity of items on the <device_name> is currently 10.
+todo,11,Would you be able to tell me how many things there are on the <device_name> now?,"Yes, I can tell you that there are 11 things on the <device_name> now."
+todo,12,Can you enlighten me as to the number of items on the <device_name>?,I'd be pleased to enlighten you that there are 12 items on the <device_name>.
+timer,active;<duration>;<remaining>,How much time left on the <device_name>?,The <device_name> is set for <duration>. There is currently <remaining> remaining.
+timer,active;<duration>;<remaining>,How long before the <device_name> goes off?,The <device_name> will go off in <remaining>.
+timer,active;<duration>;<remaining>,When is the <device_name> set to go off?,The <device_name> is set for <duration> and will go off in <remaining>.

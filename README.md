@@ -144,6 +144,8 @@ See [docs/Backend Configuration.md](/docs/Backend%20Configuration.md) for more i
 **Installing llama-cpp-python for local model usage**:  
 In order to run a model directly as part of your Home Assistant installation, you will need to install one of the pre-build wheels because there are no existing musllinux wheels for the package. Compatible wheels for x86_x64 and arm64 are provided in the [dist](./dist) folder. Copy the `*.whl` files to the `custom_components/llama_conversation/` folder. They will be installed while setting up the component.
 
+NOTE: Home Assistant recently moved from Python 3.11 to Python 3.12. If you are using HA 2024.1.4 and prior, use the `cp311` wheels and if you are using HA 2024.2.1 or newer then use the `cp312` wheels.
+
 **Setting up the Llama.cpp backend with a model from HuggingFace**:  
 You need the following settings to configure the local backend from HuggingFace:
 1. Model Name: the name of the model in the form `repo/model-name`. The repo MUST contain a GGUF quantized model.

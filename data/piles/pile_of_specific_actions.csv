@@ -345,3 +345,309 @@ switch.turn_on,roof_deck,Engage the roof deck lighting.
 switch.turn_on,wine_cellar,Illuminate the wine cellar.
 switch.turn_on,gym_ceiling,Light up the gym ceiling lights.
 switch.turn_on,front_lawn,Activate the front lawn spotlights.
+vacuum.kitchen,Please turn on the kitchen vacuum.,start
+vacuum.living_room,Could you please activate the living room vacuum?,start
+vacuum.dining_room,The dining room vacuum needs to be started.,start
+vacuum.bedroom1,Let's start the vacuum in bedroom one.,start
+vacuum.bedroom2,Can you please turn on the vacuum for bedroom two?,start
+vacuum.study,The study vacuum should be activated.,start
+vacuum.library,May I ask you to start the library vacuum?,start
+vacuum.office,Please initiate the office vacuum.,start
+vacuum.entrance_hall,Could you please turn on the entrance hall vacuum?,start
+vacuum.sunroom,The sunroom vacuum needs to be started.,start
+vacuum.patio,Let's activate the patio vacuum.,start
+vacuum.garage,"Can we clean up the garage, please?",start
+vacuum.workshop,May I request you to turn on the workshop vacuum?,start
+vacuum.utility_room,Please clean the utility room.,start
+vacuum.mud_room,Could you please clean up the mud room?,start
+vacuum.powder_room,The powder room needs to be cleaned.,start
+vacuum.hallway,Let's turn on the hallway vacuum.,start
+vacuum.staircase,Can we please start the staircase vacuum?,start
+vacuum.balcony,May I ask you to clean the balcony?,start
+vacuum.roof_deck,Please roof deck is dirty.,start
+vacuum.attic,Let's start the attic vacuum.,start
+vacuum.basement,"Can we turn on the basement vacuum, please?",start
+vacuum.pool_area,The pool area vacuum needs to be started.,start
+vacuum.garden,Could you please activate the garden vacuum?,start
+vacuum.terrace,May I request you to start the terrace vacuum?,start
+vacuum.porch,Please initiate the porch vacuum.,start
+vacuum.shed,"Can we turn on the shed vacuum, please?",start
+vacuum.workshop2,The second workshop is pretty dirty right now.,start
+vacuum.studio,May I ask you to start the studio vacuum?,start
+vacuum.greenhouse,Please initiate the greenhouse vacuum.,start
+vacuum.potting_shed,"Can we turn on the potting shed vacuum, please?",start
+vacuum.summer_house,The summer house vacuum needs to be started.,start
+vacuum.garage2,Let's start the second garage vacuum.,start
+vacuum.tool_shed,May I request you to activate the tool shed vacuum?,start
+vacuum.barn,Could we please turn on the barn vacuum?,start
+vacuum.wine_cellar,The wine cellar should be cleaned.,start
+vacuum.storage_room,Let's initiate the storage room cleanup.,start
+vacuum.greenhouse2,May I ask you to activate the second greenhouse vacuum?,start
+vacuum.boat_house,Please turn on the boat house vacuum.,start
+vacuum.marina,Could we please start the marina vacuum?,start
+vacuum.bb8,Turn on BB8.,start
+vacuum.c3po,Can you start C3PO?,start
+vacuum.hal,Please turn on Hal.,start
+vacuum.r2d2,Can you tell R2D2 to clean up?,start
+todo.groceries,Add milk to my groceries list.,add_item
+todo.household_supplies,Could you please add eggs to my household supplies list?,add_item
+todo.electronics,I would like you to add a new printer to the electronics list.,add_item
+todo.clothing,Kindly add a shirt to the clothing list for me.,add_item
+todo.office_supplies,Could you please add paper clips to the office supplies list?,add_item
+todo.personal_care,I would appreciate it if you could add toothpaste to my personal care list.,add_item
+todo.technology,I'd like you to add a new phone to the technology list.,add_item
+todo.gifts,Could you please add a gift card to the gifts list?,add_item
+todo.books,I would like you to add a novel to the books list.,add_item
+todo.music,Could you please add Halsey's new album to my music list?,add_item
+todo.movies,Could you kindly add Batman Begins to the movies list for me?,add_item
+todo.travel,I would appreciate it if you could add Scotland to the travel list.,add_item
+todo.education,I'd like you to add a language course to the education list.,add_item
+todo.health,Could you please add a doctor's appointment to my health list?,add_item
+todo.finance,"I would like you to add ""Pay Power Bill"" to the finance list.",add_item
+todo.shopping_list,Could you please add bread to the shopping list?,add_item
+todo.household_supplies_list,"Could you kindly add a ""Walnut Credenza"" to the projects list?",add_item
+todo.electronics_list,I would like you to add a new laptop to the electronics list.,add_item
+todo.clothing_list,Kindly add pants to the clothing list for me.,add_item
+todo.office_supplies_list,Could you please add staples to the office supplies list?,add_item
+todo.personal_care_list,I would appreciate it if you could add razorblades to my personal care list.,add_item
+todo.technology_list,I'd like you to add a new computer to the technology list.,add_item
+todo.gifts_list,Could you please add a socks to the gifts list?,add_item
+todo.books_list,"I would like you to add ""Treasure Island"" to the books list.",add_item
+todo.music_list,Could you please add Taylor Swift's new album to my music list?,add_item
+todo.movies_list,Could you kindly add Pulp Fiction to the movies list for me?,add_item
+todo.travel_list,I would appreciate it if you could add Japan to the travel list.,add_item
+todo.education_list,I'd like you to add a language course to the education list.,add_item
+todo.health_list,Could you please add a doctor's appointment to my health list?,add_item
+todo.finance_list,"I would like you to add ""Pay Phone Bill"" to the finance list.",add_item
+todo.grocery_list,"Could you please add ""Vinegar"" to the shopping list?",add_item
+todo.projects,"Could you kindly add a ""Maple Bench"" to the projects list?",add_item
+input_select.nature_sounds,"Could you set the nature sounds to ""thunderstorm"", please?",select_option
+input_select.people,"Can you set the people select to ""John""?",select_option
+input_select.who_cooks,Can you change who cooks to Paulus please?,select_option
+input_select.living_room_scene,Change the living room scene to Movie Time.,select_option
+input_select.alarm_status,"Set the alarm status to ""Armed"".",select_option
+input_select.roof_light_preset,"Change the roof light preset to ""Candy Cane"".",select_option
+input_select.roof_light_preset,"Please set ""Halloween"" for the roof light preset"".",select_option
+input_select.roof_light_preset,"Turn the roof light preset to ""Twinkle"".",select_option
+input_select.nature_sounds,"Turn ""off"" the nature sounds.",select_option
+input_select.nature_sounds,"Set nature sounds to ""Windy Mountain"".",select_option
+timer.pomodoro,Please set my pomodoro timer for 20 minutes.,start
+timer.kitchen,Turn on the kitchen timer for 8 minutes.,start
+timer.work,Set the work timer for 10 minutes.,start
+timer.laundry,Start the laundry timer for an hour.,start
+timer.cooking,Set a 30 second cooking timer.,start
+timer.pomodoro,Cancel the pomodoro timer.,cancel
+timer.kitchen,Please stop my kitchen timer.,cancel
+timer.work,Turn off the work timer.,cancel
+timer.laundry,Please shut off the laundry timer.,cancel
+timer.cooking,The cooking timer is no longer needed.,cancel
+light.bar_light,Please switch off the bar light,turn_off
+light.bar_light,Turn off bar light,turn_off
+light.bar_light,Turn off the bar light,turn_off
+light.dining_room_light,Deactivate dining room light,turn_off
+light.dining_room_light,Shut off dining room light,turn_off
+light.dining_room_light,Toggle the dining room light,turn_off
+light.front_light,Can we power down the front light?,turn_off
+light.front_light,Can we turn down the front light?,turn_off
+light.front_light,Can you turn off the lights on the front?,turn_off
+light.gym_light,Can you shut off the gym light?,turn_off
+light.gym_light,Can you turn off the gym light?,turn_off
+light.gym_light,Could we turn off the gym lights?,turn_off
+light.island_light,Could you disable the island light,turn_off
+light.island_light,Deactivate the island light,turn_off
+light.island_light,Deactivate the island area lighting.,turn_off
+light.kitchen_light,Deactivate the kitchen light,turn_off
+light.kitchen_light,Deactivate the lights at the kitchen.,turn_off
+light.kitchen_light,Disable the lights in the kitchen.,turn_off
+light.living_room_light,living room light off,turn_off
+light.living_room_light,Disable the living room lights.,turn_off
+light.living_room_light,Please disable the living room light.,turn_off
+light.main_basement_light,Please extinguish the main basement light,turn_off
+light.main_basement_light,Please power down the lights in the main basement.,turn_off
+light.main_basement_light,Please switch off the main basement light,turn_off
+light.man_cave_light,Please switch off the man cave area lights.,turn_off
+light.man_cave_light,Please turn off the man cave lights.,turn_off
+light.man_cave_light,Please turn off the man cave light.,turn_off
+light.master_bedroom_light,Power off the lights in the master bedroom.,turn_off
+light.master_bedroom_light,Set the master bedroom lights to off.,turn_off
+light.master_bedroom_light,Shut down the master bedroom lights.,turn_off
+light.pool_table_light,Shut down the pool table light,turn_off
+light.pool_table_light,Switch off the pool table light,turn_off
+light.pool_table_light,Switch off the pool table light please,turn_off
+light.pool_table_light,Switch off the pool table light now,turn_off
+light.pool_table_light,Switch off the pool table lights,turn_off
+light.pool_table_light,Switch off the light in the pool table,turn_off
+light.pool_table_light,Switch off the pool table light,turn_off
+light.pool_table_light,Turn off the pool table light,turn_off
+light.pool_table_light,Turn off the pool table light please,turn_off
+light.pool_table_light,Turn off the pool table light now,turn_off
+light.pool_table_light,You can turn off the pool table light now,turn_off
+light.pool_table_light,Turn off the pool table lights.,turn_off
+light.pool_table_light,Turn off the pool table light please.,turn_off
+light.pool_table_light,Turn off the pool table light,turn_off
+light.pool_table_light,Turn off the light in the pool table.,turn_off
+light.pool_table_light,Turn off the pool table light,turn_off
+light.pool_table_light,Turn off the light in the pool table,turn_off
+light.pool_table_light,Turn the pool table light off,turn_off
+light.porch_light,Please switch off the porch light,turn_off
+light.porch_light,Turn off porch light,turn_off
+light.porch_light,Turn off the porch light,turn_off
+light.porch_light,Deactivate porch light,turn_off
+light.porch_light,Shut off porch light,turn_off
+light.porch_light,Toggle the porch light,turn_off
+light.porch_light,Can we power down the porch light?,turn_off
+light.porch_light,Can we turn down the porch light?,turn_off
+light.porch_light,Can you turn off the lights on the porch?,turn_off
+light.porch_light,Can you shut off the porch light?,turn_off
+light.porch_light,Can you turn off the porch light?,turn_off
+light.porch_light,Could we turn off the porch lights?,turn_off
+light.porch_light,Could you disable the porch light,turn_off
+light.porch_light,Deactivate the porch light,turn_off
+light.porch_light,Deactivate the porch area lighting.,turn_off
+light.porch_light,Deactivate the porch light,turn_off
+light.porch_light,Deactivate the light on the porch,turn_off
+light.porch_light,Deactivate the porch light,turn_off
+light.porch_light,Deactivate the porch light,turn_off
+light.porch_light,Deactivate the porch light,turn_off
+light.porch_light,Deactivate the lights at the porch.,turn_off
+light.porch_light,Disable the lights in the porch.,turn_off
+light.porch_light,porch light off,turn_off
+light.porch_light,Disable the porch lights.,turn_off
+light.porch_light,Please disable the porch light.,turn_off
+light.porch_light,Please extinguish the porch light,turn_off
+light.porch_light,Please power down the lights in the porch.,turn_off
+light.porch_light,Please switch off the porch light,turn_off
+light.porch_light,Please switch off the porch area lights.,turn_off
+light.porch_light,Please turn off the porch lights.,turn_off
+light.porch_light,Please turn off the porch light.,turn_off
+light.porch_light,Power off the lights in the porch.,turn_off
+light.porch_light,Set the porch lights to off.,turn_off
+light.porch_light,Shut down the porch lights.,turn_off
+light.porch_light,Shut down the porch light,turn_off
+light.porch_light,Switch off the porch light,turn_off
+light.porch_light,Switch off the porch light please,turn_off
+light.porch_light,Switch off the porch light now,turn_off
+light.porch_light,Switch off the porch lights,turn_off
+light.porch_light,Switch off the light in the porch,turn_off
+light.porch_light,Switch off the porch light,turn_off
+light.porch_light,Turn off the porch light,turn_off
+light.porch_light,Turn off the porch light please,turn_off
+light.porch_light,Turn off the porch light now,turn_off
+light.porch_light,You can turn off the porch light now,turn_off
+light.porch_light,Turn off the porch lights.,turn_off
+light.porch_light,Turn off the porch light please.,turn_off
+light.porch_light,Turn off the porch light,turn_off
+light.porch_light,Turn off the light in the porch.,turn_off
+light.porch_light,Turn off the porch light,turn_off
+light.porch_light,Turn off the light in the porch,turn_off
+light.porch_light,Turn the porch light off,turn_off
+light.shower_light,Please switch off the shower light,turn_off
+light.shower_light,Turn off shower light,turn_off
+light.shower_light,Turn off the shower light,turn_off
+light.shower_light,Deactivate shower light,turn_off
+light.shower_light,Shut off shower light,turn_off
+light.stair_light,stair light off,turn_off
+light.stair_light,Disable the stair lights.,turn_off
+light.stair_light,Shut off stairwell light,turn_off
+light.stair_light,Toggle the stairwell light,turn_off
+light.stair_light,Can we power down the stairwell light?,turn_off
+light.roof_light,Please switch off the roof light,turn_off
+light.roof_light,Turn off roof light,turn_off
+light.roof_light,Turn off the roof light,turn_off
+light.walkway_light,Shut down the walkway lights.,turn_off
+light.walkway_light,Turn off the walkway light,turn_off
+light.walkway_light,Turn the walkway light off,turn_off
+light.Bobs_lamp,Please switch off Bob's light,turn_off
+light.janets_lamp,Turn off Janet's light,turn_off
+light.ruths_lamp,Please switch off Ruth's lamp,turn_off
+light.colins_lamp,Turn off Colin's lamp,turn_off
+light.neenas_lamp,Turn off Neena's lamp,turn_off
+light.roberts_lamp,Deactivate Robert's lamp,turn_off
+light.paulus_lamp,Shut off Paulus' lamp,turn_off
+light.peters_lamp,Toggle Peter's lamp,turn_off
+light.angelas_lamp,Can we power down Angela's lamp?,turn_off
+light.entry_lamp,Please switch off entry lamp,turn_off
+light.entry_lamp,Turn off entry lamp,turn_off
+light.entry_lamp,Please extinguish entryway lamp,turn_off
+light.entry_lamp,Please switch off entryway lamp,turn_off
+light.entry_lamp,Please switch off entryway area lamps.,turn_off
+light.entry_lamp,Deactivate entrance light,turn_off
+light.bar_light,Illuminate the light in my bar.,turn_on
+light.bar_light,Illuminate the bar.,turn_on
+light.bar_light,Bar light on,turn_on
+light.bar_light,Light up the bar.,turn_on
+light.dining_room_light,Activate the lights in the dining room,turn_on
+light.dining_room_light,Enable the dining room light please,turn_on
+light.dining_room_light,Engage the lights in the dining room.,turn_on
+light.front_light,Activate the front light please,turn_on
+light.front_light,Please activate the front light,turn_on
+light.front_light,Activate the front light now,turn_on
+light.gym_light,Turn on the gym light please,turn_on
+light.gym_light,Turn the gym light on,turn_on
+light.gym_light,gym light on,turn_on
+light.island_light,Turn the island light on,turn_on
+light.island_light,island light on,turn_on
+light.island_light,Switch on the island light,turn_on
+light.kitchen_light,kitchen light on,turn_on
+light.kitchen_light,Switch on the kitchen light,turn_on
+light.kitchen_light,Hey can you turn on the kitchen light,turn_on
+light.living_room_light,Turn on the living room lights.,turn_on
+light.living_room_light,Turn on the living room lights please.,turn_on
+light.living_room_light,Please turn on the living room lights.,turn_on
+light.living_room_light,Turn on the living room lighting.,turn_on
+light.main_basement_light,Turn on the main basement light,turn_on
+light.main_basement_light,Turn on main basement light,turn_on
+light.man_cave_light,Activate the man cave man cave light.,turn_on
+light.man_cave_light,Activate the lights in the man cave,turn_on
+light.man_cave_light,Could you light up the man cave?,turn_on
+light.man_cave_light,Enable the man cave light,turn_on
+light.master_bedroom_light,Could you illuminate the master bedroom,turn_on
+light.pool_table_bar_light,pool table bar light on,turn_on
+light.pool_table_bar_light,Switch on the pool table bar light,turn_on
+light.pool_table_bar_light,Can you turn on the pool table bar light?,turn_on
+light.pool_table_light,Enable the pool table light please,turn_on
+light.porch_light,Turn on porch light,turn_on
+light.porch_light,Can you turn on the porch light?,turn_on
+light.porch_light,Could you turn on the porch light please?,turn_on
+light.shower_light,Turn on the shower light,turn_on
+light.shower_light,Turn on shower light,turn_on
+light.shower_light,Activate the shower light,turn_on
+light.shower_light,Could you illuminate the shower please,turn_on
+light.shower_light,Turn on the lights at the shower,turn_on
+light.shower_light,Light up the shower please,turn_on
+light.shower_light,Turn on the shower light please,turn_on
+light.shower_light,Turn the shower light on,turn_on
+light.shower_light,shower light on,turn_on
+light.stair_light,Activate the stair light please,turn_on
+light.stair_light,Please activate the stair light,turn_on
+light.stair_light,Can you light up the stairwell please?,turn_on
+light.stair_light,Please activate the stairwell light,turn_on
+light.stair_light,Please switch on the stairwell area light,turn_on
+light.roof_light,Please turn on the roof light.,turn_on
+light.roof_light,Switch on the roof light please,turn_on
+light.roof_light,Can you turn on the light in the roof?,turn_on
+light.walkway_light,Please activate the walkway light,turn_on
+light.walkway_light,Please switch on the walkway area light,turn_on
+light.walkway_light,Turn on the walkway lighting.,turn_on
+light.freds_lamp,Turn on Fred's light,turn_on
+light.colins_lamp,Turn on Colin's light,turn_on
+light.roberts_lamp,Activate Robert's light,turn_on
+light.pierres_lamp,Turn on Pierre's light please,turn_on
+light.jennifers_lamp,Turn Jenn's light on,turn_on
+light.julias_lamp,Julia's light on,turn_on
+light.neenas_lamp,Switch on Neena's light,turn_on
+light.patricks_lamp,Can you turn on Patrick's light?,turn_on
+light.sams_lamp,Light up Sam's.,turn_on
+light.johns_lamp,Brighten up John's light.,turn_on
+light.jordans_lamp,Engage Jordan's lighting.,turn_on
+light.lebrons_lamp,Light up Lebron's lights.,turn_on
+light.angies_lamp,Can you turn on Angie's lamp?,turn_on
+light.louis_lamp,Could you turn on Louis' lamp please?,turn_on
+light.katniss_lamp,Could you enable Katniss' lamp,turn_on
+light.waynes_lamp,Enable Wayne's lamp,turn_on
+light.samuels_lamp,Enable Samuel's lamp please,turn_on
+light.entry_lamp,Turn on entry lamp,turn_on
+light.entry_lamp,Please activate entryway lamp,turn_on
+light.entry_lamp,Please switch on entryway area lamp,turn_on
+light.entry_lamp,Turn on entrance light,turn_on
+light.entry_lamp,Turn on entrance lighting.,turn_on
