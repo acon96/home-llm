@@ -67,7 +67,7 @@ python3 train.py \
 
 """
 python3 train.py \
-    --run_name stablehome-3b-rev4 \
+    --run_name stablehome-3b-rev5 \
     --base_model stabilityai/stablelm-zephyr-3b \
     --bf16 \
     --train_dataset data/home_assistant_train.jsonl \
@@ -206,6 +206,8 @@ if model.get_input_embeddings().num_embeddings < embeddings_len:
     model.resize_token_embeddings(embeddings_len)
 else:
     model.tie_weights()
+
+# model.tie_weights()
 
 if training_run_args.use_lora:
     from peft import LoraConfig, TaskType, get_peft_model, prepare_model_for_kbit_training

@@ -22,10 +22,11 @@ The dataset is generated from the different CSV "piles". The "piles" contain dif
 
 ## Generating the dataset from piles
 
-`python3 generate_home_assistant_data.py --train --test --large`
+`python3 generate_home_assistant_data.py --train --test --large --sharegpt`
 
 Supported dataset splits are `--test`, `--train`, & `--sample`
 Arguments to set the train dataset size are `--small`, `--medium`, `--large`, & `--xl`.
+Supported formats are `--raw_corpus` (chatml formatted) & `--sharegpt`
 
 ## Merging with other instruct-datasets for training
 

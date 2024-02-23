@@ -9,6 +9,20 @@ from tqdm import tqdm
 
 CTX_SIZE = 2048
 
+"""
+python3 evaluate.py stablehome-3b-rev1/checkpoint-400 --batch-size 4 --lora && \
+  python3 evaluate.py stablehome-3b-rev1/checkpoint-800 --batch-size 4 --lora && \
+  python3 evaluate.py stablehome-3b-rev1/checkpoint-1200 --batch-size 4 --lora && \
+  python3 evaluate.py stablehome-3b-rev1/checkpoint-1600 --batch-size 4 --lora && \
+  python3 evaluate.py stablehome-3b-rev1/checkpoint-2000 --batch-size 4 --lora && \
+  python3 evaluate.py stablehome-3b-rev1/checkpoint-2400 --batch-size 4 --lora && \
+  python3 evaluate.py stablehome-3b-rev1/checkpoint-2800 --batch-size 4 --lora && \
+  python3 evaluate.py stablehome-3b-rev1/checkpoint-3200 --batch-size 4 --lora && \
+  python3 evaluate.py stablehome-3b-rev1/checkpoint-3600 --batch-size 4 --lora && \
+  python3 evaluate.py stablehome-3b-rev1/checkpoint-4000 --batch-size 4 --lora && \
+  python3 evaluate.py stablehome-3b-rev1 --batch-size 4 --lora
+"""
+
 def tokenize(tokenizer, prompt):
     return tokenizer(prompt, return_tensors="pt", padding=True, truncation=True, max_length=CTX_SIZE)
 

@@ -5,13 +5,14 @@ This project provides the required "glue" components to control your Home Assist
 The "Home" models are a fine tuning of the Phi model series from Microsoft.  The model is able to control devices in the user's house as well as perform basic question and answering.  The fine tuning dataset is a combination of the [Cleaned Stanford Alpaca Dataset](https://huggingface.co/datasets/yahma/alpaca-cleaned) as well as a [custom synthetic dataset](./data) designed to teach the model function calling based on the device information in the context.
 
 The latest models can be found on HuggingFace:  
-3B v2 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v2-GGUF  
+3B v3 (Based on StableLM-Zephyr-3B): https://huggingface.co/acon96/Home-3B-v3-GGUF  
 1B v2 (Based on Phi-1.5): https://huggingface.co/acon96/Home-1B-v2-GGUF  
 
 <details>
 
 <summary>Old Models</summary>  
 
+3B v2 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v2-GGUF  
 3B v1 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v1-GGUF  
 1B v1 (Based on Phi-1.5): https://huggingface.co/acon96/Home-1B-v1-GGUF  
 
