@@ -81,7 +81,7 @@ For more information See [output.gbnf](./custom_components/llama_conversation/ou
 
 When setting up the component, there are 5 different "backend" options to choose from:
 
-a. Llama.cpp with a model from HuggingFace  
+a. Llama.cpp with a model from HuggingFace  <--- recommended if you are lost  
 b. Llama.cpp with a locally provided model  
 c. A remote instance of text-generation-webui  
 d. A generic OpenAI API compatible interface; *should* be compatible with LocalAI, LM Studio, and all other OpenAI compatible backends  
@@ -93,6 +93,9 @@ See [docs/Backend Configuration.md](/docs/Backend%20Configuration.md) for more i
 
 This is option A
 
+It is recommended to use either `acon96/Home-3B-v3-GGUF` or `acon96/Home-1B-v2-GGUF` as the model for this integration.
+NOTE: if you are using `acon96/Home-3B-v3-GGUF`, you need to set the prompt template to `Zephyr` after setting up the component by configuring the model after creation.
+
 You need the following settings to configure the local backend from HuggingFace:
 1. **Model Name**: the name of the model in the form `repo/model-name`. The repo MUST contain a GGUF quantized model.
 2. **Model Quantization**: The quantization level to download. Pick from the list. Higher quantizations use more RAM but have higher quality responses.
@@ -100,6 +103,10 @@ You need the following settings to configure the local backend from HuggingFace:
 #### Llama.cpp Backend with a locally downloaded model
 
 This is option B
+
+Please download the model file from HuggingFace and copy it to your Home Assistant device. Recommended models are [acon96/Home-3B-v3-GGUF](https://huggingface.co/acon96/Home-3B-v3-GGUF) or [acon96/Home-1B-v2-GGUF](https://huggingface.co/acon96/Home-1B-v2-GGUF).
+
+NOTE: if you are using `acon96/Home-3B-v3-GGUF`, you need to set the prompt template to `Zephyr` after setting up the component by configuring the model after creation.
 
 You need the following settings to configure the local backend from HuggingFace:
 1. **Model File Name**: the file name where Home Assistant can access the model to load. Most likely a sub-path of `/config` or `/media` or wherever you copied the model file to.
