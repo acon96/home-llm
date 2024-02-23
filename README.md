@@ -2,40 +2,37 @@
 This project provides the required "glue" components to control your Home Assistant installation with a completely local Large Language Model acting as a personal assistant. The goal is to provide a drop in solution to be used as a "conversation agent" component by Home Assistant.
 
 ## Model
-The "Home" models are a fine tuning of the Phi model series from Microsoft.  The model is able to control devices in the user's house as well as perform basic question and answering.  The fine tuning dataset is a combination of the [Cleaned Stanford Alpaca Dataset](https://huggingface.co/datasets/yahma/alpaca-cleaned) as well as a [custom synthetic dataset](./data) designed to teach the model function calling based on the device information in the context.
+The "Home" models are a fine tuning of the Phi model series from Microsoft and the StableLM model series from StabilityAI.  The model is able to control devices in the user's house as well as perform basic question and answering.  The fine tuning dataset is a [custom synthetic dataset](./data) designed to teach the model function calling based on the device information in the context.
 
 The latest models can be found on HuggingFace:  
-3B v3 (Based on StableLM-Zephyr-3B): https://huggingface.co/acon96/Home-3B-v3-GGUF  
-1B v2 (Based on Phi-1.5): https://huggingface.co/acon96/Home-1B-v2-GGUF  
+3B v3 (Based on StableLM-Zephyr-3B): https://huggingface.co/acon96/Home-3B-v3-GGUF  (Zephyr prompt foramt)  
+1B v2 (Based on Phi-1.5): https://huggingface.co/acon96/Home-1B-v2-GGUF  (ChatML prompt format)  
 
 <details>
 
 <summary>Old Models</summary>  
 
-3B v2 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v2-GGUF  
-3B v1 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v1-GGUF  
-1B v1 (Based on Phi-1.5): https://huggingface.co/acon96/Home-1B-v1-GGUF  
+3B v2 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v2-GGUF  (ChatML prompt format)  
+3B v1 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v1-GGUF  (ChatML prompt format)  
+1B v1 (Based on Phi-1.5): https://huggingface.co/acon96/Home-1B-v1-GGUF  (ChatML prompt format)  
 
 </details>
 
 Make sure you have `llama-cpp-python>=0.2.29` in order to run these models.
 
-The main difference between the 2 models (besides parameter count) is the training data. The 1B model is ONLY trained on the synthetic dataset provided in this project, while the 3B model is trained on a mixture of this synthetic dataset, and the cleaned Stanford Alpaca dataset.
-
 The model is quantized using Llama.cpp in order to enable running the model in super low resource environments that are common with Home Assistant installations such as Raspberry Pis.
 
-The model can be used as an "instruct" type model using the ChatML prompt format. The system prompt is used to provide information about the state of the Home Assistant installation including available devices and callable services.
+The model can be used as an "instruct" type model using the [ChatML](https://github.com/MicrosoftDocs/azure-docs/blob/main/articles/ai-services/openai/includes/chat-markup-language.md) or [Zephyr](https://huggingface.co/HuggingFaceH4/zephyr-7b-alpha/discussions/3) prompt format (depends on the model). The system prompt is used to provide information about the state of the Home Assistant installation including available devices and callable services.
 
 Example "system" prompt: 
 ```
-<|im_start|>system
 You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed with the information provided only.
 Services: light.turn_off(), light.turn_on(brightness,rgb_color), fan.turn_on(), fan.turn_off()
 Devices:
 light.office 'Office Light' = on;80%
 fan.office 'Office fan' = off
 light.kitchen 'Kitchen Light' = on;80%;red
-light.bedroom 'Bedroom Light' = off<|im_end|>
+light.bedroom 'Bedroom Light' = off
 ```
 
 For more about how the model is prompted see [Model Prompting](/docs/Model%20Prompting.md)
@@ -43,17 +40,15 @@ For more about how the model is prompted see [Model Prompting](/docs/Model%20Pro
 Output from the model will consist of a response that should be relayed back to the user, along with an optional code block that will invoke different Home Assistant "services". The output format from the model for function calling is as follows:
 
 `````
-<|im_start|>assistant
 turning on the kitchen lights for you now
 ```homeassistant
 { "service": "light.turn_on", "target_device": "light.kitchen" }
-```<|im_end|>
 `````
 
 Due to the mix of data used during fine tuning, the 3B model is also capable of basic instruct and QA tasks. For example, the model is able to perform basic logic tasks such as the following:
 
 ```
-<|im_start|>system You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed with the information provided only.
+<|system|>You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed with the information provided only.
 *snip*
 <|im_end|>
 <|im_start|>user
