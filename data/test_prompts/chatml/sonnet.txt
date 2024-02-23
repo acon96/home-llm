@@ -24,5 +24,5 @@ light.kitchen_winecellar_warm 'Kitchen Wine Cellar Warm Light' = off
 light.driveway 'driveway' = off
 light.shed 'Shed Light' = on<|im_end|>
 <|im_start|>user
-make sure both the lights on the christmas tree are on<|im_end|>
+write a sonnet about the lights in my house. reference specific light names<|im_end|>
 <|im_start|>assistant

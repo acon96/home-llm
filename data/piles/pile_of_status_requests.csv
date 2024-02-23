@@ -200,48 +200,48 @@ fan,on,How's the <device_name>,The <device_name> is on
 fan,off,Status of <device_name>,The <device_name> is off
 light,on,<device_name> condition,The <device_name> is on
 light,off,What's up with <device_name>,The <device_name> is off
-media_player,on;<volume>,What's the volume on <device_name>?,The volume on <device_name> is at <volume>.
-media_player,off,Can you check the volume level of <device_name>?,"<device_name> is off, so I can't check the volume level currently."
-media_player,idle,"I need the current volume of <device_name>, please.",The current volume of <device_name> is <volume>.
-media_player,playing,Is the volume too loud on <device_name>?,The volume on <device_name> is currently set to <volume>.
-media_player,paused,What was the volume set to before <device_name> was paused?,"Before being paused, <device_name> had a volume level of <volume>."
-media_player,playing,Could you increase <device_name>'s volume a bit?,I've increased the volume on <device_name>. It's now at <volume>.
-media_player,playing,Is the volume muted on <device_name>?,The volume on <device_name> is not muted. It's at <volume>.
-media_player,on,What's playing on <device_name> right now?,<media> is currently playing on <device_name>.
-media_player,off,Is there anything playing on <device_name>?,Nothing is playing on <device_name> as it is currently off.
-media_player,idle,Can you tell me what was last played on <device_name>?,The last media played on <device_name> was <media>.
-media_player,playing,What is playing on <device_name> at the moment?,The song <media> is playing on <device_name> right now.
-media_player,paused,What media was paused on <device_name>?,<media> was paused on <device_name>.
-media_player,on,"I hear something from <device_name>, what is it?",<device_name> is not currently playing anything.
-media_player,playing,"I like this track on <device_name>, what is it?",You're listening to <media> on <device_name>.
-media_player,paused,Can you name the movie that's on <device_name>?,The movie currently paused on <device_name> is <media>.
-media_player,standby,What was the last show watched on <device_name>?,The last show watched on <device_name> was <media>.
-media_player,buffering,Which episode is on <device_name> right now?,The episode on <device_name> is <media>.
-light,on;<color>;<brightness>,What's the brightness of <device_name>?,The brightness of <device_name> is currently at <brightness>.
-light,on;<color>;<brightness>,Can you tell me the color of <device_name>?,<device_name> is currently showing <color>.
-light,on;<color>;<brightness>,Is <device_name> set to a bright or dim setting?,<device_name> is set to a <brightness> brightness level.
-light,on;<color>;<brightness>,What hue is <device_name> displaying?,<device_name> is displaying a <color> hue.
-light,on;<color>;<brightness>,How bright is <device_name> right now?,<device_name> is currently at <brightness>% brightness.
-light,on;<color>;<brightness>,I'd like to know the current color of <device_name>.,The current color of <device_name> is <color>.
-light,on;<color>;<brightness>,Is <device_name> more on the dim side or the bright side?,<device_name> is more on the <brightness> side.
-light,on;<color>;<brightness>,What color setting is <device_name> on?,<device_name> is set to <color> color setting.
-light,on;<color>;<brightness>,Could you check the brightness level of <device_name> for me?,"Sure, the brightness level of <device_name> is <brightness>."
-light,on;<color>;<brightness>,"Tell me, what's the current hue of <device_name>?",The current hue of <device_name> is <color>.
-light,off,What's the brightness of <device_name>?,The device <device_name> is turned off.
-light,off,Can you tell me the color of <device_name>?,<device_name> is turned off.
-light,off,Is <device_name> set to a bright or dim setting?,"No, <device_name> is turned off."
-light,off,What hue is <device_name> displaying?,<device_name> is actually turned off.
-light,off,How bright is <device_name> right now?,<device_name> is turned off.
-media_player,playing;<media>;<volume>,What's currently playing on <device_name>?,<device_name> is playing <media> at volume level <volume>.
-media_player,paused;<media>;<volume>,Can you tell me what's paused on <device_name>?,<device_name> has <media> paused at volume level <volume>.
-media_player,idle;<volume>,Is there anything playing on <device_name>?,<device_name> is currently idle with the volume set to <volume>.
-media_player,playing;<media>;<volume>,What song is <device_name> playing?,<device_name> is playing the song <media> at volume <volume>.
-media_player,paused;<media>;<volume>,What was the last thing played on <device_name>?,"The last media played on <device_name> was <media>, currently paused at volume <volume>."
-media_player,idle;<volume>,Is <device_name> active right now?,"<device_name> is currently idle, the volume is set to <volume>."
-media_player,playing;<media>;<volume>,What's on <device_name> at the moment?,<device_name> is currently playing <media> at volume <volume>.
+media_player,on;<volume>,"What's the volume on <device_name>?","The volume on <device_name> is at <volume>."
+media_player,off,"Can you check the volume level of <device_name>?","<device_name> is off, so I can't check the volume level currently."
+media_player,idle,"I need the current volume of <device_name>, please.","The current volume of <device_name> is <volume>."
+media_player,playing,"Is the volume too loud on <device_name>?","The volume on <device_name> is currently set to <volume>."
+media_player,paused,"What was the volume set to before <device_name> was paused?","Before being paused, <device_name> had a volume level of <volume>."
+media_player,playing,"Could you increase <device_name>'s volume a bit?","I've increased the volume on <device_name>. It's now at <volume>."
+media_player,playing,"Is the volume muted on <device_name>?","The volume on <device_name> is not muted. It's at <volume>."
+media_player,on,"What's playing on <device_name> right now?","<media> is currently playing on <device_name>."
+media_player,off,"Is there anything playing on <device_name>?","Nothing is playing on <device_name> as it is currently off."
+media_player,idle,"Can you tell me what was last played on <device_name>?","The last media played on <device_name> was <media>."
+media_player,playing,"What is playing on <device_name> at the moment?","The song <media> is playing on <device_name> right now."
+media_player,paused,"What media was paused on <device_name>?","<media> was paused on <device_name>."
+media_player,on,"I hear something from <device_name>, what is it?","<device_name> is not currently playing anything."
+media_player,playing,"I like this track on <device_name>, what is it?","You're listening to <media> on <device_name>."
+media_player,paused,"Can you name the movie that's on <device_name>?","The movie currently paused on <device_name> is <media>."
+media_player,standby,"What was the last show watched on <device_name>?","The last show watched on <device_name> was <media>."
+media_player,buffering,"Which episode is on <device_name> right now?","The episode on <device_name> is <media>."
+light,on;<color>;<brightness>,"What's the brightness of <device_name>?","The brightness of <device_name> is currently at <brightness>."
+light,on;<color>;<brightness>,"Can you tell me the color of <device_name>?","<device_name> is currently showing <color>."
+light,on;<color>;<brightness>,"Is <device_name> set to a bright or dim setting?","<device_name> is set to a <brightness> brightness level."
+light,on;<color>;<brightness>,"What hue is <device_name> displaying?","<device_name> is displaying a <color> hue."
+light,on;<color>;<brightness>,"How bright is <device_name> right now?","<device_name> is currently at <brightness>% brightness."
+light,on;<color>;<brightness>,"I'd like to know the current color of <device_name>.","The current color of <device_name> is <color>."
+light,on;<color>;<brightness>,"Is <device_name> more on the dim side or the bright side?","<device_name> is more on the <brightness> side."
+light,on;<color>;<brightness>,"What color setting is <device_name> on?","<device_name> is set to <color> color setting."
+light,on;<color>;<brightness>,"Could you check the brightness level of <device_name> for me?","Sure, the brightness level of <device_name> is <brightness>."
+light,on;<color>;<brightness>,"Tell me, what's the current hue of <device_name>?","The current hue of <device_name> is <color>."
+light,off,"What's the brightness of <device_name>?","The device <device_name> is turned off."
+light,off,"Can you tell me the color of <device_name>?","<device_name> is turned off."
+light,off,"Is <device_name> set to a bright or dim setting?","No, <device_name> is turned off."
+light,off,"What hue is <device_name> displaying?","<device_name> is actually turned off."
+light,off,"How bright is <device_name> right now?","<device_name> is turned off."
+media_player,playing;<media>;<volume>,"What's currently playing on <device_name>?","<device_name> is playing <media> at volume level <volume>."
+media_player,paused;<media>;<volume>,"Can you tell me what's paused on <device_name>?","<device_name> has <media> paused at volume level <volume>."
+media_player,idle;<volume>,"Is there anything playing on <device_name>?","<device_name> is currently idle with the volume set to <volume>."
+media_player,playing;<media>;<volume>,"What song is <device_name> playing?","<device_name> is playing the song <media> at volume <volume>."
+media_player,paused;<media>;<volume>,"What was the last thing played on <device_name>?","The last media played on <device_name> was <media>, currently paused at volume <volume>."
+media_player,idle;<volume>,"Is <device_name> active right now?","<device_name> is currently idle, the volume is set to <volume>."
+media_player,playing;<media>;<volume>,"What's on <device_name> at the moment?","<device_name> is currently playing <media> at volume <volume>."
 media_player,paused;<media>;<volume>,"I forgot what I paused on <device_name>, can you remind me?","You paused <media> on <device_name>, and the volume is set to <volume>."
-media_player,idle;<volume>,Is <device_name> turned off or on?,"<device_name> is on but idle, with volume at <volume>."
-media_player,playing;<media>;<volume>,I'd like to know what's playing on <device_name>.,"Currently, <media> is playing on <device_name> at volume level <volume>."
+media_player,idle;<volume>,"Is <device_name> turned off or on?","<device_name> is on but idle, with volume at <volume>."
+media_player,playing;<media>;<volume>,"I'd like to know what's playing on <device_name>.","Currently, <media> is playing on <device_name> at volume level <volume>."
 vacuum,cleaning,Is the <device_name> vacuum running right now?,The vacuum is running.
 vacuum,cleaning,Is the <device_name> vacuum on?,It is. Your home is currently being cleaned.
 vacuum,cleaning,Is <device_name> cleaning?,"Yes, <device_name> is currently vacuuming."

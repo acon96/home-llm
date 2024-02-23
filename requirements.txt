@@ -4,3 +4,6 @@ datasets
 peft
 bitsandbytes
 webcolors
+pandas
+# flash-attn
+sentencepiece
