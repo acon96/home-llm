@@ -21,8 +21,11 @@
 - [x] publish snapshot of dataset on HF  
 - [ ] figure out DPO for refusals + fixing incorrect entity id  
 - [ ] mixtral + prompting (no fine tuning)  
-- [ ] use varied system prompts to add behaviors  
+    - add in context learning variables to sys prompt template
+    - add new options to setup process for setting prompt style + picking fine-tuned/ICL
+- [x] use varied system prompts to add behaviors  
 - [ ] setup github actions to build wheels that are optimized for RPIs
+- [ ] detection/mitigation of too many entities being exposed & blowing out the context length
 
 ## more complicated ideas
 - [ ] "context requests"  

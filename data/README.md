@@ -39,7 +39,7 @@ Supported datasets right now are:
 Please note that the supported datasets all have different licenses. Be aware that the license of the resulting data mixture might be different that the license of this dataset alone.
 
 ## Adding a new personality
-In order to add a new personality, you need to define a new system prompt and new set of responses for the assistant. The system prompt is the description of the assistant's behavior that occurs at the start of the context. The responses are what is said back to the user when performing a task. The model should stil respond with the correct service call no matter what the assistant's response is. The list of system prompts are stored in `pile_of_system_prompts.csv`, and the list of responses are stored in `pile_of_responses.csv`
+In order to add a new personality, you need to define a new system prompt and new set of responses for the assistant. The system prompt is the description of the assistant's behavior that occurs at the start of the context. The responses are what is said back to the user when performing a task. The model should still respond with the correct service call no matter what the assistant's response is. The list of system prompts are stored in `pile_of_system_prompts.csv`, and the list of responses are stored in `pile_of_responses.csv`
 
 There are 2 columns in `pile_of_system_prompts.csv`:
 - `persona`: the name of the persona
@@ -47,12 +47,12 @@ There are 2 columns in `pile_of_system_prompts.csv`:
 
 The response pile is a CSV with the following headers: `service,response,language,persona,short`
 - `service`: the service name that we are responding to. Make sure you cover enough different services so that the model can learn how to respond in all situations.
-- `resposne`: the text of the repsonse. Recommended to put this in quotes in case the response also has commas in it
+- `response`: the text of the response. Recommended to put this in quotes in case the response also has commas in it
 - `language`: the language code of the response (currently only `en` is supported)
 - `persona`: the name of the persona the response belongs to. Use the name of your persona here
-- `short`: either 0 or 1. If it is 1 then the response is considered "short', and can be combined together with other "short" repsonses using "and". These are used for examples where there are multiple service calls
+- `short`: either 0 or 1. If it is 1 then the response is considered "short', and can be combined together with other "short" responses using "and". These are used for examples where there are multiple service calls
 
-Generating the full dataset using the python script will print out a warning for any responses that are missing for a persona
+Generating the full dataset using the python script will print out a warning for any responses that are missing for a persona.
 
 ## Adding new Home Assistant functionality
 TODO
