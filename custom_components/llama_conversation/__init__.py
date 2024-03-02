@@ -753,6 +753,7 @@ class OllamaAPIAgent(LLaMAAgent):
         request_params = {
             "model": self.model_name,
             "stream": False,
+            "keep_alive": "-1m", # prevent ollama from unloading the model
             "options": {
                 "top_p": top_p,
                 "temperature": temperature,

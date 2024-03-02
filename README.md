@@ -19,7 +19,7 @@ When doing this, you can host the model yourself and point the add-on at machine
 The "Home" models are a fine tuning of the Phi model series from Microsoft and the StableLM model series from StabilityAI.  The model is able to control devices in the user's house as well as perform basic question and answering.  The fine tuning dataset is a [custom synthetic dataset](./data) designed to teach the model function calling based on the device information in the context.
 
 The latest models can be found on HuggingFace:  
-3B v3 (Based on StableLM-Zephyr-3B): https://huggingface.co/acon96/Home-3B-v3-GGUF  (Zephyr prompt foramt)  
+3B v3 (Based on StableLM-Zephyr-3B): https://huggingface.co/acon96/Home-3B-v3-GGUF  (Zephyr prompt format)  
 1B v2 (Based on Phi-1.5): https://huggingface.co/acon96/Home-1B-v2-GGUF  (ChatML prompt format)  
 
 <details>
@@ -53,20 +53,21 @@ Output from the model will consist of a response that should be relayed back to 
 
 `````
 turning on the kitchen lights for you now
-```Home Assistant
+```homeassistant
 { "service": "light.turn_on", "target_device": "light.kitchen" }
+```
 `````
 
-Due to the mix of data used during fine tuning, the 3B model is also capable of basic instruct and QA tasks. For example, the model is able to perform basic logic tasks such as the following:
+Due to the mix of data used during fine tuning, the 3B model is also capable of basic instruct and QA tasks. For example, the model is able to perform basic logic tasks such as the following (Zephyr prompt format shown):
 
 ```
 <|system|>You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed with the information provided only.
 *snip*
-<|im_end|>
-<|im_start|>user
-if mary is 7 years old, and I am 3 years older than her. how old am I?<|im_end|>
-<|im_start|>assistant
-If Mary is 7 years old, then you are 10 years old (7+3=10).<|im_end|>
+<|endoftext|>
+<|user|>
+if mary is 7 years old, and I am 3 years older than her. how old am I?<|endoftext|>
+<|assistant|>
+If Mary is 7 years old, then you are 10 years old (7+3=10).<|endoftext|>
 ```
 
 ### Synthetic Dataset

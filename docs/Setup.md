@@ -125,6 +125,27 @@ With the remote text-generation-webui backend, the component will validate that 
 **Setting up with LocalAI**:  
 If you are an existing LocalAI user or would like to use LocalAI as your backend, please refer to [this](https://io.midori-ai.xyz/howtos/setup-with-ha/) website which has instructions on how to setup LocalAI to work with Home-LLM including automatic installation of the latest version of the the Home-LLM model. The auto-installer (LocalAI Manager) will automatically download and setup LocalAI and/or the model of your choice and automatically create the necessary template files for the model to work with this integration.
 
+**Setting up Ollama**:  
+In order to use the GGUF model with Ollama:
+
+1. Download the desired quantization level of the model from HuggingFace (see above for links)
+2. Copy the following block into a `Modelfile`:
+```
+FROM Home-3B-v3.q4_k_m.gguf
+PARAMETER num_ctx 2048
+PARAMETER temperature 0.1
+PARAMETER top_k 40
+PARAMETER top_p 0.95
+PARAMETER stop "<|endoftext|>"
+PARAMETER stop "<|im_end|>"
+```
+
+3. Change the `FROM` line to match the filename of the quantized model that you downloaded
+4. Create the model with Ollama
+    - `ollama create home-3b-v3:q4_k_m -f Modelfile`
+5. Start the server
+    - `ollama serve`
+
 ## Configuring as a Conversation Agent
 
 > 🛑 ✋🏻 Security Warning 

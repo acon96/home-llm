@@ -26,6 +26,8 @@
 - [x] use varied system prompts to add behaviors  
 - [ ] setup github actions to build wheels that are optimized for RPIs
 - [ ] detection/mitigation of too many entities being exposed & blowing out the context length
+- [ ] entity aliases
+- [ ] areas/room support 
 
 ## more complicated ideas
 - [ ] "context requests"  
