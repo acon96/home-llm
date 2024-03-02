@@ -18,7 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_SSL, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryError, TemplateError
-from homeassistant.helpers import config_validation as cv, intent, template
+from homeassistant.helpers import config_validation as cv, intent, template, entity_registry as er
 from homeassistant.util import ulid
 
 from .utils import closest_color, flatten_vol_schema, install_llama_cpp_python
@@ -338,12 +338,18 @@ class LLaMAAgent(AbstractConversationAgent):
         """Gather exposed entity states"""
         entity_states = {}
         domains = set()
+        entity_registry = er.async_get(self.hass)
+
         for state in self.hass.states.async_all():
             if not async_should_expose(self.hass, CONVERSATION_DOMAIN, state.entity_id):
                 continue
 
+            entity = entity_registry.async_get(state.entity_id)
+
             attributes = dict(state.attributes)
             attributes["state"] = state.state
+            if entity and entity.aliases:
+                attributes["aliases"] = entity.aliases
             entity_states[state.entity_id] = attributes
             domains.add(state.domain)
 
@@ -408,9 +414,15 @@ class LLaMAAgent(AbstractConversationAgent):
                     result = result + ";" + str(value)
             return result
 
-        formatted_states = "\n".join(
-            [f"{name} '{attributes.get('friendly_name')}' = {expose_attributes(attributes)}" for name, attributes in entities_to_expose.items()]
-        ) + "\n"
+        device_states = [f"{name} '{attributes.get('friendly_name')}' = {expose_attributes(attributes)}" for name, attributes in entities_to_expose.items()]
+
+        # expose devices as their alias as well
+        for name, attributes in entities_to_expose.items():
+            if "aliases" in attributes:
+                for alias in attributes["aliases"]:
+                    device_states.append(f"{name} '{alias}' = {expose_attributes(attributes)}")
+
+        formatted_states = "\n".join(device_states) + "\n"
 
         service_dict = self.hass.services.async_services()
         all_services = []
