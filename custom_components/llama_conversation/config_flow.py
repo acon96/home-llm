@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, UnitOfTime
 from homeassistant.data_entry_flow import (
     AbortFlow,
     FlowHandler,
@@ -23,6 +23,7 @@ from homeassistant.data_entry_flow import (
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
+    NumberSelectorMode,
     TemplateSelector,
     SelectSelector,
     SelectSelectorConfig,
@@ -56,6 +57,7 @@ from .const import (
     CONF_SERVICE_CALL_REGEX,
     CONF_REMOTE_USE_CHAT_ENDPOINT,
     CONF_TEXT_GEN_WEBUI_CHAT_MODE,
+    CONF_OLLAMA_KEEP_ALIVE_MIN,
     DEFAULT_CHAT_MODEL,
     DEFAULT_HOST,
     DEFAULT_PORT,
@@ -77,6 +79,7 @@ from .const import (
     DEFAULT_OPTIONS,
     DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
     DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
+    DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
     BACKEND_TYPE_LLAMA_HF,
     BACKEND_TYPE_LLAMA_EXISTING,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
@@ -393,7 +396,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             return self.async_show_progress_done(next_step_id="finish")
 
 
-    def _validate_remote_api(self, user_input: dict) -> str:
+    def _validate_text_generation_webui(self, user_input: dict) -> str:
         try:
             headers = {}
             api_key = user_input.get(CONF_TEXT_GEN_WEBUI_ADMIN_KEY, user_input.get(CONF_OPENAI_API_KEY))
@@ -417,6 +420,31 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         except Exception as ex:
             _LOGGER.info("Connection error was: %s", repr(ex))
             return "failed_to_connect"
+        
+    def _validate_ollama(self, user_input: dict) -> str:
+        try:
+            headers = {}
+            api_key = user_input.get(CONF_OPENAI_API_KEY)
+            if api_key:
+                headers["Authorization"] = f"Bearer {api_key}"
+
+            models_result = requests.get(
+                f"{'https' if self.model_config[CONF_SSL] else 'http'}://{self.model_config[CONF_HOST]}:{self.model_config[CONF_PORT]}/api/tags",
+                headers=headers
+            )
+            models_result.raise_for_status()
+
+            models = models_result.json()["models"]
+
+            for model in models:
+                if model["name"].split(":")[0] == self.model_config[CONF_CHAT_MODEL]:
+                    return ""
+
+            return "missing_model_api"
+
+        except Exception as ex:
+            _LOGGER.info("Connection error was: %s", repr(ex))
+            return "failed_to_connect"
 
     async def async_step_remote_model(
         self, user_input: dict[str, Any] | None = None
@@ -428,26 +456,30 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         if user_input:
             try:
                 self.model_config.update(user_input)
+                error_reason = None
 
-                # only validate and load when using text-generation-webui
+                # validate and load when using text-generation-webui or ollama
                 if backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
                     error_reason = await self.hass.async_add_executor_job(
-                        self._validate_remote_api, user_input
+                        self._validate_text_generation_webui, user_input
                     )
-                    if error_reason:
-                        errors["base"] = error_reason
-                        schema = STEP_REMOTE_SETUP_DATA_SCHEMA(
-                            backend_type,
-                            host=user_input[CONF_HOST],
-                            port=user_input[CONF_PORT],
-                            ssl=user_input[CONF_SSL],
-                            chat_model=user_input[CONF_CHAT_MODEL],
-                            use_chat_endpoint=user_input[CONF_REMOTE_USE_CHAT_ENDPOINT],
-                            webui_preset=user_input.get(CONF_TEXT_GEN_WEBUI_PRESET),
-                            webui_chat_mode=user_input.get(CONF_TEXT_GEN_WEBUI_CHAT_MODE),
-                        )
-                    else:
-                        return await self.async_step_finish()
+                elif backend_type == BACKEND_TYPE_OLLAMA:
+                    error_reason = await self.hass.async_add_executor_job(
+                        self._validate_ollama, user_input
+                    )
+
+                if error_reason:
+                    errors["base"] = error_reason
+                    schema = STEP_REMOTE_SETUP_DATA_SCHEMA(
+                        backend_type,
+                        host=user_input[CONF_HOST],
+                        port=user_input[CONF_PORT],
+                        ssl=user_input[CONF_SSL],
+                        chat_model=user_input[CONF_CHAT_MODEL],
+                        use_chat_endpoint=user_input[CONF_REMOTE_USE_CHAT_ENDPOINT],
+                        webui_preset=user_input.get(CONF_TEXT_GEN_WEBUI_PRESET),
+                        webui_chat_mode=user_input.get(CONF_TEXT_GEN_WEBUI_CHAT_MODE),
+                    )
                 else:
                     return await self.async_step_finish()
 
@@ -599,7 +631,7 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_REQUEST_TIMEOUT,
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
                 default=DEFAULT_REQUEST_TIMEOUT,
-            ): int,
+            ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
             vol.Required(
                 CONF_REMOTE_USE_CHAT_ENDPOINT,
                 description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
@@ -626,7 +658,7 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_REQUEST_TIMEOUT,
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
                 default=DEFAULT_REQUEST_TIMEOUT,
-            ): int,
+            ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
             vol.Required(
                 CONF_REMOTE_USE_CHAT_ENDPOINT,
                 description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
@@ -649,7 +681,7 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_REQUEST_TIMEOUT,
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
                 default=DEFAULT_REQUEST_TIMEOUT,
-            ): int,
+            ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
             vol.Required(
                 CONF_REMOTE_USE_CHAT_ENDPOINT,
                 description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
@@ -682,7 +714,12 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_REQUEST_TIMEOUT,
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
                 default=DEFAULT_REQUEST_TIMEOUT,
-            ): int,
+            ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
+            vol.Required(
+                CONF_OLLAMA_KEEP_ALIVE_MIN,
+                description={"suggested_value": options.get(CONF_OLLAMA_KEEP_ALIVE_MIN)},
+                default=DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
+            ): NumberSelector(NumberSelectorConfig(min=-1, max=1440, step=1, unit_of_measurement=UnitOfTime.MINUTES, mode=NumberSelectorMode.BOX)),
             vol.Required(
                 CONF_REMOTE_USE_CHAT_ENDPOINT,
                 description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},

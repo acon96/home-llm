@@ -60,6 +60,7 @@
                     "top_k": "Top K",
                     "top_p": "Top P",
                     "request_timeout": "Remote Request Timeout (seconds)",
+                    "ollama_keep_alive": "Keep Alive/Inactivity Timeout (minutes)",
                     "extra_attributes_to_expose": "Additional attribute to expose in the context",
                     "gbnf_grammar": "Enable GBNF Grammar",
                     "openai_api_key": "API Key",

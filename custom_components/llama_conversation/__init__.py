@@ -44,6 +44,7 @@ from .const import (
     CONF_SERVICE_CALL_REGEX,
     CONF_REMOTE_USE_CHAT_ENDPOINT,
     CONF_TEXT_GEN_WEBUI_CHAT_MODE,
+    CONF_OLLAMA_KEEP_ALIVE_MIN,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
@@ -60,6 +61,7 @@ from .const import (
     DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
     DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
     DEFAULT_OPTIONS,
+    DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
     BACKEND_TYPE_LLAMA_HF,
     BACKEND_TYPE_LLAMA_EXISTING,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
@@ -728,6 +730,24 @@ class OllamaAPIAgent(LLaMAAgent):
         self.api_key = entry.data.get(CONF_OPENAI_API_KEY)
         self.model_name = entry.data.get(CONF_CHAT_MODEL)
 
+        # ollama handles loading for us so just make sure the model is available
+        try:
+            headers = {}
+            if self.api_key:
+                headers["Authorization"] = f"Bearer {self.api_key}"
+                
+            currently_downloaded_result = requests.get(
+                f"{self.api_host}/api/tags",
+                headers=headers,
+            )
+            currently_downloaded_result.raise_for_status()
+                
+        except Exception as ex:
+            _LOGGER.debug("Connection error was: %s", repr(ex))
+            raise ConfigEntryNotReady("There was a problem connecting to the remote server") from ex
+
+        if not any([ x["name"].split(":")[0] == self.model_name for x in currently_downloaded_result.json()["models"]]):
+            raise ConfigEntryNotReady(f"Ollama server does not have the provided model: {self.model_name}")
 
     def _chat_completion_params(self, conversation: dict) -> (str, dict):
         request_params = {}
@@ -759,13 +779,14 @@ class OllamaAPIAgent(LLaMAAgent):
         temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
         top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
         timeout = self.entry.options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
+        keep_alive = self.entry.options.get(CONF_OLLAMA_KEEP_ALIVE_MIN, DEFAULT_OLLAMA_KEEP_ALIVE_MIN)
         use_chat_api = self.entry.options.get(CONF_REMOTE_USE_CHAT_ENDPOINT, DEFAULT_REMOTE_USE_CHAT_ENDPOINT)
         
 
         request_params = {
             "model": self.model_name,
             "stream": False,
-            "keep_alive": "-1m", # prevent ollama from unloading the model
+            "keep_alive": f"{keep_alive}m", # prevent ollama from unloading the model
             "options": {
                 "top_p": top_p,
                 "temperature": temperature,
