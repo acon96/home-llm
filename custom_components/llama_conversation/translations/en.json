@@ -7,7 +7,7 @@
             "missing_model_file": "The provided file does not exist.",
             "other_existing_local": "Another model is already loaded locally. Please unload it or configure a remote model.",
             "unknown": "Unexpected error",
-            "missing_wheels": "Llama.cpp is not installed and could not find any wheels to install!",
+            "missing_wheels": "Llama.cpp is not installed and could not find any wheels to install! See the logs for more information.",
             "pip_wheel_error": "Pip returned an error while installing the wheel!"
         },
         "progress": {
@@ -60,6 +60,7 @@
                     "top_k": "Top K",
                     "top_p": "Top P",
                     "request_timeout": "Remote Request Timeout (seconds)",
+                    "ollama_keep_alive": "Keep Alive/Inactivity Timeout (minutes)",
                     "extra_attributes_to_expose": "Additional attribute to expose in the context",
                     "gbnf_grammar": "Enable GBNF Grammar",
                     "openai_api_key": "API Key",

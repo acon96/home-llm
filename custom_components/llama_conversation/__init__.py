@@ -9,34 +9,19 @@ import requests
 import re
 import os
 import json
-import webcolors
-
-import voluptuous as vol
-from collections.abc import Iterable
 
 import homeassistant.components.conversation as ha_conversation
 from homeassistant.components.conversation import ConversationInput, ConversationResult, AbstractConversationAgent
 from homeassistant.components.conversation.const import DOMAIN as CONVERSATION_DOMAIN
-from homeassistant.components.homeassistant.exposed_entities import (
-    async_should_expose,
-)
+from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_SSL, MATCH_ALL
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceCall,
-    ServiceResponse,
-    SupportsResponse,
-)
-from homeassistant.exceptions import (
-    ConfigEntryNotReady,
-    HomeAssistantError,
-    TemplateError,
-)
-from homeassistant.helpers import config_validation as cv, intent, selector, template
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryError, TemplateError
+from homeassistant.helpers import config_validation as cv, intent, template, entity_registry as er
 from homeassistant.util import ulid
 
+from .utils import closest_color, flatten_vol_schema, install_llama_cpp_python
 from .const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -59,6 +44,7 @@ from .const import (
     CONF_SERVICE_CALL_REGEX,
     CONF_REMOTE_USE_CHAT_ENDPOINT,
     CONF_TEXT_GEN_WEBUI_CHAT_MODE,
+    CONF_OLLAMA_KEEP_ALIVE_MIN,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
@@ -75,6 +61,7 @@ from .const import (
     DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
     DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
     DEFAULT_OPTIONS,
+    DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
     BACKEND_TYPE_LLAMA_HF,
     BACKEND_TYPE_LLAMA_EXISTING,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
@@ -164,34 +151,6 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
     _LOGGER.debug("Migration to version %s successful", config_entry.version)
 
     return True
-
-def closest_color(requested_color):
-    min_colors = {}
-    for key, name in webcolors.CSS3_HEX_TO_NAMES.items():
-        r_c, g_c, b_c = webcolors.hex_to_rgb(key)
-        rd = (r_c - requested_color[0]) ** 2
-        gd = (g_c - requested_color[1]) ** 2
-        bd = (b_c - requested_color[2]) ** 2
-        min_colors[(rd + gd + bd)] = name
-    return min_colors[min(min_colors.keys())]
-
-def flatten_schema(schema):
-    flattened = []
-    def _flatten(current_schema, prefix=''):
-        if isinstance(current_schema, vol.Schema):
-            if isinstance(current_schema.schema, vol.validators._WithSubValidators):
-                for subval in current_schema.schema.validators:
-                    _flatten(subval, prefix)
-            elif isinstance(current_schema.schema, dict):
-                for key, val in current_schema.schema.items():
-                    _flatten(val, prefix + str(key) + '/')
-        elif isinstance(current_schema, vol.validators._WithSubValidators):
-            for subval in current_schema.validators:
-                _flatten(subval, prefix)
-        elif callable(current_schema):
-            flattened.append(prefix[:-1] if prefix else prefix)
-    _flatten(schema)
-    return flattened
 
 class LLaMAAgent(AbstractConversationAgent):
     """Local LLaMA conversation agent."""
@@ -381,12 +340,18 @@ class LLaMAAgent(AbstractConversationAgent):
         """Gather exposed entity states"""
         entity_states = {}
         domains = set()
+        entity_registry = er.async_get(self.hass)
+
         for state in self.hass.states.async_all():
             if not async_should_expose(self.hass, CONVERSATION_DOMAIN, state.entity_id):
                 continue
 
+            entity = entity_registry.async_get(state.entity_id)
+
             attributes = dict(state.attributes)
             attributes["state"] = state.state
+            if entity and entity.aliases:
+                attributes["aliases"] = entity.aliases
             entity_states[state.entity_id] = attributes
             domains.add(state.domain)
 
@@ -451,15 +416,21 @@ class LLaMAAgent(AbstractConversationAgent):
                     result = result + ";" + str(value)
             return result
 
-        formatted_states = "\n".join(
-            [f"{name} '{attributes.get('friendly_name')}' = {expose_attributes(attributes)}" for name, attributes in entities_to_expose.items()]
-        ) + "\n"
+        device_states = [f"{name} '{attributes.get('friendly_name')}' = {expose_attributes(attributes)}" for name, attributes in entities_to_expose.items()]
+
+        # expose devices as their alias as well
+        for name, attributes in entities_to_expose.items():
+            if "aliases" in attributes:
+                for alias in attributes["aliases"]:
+                    device_states.append(f"{name} '{alias}' = {expose_attributes(attributes)}")
+
+        formatted_states = "\n".join(device_states) + "\n"
 
         service_dict = self.hass.services.async_services()
         all_services = []
         for domain in domains:
             for name, service in service_dict.get(domain, {}).items():
-                args = flatten_schema(service.schema)
+                args = flatten_vol_schema(service.schema)
                 args_to_expose = set(args).intersection(extra_attributes_to_expose)
                 all_services.append(f"{domain}.{name}({','.join(args_to_expose)})")
         formatted_services = ", ".join(all_services)
@@ -488,7 +459,16 @@ class LocalLLaMAAgent(LLaMAAgent):
             raise Exception(f"Model was not found at '{self.model_path}'!")
 
         # don't import it until now because the wheel is installed by config_flow.py
-        module = importlib.import_module("llama_cpp")
+        try:
+            module = importlib.import_module("llama_cpp")
+        except ModuleNotFoundError:
+            # attempt to re-install llama-cpp-python if it was uninstalled for some reason
+            install_result = install_llama_cpp_python(self.hass.config.config_dir)
+            if not install_result == True:
+                raise ConfigEntryError("llama-cpp-python was not installed on startup and re-installing it led to an error!")
+            
+            module = importlib.import_module("llama_cpp")
+            
         Llama = getattr(module, "Llama")
         LlamaGrammar = getattr(module, "LlamaGrammar")
 
@@ -750,6 +730,24 @@ class OllamaAPIAgent(LLaMAAgent):
         self.api_key = entry.data.get(CONF_OPENAI_API_KEY)
         self.model_name = entry.data.get(CONF_CHAT_MODEL)
 
+        # ollama handles loading for us so just make sure the model is available
+        try:
+            headers = {}
+            if self.api_key:
+                headers["Authorization"] = f"Bearer {self.api_key}"
+                
+            currently_downloaded_result = requests.get(
+                f"{self.api_host}/api/tags",
+                headers=headers,
+            )
+            currently_downloaded_result.raise_for_status()
+                
+        except Exception as ex:
+            _LOGGER.debug("Connection error was: %s", repr(ex))
+            raise ConfigEntryNotReady("There was a problem connecting to the remote server") from ex
+
+        if not any([ x["name"].split(":")[0] == self.model_name for x in currently_downloaded_result.json()["models"]]):
+            raise ConfigEntryNotReady(f"Ollama server does not have the provided model: {self.model_name}")
 
     def _chat_completion_params(self, conversation: dict) -> (str, dict):
         request_params = {}
@@ -781,12 +779,14 @@ class OllamaAPIAgent(LLaMAAgent):
         temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
         top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
         timeout = self.entry.options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
+        keep_alive = self.entry.options.get(CONF_OLLAMA_KEEP_ALIVE_MIN, DEFAULT_OLLAMA_KEEP_ALIVE_MIN)
         use_chat_api = self.entry.options.get(CONF_REMOTE_USE_CHAT_ENDPOINT, DEFAULT_REMOTE_USE_CHAT_ENDPOINT)
         
 
         request_params = {
             "model": self.model_name,
             "stream": False,
+            "keep_alive": f"{keep_alive}m", # prevent ollama from unloading the model
             "options": {
                 "top_p": top_p,
                 "temperature": temperature,

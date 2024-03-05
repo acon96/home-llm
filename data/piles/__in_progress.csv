@@ -1,0 +1,71 @@
+---- templated actions
+input_select,select_option,"Set <device_name> to <option>.",8
+input_select,select_option,"Can you please modify <device_name> and select the <option>?",8
+input_select,select_option,"I'd like to request that <device_name> be configured with the setting <option>.",8
+input_select,select_option,"May I kindly ask you to set the configuration of <device_name> to <option>?",8
+input_select,select_option,"Please adjust the settings of <device_name> and choose the <option>.",8
+input_select,select_option,"Could we please change the mode of <device_name> to <option>?",8
+input_select,select_option,"Set the <option> on <device_name>.",8
+input_select,select_option,"I'd appreciate if you could update the settings for <device_name> and set it to the <option>.",8
+input_select,select_option,"May we make the following adjustment: configure <device_name> with the <option>?",8
+input_select,select_option,"Could you please make sure that <device_name> utilizes the setting <option>?",8
+input_select,select_option,"I'd like to request your assistance in setting <device_name> to <option>.",8
+input_select,select_option,"Set <device_name> to the <option> mode.",8
+input_select,select_option,"Can we please alter the configuration of <device_name> and select the <option>?",8
+
+---- specific actions
+input_select.nature_sounds,"Could you set the nature sounds to ""thunderstorm"", please?",select_option
+input_select.people,"Can you set the people select to ""John""?",select_option
+input_select.who_cooks,Can you change who cooks to Paulus please?,select_option
+input_select.living_room_scene,Change the living room scene to Movie Time.,select_option
+input_select.alarm_status,"Set the alarm status to ""Armed"".",select_option
+input_select.roof_light_preset,"Change the roof light preset to ""Candy Cane"".",select_option
+input_select.roof_light_preset,"Please set ""Halloween"" for the roof light preset"".",select_option
+input_select.roof_light_preset,"Turn the roof light preset to ""Twinkle"".",select_option
+input_select.nature_sounds,"Turn ""off"" the nature sounds.",select_option
+input_select.nature_sounds,"Set nature sounds to ""Windy Mountain"".",select_option
+
+
+---- we need to add support for prameters in specific actions pile to use these
+todo.add_item,groceries,Add milk to my groceries list.
+todo.add_item,household_supplies,Could you please add eggs to my household supplies list?
+todo.add_item,electronics,I would like you to add a new printer to the electronics list.
+todo.add_item,clothing,Kindly add a shirt to the clothing list for me.
+todo.add_item,office_supplies,Could you please add paper clips to the office supplies list?
+todo.add_item,personal_care,I would appreciate it if you could add toothpaste to my personal care list.
+todo.add_item,technology,I'd like you to add a new phone to the technology list.
+todo.add_item,gifts,Could you please add a gift card to the gifts list?
+todo.add_item,books,I would like you to add a novel to the books list.
+todo.add_item,music,Could you please add Halsey's new album to my music list?
+todo.add_item,movies,Could you kindly add Batman Begins to the movies list for me?
+todo.add_item,travel,I would appreciate it if you could add Scotland to the travel list.
+todo.add_item,education,I'd like you to add a language course to the education list.
+todo.add_item,health,Could you please add a doctor's appointment to my health list?
+todo.add_item,finance,"I would like you to add ""Pay Power Bill"" to the finance list."
+todo.add_item,shopping_list,Could you please add bread to the shopping list?
+todo.add_item,household_supplies_list,"Could you kindly add a ""Walnut Credenza"" to the projects list?"
+todo.add_item,electronics_list,I would like you to add a new laptop to the electronics list.
+todo.add_item,clothing_list,Kindly add pants to the clothing list for me.
+todo.add_item,office_supplies_list,Could you please add staples to the office supplies list?
+todo.add_item,personal_care_list,I would appreciate it if you could add razorblades to my personal care list.
+todo.add_item,technology_list,I'd like you to add a new computer to the technology list.
+todo.add_item,gifts_list,Could you please add a socks to the gifts list?
+todo.add_item,books_list,"I would like you to add ""Treasure Island"" to the books list."
+todo.add_item,music_list,Could you please add Taylor Swift's new album to my music list?
+todo.add_item,movies_list,Could you kindly add Pulp Fiction to the movies list for me?
+todo.add_item,travel_list,I would appreciate it if you could add Japan to the travel list.
+todo.add_item,education_list,I'd like you to add a language course to the education list.
+todo.add_item,health_list,Could you please add a doctor's appointment to my health list?
+todo.add_item,finance_list,"I would like you to add ""Pay Phone Bill"" to the finance list."
+todo.add_item,grocery_list,"Could you please add ""Vinegar"" to the shopping list?"
+todo.add_item,projects,"Could you kindly add a ""Maple Bench"" to the projects list?"
+timer.start,pomodoro,Please set my pomodoro timer for 20 minutes.
+timer.start,kitchen,Turn on the kitchen timer for 8 minutes.
+timer.start,work,Set the work timer for 10 minutes.
+timer.start,laundry,Start the laundry timer for an hour.
+timer.start,cooking,Set a 30 second cooking timer.
+timer.cancel,pomodoro,Cancel the pomodoro timer.
+timer.cancel,kitchen,Please stop my kitchen timer.
+timer.cancel,work,Turn off the work timer.
+timer.cancel,laundry,Please shut off the laundry timer.
+timer.cancel,cooking,The cooking timer is no longer needed.

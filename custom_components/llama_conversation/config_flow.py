@@ -1,25 +1,19 @@
 """Config flow for Local LLaMA Conversation integration."""
 from __future__ import annotations
 
-import time
 import os
+import sys
 import logging
 import requests
-import platform
 from types import MappingProxyType
 from typing import Any
 from abc import ABC, abstractmethod
-from importlib.metadata import version
-
-from huggingface_hub import hf_hub_download, HfFileSystem
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
-from homeassistant.requirements import pip_kwargs
-from homeassistant.util.package import install_package, is_installed
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, UnitOfTime
 from homeassistant.data_entry_flow import (
     AbortFlow,
     FlowHandler,
@@ -29,6 +23,7 @@ from homeassistant.data_entry_flow import (
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
+    NumberSelectorMode,
     TemplateSelector,
     SelectSelector,
     SelectSelectorConfig,
@@ -37,6 +32,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
 )
 
+from .utils import download_model_from_hf, install_llama_cpp_python
 from .const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -61,6 +57,7 @@ from .const import (
     CONF_SERVICE_CALL_REGEX,
     CONF_REMOTE_USE_CHAT_ENDPOINT,
     CONF_TEXT_GEN_WEBUI_CHAT_MODE,
+    CONF_OLLAMA_KEEP_ALIVE_MIN,
     DEFAULT_CHAT_MODEL,
     DEFAULT_HOST,
     DEFAULT_PORT,
@@ -82,6 +79,7 @@ from .const import (
     DEFAULT_OPTIONS,
     DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
     DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
+    DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
     BACKEND_TYPE_LLAMA_HF,
     BACKEND_TYPE_LLAMA_EXISTING,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
@@ -166,62 +164,6 @@ def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, ss
             **extra2
         }
     )
-
-def download_model_from_hf(
-    model_name: str, quantization_type: str, storage_folder: str
-):
-    try:
-        fs = HfFileSystem()
-        potential_files = [ f for f in fs.glob(f"{model_name}/*.gguf") ]
-        wanted_file = [f for f in potential_files if (f".{quantization_type.lower()}." in f or f".{quantization_type.upper()}." in f)]
-
-        if len(wanted_file) != 1:
-            raise Exception(f"The quantization '{quantization_type}' does not exist in the HF repo for {model_name}")
-
-        os.makedirs(storage_folder, exist_ok=True)
-
-        return hf_hub_download(
-            repo_id=model_name,
-            repo_type="model",
-            filename=wanted_file[0].removeprefix(model_name + "/"),
-            resume_download=True,
-            cache_dir=storage_folder,
-        )
-    except Exception as ex:
-        return ex
-
-def install_llama_cpp_python(config_dir: str):
-    try:
-        platform_suffix = platform.machine()
-        if platform_suffix == "arm64":
-            platform_suffix = "aarch64"
-        folder = os.path.dirname(__file__)
-        potential_wheels = sorted([ path for path in os.listdir(folder) if path.endswith(f"{platform_suffix}.whl") ], reverse=True)
-        if len(potential_wheels) == 0:
-            # someone who is better at async can figure out why this is necessary
-            time.sleep(0.5)
-
-            if is_installed("llama-cpp-python"):
-                _LOGGER.info("llama-cpp-python is already installed")
-                return True
-            return Exception("missing_wheels")
-        
-        latest_wheel = potential_wheels[0]
-        latest_version = latest_wheel.split("-")[1]
-
-        if not is_installed("llama-cpp-python") or version("llama-cpp-python") != latest_version:
-            _LOGGER.info("Installing llama-cpp-python from wheel")
-            _LOGGER.debug(f"Wheel location: {latest_wheel}")
-            return install_package(os.path.join(folder, latest_wheel), pip_kwargs(config_dir))
-        else:
-            # someone who is better at async can figure out why this is necessary
-            time.sleep(0.5)
-
-            _LOGGER.info("llama-cpp-python is already installed")
-            return True
-    except Exception as ex:
-        _LOGGER.exception("Install failed!")
-        return ex
 
 
 class BaseLlamaConversationConfigFlow(FlowHandler, ABC):
@@ -313,29 +255,23 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         schema = STEP_INIT_DATA_SCHEMA()
 
         if user_input:
-            try:
-                local_backend = is_local_backend(user_input[CONF_BACKEND_TYPE])
-                self.model_config.update(user_input)
-
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+            local_backend = is_local_backend(user_input[CONF_BACKEND_TYPE])
+            self.model_config.update(user_input)
+            if local_backend:
+                return await self.async_step_install_local_wheels()
+                # this check isn't working right now
+                # for key, value in self.hass.data.get(DOMAIN, {}).items():
+                #     other_backend_type = value.data.get(CONF_BACKEND_TYPE)
+                #     if other_backend_type == BACKEND_TYPE_LLAMA_HF or \
+                #         other_backend_type == BACKEND_TYPE_LLAMA_EXISTING:
+                #         errors["base"] = "other_existing_local"
+                #         schema = STEP_INIT_DATA_SCHEMA(
+                #             backend_type=user_input[CONF_BACKEND_TYPE],
+                #         )
+                # if "base" not in errors:
+                #     return await self.async_step_install_local_wheels()
             else:
-                if local_backend:
-                    return await self.async_step_install_local_wheels()
-                    # this check isn't working right now
-                    # for key, value in self.hass.data.get(DOMAIN, {}).items():
-                    #     other_backend_type = value.data.get(CONF_BACKEND_TYPE)
-                    #     if other_backend_type == BACKEND_TYPE_LLAMA_HF or \
-                    #         other_backend_type == BACKEND_TYPE_LLAMA_EXISTING:
-                    #         errors["base"] = "other_existing_local"
-                    #         schema = STEP_INIT_DATA_SCHEMA(
-                    #             backend_type=user_input[CONF_BACKEND_TYPE],
-                    #         )
-                    # if "base" not in errors:
-                    #     return await self.async_step_install_local_wheels()
-                else:
-                    return await self.async_step_remote_model()
+                return await self.async_step_remote_model()
         elif self.install_wheel_error:
             errors["base"] = str(self.install_wheel_error)
             self.install_wheel_error = None
@@ -350,6 +286,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         if not user_input:
             if self.install_wheel_task:
                 return self.async_show_progress(
+                    progress_task=self.install_wheel_task,
                     step_id="install_local_wheels",
                     progress_action="install_local_wheels",
                 )
@@ -362,6 +299,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             self.hass.async_create_task(self._async_do_task(self.install_wheel_task))
 
             return self.async_show_progress(
+                progress_task=self.install_wheel_task,
                 step_id="install_local_wheels",
                 progress_action="install_local_wheels",
             )
@@ -402,24 +340,18 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                 downloaded_model_quantization=self.model_config[CONF_DOWNLOADED_MODEL_QUANTIZATION]
             )
 
-        if user_input:
-            try:
-                self.model_config.update(user_input)
+        if user_input and "result" not in user_input:
+            self.model_config.update(user_input)
 
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+            if backend_type == BACKEND_TYPE_LLAMA_HF:
+                return await self.async_step_download()
             else:
-                if backend_type == BACKEND_TYPE_LLAMA_HF:
-                    return await self.async_step_download()
+                model_file = self.model_config[CONF_DOWNLOADED_MODEL_FILE]
+                if os.path.exists(model_file):
+                    return await self.async_step_finish()
                 else:
-                    model_file = self.model_config[CONF_DOWNLOADED_MODEL_FILE]
-                    if os.path.exists(model_file):
-                        return await self.async_step_finish()
-                    else:
-                        errors["base"] = "missing_model_file"
-                        schema = STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA(model_file)
-
+                    errors["base"] = "missing_model_file"
+                    schema = STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA(model_file)
 
         return self.async_show_form(
             step_id="local_model", data_schema=schema, errors=errors
@@ -431,6 +363,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         if not user_input:
             if self.download_task:
                 return self.async_show_progress(
+                    progress_task=self.download_task,
                     step_id="download",
                     progress_action="download",
                 )
@@ -446,6 +379,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             self.hass.async_create_task(self._async_do_task(self.download_task))
 
             return self.async_show_progress(
+                progress_task=self.download_task,
                 step_id="download",
                 progress_action="download",
             )
@@ -462,7 +396,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             return self.async_show_progress_done(next_step_id="finish")
 
 
-    def _validate_remote_api(self, user_input: dict) -> str:
+    def _validate_text_generation_webui(self, user_input: dict) -> str:
         try:
             headers = {}
             api_key = user_input.get(CONF_TEXT_GEN_WEBUI_ADMIN_KEY, user_input.get(CONF_OPENAI_API_KEY))
@@ -486,6 +420,31 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         except Exception as ex:
             _LOGGER.info("Connection error was: %s", repr(ex))
             return "failed_to_connect"
+        
+    def _validate_ollama(self, user_input: dict) -> str:
+        try:
+            headers = {}
+            api_key = user_input.get(CONF_OPENAI_API_KEY)
+            if api_key:
+                headers["Authorization"] = f"Bearer {api_key}"
+
+            models_result = requests.get(
+                f"{'https' if self.model_config[CONF_SSL] else 'http'}://{self.model_config[CONF_HOST]}:{self.model_config[CONF_PORT]}/api/tags",
+                headers=headers
+            )
+            models_result.raise_for_status()
+
+            models = models_result.json()["models"]
+
+            for model in models:
+                if model["name"].split(":")[0] == self.model_config[CONF_CHAT_MODEL]:
+                    return ""
+
+            return "missing_model_api"
+
+        except Exception as ex:
+            _LOGGER.info("Connection error was: %s", repr(ex))
+            return "failed_to_connect"
 
     async def async_step_remote_model(
         self, user_input: dict[str, Any] | None = None
@@ -497,26 +456,30 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         if user_input:
             try:
                 self.model_config.update(user_input)
+                error_reason = None
 
-                # only validate and load when using text-generation-webui
+                # validate and load when using text-generation-webui or ollama
                 if backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
                     error_reason = await self.hass.async_add_executor_job(
-                        self._validate_remote_api, user_input
+                        self._validate_text_generation_webui, user_input
                     )
-                    if error_reason:
-                        errors["base"] = error_reason
-                        schema = STEP_REMOTE_SETUP_DATA_SCHEMA(
-                            backend_type,
-                            host=user_input[CONF_HOST],
-                            port=user_input[CONF_PORT],
-                            ssl=user_input[CONF_SSL],
-                            chat_model=user_input[CONF_CHAT_MODEL],
-                            use_chat_endpoint=user_input[CONF_REMOTE_USE_CHAT_ENDPOINT],
-                            webui_preset=user_input.get(CONF_TEXT_GEN_WEBUI_PRESET),
-                            webui_chat_mode=user_input.get(CONF_TEXT_GEN_WEBUI_CHAT_MODE),
-                        )
-                    else:
-                        return await self.async_step_finish()
+                elif backend_type == BACKEND_TYPE_OLLAMA:
+                    error_reason = await self.hass.async_add_executor_job(
+                        self._validate_ollama, user_input
+                    )
+
+                if error_reason:
+                    errors["base"] = error_reason
+                    schema = STEP_REMOTE_SETUP_DATA_SCHEMA(
+                        backend_type,
+                        host=user_input[CONF_HOST],
+                        port=user_input[CONF_PORT],
+                        ssl=user_input[CONF_SSL],
+                        chat_model=user_input[CONF_CHAT_MODEL],
+                        use_chat_endpoint=user_input[CONF_REMOTE_USE_CHAT_ENDPOINT],
+                        webui_preset=user_input.get(CONF_TEXT_GEN_WEBUI_PRESET),
+                        webui_chat_mode=user_input.get(CONF_TEXT_GEN_WEBUI_CHAT_MODE),
+                    )
                 else:
                     return await self.async_step_finish()
 
@@ -668,7 +631,7 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_REQUEST_TIMEOUT,
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
                 default=DEFAULT_REQUEST_TIMEOUT,
-            ): int,
+            ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
             vol.Required(
                 CONF_REMOTE_USE_CHAT_ENDPOINT,
                 description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
@@ -695,7 +658,7 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_REQUEST_TIMEOUT,
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
                 default=DEFAULT_REQUEST_TIMEOUT,
-            ): int,
+            ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
             vol.Required(
                 CONF_REMOTE_USE_CHAT_ENDPOINT,
                 description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
@@ -718,7 +681,7 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_REQUEST_TIMEOUT,
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
                 default=DEFAULT_REQUEST_TIMEOUT,
-            ): int,
+            ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
             vol.Required(
                 CONF_REMOTE_USE_CHAT_ENDPOINT,
                 description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
@@ -751,7 +714,12 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_REQUEST_TIMEOUT,
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
                 default=DEFAULT_REQUEST_TIMEOUT,
-            ): int,
+            ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
+            vol.Required(
+                CONF_OLLAMA_KEEP_ALIVE_MIN,
+                description={"suggested_value": options.get(CONF_OLLAMA_KEEP_ALIVE_MIN)},
+                default=DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
+            ): NumberSelector(NumberSelectorConfig(min=-1, max=1440, step=1, unit_of_measurement=UnitOfTime.MINUTES, mode=NumberSelectorMode.BOX)),
             vol.Required(
                 CONF_REMOTE_USE_CHAT_ENDPOINT,
                 description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
