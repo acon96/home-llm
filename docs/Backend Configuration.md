@@ -27,9 +27,16 @@ For details about the sampling parameters, see here: https://github.com/oobaboog
 | Option Name | Description | Suggested Value |
 | ------------ | --------- | ------------ |
 | Request Timeout | The maximum time in seconds that the integration will wait for a response from the remote server | 90 (higher if running on low resource hardware) |
-| Use chat completions endpoint | Flag to use `/v1/chat/completions` as the remote endpoint instead of `/v1/completions` |  |
+| Use chat completions endpoint | If set, tells text-generation-webui to format the prompt instead of this extension. Prompt Format set here will not apply if this is enabled |  |
 | Generation Preset/Character Name | The preset or character name to pass to the backend. If none is provided then the settings that are currently selected in the UI will be applied |  |
 | Chat Mode | [see here](https://github.com/oobabooga/text-generation-webui/wiki/01-%E2%80%90-Chat-Tab#mode) | Instruct |
+
+# Ollama
+| Option Name | Description | Suggested Value |
+| ------------ | --------- | ------------ |
+| Request Timeout | The maximum time in seconds that the integration will wait for a response from the remote server | 90 (higher if running on low resource hardware) |
+| Keep Alive/Inactivity Timeout | The duration in minutes to keep the model loaded after each request. Set to a negative value to keep loaded forever | 30m |
+| Use chat completions endpoint | If set, tells Ollama to format the prompt instead of this extension. Prompt Format set here will not apply if this is enabled |  |
 
 # Generic OpenAI API Compatible
 For details about the sampling parameters, see here: https://github.com/oobabooga/text-generation-webui/wiki/03-%E2%80%90-Parameters-Tab#parameters-description
