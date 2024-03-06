@@ -746,7 +746,11 @@ class OllamaAPIAgent(LLaMAAgent):
             _LOGGER.debug("Connection error was: %s", repr(ex))
             raise ConfigEntryNotReady("There was a problem connecting to the remote server") from ex
 
-        if not any([ x["name"].split(":")[0] == self.model_name for x in currently_downloaded_result.json()["models"]]):
+        model_names = [ x["name"] for x in currently_downloaded_result.json()["models"] ]
+        if ":" in self.model_name:
+            if not any([ name == self.model_name for name in model_names]):
+                raise ConfigEntryNotReady(f"Ollama server does not have the provided model: {self.model_name}")    
+        elif not any([ name.split(":")[0] == self.model_name for name in model_names ]):
             raise ConfigEntryNotReady(f"Ollama server does not have the provided model: {self.model_name}")
 
     def _chat_completion_params(self, conversation: dict) -> (str, dict):

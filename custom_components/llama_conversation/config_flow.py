@@ -437,8 +437,13 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             models = models_result.json()["models"]
 
             for model in models:
-                if model["name"].split(":")[0] == self.model_config[CONF_CHAT_MODEL]:
+                model_name = self.model_config[CONF_CHAT_MODEL]
+                if ":" in model_name:
+                    if model["name"] == model_name:
+                        return ""
+                elif model["name"].split(":")[0] == model_name:
                     return ""
+                
 
             return "missing_model_api"
 
