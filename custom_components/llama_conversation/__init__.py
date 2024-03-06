@@ -33,6 +33,7 @@ from .const import (
     CONF_BACKEND_TYPE,
     CONF_DOWNLOADED_MODEL_FILE,
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
+    CONF_ALLOWED_SERVICE_CALL_ARGUMENTS,
     CONF_PROMPT_TEMPLATE,
     CONF_USE_GBNF_GRAMMAR,
     CONF_TEXT_GEN_WEBUI_PRESET,
@@ -53,6 +54,7 @@ from .const import (
     DEFAULT_BACKEND_TYPE,
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
+    DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS,
     DEFAULT_PROMPT_TEMPLATE,
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_REFRESH_SYSTEM_PROMPT,
@@ -201,8 +203,8 @@ class LLaMAAgent(AbstractConversationAgent):
         remember_conversation = self.entry.options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION)
         remember_num_interactions = self.entry.options.get(CONF_REMEMBER_NUM_INTERACTIONS, False)
         service_call_regex = self.entry.options.get(CONF_SERVICE_CALL_REGEX, DEFAULT_SERVICE_CALL_REGEX)
-        extra_attributes_to_expose = self.entry.options \
-            .get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE)
+        allowed_service_call_arguments = self.entry.options \
+            .get(CONF_ALLOWED_SERVICE_CALL_ARGUMENTS, DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS)
 
         try:
             service_call_pattern = re.compile(service_call_regex)
@@ -307,17 +309,22 @@ class LLaMAAgent(AbstractConversationAgent):
                 if "brightness" in extra_arguments and 0.0 < extra_arguments["brightness"] < 1.0:
                     extra_arguments["brightness"] = int(extra_arguments["brightness"] * 255)
 
+                # convert string "tuple" to a list for RGB colors
+                if "rgb_color" in extra_arguments and isinstance(extra_arguments["rgb_color"], str):
+                    extra_arguments["rgb_color"] = [ int(x) for x in extra_arguments["rgb_color"][1:-1].split(",") ]
+
                 # only acknowledge requests to exposed entities
                 if entity not in exposed_entities:
                     to_say += f" Can't find device '{entity}'!"
                 else:
                     # copy arguments to service call
                     service_data = {ATTR_ENTITY_ID: entity}
-                    for attr in extra_attributes_to_expose:
+                    for attr in allowed_service_call_arguments:
                         if attr in extra_arguments.keys():
                             service_data[attr] = extra_arguments[attr]
                     
                     try:
+                        _LOGGER.debug(f"service data: {service_data}")
                         await self.hass.services.async_call(
                             domain,
                             service,
@@ -326,7 +333,7 @@ class LLaMAAgent(AbstractConversationAgent):
                         )
                     except Exception as err:
                         to_say += f"\nFailed to run: {line}"
-                        _LOGGER.debug(f"err: {err}; {repr(err)}")
+                        _LOGGER.exception(f"Failed to run: {line}")
 
         to_say = to_say.replace("<|im_end|>", "") # remove the eos token if it is returned (some backends + the old model does this)
         
@@ -387,6 +394,8 @@ class LLaMAAgent(AbstractConversationAgent):
 
         extra_attributes_to_expose = self.entry.options \
             .get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE)
+        allowed_service_call_arguments = self.entry.options \
+            .get(CONF_ALLOWED_SERVICE_CALL_ARGUMENTS, DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS)
 
         def expose_attributes(attributes):
             result = attributes["state"]
@@ -431,7 +440,7 @@ class LLaMAAgent(AbstractConversationAgent):
         for domain in domains:
             for name, service in service_dict.get(domain, {}).items():
                 args = flatten_vol_schema(service.schema)
-                args_to_expose = set(args).intersection(extra_attributes_to_expose)
+                args_to_expose = set(args).intersection(allowed_service_call_arguments)
                 all_services.append(f"{domain}.{name}({','.join(args_to_expose)})")
         formatted_services = ", ".join(all_services)
 

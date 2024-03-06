@@ -62,6 +62,7 @@
                     "request_timeout": "Remote Request Timeout (seconds)",
                     "ollama_keep_alive": "Keep Alive/Inactivity Timeout (minutes)",
                     "extra_attributes_to_expose": "Additional attribute to expose in the context",
+                    "allowed_service_call_arguments": "Arguments allowed to be pass to service calls",
                     "gbnf_grammar": "Enable GBNF Grammar",
                     "openai_api_key": "API Key",
                     "text_generation_webui_admin_key": "Admin Key",

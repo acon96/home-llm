@@ -48,6 +48,7 @@ from .const import (
     CONF_PROMPT_TEMPLATE,
     CONF_USE_GBNF_GRAMMAR,
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
+    CONF_ALLOWED_SERVICE_CALL_ARGUMENTS,
     CONF_TEXT_GEN_WEBUI_PRESET,
     CONF_REFRESH_SYSTEM_PROMPT,
     CONF_REMEMBER_CONVERSATION,
@@ -73,6 +74,7 @@ from .const import (
     DEFAULT_PROMPT_TEMPLATE,
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
+    DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS,
     DEFAULT_REFRESH_SYSTEM_PROMPT,
     DEFAULT_REMEMBER_CONVERSATION,
     DEFAULT_SERVICE_CALL_REGEX,
@@ -585,6 +587,11 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
             CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
             description={"suggested_value": options.get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE)},
             default=DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
+        ): TextSelector(TextSelectorConfig(multiple=True)),
+        vol.Required(
+            CONF_ALLOWED_SERVICE_CALL_ARGUMENTS,
+            description={"suggested_value": options.get(CONF_ALLOWED_SERVICE_CALL_ARGUMENTS)},
+            default=DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS,
         ): TextSelector(TextSelectorConfig(multiple=True)),
         vol.Required(
             CONF_SERVICE_CALL_REGEX,
