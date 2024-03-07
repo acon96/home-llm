@@ -1,0 +1,41 @@
+service,response
+blinds.open,Opening the blinds for you.
+blinds.close,Closing the blinds as you requested.
+blinds.stop,Stopping the blinds now.
+blinds.toggle,Toggling the blinds state for you.
+fan.turn_on,Turning on the fan for you.
+fan.turn_off,Switching off the fan as requested.
+fan.toggle,I'll toggle the fan's state for you.
+fan.increase_speed,Increasing the fan speed for you.
+fan.decrease_speed,Reducing the fan speed as you requested.
+garage_door.cover_open,Opening the garage door for you.
+garage_door.cover_close,Closing the garage door as requested.
+garage_door.stop_cover,Stopping the garage door now.
+garage_door.toggle,Toggling the garage door state for you.
+light.turn_on,Turning on the light for you.
+light.turn_off,Turning off the light as requested.
+light.toggle,Toggling the light for you.
+lock.lock,Locking the door for you.
+lock.unlock,Unlocking the door as you requested.
+media_player.turn_on,Turning on the media player for you.
+media_player.turn_off,Turning off the media player as requested.
+media_player.toggle,Toggling the media player for you.
+media_player.volume_up,Increasing the volume for you.
+media_player.volume_down,Reducing the volume as you requested.
+media_player.volume_mute,Muting the volume for you.
+media_player.media_play_pause,Toggling play/pause on the media player.
+media_player.media_play,Starting media playback.
+media_player.media_pause,Pausing the media playback.
+media_player.media_stop,Stopping the media playback.
+media_player.media_next_track,Skipping to the next track.
+media_player.media_previous_track,Going back to the previous track.
+switch.turn_on,Turning on the switch for you.
+switch.turn_off,Turning off the switch as requested.
+switch.toggle,Toggling the switch for you.
+vacuum.start,Starting the vacuum now.
+vacuum.stop,Stopping the vacuum.
+vacuum.pause,Pausing the vacuum for now.
+vacuum.return_to_base,Sending the vacuum back to its base.
+todo.add_item,the todo has been added to your todo list.
+timer.start,Starting timer now.
+timer.cancel,Timer has been canceled.

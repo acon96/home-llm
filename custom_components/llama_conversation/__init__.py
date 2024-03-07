@@ -9,6 +9,8 @@ import requests
 import re
 import os
 import json
+import csv
+import random
 
 import homeassistant.components.conversation as ha_conversation
 from homeassistant.components.conversation import ConversationInput, ConversationResult, AbstractConversationAgent
@@ -36,6 +38,7 @@ from .const import (
     CONF_ALLOWED_SERVICE_CALL_ARGUMENTS,
     CONF_PROMPT_TEMPLATE,
     CONF_USE_GBNF_GRAMMAR,
+    CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
     CONF_TEXT_GEN_WEBUI_PRESET,
     CONF_OPENAI_API_KEY,
     CONF_TEXT_GEN_WEBUI_ADMIN_KEY,
@@ -57,6 +60,7 @@ from .const import (
     DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS,
     DEFAULT_PROMPT_TEMPLATE,
     DEFAULT_USE_GBNF_GRAMMAR,
+    DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
     DEFAULT_REFRESH_SYSTEM_PROMPT,
     DEFAULT_REMEMBER_CONVERSATION,
     DEFAULT_SERVICE_CALL_REGEX,
@@ -75,6 +79,7 @@ from .const import (
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT,
     DOMAIN,
     GBNF_GRAMMAR_FILE,
+    IN_CONTEXT_EXAMPLES_FILE,
     PROMPT_TEMPLATE_DESCRIPTIONS,
 )
 
@@ -84,6 +89,9 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def update_listener(hass, entry):
     """Handle options update."""
+    agent = await ha_conversation._get_agent_manager(hass).async_get_agent(entry.entry_id)
+    agent._update_options()
+
     hass.data[DOMAIN][entry.entry_id] = entry
     return True
 
@@ -160,6 +168,7 @@ class LLaMAAgent(AbstractConversationAgent):
     hass: Any
     entry_id: str
     history: dict[str, list[dict]]
+    in_context_examples: list[dict]
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the agent."""
@@ -171,7 +180,23 @@ class LLaMAAgent(AbstractConversationAgent):
             CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE
         )
 
+        if entry.options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES, DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES):
+            self._load_icl_examples()
+
         self._load_model(entry)
+
+    def _load_icl_examples(self):
+        try:
+            self.in_context_examples = list(csv.DictReader(os.path.join(os.path.dirname(__file__), IN_CONTEXT_EXAMPLES_FILE)))
+        except Exception:
+            _LOGGER.exception("Failed to load in context learning examples!")
+            self.in_context_examples = None
+
+    def _update_options(self):
+        if self.entry.options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES, DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES):
+            self._load_icl_examples()
+        else:
+            self.in_context_examples = None
 
     @property
     def entry(self):
@@ -287,6 +312,7 @@ class LLaMAAgent(AbstractConversationAgent):
                 if len(line) == 0:
                     break
 
+                # TODO: handle json only format for things like mistral
                 # parse old format or JSON format
                 try:
                     json_output = json.loads(line)
@@ -396,6 +422,27 @@ class LLaMAAgent(AbstractConversationAgent):
             .get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE)
         allowed_service_call_arguments = self.entry.options \
             .get(CONF_ALLOWED_SERVICE_CALL_ARGUMENTS, DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS)
+        
+        def icl_example_generator(num_examples, entity_names, service_names):
+            entity_domains = set([x.split(".")[0] for x in entity_names])
+            entity_names = entity_names[:]
+            
+            # filter out examples for disabled services
+            in_context_examples = [ x for x in self.in_context_examples if x["service"] in service_names and x["service"].split(".")[0] in entity_domains ]
+
+            random.shuffle(in_context_examples)
+            random.shuffle(entity_names)
+            
+            for x in range(num_examples):
+                chosen_example = in_context_examples.pop()
+                chosen_service = chosen_example["service"]
+                device = [ x for x in entity_names if x.split(".")[0] == chosen_service.split(".")[0] ][0]
+                example = {
+                    "to_say": chosen_example["response"],
+                    "service": chosen_service,
+                    "target_device": device,
+                }
+                yield json.dumps(example) + "\n"
 
         def expose_attributes(attributes):
             result = attributes["state"]
@@ -444,11 +491,16 @@ class LLaMAAgent(AbstractConversationAgent):
                 all_services.append(f"{domain}.{name}({','.join(args_to_expose)})")
         formatted_services = ", ".join(all_services)
 
+        render_variables = {
+            "devices": formatted_states,
+            "services": formatted_services,
+        }
+
+        if self.in_context_examples:
+            render_variables["response_examples"] = icl_example_generator(10, list(entities_to_expose.keys()), all_services)
+        
         return template.Template(prompt_template, self.hass).async_render(
-            {
-                "devices": formatted_states,
-                "services": formatted_services,
-            },
+            render_variables,
             parse_result=False,
         )
 
@@ -456,6 +508,7 @@ class LocalLLaMAAgent(LLaMAAgent):
     model_path: str
     llm: Any
     grammar: Any
+    llama_cpp_module: Any
 
     def _load_model(self, entry: ConfigEntry) -> None:
         self.model_path = entry.data.get(CONF_DOWNLOADED_MODEL_FILE)
@@ -469,17 +522,16 @@ class LocalLLaMAAgent(LLaMAAgent):
 
         # don't import it until now because the wheel is installed by config_flow.py
         try:
-            module = importlib.import_module("llama_cpp")
+            self.llama_cpp_module = importlib.import_module("llama_cpp")
         except ModuleNotFoundError:
             # attempt to re-install llama-cpp-python if it was uninstalled for some reason
             install_result = install_llama_cpp_python(self.hass.config.config_dir)
             if not install_result == True:
                 raise ConfigEntryError("llama-cpp-python was not installed on startup and re-installing it led to an error!")
             
-            module = importlib.import_module("llama_cpp")
+            self.llama_cpp_module = importlib.import_module("llama_cpp")
             
-        Llama = getattr(module, "Llama")
-        LlamaGrammar = getattr(module, "LlamaGrammar")
+        Llama = getattr(self.llama_cpp_module, "Llama")
 
         _LOGGER.debug("Loading model...")
         self.llm = Llama(
@@ -491,6 +543,11 @@ class LocalLLaMAAgent(LLaMAAgent):
             # n_threads_batch=4,
         )
 
+        if entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
+            self._load_grammar()
+
+    def _load_grammar(self):
+        LlamaGrammar = getattr(self.llama_cpp_module, "LlamaGrammar")
         _LOGGER.debug("Loading grammar...")
         try:
             # TODO: make grammar configurable
@@ -500,6 +557,12 @@ class LocalLLaMAAgent(LLaMAAgent):
             _LOGGER.debug("Loaded grammar")
         except Exception:
             _LOGGER.exception("Failed to load grammar!")
+            self.grammar = None
+
+    def _update_options(self):
+        if self.entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
+            self._load_grammar()
+        else:
             self.grammar = None
     
     def _generate(self, conversation: dict) -> str:
@@ -512,7 +575,6 @@ class LocalLLaMAAgent(LLaMAAgent):
         temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
         top_k = int(self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K))
         top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
-        grammar = self.grammar if self.entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR) else None
 
         _LOGGER.debug(f"Options: {self.entry.options}")
 
@@ -522,7 +584,7 @@ class LocalLLaMAAgent(LLaMAAgent):
             temp=temperature,
             top_k=top_k,
             top_p=top_p,
-            grammar=grammar
+            grammar=self.grammar
         )
 
         result_tokens = []

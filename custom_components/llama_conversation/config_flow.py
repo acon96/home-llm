@@ -534,6 +534,7 @@ class OptionsFlow(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
+            # TODO: validate that files exist (GBNF + ICL examples)
             return self.async_create_entry(title="LLaMA Conversation", data=user_input)
         schema = local_llama_config_option_schema(
             self.config_entry.options,
