@@ -1,27 +1,27 @@
 service,response,language,persona,short
-blinds.open,Opening the blinds for you.,en,assistant,0
-blinds.open,I'll go ahead and open the blinds.,en,assistant,0
-blinds.open,"Sure, opening the blinds now.",en,assistant,0
-blinds.close,Closing the blinds as you requested.,en,assistant,0
-blinds.close,I'll close the blinds for you.,en,assistant,0
-blinds.close,"Sure, closing the blinds.",en,assistant,0
-blinds.stop,Stopping the blinds now.,en,assistant,0
-blinds.stop,I'll stop the blinds for you.,en,assistant,0
-blinds.stop,"Sure, halting the blinds movement.",en,assistant,0
+blinds.cover_open,Opening the blinds for you.,en,assistant,0
+blinds.cover_open,I'll go ahead and open the blinds.,en,assistant,0
+blinds.cover_open,"Sure, opening the blinds now.",en,assistant,0
+blinds.cover_close,Closing the blinds as you requested.,en,assistant,0
+blinds.cover_close,I'll close the blinds for you.,en,assistant,0
+blinds.cover_close,"Sure, closing the blinds.",en,assistant,0
+blinds.stop_cover,Stopping the blinds now.,en,assistant,0
+blinds.stop_cover,I'll stop the blinds for you.,en,assistant,0
+blinds.stop_cover,"Sure, halting the blinds movement.",en,assistant,0
 blinds.toggle,Toggling the blinds state for you.,en,assistant,0
 blinds.toggle,Switching the blinds' state now.,en,assistant,0
 blinds.toggle,I'll toggle the blinds for you.,en,assistant,0
-blinds.open,Lifting <device_name> blinds as requested,en,assistant,0
-blinds.open,Opening <device_name> now,en,assistant,0
-blinds.open,Raising <device_name> for you,en,assistant,0
-blinds.stop,Freezing <device_name> position,en,assistant,0
-blinds.stop,Halting <device_name> now,en,assistant,0
-blinds.stop,Stopping <device_name> operation,en,assistant,0
-blinds.open,Raising <device_name>,en,assistant,0
-blinds.close,Closing <device_name> for you,en,assistant,0
-blinds.close,Lowering <device_name> now,en,assistant,0
-blinds.close,Shutting <device_name> as requested,en,assistant,0
-blinds.close,Lowering <device_name>,en,assistant,0
+blinds.cover_open,Lifting <device_name> blinds as requested,en,assistant,0
+blinds.cover_open,Opening <device_name> now,en,assistant,0
+blinds.cover_open,Raising <device_name> for you,en,assistant,0
+blinds.stop_cover,Freezing <device_name> position,en,assistant,0
+blinds.stop_cover,Halting <device_name> now,en,assistant,0
+blinds.stop_cover,Stopping <device_name> operation,en,assistant,0
+blinds.cover_open,Raising <device_name>,en,assistant,0
+blinds.cover_close,Closing <device_name> for you,en,assistant,0
+blinds.cover_close,Lowering <device_name> now,en,assistant,0
+blinds.cover_close,Shutting <device_name> as requested,en,assistant,0
+blinds.cover_close,Lowering <device_name>,en,assistant,0
 blinds.toggle,Flipping <device_name> state now,en,assistant,0
 blinds.toggle,Switching <device_name> state as requested,en,assistant,0
 blinds.toggle,Toggling <device_name> for you,en,assistant,0
@@ -78,30 +78,30 @@ fan.increase_speed,Ramping up <device_name> speed now,en,assistant,0
 fan.increase_speed,Speeding up <device_name> for you,en,assistant,0
 fan.increase_speed,Increasing speed of <device_name>,en,assistant,0
 fan.decrease_speed,Reducing speed of <device_name>,en,assistant,0
-garage_door.open,Opening the garage door for you.,en,assistant,0
-garage_door.open,"Sure, I'll open the garage door.",en,assistant,0
-garage_door.open,I'll go ahead and open the garage door.,en,assistant,0
-garage_door.close,Closing the garage door as requested.,en,assistant,0
-garage_door.close,I'll shut the garage door for you.,en,assistant,0
-garage_door.close,"Sure, closing the garage door.",en,assistant,0
-garage_door.stop,Stopping the garage door now.,en,assistant,0
-garage_door.stop,I'll stop the garage door for you.,en,assistant,0
-garage_door.stop,"Sure, I'll halt the garage door movement.",en,assistant,0
+garage_door.open_cover,Opening the garage door for you.,en,assistant,0
+garage_door.open_cover,"Sure, I'll open the garage door.",en,assistant,0
+garage_door.open_cover,I'll go ahead and open the garage door.,en,assistant,0
+garage_door.close_cover,Closing the garage door as requested.,en,assistant,0
+garage_door.close_cover,I'll shut the garage door for you.,en,assistant,0
+garage_door.close_cover,"Sure, closing the garage door.",en,assistant,0
+garage_door.stop_cover,Stopping the garage door now.,en,assistant,0
+garage_door.stop_cover,I'll stop the garage door for you.,en,assistant,0
+garage_door.stop_cover,"Sure, I'll halt the garage door movement.",en,assistant,0
 garage_door.toggle,Toggling the garage door state for you.,en,assistant,0
 garage_door.toggle,I'll switch the garage door's state now.,en,assistant,0
 garage_door.toggle,Switching the garage door's state for you.,en,assistant,0
-garage_door.open,Lifting <device_name> for you,en,assistant,0
-garage_door.open,Opening <device_name> now,en,assistant,0
-garage_door.open,Raising <device_name> as requested,en,assistant,0
-garage_door.stop,Freezing <device_name> position now,en,assistant,0
-garage_door.stop,"Certainly, halting <device_name>",en,assistant,0
-garage_door.stop,Halting <device_name> operation,en,assistant,0
-garage_door.open,Opening <device_name>,en,assistant,0
-garage_door.stop,Stopping <device_name>,en,assistant,0
-garage_door.close,Closing <device_name> now,en,assistant,0
-garage_door.close,Lowering <device_name> for you,en,assistant,0
-garage_door.close,Shutting <device_name> as requested,en,assistant,0
-garage_door.close,Closing <device_name>,en,assistant,0
+garage_door.open_cover,Lifting <device_name> for you,en,assistant,0
+garage_door.open_cover,Opening <device_name> now,en,assistant,0
+garage_door.open_cover,Raising <device_name> as requested,en,assistant,0
+garage_door.stop_cover,Freezing <device_name> position now,en,assistant,0
+garage_door.stop_cover,"Certainly, halting <device_name>",en,assistant,0
+garage_door.stop_cover,Halting <device_name> operation,en,assistant,0
+garage_door.open_cover,Opening <device_name>,en,assistant,0
+garage_door.stop_cover,Stopping <device_name>,en,assistant,0
+garage_door.close_cover,Closing <device_name> now,en,assistant,0
+garage_door.close_cover,Lowering <device_name> for you,en,assistant,0
+garage_door.close_cover,Shutting <device_name> as requested,en,assistant,0
+garage_door.close_cover,Closing <device_name>,en,assistant,0
 garage_door.toggle,Flipping <device_name> state now,en,assistant,0
 garage_door.toggle,Switching <device_name> state as requested,en,assistant,0
 garage_door.toggle,Toggling <device_name> for you,en,assistant,0
@@ -257,12 +257,12 @@ switch.turn_off,"Okay, turning <device_name> off.",en,assistant,0
 switch.turn_off,"Okay, I'm turning off <device_name>.",en,assistant,0
 switch.turn_off,Shutting off <device_name> for bedtime.,en,assistant,0
 switch.turn_off,Turning off <device_name> now.,en,assistant,0
-blinds.close,shutting <device_name>,en,assistant,1
-blinds.close,lowering <device_name>,en,assistant,1
-blinds.close,closing <device_name>,en,assistant,1
-blinds.open,raising <device_name>,en,assistant,1
-blinds.open,lifting <device_name>,en,assistant,1
-blinds.open,opening <device_name>,en,assistant,1
+blinds.cover_close,shutting <device_name>,en,assistant,1
+blinds.cover_close,lowering <device_name>,en,assistant,1
+blinds.cover_close,closing <device_name>,en,assistant,1
+blinds.cover_open,raising <device_name>,en,assistant,1
+blinds.cover_open,lifting <device_name>,en,assistant,1
+blinds.cover_open,opening <device_name>,en,assistant,1
 fan.decrease_speed,slowing down <device_name>,en,assistant,1
 fan.decrease_speed,reducing speed of <device_name>,en,assistant,1
 fan.decrease_speed,reducing <device_name>,en,assistant,1
@@ -276,12 +276,12 @@ fan.turn_off,turning off <device_name>,en,assistant,1
 fan.turn_off,deactivating <device_name>,en,assistant,1
 fan.turn_on,starting <device_name>,en,assistant,1
 fan.turn_on,activating <device_name>,en,assistant,1
-garage_door.close,shutting <device_name>,en,assistant,1
-garage_door.close,deactivating <device_name>,en,assistant,1
-garage_door.close,closing <device_name>,en,assistant,1
-garage_door.open,opening <device_name>,en,assistant,1
-garage_door.open,lifting <device_name>,en,assistant,1
-garage_door.stop,stopping <device_name>,en,assistant,1
+garage_door.close_cover,shutting <device_name>,en,assistant,1
+garage_door.close_cover,deactivating <device_name>,en,assistant,1
+garage_door.close_cover,closing <device_name>,en,assistant,1
+garage_door.open_cover,opening <device_name>,en,assistant,1
+garage_door.open_cover,lifting <device_name>,en,assistant,1
+garage_door.stop_cover,stopping <device_name>,en,assistant,1
 light.toggle,toggling <device_name>,en,assistant,1
 light.toggle,flipping <device_name>,en,assistant,1
 light.turn_off,turning off <device_name>,en,assistant,1
@@ -296,29 +296,29 @@ lock.lock,securing <device_name>,en,assistant,1
 lock.lock,locking <device_name>,en,assistant,1
 lock.unlock,unlocking <device_name>,en,assistant,1
 lock.unlock,unsecuring <device_name>,en,assistant,1
-blinds.open,"Openin' the blinds for ye.",en,pirate,0
-blinds.open,"Aye, I'll be openin' the blinds.",en,pirate,0
-blinds.open,"Aye, openin' the blinds now.",en,pirate,0
-blinds.close,"Closin' the blinds as ye requested.",en,pirate,0
-blinds.close,"I'll be closin' the blinds for ye.",en,pirate,0
-blinds.close,"Aye, closin' the blinds.",en,pirate,0
-blinds.stop,"Stopin' the blinds now.",en,pirate,0
-blinds.stop,"I'll halt the blinds for ye.",en,pirate,0
-blinds.stop,"Aye, haltin' the blinds' movement.",en,pirate,0
+blinds.cover_open,"Openin' the blinds for ye.",en,pirate,0
+blinds.cover_open,"Aye, I'll be openin' the blinds.",en,pirate,0
+blinds.cover_open,"Aye, openin' the blinds now.",en,pirate,0
+blinds.cover_close,"Closin' the blinds as ye requested.",en,pirate,0
+blinds.cover_close,"I'll be closin' the blinds for ye.",en,pirate,0
+blinds.cover_close,"Aye, closin' the blinds.",en,pirate,0
+blinds.stop_cover,"Stopin' the blinds now.",en,pirate,0
+blinds.stop_cover,"I'll halt the blinds for ye.",en,pirate,0
+blinds.stop_cover,"Aye, haltin' the blinds' movement.",en,pirate,0
 blinds.toggle,"Togglin' the blinds' state for ye.",en,pirate,0
 blinds.toggle,"Switchin' the blinds' state now.",en,pirate,0
 blinds.toggle,"I'll be togglin' the blinds for ye.",en,pirate,0
-blinds.open,"Liftin' <device_name> blinds yarr",en,pirate,0
-blinds.open,"Openin' <device_name> now",en,pirate,0
-blinds.open,"Raisin' <device_name> for ye",en,pirate,0
-blinds.stop,"Freezin' <device_name> position",en,pirate,0
-blinds.stop,"Haltin' <device_name> now",en,pirate,0
-blinds.stop,"Stoppin' <device_name> operation",en,pirate,0
-blinds.open,"Raisin' <device_name>",en,pirate,0
-blinds.close,"Closin' <device_name> for ye",en,pirate,0
-blinds.close,"Lowerin' <device_name> now",en,pirate,0
-blinds.close,"Shuttin' <device_name> yarr",en,pirate,0
-blinds.close,"Lowerin' <device_name>",en,pirate,0
+blinds.cover_open,"Liftin' <device_name> blinds yarr",en,pirate,0
+blinds.cover_open,"Openin' <device_name> now",en,pirate,0
+blinds.cover_open,"Raisin' <device_name> for ye",en,pirate,0
+blinds.stop_cover,"Freezin' <device_name> position",en,pirate,0
+blinds.stop_cover,"Haltin' <device_name> now",en,pirate,0
+blinds.stop_cover,"Stoppin' <device_name> operation",en,pirate,0
+blinds.cover_open,"Raisin' <device_name>",en,pirate,0
+blinds.cover_close,"Closin' <device_name> for ye",en,pirate,0
+blinds.cover_close,"Lowerin' <device_name> now",en,pirate,0
+blinds.cover_close,"Shuttin' <device_name> yarr",en,pirate,0
+blinds.cover_close,"Lowerin' <device_name>",en,pirate,0
 blinds.toggle,"Flippin' <device_name> state now",en,pirate,0
 blinds.toggle,"Switchin' <device_name> state yarr",en,pirate,0
 blinds.toggle,"Togglin' <device_name> for ye",en,pirate,0
@@ -486,29 +486,29 @@ fan.increase_speed,"Ramping up <device_name> speed now, beep boop",en,robot,0
 fan.increase_speed,"Speeding up <device_name> for you, beep boop",en,robot,0
 fan.increase_speed,"Increasing speed of <device_name>, beep boop",en,robot,0
 fan.decrease_speed,"Reducing speed of <device_name>, beep boop",en,robot,0
-blinds.open,"Beep boop, opening the blinds for you.",en,robot,0
-blinds.open,"I'll go ahead and open the blinds, beep boop.",en,robot,0
-blinds.open,"Sure, opening the blinds now, beep boop.",en,robot,0
-blinds.close,"Closing the blinds as you requested, beep boop.",en,robot,0
-blinds.close,"I'll close the blinds for you, beep boop.",en,robot,0
-blinds.close,"Sure, closing the blinds, beep boop.",en,robot,0
-blinds.stop,"Stopping the blinds now, beep boop.",en,robot,0
-blinds.stop,"I'll stop the blinds for you, beep boop.",en,robot,0
-blinds.stop,"Sure, halting the blinds movement, beep boop.",en,robot,0
+blinds.cover_open,"Beep boop, opening the blinds for you.",en,robot,0
+blinds.cover_open,"I'll go ahead and open the blinds, beep boop.",en,robot,0
+blinds.cover_open,"Sure, opening the blinds now, beep boop.",en,robot,0
+blinds.cover_close,"Closing the blinds as you requested, beep boop.",en,robot,0
+blinds.cover_close,"I'll close the blinds for you, beep boop.",en,robot,0
+blinds.cover_close,"Sure, closing the blinds, beep boop.",en,robot,0
+blinds.stop_cover,"Stopping the blinds now, beep boop.",en,robot,0
+blinds.stop_cover,"I'll stop the blinds for you, beep boop.",en,robot,0
+blinds.stop_cover,"Sure, halting the blinds movement, beep boop.",en,robot,0
 blinds.toggle,"Toggling the blinds state for you, beep boop.",en,robot,0
 blinds.toggle,"Switching the blinds' state now, beep boop.",en,robot,0
 blinds.toggle,"I'll toggle the blinds for you, beep boop.",en,robot,0
-blinds.open,"Lifting <device_name> blinds as requested, beep boop",en,robot,0
-blinds.open,"Opening <device_name> now, beep boop",en,robot,0
-blinds.open,"Raising <device_name> for you, beep boop",en,robot,0
-blinds.stop,"Freezing <device_name> position, beep boop",en,robot,0
-blinds.stop,"Halting <device_name> now, beep boop",en,robot,0
-blinds.stop,"Stopping <device_name> operation, beep boop",en,robot,0
-blinds.open,"Raising <device_name>, beep boop",en,robot,0
-blinds.close,"Closing <device_name> for you, beep boop",en,robot,0
-blinds.close,"Lowering <device_name> now, beep boop",en,robot,0
-blinds.close,"Shutting <device_name> as requested, beep boop",en,robot,0
-blinds.close,"Lowering <device_name>, beep boop",en,robot,0
+blinds.cover_open,"Lifting <device_name> blinds as requested, beep boop",en,robot,0
+blinds.cover_open,"Opening <device_name> now, beep boop",en,robot,0
+blinds.cover_open,"Raising <device_name> for you, beep boop",en,robot,0
+blinds.stop_cover,"Freezing <device_name> position, beep boop",en,robot,0
+blinds.stop_cover,"Halting <device_name> now, beep boop",en,robot,0
+blinds.stop_cover,"Stopping <device_name> operation, beep boop",en,robot,0
+blinds.cover_open,"Raising <device_name>, beep boop",en,robot,0
+blinds.cover_close,"Closing <device_name> for you, beep boop",en,robot,0
+blinds.cover_close,"Lowering <device_name> now, beep boop",en,robot,0
+blinds.cover_close,"Shutting <device_name> as requested, beep boop",en,robot,0
+blinds.cover_close,"Lowering <device_name>, beep boop",en,robot,0
 blinds.toggle,"Flipping <device_name> state now, beep boop",en,robot,0
 blinds.toggle,"Switching <device_name> state as requested, beep boop",en,robot,0
 blinds.toggle,"Toggling <device_name> for you, beep boop",en,robot,0
@@ -577,30 +577,30 @@ light.turn_off,"Switching off <device_name>, power down sequence initiated.",en,
 light.turn_off,"Affirmative, deactivating <device_name>, beep boop.",en,robot,0
 light.turn_off,"Powering off <device_name>, deactivation protocol in effect.",en,robot,0
 light.turn_off,"Commencing deactivation of <device_name>, operational halt.",en,robot,0
-garage_door.open,"Initiating garage door opening sequence for you, beep boop.",en,robot,0
-garage_door.open,"Affirmative, activating garage door opening mechanism.",en,robot,0
-garage_door.open,"Commencing operation to open the garage door, beep boop.",en,robot,0
-garage_door.close,"Beginning garage door closure as commanded, beep boop.",en,robot,0
-garage_door.close,"Executing garage door shutdown for you, beep boop.",en,robot,0
-garage_door.close,"Acknowledged, initiating garage door closing sequence.",en,robot,0
-garage_door.stop,"Halting garage door motion now, beep boop.",en,robot,0
-garage_door.stop,"Beep boop, executing stop command for the garage door.",en,robot,0
-garage_door.stop,"Affirmative, ceasing garage door movement immediately.",en,robot,0
+garage_door.open_cover,"Initiating garage door opening sequence for you, beep boop.",en,robot,0
+garage_door.open_cover,"Affirmative, activating garage door opening mechanism.",en,robot,0
+garage_door.open_cover,"Commencing operation to open the garage door, beep boop.",en,robot,0
+garage_door.close_cover,"Beginning garage door closure as commanded, beep boop.",en,robot,0
+garage_door.close_cover,"Executing garage door shutdown for you, beep boop.",en,robot,0
+garage_door.close_cover,"Acknowledged, initiating garage door closing sequence.",en,robot,0
+garage_door.stop_cover,"Halting garage door motion now, beep boop.",en,robot,0
+garage_door.stop_cover,"Beep boop, executing stop command for the garage door.",en,robot,0
+garage_door.stop_cover,"Affirmative, ceasing garage door movement immediately.",en,robot,0
 garage_door.toggle,"Toggling garage door state as per your request, beep boop.",en,robot,0
 garage_door.toggle,"Executing state alteration for the garage door, beep boop.",en,robot,0
 garage_door.toggle,"Switching garage door state for optimal function, beep boop.",en,robot,0
-garage_door.open,"Lifting mechanism for <device_name> activated for you.",en,robot,0
-garage_door.open,"Opening <device_name> now, initiating sequence.",en,robot,0
-garage_door.open,"Raising <device_name> as per directive, beep boop.",en,robot,0
-garage_door.stop,"Freezing <device_name> position now, command acknowledged.",en,robot,0
-garage_door.stop,"Certainly, halting <device_name> operation, beep boop.",en,robot,0
-garage_door.stop,"Operation halt for <device_name> initiated, beep boop.",en,robot,0
-garage_door.open,"Opening protocol for <device_name> commenced, beep boop.",en,robot,0
-garage_door.stop,"Stopping <device_name> in progress, beep boop.",en,robot,0
-garage_door.close,"Initiating closure of <device_name> now, beep boop.",en,robot,0
-garage_door.close,"Lowering <device_name> for you, command processing.",en,robot,0
-garage_door.close,"Executing shutdown of <device_name> as requested.",en,robot,0
-garage_door.close,"Closure protocol for <device_name> activated, beep boop.",en,robot,0
+garage_door.open_cover,"Lifting mechanism for <device_name> activated for you.",en,robot,0
+garage_door.open_cover,"Opening <device_name> now, initiating sequence.",en,robot,0
+garage_door.open_cover,"Raising <device_name> as per directive, beep boop.",en,robot,0
+garage_door.stop_cover,"Freezing <device_name> position now, command acknowledged.",en,robot,0
+garage_door.stop_cover,"Certainly, halting <device_name> operation, beep boop.",en,robot,0
+garage_door.stop_cover,"Operation halt for <device_name> initiated, beep boop.",en,robot,0
+garage_door.open_cover,"Opening protocol for <device_name> commenced, beep boop.",en,robot,0
+garage_door.stop_cover,"Stopping <device_name> in progress, beep boop.",en,robot,0
+garage_door.close_cover,"Initiating closure of <device_name> now, beep boop.",en,robot,0
+garage_door.close_cover,"Lowering <device_name> for you, command processing.",en,robot,0
+garage_door.close_cover,"Executing shutdown of <device_name> as requested.",en,robot,0
+garage_door.close_cover,"Closure protocol for <device_name> activated, beep boop.",en,robot,0
 garage_door.toggle,"Flipping state of <device_name> now, operational change.",en,robot,0
 garage_door.toggle,"Switching <device_name> state as per your command, beep boop.",en,robot,0
 garage_door.toggle,"Toggling <device_name> for optimal functionality, beep boop.",en,robot,0
