@@ -1,27 +1,27 @@
 service,response,language,persona,short
-blinds.cover_open,Opening the blinds for you.,en,assistant,0
-blinds.cover_open,I'll go ahead and open the blinds.,en,assistant,0
-blinds.cover_open,"Sure, opening the blinds now.",en,assistant,0
-blinds.cover_close,Closing the blinds as you requested.,en,assistant,0
-blinds.cover_close,I'll close the blinds for you.,en,assistant,0
-blinds.cover_close,"Sure, closing the blinds.",en,assistant,0
+blinds.open_cover,Opening the blinds for you.,en,assistant,0
+blinds.open_cover,I'll go ahead and open the blinds.,en,assistant,0
+blinds.open_cover,"Sure, opening the blinds now.",en,assistant,0
+blinds.close_cover,Closing the blinds as you requested.,en,assistant,0
+blinds.close_cover,I'll close the blinds for you.,en,assistant,0
+blinds.close_cover,"Sure, closing the blinds.",en,assistant,0
 blinds.stop_cover,Stopping the blinds now.,en,assistant,0
 blinds.stop_cover,I'll stop the blinds for you.,en,assistant,0
 blinds.stop_cover,"Sure, halting the blinds movement.",en,assistant,0
 blinds.toggle,Toggling the blinds state for you.,en,assistant,0
 blinds.toggle,Switching the blinds' state now.,en,assistant,0
 blinds.toggle,I'll toggle the blinds for you.,en,assistant,0
-blinds.cover_open,Lifting <device_name> blinds as requested,en,assistant,0
-blinds.cover_open,Opening <device_name> now,en,assistant,0
-blinds.cover_open,Raising <device_name> for you,en,assistant,0
+blinds.open_cover,Lifting <device_name> blinds as requested,en,assistant,0
+blinds.open_cover,Opening <device_name> now,en,assistant,0
+blinds.open_cover,Raising <device_name> for you,en,assistant,0
 blinds.stop_cover,Freezing <device_name> position,en,assistant,0
 blinds.stop_cover,Halting <device_name> now,en,assistant,0
 blinds.stop_cover,Stopping <device_name> operation,en,assistant,0
-blinds.cover_open,Raising <device_name>,en,assistant,0
-blinds.cover_close,Closing <device_name> for you,en,assistant,0
-blinds.cover_close,Lowering <device_name> now,en,assistant,0
-blinds.cover_close,Shutting <device_name> as requested,en,assistant,0
-blinds.cover_close,Lowering <device_name>,en,assistant,0
+blinds.open_cover,Raising <device_name>,en,assistant,0
+blinds.close_cover,Closing <device_name> for you,en,assistant,0
+blinds.close_cover,Lowering <device_name> now,en,assistant,0
+blinds.close_cover,Shutting <device_name> as requested,en,assistant,0
+blinds.close_cover,Lowering <device_name>,en,assistant,0
 blinds.toggle,Flipping <device_name> state now,en,assistant,0
 blinds.toggle,Switching <device_name> state as requested,en,assistant,0
 blinds.toggle,Toggling <device_name> for you,en,assistant,0
@@ -257,12 +257,12 @@ switch.turn_off,"Okay, turning <device_name> off.",en,assistant,0
 switch.turn_off,"Okay, I'm turning off <device_name>.",en,assistant,0
 switch.turn_off,Shutting off <device_name> for bedtime.,en,assistant,0
 switch.turn_off,Turning off <device_name> now.,en,assistant,0
-blinds.cover_close,shutting <device_name>,en,assistant,1
-blinds.cover_close,lowering <device_name>,en,assistant,1
-blinds.cover_close,closing <device_name>,en,assistant,1
-blinds.cover_open,raising <device_name>,en,assistant,1
-blinds.cover_open,lifting <device_name>,en,assistant,1
-blinds.cover_open,opening <device_name>,en,assistant,1
+blinds.close_cover,shutting <device_name>,en,assistant,1
+blinds.close_cover,lowering <device_name>,en,assistant,1
+blinds.close_cover,closing <device_name>,en,assistant,1
+blinds.open_cover,raising <device_name>,en,assistant,1
+blinds.open_cover,lifting <device_name>,en,assistant,1
+blinds.open_cover,opening <device_name>,en,assistant,1
 fan.decrease_speed,slowing down <device_name>,en,assistant,1
 fan.decrease_speed,reducing speed of <device_name>,en,assistant,1
 fan.decrease_speed,reducing <device_name>,en,assistant,1
@@ -296,29 +296,29 @@ lock.lock,securing <device_name>,en,assistant,1
 lock.lock,locking <device_name>,en,assistant,1
 lock.unlock,unlocking <device_name>,en,assistant,1
 lock.unlock,unsecuring <device_name>,en,assistant,1
-blinds.cover_open,"Openin' the blinds for ye.",en,pirate,0
-blinds.cover_open,"Aye, I'll be openin' the blinds.",en,pirate,0
-blinds.cover_open,"Aye, openin' the blinds now.",en,pirate,0
-blinds.cover_close,"Closin' the blinds as ye requested.",en,pirate,0
-blinds.cover_close,"I'll be closin' the blinds for ye.",en,pirate,0
-blinds.cover_close,"Aye, closin' the blinds.",en,pirate,0
+blinds.open_cover,"Openin' the blinds for ye.",en,pirate,0
+blinds.open_cover,"Aye, I'll be openin' the blinds.",en,pirate,0
+blinds.open_cover,"Aye, openin' the blinds now.",en,pirate,0
+blinds.close_cover,"Closin' the blinds as ye requested.",en,pirate,0
+blinds.close_cover,"I'll be closin' the blinds for ye.",en,pirate,0
+blinds.close_cover,"Aye, closin' the blinds.",en,pirate,0
 blinds.stop_cover,"Stopin' the blinds now.",en,pirate,0
 blinds.stop_cover,"I'll halt the blinds for ye.",en,pirate,0
 blinds.stop_cover,"Aye, haltin' the blinds' movement.",en,pirate,0
 blinds.toggle,"Togglin' the blinds' state for ye.",en,pirate,0
 blinds.toggle,"Switchin' the blinds' state now.",en,pirate,0
 blinds.toggle,"I'll be togglin' the blinds for ye.",en,pirate,0
-blinds.cover_open,"Liftin' <device_name> blinds yarr",en,pirate,0
-blinds.cover_open,"Openin' <device_name> now",en,pirate,0
-blinds.cover_open,"Raisin' <device_name> for ye",en,pirate,0
+blinds.open_cover,"Liftin' <device_name> blinds yarr",en,pirate,0
+blinds.open_cover,"Openin' <device_name> now",en,pirate,0
+blinds.open_cover,"Raisin' <device_name> for ye",en,pirate,0
 blinds.stop_cover,"Freezin' <device_name> position",en,pirate,0
 blinds.stop_cover,"Haltin' <device_name> now",en,pirate,0
 blinds.stop_cover,"Stoppin' <device_name> operation",en,pirate,0
-blinds.cover_open,"Raisin' <device_name>",en,pirate,0
-blinds.cover_close,"Closin' <device_name> for ye",en,pirate,0
-blinds.cover_close,"Lowerin' <device_name> now",en,pirate,0
-blinds.cover_close,"Shuttin' <device_name> yarr",en,pirate,0
-blinds.cover_close,"Lowerin' <device_name>",en,pirate,0
+blinds.open_cover,"Raisin' <device_name>",en,pirate,0
+blinds.close_cover,"Closin' <device_name> for ye",en,pirate,0
+blinds.close_cover,"Lowerin' <device_name> now",en,pirate,0
+blinds.close_cover,"Shuttin' <device_name> yarr",en,pirate,0
+blinds.close_cover,"Lowerin' <device_name>",en,pirate,0
 blinds.toggle,"Flippin' <device_name> state now",en,pirate,0
 blinds.toggle,"Switchin' <device_name> state yarr",en,pirate,0
 blinds.toggle,"Togglin' <device_name> for ye",en,pirate,0
@@ -486,29 +486,29 @@ fan.increase_speed,"Ramping up <device_name> speed now, beep boop",en,robot,0
 fan.increase_speed,"Speeding up <device_name> for you, beep boop",en,robot,0
 fan.increase_speed,"Increasing speed of <device_name>, beep boop",en,robot,0
 fan.decrease_speed,"Reducing speed of <device_name>, beep boop",en,robot,0
-blinds.cover_open,"Beep boop, opening the blinds for you.",en,robot,0
-blinds.cover_open,"I'll go ahead and open the blinds, beep boop.",en,robot,0
-blinds.cover_open,"Sure, opening the blinds now, beep boop.",en,robot,0
-blinds.cover_close,"Closing the blinds as you requested, beep boop.",en,robot,0
-blinds.cover_close,"I'll close the blinds for you, beep boop.",en,robot,0
-blinds.cover_close,"Sure, closing the blinds, beep boop.",en,robot,0
+blinds.open_cover,"Beep boop, opening the blinds for you.",en,robot,0
+blinds.open_cover,"I'll go ahead and open the blinds, beep boop.",en,robot,0
+blinds.open_cover,"Sure, opening the blinds now, beep boop.",en,robot,0
+blinds.close_cover,"Closing the blinds as you requested, beep boop.",en,robot,0
+blinds.close_cover,"I'll close the blinds for you, beep boop.",en,robot,0
+blinds.close_cover,"Sure, closing the blinds, beep boop.",en,robot,0
 blinds.stop_cover,"Stopping the blinds now, beep boop.",en,robot,0
 blinds.stop_cover,"I'll stop the blinds for you, beep boop.",en,robot,0
 blinds.stop_cover,"Sure, halting the blinds movement, beep boop.",en,robot,0
 blinds.toggle,"Toggling the blinds state for you, beep boop.",en,robot,0
 blinds.toggle,"Switching the blinds' state now, beep boop.",en,robot,0
 blinds.toggle,"I'll toggle the blinds for you, beep boop.",en,robot,0
-blinds.cover_open,"Lifting <device_name> blinds as requested, beep boop",en,robot,0
-blinds.cover_open,"Opening <device_name> now, beep boop",en,robot,0
-blinds.cover_open,"Raising <device_name> for you, beep boop",en,robot,0
+blinds.open_cover,"Lifting <device_name> blinds as requested, beep boop",en,robot,0
+blinds.open_cover,"Opening <device_name> now, beep boop",en,robot,0
+blinds.open_cover,"Raising <device_name> for you, beep boop",en,robot,0
 blinds.stop_cover,"Freezing <device_name> position, beep boop",en,robot,0
 blinds.stop_cover,"Halting <device_name> now, beep boop",en,robot,0
 blinds.stop_cover,"Stopping <device_name> operation, beep boop",en,robot,0
-blinds.cover_open,"Raising <device_name>, beep boop",en,robot,0
-blinds.cover_close,"Closing <device_name> for you, beep boop",en,robot,0
-blinds.cover_close,"Lowering <device_name> now, beep boop",en,robot,0
-blinds.cover_close,"Shutting <device_name> as requested, beep boop",en,robot,0
-blinds.cover_close,"Lowering <device_name>, beep boop",en,robot,0
+blinds.open_cover,"Raising <device_name>, beep boop",en,robot,0
+blinds.close_cover,"Closing <device_name> for you, beep boop",en,robot,0
+blinds.close_cover,"Lowering <device_name> now, beep boop",en,robot,0
+blinds.close_cover,"Shutting <device_name> as requested, beep boop",en,robot,0
+blinds.close_cover,"Lowering <device_name>, beep boop",en,robot,0
 blinds.toggle,"Flipping <device_name> state now, beep boop",en,robot,0
 blinds.toggle,"Switching <device_name> state as requested, beep boop",en,robot,0
 blinds.toggle,"Toggling <device_name> for you, beep boop",en,robot,0

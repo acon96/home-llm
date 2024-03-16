@@ -1,10 +1,10 @@
 service_name,device_name,english_phrase
-blinds.cover_close,kitchen,Lower the kitchen blinds
-blinds.cover_close,living_room,Close the living room blinds
-blinds.cover_close,master_bedroom,Shut the master bedroom blinds
-blinds.cover_open,kitchen,Could you raise the kitchen blinds
-blinds.cover_open,living_room,Open the living room blinds
-blinds.cover_open,master_bedroom,Lift the master bedroom blinds
+blinds.close_cover,kitchen,Lower the kitchen blinds
+blinds.close_cover,living_room,Close the living room blinds
+blinds.close_cover,master_bedroom,Shut the master bedroom blinds
+blinds.open_cover,kitchen,Could you raise the kitchen blinds
+blinds.open_cover,living_room,Open the living room blinds
+blinds.open_cover,master_bedroom,Lift the master bedroom blinds
 blinds.stop_cover,kitchen,Stop the kitchen blinds where they are
 blinds.stop_cover,living_room,Stop adjusting the living room blinds
 blinds.stop_cover,master_bedroom,Please halt the master bedroom blinds

@@ -1,19 +1,19 @@
 device_type,service,english_phrase,multiplier
-blinds,close,Close the <device_name>,1
-blinds,close,Lower the <device_name>,1
-blinds,close,Shut the <device_name>,1
-blinds,open,Lift the <device_name> blinds,1
-blinds,open,Open the <device_name>,1
-blinds,open,Raise the <device_name>,1
-blinds,stop,Freeze the <device_name>,1
-blinds,stop,Halt the <device_name>,1
-blinds,stop,Stop the <device_name>,1
+blinds,close_cover,Close the <device_name>,1
+blinds,close_cover,Lower the <device_name>,1
+blinds,close_cover,Shut the <device_name>,1
+blinds,open_cover,Lift the <device_name> blinds,1
+blinds,open_cover,Open the <device_name>,1
+blinds,open_cover,Raise the <device_name>,1
+blinds,stop_cover,Freeze the <device_name>,1
+blinds,stop_cover,Halt the <device_name>,1
+blinds,stop_cover,Stop the <device_name>,1
 blinds,toggle,Flip the <device_name> state,1
 blinds,toggle,Switch the <device_name> state,1
 blinds,toggle,Toggle the <device_name>,1
-blinds|fan,close|turn_off,Close <device_name1> and deactivate <device_name2>,1
-blinds|fan,open|increase_speed,Raise the <device_name1> and speed up the <device_name2>,1
-blinds|light,open|turn_on,Raise <device_name1> and activate <device_name2>,1
+blinds|fan,close_cover|turn_off,Close <device_name1> and deactivate <device_name2>,1
+blinds|fan,open_cover|increase_speed,Raise the <device_name1> and speed up the <device_name2>,1
+blinds|light,open_cover|turn_on,Raise <device_name1> and activate <device_name2>,1
 fan,decrease_speed,Decrease the <device_name> speed,1
 fan,decrease_speed,Lower the <device_name> speed,1
 fan,decrease_speed,Slow down the <device_name>,1
@@ -29,37 +29,37 @@ fan,turn_off,Turn off the <device_name>,1
 fan,turn_on,Activate the <device_name>,1
 fan,turn_on,Please start the <device_name>,1
 fan,turn_on,Turn on the <device_name>,1
-fan|blinds,turn_off|open,Turn off <device_name1> and open <device_name2>,1
-fan|blinds|garage_door,increase_speed|open|open,Speed up <device_name1> open <device_name2> and <device_name3>,1
-fan|blinds|light,decrease_speed|open|turn_off,Slow down <device_name1> open <device_name2> and turn off <device_name3>,1
-fan|blinds|light,turn_off|close|turn_on,Turn off <device_name1> close <device_name2> and turn on <device_name3>,1
+fan|blinds,turn_off|open_cover,Turn off <device_name1> and open <device_name2>,1
+fan|blinds|garage_door,increase_speed|open_cover|open_cover,Speed up <device_name1> open <device_name2> and <device_name3>,1
+fan|blinds|light,decrease_speed|open_cover|turn_off,Slow down <device_name1> open <device_name2> and turn off <device_name3>,1
+fan|blinds|light,turn_off|close_cover|turn_on,Turn off <device_name1> close <device_name2> and turn on <device_name3>,1
 fan|fan,increase_speed|decrease_speed,Speed up <device_name1> and slow down <device_name2>,1
 fan|fan,turn_on|turn_off,Turn on <device_name1> and turn off <device_name2>,1
-fan|garage_door,increase_speed|close,Increase speed of <device_name1> and close <device_name2>,1
-fan|garage_door|blinds,increase_speed|close|open,Speed up <device_name1> close <device_name2> and open <device_name3>,1
-fan|garage_door|blinds,turn_on|close|close,Turn on <device_name1> close <device_name2> and <device_name3>,1
-fan|garage_door|light,turn_off|close|turn_off,Turn off <device_name1> and <device_name3> and close <device_name2>,1
-fan|garage_door|lock,turn_off|close|lock,Turn off <device_name1> close <device_name2> and lock <device_name3>,1
-fan|garage_door|lock,turn_on|open|unlock,Turn on <device_name1> open <device_name2> and unlock <device_name3>,1
+fan|garage_door,increase_speed|close_cover,Increase speed of <device_name1> and close <device_name2>,1
+fan|garage_door|blinds,increase_speed|close_cover|open_cover,Speed up <device_name1> close <device_name2> and open <device_name3>,1
+fan|garage_door|blinds,turn_on|close_cover|close_cover,Turn on <device_name1> close <device_name2> and <device_name3>,1
+fan|garage_door|light,turn_off|close_cover|turn_off,Turn off <device_name1> and <device_name3> and close <device_name2>,1
+fan|garage_door|lock,turn_off|close_cover|lock,Turn off <device_name1> close <device_name2> and lock <device_name3>,1
+fan|garage_door|lock,turn_on|open_cover|unlock,Turn on <device_name1> open <device_name2> and unlock <device_name3>,1
 fan|light,turn_on|turn_off,Activate <device_name1> and deactivate <device_name2>,1
 fan|light|lock,decrease_speed|toggle|lock,Slow down <device_name1> toggle <device_name2> and lock <device_name3>,1
 fan|lock,decrease_speed|unlock,Slow down the <device_name1> and unlock the <device_name2>,1
-garage_door,close,Close the <device_name>,1
-garage_door,close,Lower the <device_name>,1
-garage_door,close,Shut the <device_name>,1
-garage_door,open,Lift the <device_name>,1
-garage_door,open,Open the <device_name>,1
-garage_door,open,Raise the <device_name>,1
-garage_door,stop,Freeze the <device_name>,1
-garage_door,stop,Halt the <device_name>,1
-garage_door,stop,Stop the <device_name>,1
+garage_door,close_cover,Close the <device_name>,1
+garage_door,close_cover,Lower the <device_name>,1
+garage_door,close_cover,Shut the <device_name>,1
+garage_door,open_cover,Lift the <device_name>,1
+garage_door,open_cover,Open the <device_name>,1
+garage_door,open_cover,Raise the <device_name>,1
+garage_door,stop_cover,Freeze the <device_name>,1
+garage_door,stop_cover,Halt the <device_name>,1
+garage_door,stop_cover,Stop the <device_name>,1
 garage_door,toggle,Flip the <device_name> state,1
 garage_door,toggle,Switch the <device_name> state,1
 garage_door,toggle,Toggle the <device_name>,1
-garage_door|blinds,open|open,Open the <device_name1> and lift the <device_name2>,1
-garage_door|fan,close|turn_off,Close <device_name1> and deactivate <device_name2>,1
-garage_door|light,open|turn_on,Open <device_name1> and activate <device_name2>,1
-garage_door|lock,open|unlock,Open <device_name1> and unlock <device_name2>,1
+garage_door|blinds,open_cover|open_cover,Open the <device_name1> and lift the <device_name2>,1
+garage_door|fan,close_cover|turn_off,Close <device_name1> and deactivate <device_name2>,1
+garage_door|light,open_cover|turn_on,Open <device_name1> and activate <device_name2>,1
+garage_door|lock,open_cover|unlock,Open <device_name1> and unlock <device_name2>,1
 light,toggle,Flip the <device_name> on or off,1
 light,toggle,Switch the <device_name> state,1
 light,toggle,Toggle the <device_name> state,1
@@ -69,11 +69,11 @@ light,turn_off,Turn off the <device_name>,1
 light,turn_on,Activate the <device_name>,1
 light,turn_on,Can you turn on the <device_name>?,1
 light,turn_on,Please switch on the <device_name>,1
-light|blinds,turn_off|close,Turn off <device_name1> and close <device_name2>,1
-light|blinds|fan,turn_on|close|decrease_speed,Turn on <device_name1> close <device_name2> and slow down <device_name3>,1
-light|blinds|garage_door,turn_on|open|close,Turn on <device_name1> open <device_name2> and close <device_name3>,1
-light|blinds|lock,turn_off|close|lock,"Turn off the <device_name1> close the <device_name2> and lock the <device_name3>",1
-light|blinds|lock,turn_off|close|unlock,Turn off <device_name1> close <device_name2> and unlock <device_name3>,1
+light|blinds,turn_off|close_cover,Turn off <device_name1> and close <device_name2>,1
+light|blinds|fan,turn_on|close_cover|decrease_speed,Turn on <device_name1> close <device_name2> and slow down <device_name3>,1
+light|blinds|garage_door,turn_on|open_cover|close_cover,Turn on <device_name1> open <device_name2> and close <device_name3>,1
+light|blinds|lock,turn_off|close_cover|lock,"Turn off the <device_name1> close the <device_name2> and lock the <device_name3>",1
+light|blinds|lock,turn_off|close_cover|unlock,Turn off <device_name1> close <device_name2> and unlock <device_name3>,1
 light|fan,toggle|decrease_speed,Toggle <device_name1> and slow down <device_name2>,1
 light|fan,toggle|increase_speed,Toggle <device_name1> and speed up <device_name2>,1
 light|fan,turn_off|turn_on,Turn off the <device_name1> and turn on <device_name2>,1
@@ -81,21 +81,21 @@ light|fan,turn_on|toggle,Switch on <device_name1> and toggle <device_name2>,1
 light|fan,turn_on|turn_off,Turn on the <device_name1> and turn off the <device_name2>,1
 light|fan,turn_on|turn_on,Turn on both the <device_name1> and <device_name2>,1
 light|fan,turn_on|turn_on,Turn on the <device_name1> and <device_name2>,1
-light|fan|blinds,toggle|increase_speed|open,Toggle <device_name1> speed up <device_name2> and open <device_name3>,1
-light|fan|blinds,turn_off|decrease_speed|close,Turn off <device_name1> slow down <device_name2> and close <device_name3>,1
-light|fan|blinds,turn_off|turn_off|close,Turn off <device_name1> and <device_name2> and close <device_name3>,1
-light|fan|garage_door,toggle|decrease_speed|open,Toggle <device_name1> slow down <device_name2> and open <device_name3>,1
-light|fan|garage_door,turn_off|turn_on|close,Turn off <device_name1> turn on <device_name2> and close <device_name3>,1
-light|fan|garage_door,turn_on|toggle|open,"Switch on the <device_name1> flip the <device_name2> and lift the <device_name3>",1
-light|fan|garage_door,turn_on|turn_on|open,Turn on <device_name1> and <device_name2> and open <device_name3>,1
+light|fan|blinds,toggle|increase_speed|open_cover,Toggle <device_name1> speed up <device_name2> and open <device_name3>,1
+light|fan|blinds,turn_off|decrease_speed|close_cover,Turn off <device_name1> slow down <device_name2> and close <device_name3>,1
+light|fan|blinds,turn_off|turn_off|close_cover,Turn off <device_name1> and <device_name2> and close <device_name3>,1
+light|fan|garage_door,toggle|decrease_speed|open_cover,Toggle <device_name1> slow down <device_name2> and open <device_name3>,1
+light|fan|garage_door,turn_off|turn_on|close_cover,Turn off <device_name1> turn on <device_name2> and close <device_name3>,1
+light|fan|garage_door,turn_on|toggle|open_cover,"Switch on the <device_name1> flip the <device_name2> and lift the <device_name3>",1
+light|fan|garage_door,turn_on|turn_on|open_cover,Turn on <device_name1> and <device_name2> and open <device_name3>,1
 light|fan|lock,toggle|toggle|lock,Toggle both <device_name1> and <device_name2> and lock <device_name3>,1
 light|fan|lock,turn_off|turn_off|unlock,Turn off <device_name1> and <device_name2> and unlock <device_name3>,1
 light|fan|lock,turn_on|increase_speed|lock,Turn on <device_name1> speed up <device_name2> and lock <device_name3>,1
 light|fan|lock,turn_on|turn_on|unlock,Turn on both <device_name1> and <device_name2> and unlock <device_name3>,1
-light|garage_door,toggle|stop,Toggle the <device_name1> and stop the <device_name2>,1
-light|garage_door,turn_on|open,Switch on <device_name1> and open <device_name2>,1
-light|garage_door,turn_on|open,Switch on the <device_name1> and open the <device_name2>,1
-light|garage_door|lock,turn_on|open|lock,Turn on <device_name1> open <device_name2> and lock <device_name3>,1
+light|garage_door,toggle|stop_cover,Toggle the <device_name1> and stop the <device_name2>,1
+light|garage_door,turn_on|open_cover,Switch on <device_name1> and open <device_name2>,1
+light|garage_door,turn_on|open_cover,Switch on the <device_name1> and open the <device_name2>,1
+light|garage_door|lock,turn_on|open_cover|lock,Turn on <device_name1> open <device_name2> and lock <device_name3>,1
 light|light,toggle|toggle,Toggle both <device_name1> and <device_name2>,1
 light|light,turn_on|turn_off,Turn on <device_name1> and turn off <device_name2>,1
 light|light|fan,toggle|toggle|decrease_speed,Toggle both <device_name1> and <device_name2> and slow down <device_name3>,1
@@ -108,24 +108,24 @@ lock,lock,Secure the <device_name>,1
 lock,unlock,Disengage the <device_name> lock,1
 lock,unlock,Unlock the <device_name>,1
 lock,unlock,Unsecure the <device_name>,1
-lock|blinds,lock|close,Lock the <device_name1> and lower the <device_name2>,1
-lock|garage_door,lock|close,Secure the <device_name1> and shut the <device_name2>,1
+lock|blinds,lock|close_cover,Lock the <device_name1> and lower the <device_name2>,1
+lock|garage_door,lock|close_cover,Secure the <device_name1> and shut the <device_name2>,1
 light,turn_on,Make sure the <device_name> is on,1
 fan,turn_on,Make sure the <device_name> is on,1
-lock|lock|garage_door,lock|lock|close,Make sure <device_name1> and <device_name2> are locked and the <device_name3> is closed,1
+lock|lock|garage_door,lock|lock|close_cover,Make sure <device_name1> and <device_name2> are locked and the <device_name3> is closed,1
 light,turn_off,Ensure the <device_name> is off,1
 fan,turn_off,Ensure the <device_name> is off,1
-garage_door,close,Make certain the <device_name> is closed,1
-blinds,open,See to it that the <device_name> are open,1
+garage_door,close_cover,Make certain the <device_name> is closed,1
+blinds,open_cover,See to it that the <device_name> are open,1
 lock,lock,Ensure <device_name> is secure,1
 light,toggle,Can you flip the <device_name>,1
 fan,increase_speed,Step up the speed of the <device_name>,1
-garage_door,open,Make certain the <device_name> is open,1
-blinds,close,See to it that the <device_name> are closed,1
+garage_door,open_cover,Make certain the <device_name> is open,1
+blinds,close_cover,See to it that the <device_name> are closed,1
 lock,unlock,Make sure <device_name> is unlocked,1
 fan,decrease_speed,Slow down the <device_name>,1
 light,turn_on,Confirm that the <device_name> is on,1
-garage_door,stop,Stop the <device_name> right now,1
+garage_door,stop_cover,Stop the <device_name> right now,1
 light,turn_off,Confirm that the <device_name> is off,1
 garage_door,toggle,Toggle the <device_name> position,1
 blinds,toggle,Switch the state of the <device_name>,1
