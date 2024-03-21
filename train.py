@@ -67,15 +67,15 @@ python3 train.py \
 
 """
 python3 train.py \
-    --run_name stablehome-3b-rev5 \
+    --run_name stablehome-3b-rev8 \
     --base_model stabilityai/stablelm-zephyr-3b \
     --bf16 \
     --train_dataset data/home_assistant_train.jsonl \
     --test_dataset data/home_assistant_test.jsonl \
-    --learning_rate 1e-5 \
-    --micro_batch_size 4 --gradient_checkpointing \
+    --learning_rate 1e-5 --batch_size 128 --epochs 2 \
+    --micro_batch_size 8 --gradient_checkpointing \
     --ctx_size 2048 \
-    --save_steps 400 --save_total_limit 20 \
+    --save_steps 50 --save_total_limit 20 --eval_steps 100 --logging_steps 2 \
     --use_lora --lora_rank 64 --lora_alpha 128 --lora_modules up_proj,down_proj,q_proj,v_proj,o_proj --lora_merge
 """
 
@@ -109,6 +109,7 @@ class TrainingRunArguments:
     eval_steps: int = field(default=200, metadata={"help": "The number of steps in between evaluations of the model; set to -1 to evaluate every epoch"})
     save_steps: int = field(default=-1, metadata={"help": "The number of steps in between model checkpoints; set to -1 to save every epoch"})
     save_total_limit: int = field(default=1, metadata={"help": "The number of recent checkpoints of the model to save (not including the final model)"})
+    logging_steps: int = field(default=5, metadata={"help": "Sets the number of steps in between log output for the training run"})
     group_by_length: bool = field(default=False, metadata={"help": "If enabled, the training data will be grouped by length to optimize use of padding"})
     pre_allocate_cuda_buffers: bool = field(default=True, metadata={"help": "If enabled, runs a forward and backward pass on the model before training to force pytorch to allocate the correct size CUDA buffers up front"})
     
@@ -255,7 +256,7 @@ training_args = TrainingArguments(
     save_strategy=("steps" if training_run_args.save_steps != -1 else "epoch"),
     save_steps=(training_run_args.save_steps if training_run_args.save_steps != -1 else None),
     save_safetensors=True,
-    logging_steps=5, 
+    logging_steps=training_run_args.logging_steps, 
     output_dir=model_dir,
     num_train_epochs=training_run_args.epochs,
     save_total_limit=training_run_args.save_total_limit,
@@ -265,7 +266,7 @@ training_args = TrainingArguments(
     log_level="info",
     bf16=training_run_args.bf16,
     group_by_length=training_run_args.group_by_length,
-    skip_memory_metrics=True,
+    # skip_memory_metrics=True,
     **training_kwargs,
     # include_inputs_for_metrics=True,
 )
