@@ -4,7 +4,7 @@
 - [ ] detection/mitigation of too many entities being exposed & blowing out the context length
 - [ ] areas/room support  
 - [ ] figure out DPO for refusals + fixing incorrect entity id  
-- [ ] mixtral + prompting (no fine tuning)  
+- [x] mixtral + prompting (no fine tuning)  
     - add in context learning variables to sys prompt template
     - add new options to setup process for setting prompt style + picking fine-tuned/ICL  
 - [ ] prime kv cache with current "state" so that requests are faster  
