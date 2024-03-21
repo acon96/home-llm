@@ -9,10 +9,12 @@ There are multiple backends to choose for running the model that the Home Assist
 | Prompt Format | The format for the context of the model |  |
 | Maximum tokens to return in response | Limits the number of tokens that can be produced by each model response | 512 |
 | Additional attribute to expose in the context | Extra attributes that will be exposed to the model via the `{{ devices }}` template variable |  |
+| Arguments allowed to be pass to service calls | Any arguments not listed here will be filtered out of service calls. Used to restrict the model from modifying certain parts of your home. |  |
 | Service Call Regex | The regular expression used to extract service calls from the model response; should contain 1 repeated capture group |  |
 | Refresh System Prompt Every Turn | Flag to update the system prompt with updated device states on every chat turn. Disabling can significantly improve agent response times when using a backend that supports prefix caching (Llama.cpp) | Enabled |
 | Remember conversation | Flag to remember the conversation history (excluding system prompt) in the model context. | Enabled |
 | Number of past interactions to remember | If `Remember conversation` is enabled, number of user-assistant interaction pairs to keep in history. |  |
+| Enable in context learning (ICL) examples | If enabled, will load examples from `in_context_examples.csv` and expose them as the `{{ response_examples }}` variable in the system prompt template | |
 
 # Llama.cpp
 For details about the sampling parameters, see here: https://github.com/oobabooga/text-generation-webui/wiki/03-%E2%80%90-Parameters-Tab#parameters-description
