@@ -1,8 +1,8 @@
 {
     "config": {
         "error": {
-            "download_failed": "The download failed to complete!",
-            "failed_to_connect": "Failed to connect to the remote API. See the logs for more details.",
+            "download_failed": "The download failed to complete: {exception}",
+            "failed_to_connect": "Failed to connect to the remote API: {exception}",
             "missing_model_api": "The selected model is not provided by this API.",
             "missing_model_file": "The provided file does not exist.",
             "other_existing_local": "Another model is already loaded locally. Please unload it or configure a remote model.",
