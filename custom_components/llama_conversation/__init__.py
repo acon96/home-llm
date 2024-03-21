@@ -446,11 +446,8 @@ class LLaMAAgent(AbstractConversationAgent):
             entity_names = entity_names[:]
             
             # filter out examples for disabled services
-            # in_context_examples = [ x for x in self.in_context_examples if x["service"] in service_names and x["service"].split(".")[0] in entity_domains ]
             selected_in_context_examples = []
-            _LOGGER.debug(service_names)
             for x in self.in_context_examples:
-                _LOGGER.debug(str(x))
                 if x["service"] in service_names and x["service"].split(".")[0] in entity_domains:
                     selected_in_context_examples.append(x)
 
