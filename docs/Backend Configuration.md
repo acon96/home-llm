@@ -9,10 +9,12 @@ There are multiple backends to choose for running the model that the Home Assist
 | Prompt Format | The format for the context of the model |  |
 | Maximum tokens to return in response | Limits the number of tokens that can be produced by each model response | 512 |
 | Additional attribute to expose in the context | Extra attributes that will be exposed to the model via the `{{ devices }}` template variable |  |
+| Arguments allowed to be pass to service calls | Any arguments not listed here will be filtered out of service calls. Used to restrict the model from modifying certain parts of your home. |  |
 | Service Call Regex | The regular expression used to extract service calls from the model response; should contain 1 repeated capture group |  |
 | Refresh System Prompt Every Turn | Flag to update the system prompt with updated device states on every chat turn. Disabling can significantly improve agent response times when using a backend that supports prefix caching (Llama.cpp) | Enabled |
 | Remember conversation | Flag to remember the conversation history (excluding system prompt) in the model context. | Enabled |
 | Number of past interactions to remember | If `Remember conversation` is enabled, number of user-assistant interaction pairs to keep in history. |  |
+| Enable in context learning (ICL) examples | If enabled, will load examples from `in_context_examples.csv` and expose them as the `{{ response_examples }}` variable in the system prompt template | |
 
 # Llama.cpp
 For details about the sampling parameters, see here: https://github.com/oobabooga/text-generation-webui/wiki/03-%E2%80%90-Parameters-Tab#parameters-description
@@ -27,9 +29,16 @@ For details about the sampling parameters, see here: https://github.com/oobaboog
 | Option Name | Description | Suggested Value |
 | ------------ | --------- | ------------ |
 | Request Timeout | The maximum time in seconds that the integration will wait for a response from the remote server | 90 (higher if running on low resource hardware) |
-| Use chat completions endpoint | Flag to use `/v1/chat/completions` as the remote endpoint instead of `/v1/completions` |  |
+| Use chat completions endpoint | If set, tells text-generation-webui to format the prompt instead of this extension. Prompt Format set here will not apply if this is enabled |  |
 | Generation Preset/Character Name | The preset or character name to pass to the backend. If none is provided then the settings that are currently selected in the UI will be applied |  |
 | Chat Mode | [see here](https://github.com/oobabooga/text-generation-webui/wiki/01-%E2%80%90-Chat-Tab#mode) | Instruct |
+
+# Ollama
+| Option Name | Description | Suggested Value |
+| ------------ | --------- | ------------ |
+| Request Timeout | The maximum time in seconds that the integration will wait for a response from the remote server | 90 (higher if running on low resource hardware) |
+| Keep Alive/Inactivity Timeout | The duration in minutes to keep the model loaded after each request. Set to a negative value to keep loaded forever | 30m |
+| Use chat completions endpoint | If set, tells Ollama to format the prompt instead of this extension. Prompt Format set here will not apply if this is enabled |  |
 
 # Generic OpenAI API Compatible
 For details about the sampling parameters, see here: https://github.com/oobabooga/text-generation-webui/wiki/03-%E2%80%90-Parameters-Tab#parameters-description

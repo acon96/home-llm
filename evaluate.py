@@ -10,18 +10,23 @@ from tqdm import tqdm
 CTX_SIZE = 2048
 
 """
-python3 evaluate.py stablehome-3b-rev1/checkpoint-400 --batch-size 4 --lora && \
-  python3 evaluate.py stablehome-3b-rev1/checkpoint-800 --batch-size 4 --lora && \
-  python3 evaluate.py stablehome-3b-rev1/checkpoint-1200 --batch-size 4 --lora && \
-  python3 evaluate.py stablehome-3b-rev1/checkpoint-1600 --batch-size 4 --lora && \
-  python3 evaluate.py stablehome-3b-rev1/checkpoint-2000 --batch-size 4 --lora && \
-  python3 evaluate.py stablehome-3b-rev1/checkpoint-2400 --batch-size 4 --lora && \
-  python3 evaluate.py stablehome-3b-rev1/checkpoint-2800 --batch-size 4 --lora && \
-  python3 evaluate.py stablehome-3b-rev1/checkpoint-3200 --batch-size 4 --lora && \
-  python3 evaluate.py stablehome-3b-rev1/checkpoint-3600 --batch-size 4 --lora && \
-  python3 evaluate.py stablehome-3b-rev1/checkpoint-4000 --batch-size 4 --lora && \
-  python3 evaluate.py stablehome-3b-rev1 --batch-size 4 --lora
+python3 evaluate.py stablehome-3b-rev7/checkpoint-50 --batch-size 4 --lora && \
+  python3 evaluate.py stablehome-3b-rev7/checkpoint-100 --batch-size 4 --lora && \
+  python3 evaluate.py stablehome-3b-rev7/checkpoint-150 --batch-size 4 --lora && \
+  python3 evaluate.py stablehome-3b-rev7/checkpoint-200 --batch-size 4 --lora && \
+  python3 evaluate.py stablehome-3b-rev7/checkpoint-250 --batch-size 4 --lora && \
+  python3 evaluate.py stablehome-3b-rev7/checkpoint-300 --batch-size 4 --lora && \
+  python3 evaluate.py stablehome-3b-rev7/checkpoint-350 --batch-size 4 --lora && \
+  python3 evaluate.py stablehome-3b-rev7/checkpoint-400 --batch-size 4 --lora && \
+  python3 evaluate.py stablehome-3b-rev7/checkpoint-450 --batch-size 4 --lora && \
+  python3 evaluate.py stablehome-3b-rev7/checkpoint-500 --batch-size 4 --lora && \
+  python3 evaluate.py stablehome-3b-rev7/checkpoint-550 --batch-size 4 --lora && \
+  python3 evaluate.py stablehome-3b-rev7/checkpoint-600 --batch-size 4 --lora && \
+  python3 evaluate.py stablehome-3b-rev7/checkpoint-650 --batch-size 4 --lora && \
+  python3 evaluate.py stablehome-3b-rev7 --batch-size 4 --lora
 """
+
+# TODO: auto detect all the checkpoints to run
 
 def tokenize(tokenizer, prompt):
     return tokenizer(prompt, return_tensors="pt", padding=True, truncation=True, max_length=CTX_SIZE)

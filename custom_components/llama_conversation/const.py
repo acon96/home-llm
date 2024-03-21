@@ -36,8 +36,11 @@ DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = "5000"
 DEFAULT_SSL = False
 CONF_EXTRA_ATTRIBUTES_TO_EXPOSE = "extra_attributes_to_expose"
-DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "media_title", "volume_level"]
+DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "media_title", "volume_level", "item"]
+CONF_ALLOWED_SERVICE_CALL_ARGUMENTS = "allowed_service_call_arguments"
+DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "hvac_mode", "preset_mode", "item", "duration"]
 GBNF_GRAMMAR_FILE = "output.gbnf"
+IN_CONTEXT_EXAMPLES_FILE = "in_context_examples.csv"
 CONF_PROMPT_TEMPLATE = "prompt_template"
 PROMPT_TEMPLATE_CHATML = "chatml"
 PROMPT_TEMPLATE_ALPACA = "alpaca"
@@ -73,8 +76,7 @@ PROMPT_TEMPLATE_DESCRIPTIONS = {
         "generation_prompt": ""
     },
     PROMPT_TEMPLATE_MISTRAL: {
-        "system": { "prefix": "<s>", "suffix": "" },
-        "user": { "prefix": "[INST]", "suffix": "[/INST]" },
+        "user": { "prefix": "<s>[INST] ", "suffix": " [/INST] " },
         "assistant": { "prefix": "", "suffix": "</s>" },
         "generation_prompt": ""
     },
@@ -87,6 +89,8 @@ PROMPT_TEMPLATE_DESCRIPTIONS = {
 }
 CONF_USE_GBNF_GRAMMAR = "gbnf_grammar"
 DEFAULT_USE_GBNF_GRAMMAR = False
+CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES = "in_context_examples"
+DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES = False
 CONF_TEXT_GEN_WEBUI_PRESET = "text_generation_webui_preset"
 CONF_OPENAI_API_KEY = "openai_api_key"
 CONF_TEXT_GEN_WEBUI_ADMIN_KEY = "text_generation_webui_admin_key"

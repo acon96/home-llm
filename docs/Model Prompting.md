@@ -15,8 +15,8 @@ The `services` and `devices` variables are special variables that are provided b
 - `services` expands into a comma separated list of the services that correlate with the devices that have been exposed to the Voice Assistant.
 - `devices` expands into a multi-line block where each line is the format `<entity_id> '<friendly_name> = <state>;<extra_attributes_to_expose>`
 
-### Model "Persona"
-The model is trained with a few different personas. They can be activated by using their system prompt found below:
+### Home Model "Persona"
+The Home model is trained with a few different personas. They can be activated by using their system prompt found below:
 
 Al the Assistant - Responds politely and concisely
 ```
@@ -42,3 +42,37 @@ Currently supported prompt formats are:
 3. Alpaca
 4. Mistral
 5. None (useful for foundation models)
+
+## Prompting other models with In Context Learning
+It is possible to use models that are not fine-tuned with the dataset via the usage of In Context Learning (ICL) examples. These examples condition the model to output the correct JSON schema without any fine-tuning of the model.
+
+Here is an example configuration of using Mixtral-7B-Instruct-v0.2.
+First, download and set up the model on the desired backend.
+
+Then, navigate to the conversation agent's configuration page and set the following options:
+
+System Prompt:
+```
+You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task ask instructed with the information provided only.
+Services: {{ services }}
+Devices:
+{{ devices }}
+
+Respond to the following user instruction by responding in the same format as the following examples:
+{{ response_examples }}
+
+User instruction:
+```
+Prompt Format: `Mistral`  
+Service Call Regex: `({[\S \t]*?})`  
+Enable in context learning (ICL) examples: Checked
+
+### Explanation
+Enabling in context learning examples exposes the additional `{{ response_examples }}` variable for the system prompt. This variable is expanded to include various examples in the following format:
+```
+{"to_say": "Switching off the fan as requested.", "service": "fan.turn_off", "target_device": "fan.ceiling_fan"}
+{"to_say": "the todo has been added to your todo list.", "service": "todo.add_item", "target_device": "todo.shopping_list"}
+{"to_say": "Starting media playback.", "service": "media_player.media_play", "target_device": "media_player.bedroom"}
+```
+
+These examples are loaded from the `in_context_examples.csv` file in the `/custom_components/llama_conversation/` folder.

@@ -1,13 +1,13 @@
 service_name,device_name,english_phrase
-blinds.close,kitchen,Lower the kitchen blinds
-blinds.close,living_room,Close the living room blinds
-blinds.close,master_bedroom,Shut the master bedroom blinds
-blinds.open,kitchen,Could you raise the kitchen blinds
-blinds.open,living_room,Open the living room blinds
-blinds.open,master_bedroom,Lift the master bedroom blinds
-blinds.stop,kitchen,Stop the kitchen blinds where they are
-blinds.stop,living_room,Stop adjusting the living room blinds
-blinds.stop,master_bedroom,Please halt the master bedroom blinds
+blinds.close_cover,kitchen,Lower the kitchen blinds
+blinds.close_cover,living_room,Close the living room blinds
+blinds.close_cover,master_bedroom,Shut the master bedroom blinds
+blinds.open_cover,kitchen,Could you raise the kitchen blinds
+blinds.open_cover,living_room,Open the living room blinds
+blinds.open_cover,master_bedroom,Lift the master bedroom blinds
+blinds.stop_cover,kitchen,Stop the kitchen blinds where they are
+blinds.stop_cover,living_room,Stop adjusting the living room blinds
+blinds.stop_cover,master_bedroom,Please halt the master bedroom blinds
 blinds.toggle,kitchen,Switch the state of the kitchen blinds
 blinds.toggle,living_room,Toggle the living room blinds
 blinds.toggle,master_bedroom,Reverse the master bedroom blinds
@@ -74,17 +74,17 @@ fan.turn_on,living_room,Turn on the living room fan
 fan.turn_on,office,Could you enable the office fan
 fan.turn_on,study,Activate the study fan
 fan.turn_on,study,Switch on the study fan
-garage_door.close,bike_storage,Deactivate the bike storage garage
-garage_door.close,main,Close the main garage door
-garage_door.close,one_car,Make sure the one car garage is closed
-garage_door.close,side,Lower the side garage door
-garage_door.open,basement,Please raise the basement garage door
-garage_door.open,bike_storage,Activate the bike storage garage
-garage_door.open,main,Open the main garage door
-garage_door.open,side,Could you lift the side garage door
-garage_door.open,two_car,Open the two car garage
-garage_door.stop,main,Stop the main garage door
-garage_door.stop,side,Halt the side garage door
+garage_door.close_cover,bike_storage,Deactivate the bike storage garage
+garage_door.close_cover,main,Close the main garage door
+garage_door.close_cover,one_car,Make sure the one car garage is closed
+garage_door.close_cover,side,Lower the side garage door
+garage_door.open_cover,basement,Please raise the basement garage door
+garage_door.open_cover,bike_storage,Activate the bike storage garage
+garage_door.open_cover,main,Open the main garage door
+garage_door.open_cover,side,Could you lift the side garage door
+garage_door.open_cover,two_car,Open the two car garage
+garage_door.stop_cover,main,Stop the main garage door
+garage_door.stop_cover,side,Halt the side garage door
 garage_door.toggle,main,Toggle the main garage door
 garage_door.toggle,side,Switch the state of the side garage door
 light.toggle,attic,Change the light status in the attic

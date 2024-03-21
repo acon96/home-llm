@@ -1,12 +1,15 @@
 # TODO
-- [ ] setup github actions to build wheels that are optimized for RPIs
+- [ ] setup github actions to build wheels that are optimized for RPIs??
+- [ ] setup github actions to publish docker images for text-gen-webui addon
 - [ ] detection/mitigation of too many entities being exposed & blowing out the context length
 - [ ] areas/room support  
 - [ ] figure out DPO for refusals + fixing incorrect entity id  
-- [ ] mixtral + prompting (no fine tuning)  
+- [x] mixtral + prompting (no fine tuning)  
     - add in context learning variables to sys prompt template
     - add new options to setup process for setting prompt style + picking fine-tuned/ICL  
 - [ ] prime kv cache with current "state" so that requests are faster  
+- [ ] support fine-tuning with RoPE for longer contexts  
+- [ ] support config via yaml instead of configflow
 - [x] ChatML format (actually need to add special tokens)  
 - [x] Vicuna dataset merge (yahma/alpaca-cleaned)  
 - [x] Phi-2 fine tuning  

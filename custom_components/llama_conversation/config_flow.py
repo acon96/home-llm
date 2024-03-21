@@ -48,10 +48,12 @@ from .const import (
     CONF_PROMPT_TEMPLATE,
     CONF_USE_GBNF_GRAMMAR,
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
+    CONF_ALLOWED_SERVICE_CALL_ARGUMENTS,
     CONF_TEXT_GEN_WEBUI_PRESET,
     CONF_REFRESH_SYSTEM_PROMPT,
     CONF_REMEMBER_CONVERSATION,
     CONF_REMEMBER_NUM_INTERACTIONS,
+    CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
     CONF_OPENAI_API_KEY,
     CONF_TEXT_GEN_WEBUI_ADMIN_KEY,
     CONF_SERVICE_CALL_REGEX,
@@ -73,8 +75,10 @@ from .const import (
     DEFAULT_PROMPT_TEMPLATE,
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
+    DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS,
     DEFAULT_REFRESH_SYSTEM_PROMPT,
     DEFAULT_REMEMBER_CONVERSATION,
+    DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
     DEFAULT_SERVICE_CALL_REGEX,
     DEFAULT_OPTIONS,
     DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
@@ -225,17 +229,6 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         """Return the correct flow manager."""
         return self.hass.config_entries.flow
 
-    async def _async_do_task(self, task):
-        result = await task  # A task that take some time to complete.
-
-        # Continue the flow after show progress when the task is done.
-        # To avoid a potential deadlock we create a new task that continues the flow.
-        # The task must be completely done so the flow can await the task
-        # if needed and get the task result.
-        self.hass.async_create_task(
-            self.hass.config_entries.flow.async_configure(flow_id=self.flow_id, user_input={"result": result })
-        )
-
     def async_remove(self) -> None:
         if self.download_task:
             self.download_task.cancel()
@@ -283,47 +276,48 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
     async def async_step_install_local_wheels(
       self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        if not user_input:
-            if self.install_wheel_task:
-                return self.async_show_progress(
-                    progress_task=self.install_wheel_task,
-                    step_id="install_local_wheels",
-                    progress_action="install_local_wheels",
-                )
-
+        if not self.install_wheel_task:
             _LOGGER.debug("Queuing install task...")
             self.install_wheel_task = self.hass.async_add_executor_job(
                 install_llama_cpp_python, self.hass.config.config_dir
             )
-
-            self.hass.async_create_task(self._async_do_task(self.install_wheel_task))
 
             return self.async_show_progress(
                 progress_task=self.install_wheel_task,
                 step_id="install_local_wheels",
                 progress_action="install_local_wheels",
             )
+        
+        if self.install_wheel_task and not self.install_wheel_task.done():
+            return self.async_show_progress(
+                progress_task=self.install_wheel_task,
+                step_id="install_local_wheels",
+                progress_action="install_local_wheels",
+            )
 
-        wheel_install_result = user_input["result"]
-        if isinstance(wheel_install_result, Exception):
-            _LOGGER.warning("Failed to install wheel: %s", repr(wheel_install_result))
-            self.install_wheel_error = wheel_install_result
-            self.install_wheel_task = None
-            return self.async_show_progress_done(next_step_id="pick_backend")
-        elif wheel_install_result == False:
-            _LOGGER.warning("Failed to install wheel: %s", repr(wheel_install_result))
-            self.install_wheel_error = "pip_wheel_error"
-            self.install_wheel_task = None
-            return self.async_show_progress_done(next_step_id="pick_backend")
+        install_exception = self.install_wheel_task.exception()
+        if install_exception:
+            _LOGGER.warning("Failed to install wheel: %s", repr(install_exception))
+            self.install_wheel_error = install_exception
+            next_step = "pick_backend"
         else:
-            _LOGGER.debug(f"Finished install: {wheel_install_result}")
-            self.install_wheel_task = None
-            return self.async_show_progress_done(next_step_id="local_model")
+            wheel_install_result = self.install_wheel_task.result()
+            if not wheel_install_result:
+                _LOGGER.warning("Failed to install wheel: %s", repr(wheel_install_result))
+                self.install_wheel_error = "pip_wheel_error"
+                next_step = "pick_backend"
+            else:
+                _LOGGER.debug(f"Finished install: {wheel_install_result}")
+                next_step = "local_model"
+
+        self.install_wheel_task = None
+        return self.async_show_progress_done(next_step_id=next_step)
 
     async def async_step_local_model(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         errors = {}
+        description_placeholders = {}
 
         backend_type = self.model_config[CONF_BACKEND_TYPE]
         if backend_type == BACKEND_TYPE_LLAMA_HF:
@@ -335,6 +329,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
 
         if self.download_error:
             errors["base"] = "download_failed"
+            description_placeholders["exception"] = str(self.download_error)
             schema = STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(
                 chat_model=self.model_config[CONF_CHAT_MODEL],
                 downloaded_model_quantization=self.model_config[CONF_DOWNLOADED_MODEL_QUANTIZATION]
@@ -354,49 +349,53 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                     schema = STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA(model_file)
 
         return self.async_show_form(
-            step_id="local_model", data_schema=schema, errors=errors
+            step_id="local_model", data_schema=schema, errors=errors, description_placeholders=description_placeholders,
         )
 
     async def async_step_download(
       self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        if not user_input:
-            if self.download_task:
-                return self.async_show_progress(
-                    progress_task=self.download_task,
-                    step_id="download",
-                    progress_action="download",
-                )
-
+        if not self.download_task:
             model_name = self.model_config[CONF_CHAT_MODEL]
             quantization_type = self.model_config[CONF_DOWNLOADED_MODEL_QUANTIZATION]
 
-            storage_folder = os.path.join(self.hass.config.media_dirs["local"], "models")
+            storage_folder = os.path.join(self.hass.config.media_dirs.get("local", self.hass.config.path("media")), "models")
             self.download_task = self.hass.async_add_executor_job(
                 download_model_from_hf, model_name, quantization_type, storage_folder
             )
-
-            self.hass.async_create_task(self._async_do_task(self.download_task))
 
             return self.async_show_progress(
                 progress_task=self.download_task,
                 step_id="download",
                 progress_action="download",
             )
+        
+        if self.download_task and not self.download_task.done():
+            return self.async_show_progress(
+                progress_task=self.download_task,
+                step_id="download",
+                progress_action="download",
+            )
 
-        download_result = user_input["result"]
-        self.download_task = None
-
-        if isinstance(download_result, Exception):
-            _LOGGER.info("Failed to download model: %s", repr(download_result))
-            self.download_error = download_result
-            return self.async_show_progress_done(next_step_id="local_model")
+        download_exception = self.download_task.exception()
+        if download_exception:
+            _LOGGER.info("Failed to download model: %s", repr(download_exception))
+            self.download_error = download_exception
+            next_step = "local_model"
         else:
-            self.model_config[CONF_DOWNLOADED_MODEL_FILE] = download_result
-            return self.async_show_progress_done(next_step_id="finish")
+            self.model_config[CONF_DOWNLOADED_MODEL_FILE] = self.download_task.result()
+            next_step = "finish"
 
-
+        self.download_task = None
+        return self.async_show_progress_done(next_step_id=next_step)
+    
     def _validate_text_generation_webui(self, user_input: dict) -> str:
+        """
+        Validates a connection to text-generation-webui and that the model exists on the remote server
+
+        :param user_input: the input dictionary used to build the connection
+        :return: a tuple of (error message name, exception detail); both can be None
+        """
         try:
             headers = {}
             api_key = user_input.get(CONF_TEXT_GEN_WEBUI_ADMIN_KEY, user_input.get(CONF_OPENAI_API_KEY))
@@ -413,15 +412,21 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
 
             for model in models["model_names"]:
                 if model == self.model_config[CONF_CHAT_MODEL].replace("/", "_"):
-                    return ""
+                    return None, None
 
-            return "missing_model_api"
+            return "missing_model_api", None
 
         except Exception as ex:
             _LOGGER.info("Connection error was: %s", repr(ex))
-            return "failed_to_connect"
+            return "failed_to_connect", ex
         
     def _validate_ollama(self, user_input: dict) -> str:
+        """
+        Validates a connection to ollama and that the model exists on the remote server
+
+        :param user_input: the input dictionary used to build the connection
+        :return: a tuple of (error message name, exception detail); both can be None
+        """
         try:
             headers = {}
             api_key = user_input.get(CONF_OPENAI_API_KEY)
@@ -440,21 +445,21 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                 model_name = self.model_config[CONF_CHAT_MODEL]
                 if ":" in model_name:
                     if model["name"] == model_name:
-                        return ""
+                        return None, None
                 elif model["name"].split(":")[0] == model_name:
-                    return ""
+                    return None, None
                 
-
-            return "missing_model_api"
+            return "missing_model_api", None
 
         except Exception as ex:
             _LOGGER.info("Connection error was: %s", repr(ex))
-            return "failed_to_connect"
+            return "failed_to_connect", ex
 
     async def async_step_remote_model(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         errors = {}
+        description_placeholders = {}
         backend_type = self.model_config[CONF_BACKEND_TYPE]
         schema = STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type)
 
@@ -465,16 +470,18 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
 
                 # validate and load when using text-generation-webui or ollama
                 if backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
-                    error_reason = await self.hass.async_add_executor_job(
+                    error_message, ex = await self.hass.async_add_executor_job(
                         self._validate_text_generation_webui, user_input
                     )
                 elif backend_type == BACKEND_TYPE_OLLAMA:
-                    error_reason = await self.hass.async_add_executor_job(
+                    error_message, ex = await self.hass.async_add_executor_job(
                         self._validate_ollama, user_input
                     )
 
-                if error_reason:
-                    errors["base"] = error_reason
+                if error_message:
+                    errors["base"] = error_message
+                    if ex:
+                        description_placeholders["exception"] = str(ex)
                     schema = STEP_REMOTE_SETUP_DATA_SCHEMA(
                         backend_type,
                         host=user_input[CONF_HOST],
@@ -493,7 +500,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                 errors["base"] = "unknown"
 
         return self.async_show_form(
-            step_id="remote_model", data_schema=schema, errors=errors
+            step_id="remote_model", data_schema=schema, errors=errors, description_placeholders=description_placeholders,
         )
 
     async def async_step_finish(
@@ -532,6 +539,7 @@ class OptionsFlow(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
+            # TODO: validate that files exist (GBNF + ICL examples)
             return self.async_create_entry(title="LLaMA Conversation", data=user_input)
         schema = local_llama_config_option_schema(
             self.config_entry.options,
@@ -587,6 +595,11 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
             default=DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
         ): TextSelector(TextSelectorConfig(multiple=True)),
         vol.Required(
+            CONF_ALLOWED_SERVICE_CALL_ARGUMENTS,
+            description={"suggested_value": options.get(CONF_ALLOWED_SERVICE_CALL_ARGUMENTS)},
+            default=DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS,
+        ): TextSelector(TextSelectorConfig(multiple=True)),
+        vol.Required(
             CONF_SERVICE_CALL_REGEX,
             description={"suggested_value": options.get(CONF_SERVICE_CALL_REGEX)},
             default=DEFAULT_SERVICE_CALL_REGEX,
@@ -605,6 +618,11 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
             CONF_REMEMBER_NUM_INTERACTIONS,
             description={"suggested_value": options.get(CONF_REMEMBER_NUM_INTERACTIONS)},
         ): int,
+        vol.Required(
+            CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
+            description={"suggested_value": options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES)},
+            default=DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
+        ): bool,
     }
 
     if is_local_backend(backend_type):
