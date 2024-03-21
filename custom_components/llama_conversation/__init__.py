@@ -345,7 +345,7 @@ class LLaMAAgent(AbstractConversationAgent):
 
                 # fix certain arguments
                 # make sure brightness is 0-255 and not a percentage
-                if "brightness" in extra_arguments and 0.0 < extra_arguments["brightness"] < 1.0:
+                if "brightness" in extra_arguments and 0.0 < extra_arguments["brightness"] <= 1.0:
                     extra_arguments["brightness"] = int(extra_arguments["brightness"] * 255)
 
                 # convert string "tuple" to a list for RGB colors
