@@ -89,10 +89,11 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def update_listener(hass, entry):
     """Handle options update."""
+    hass.data[DOMAIN][entry.entry_id] = entry
+    
+    # call update handler
     agent = await ha_conversation._get_agent_manager(hass).async_get_agent(entry.entry_id)
     agent._update_options()
-
-    hass.data[DOMAIN][entry.entry_id] = entry
     return True
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -182,12 +183,22 @@ class LLaMAAgent(AbstractConversationAgent):
 
         if entry.options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES, DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES):
             self._load_icl_examples()
+        else:
+            self.in_context_examples = None
 
         self._load_model(entry)
 
     def _load_icl_examples(self):
         try:
-            self.in_context_examples = list(csv.DictReader(os.path.join(os.path.dirname(__file__), IN_CONTEXT_EXAMPLES_FILE)))
+            icl_filename = os.path.join(os.path.dirname(__file__), IN_CONTEXT_EXAMPLES_FILE)
+
+            with open(icl_filename) as f:
+                self.in_context_examples = list(csv.DictReader(f))
+
+                if set(self.in_context_examples[0].keys()) != set(["service", "response" ]):
+                    raise Exception("ICL csv file did not have 2 columns: service & response")
+
+            _LOGGER.debug(f"Loaded {len(self.in_context_examples)} examples for ICL")
         except Exception:
             _LOGGER.exception("Failed to load in context learning examples!")
             self.in_context_examples = None
@@ -312,13 +323,15 @@ class LLaMAAgent(AbstractConversationAgent):
                 if len(line) == 0:
                     break
 
-                # TODO: handle json only format for things like mistral
                 # parse old format or JSON format
                 try:
                     json_output = json.loads(line)
                     service = json_output["service"]
                     entity = json_output["target_device"]
                     domain, service = tuple(service.split("."))
+                    if "to_say" in json_output:
+                        to_say = to_say + json_output.pop("to_say")
+
                     extra_arguments = { k: v for k, v in json_output.items() if k not in [ "service", "target_device" ] }
                 except Exception:
                     try:
@@ -400,6 +413,11 @@ class LLaMAAgent(AbstractConversationAgent):
         prompt_template = self.entry.options.get(CONF_PROMPT_TEMPLATE, DEFAULT_PROMPT_TEMPLATE)
         template_desc = PROMPT_TEMPLATE_DESCRIPTIONS[prompt_template]
 
+        # handle models without a system prompt
+        if prompt[0]["role"] == "system" and "system" not in template_desc:
+            system_prompt = prompt.pop(0)
+            prompt[0]["message"] = system_prompt["message"] + prompt[0]["message"]
+
         for message in prompt:
             role = message["role"]
             message = message["message"]
@@ -411,7 +429,7 @@ class LLaMAAgent(AbstractConversationAgent):
         if include_generation_prompt:
             formatted_prompt = formatted_prompt + template_desc["generation_prompt"]
 
-        # _LOGGER.debug(formatted_prompt)
+        _LOGGER.debug(formatted_prompt)
         return formatted_prompt
 
     def _generate_system_prompt(self, prompt_template: str) -> str:
@@ -428,13 +446,19 @@ class LLaMAAgent(AbstractConversationAgent):
             entity_names = entity_names[:]
             
             # filter out examples for disabled services
-            in_context_examples = [ x for x in self.in_context_examples if x["service"] in service_names and x["service"].split(".")[0] in entity_domains ]
+            # in_context_examples = [ x for x in self.in_context_examples if x["service"] in service_names and x["service"].split(".")[0] in entity_domains ]
+            selected_in_context_examples = []
+            _LOGGER.debug(service_names)
+            for x in self.in_context_examples:
+                _LOGGER.debug(str(x))
+                if x["service"] in service_names and x["service"].split(".")[0] in entity_domains:
+                    selected_in_context_examples.append(x)
 
-            random.shuffle(in_context_examples)
+            random.shuffle(selected_in_context_examples)
             random.shuffle(entity_names)
             
             for x in range(num_examples):
-                chosen_example = in_context_examples.pop()
+                chosen_example = selected_in_context_examples.pop()
                 chosen_service = chosen_example["service"]
                 device = [ x for x in entity_names if x.split(".")[0] == chosen_service.split(".")[0] ][0]
                 example = {
@@ -484,11 +508,13 @@ class LLaMAAgent(AbstractConversationAgent):
 
         service_dict = self.hass.services.async_services()
         all_services = []
+        all_service_names = []
         for domain in domains:
             for name, service in service_dict.get(domain, {}).items():
                 args = flatten_vol_schema(service.schema)
                 args_to_expose = set(args).intersection(allowed_service_call_arguments)
                 all_services.append(f"{domain}.{name}({','.join(args_to_expose)})")
+                all_service_names.append(f"{domain}.{name}")
         formatted_services = ", ".join(all_services)
 
         render_variables = {
@@ -497,7 +523,8 @@ class LLaMAAgent(AbstractConversationAgent):
         }
 
         if self.in_context_examples:
-            render_variables["response_examples"] = icl_example_generator(10, list(entities_to_expose.keys()), all_services)
+            # TODO: make number of examples configurable
+            render_variables["response_examples"] = "\n".join(icl_example_generator(4, list(entities_to_expose.keys()), all_service_names))
         
         return template.Template(prompt_template, self.hass).async_render(
             render_variables,
@@ -560,6 +587,7 @@ class LocalLLaMAAgent(LLaMAAgent):
             self.grammar = None
 
     def _update_options(self):
+        LLaMAAgent._update_options()
         if self.entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
             self._load_grammar()
         else:

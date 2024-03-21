@@ -70,6 +70,7 @@
                     "refresh_prompt_per_tern": "Refresh System Prompt Every Turn",
                     "remember_conversation": "Remember conversation",
                     "remember_num_interactions": "Number of past interactions to remember",
+                    "in_context_examples": "Enable in context learning (ICL) examples",
                     "text_generation_webui_preset": "Generation Preset/Character Name",
                     "remote_use_chat_endpoint": "Use chat completions endpoint",
                     "text_generation_webui_chat_mode": "Chat Mode"

@@ -76,8 +76,7 @@ PROMPT_TEMPLATE_DESCRIPTIONS = {
         "generation_prompt": ""
     },
     PROMPT_TEMPLATE_MISTRAL: {
-        "system": { "prefix": "<s>", "suffix": "" },
-        "user": { "prefix": "[INST]", "suffix": "[/INST]" },
+        "user": { "prefix": "<s>[INST] ", "suffix": " [/INST] " },
         "assistant": { "prefix": "", "suffix": "</s>" },
         "generation_prompt": ""
     },

@@ -53,6 +53,7 @@ from .const import (
     CONF_REFRESH_SYSTEM_PROMPT,
     CONF_REMEMBER_CONVERSATION,
     CONF_REMEMBER_NUM_INTERACTIONS,
+    CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
     CONF_OPENAI_API_KEY,
     CONF_TEXT_GEN_WEBUI_ADMIN_KEY,
     CONF_SERVICE_CALL_REGEX,
@@ -77,6 +78,7 @@ from .const import (
     DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS,
     DEFAULT_REFRESH_SYSTEM_PROMPT,
     DEFAULT_REMEMBER_CONVERSATION,
+    DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
     DEFAULT_SERVICE_CALL_REGEX,
     DEFAULT_OPTIONS,
     DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
@@ -616,6 +618,11 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
             CONF_REMEMBER_NUM_INTERACTIONS,
             description={"suggested_value": options.get(CONF_REMEMBER_NUM_INTERACTIONS)},
         ): int,
+        vol.Required(
+            CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
+            description={"suggested_value": options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES)},
+            default=DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
+        ): bool,
     }
 
     if is_local_backend(backend_type):
