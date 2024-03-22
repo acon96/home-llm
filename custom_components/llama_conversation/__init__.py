@@ -234,6 +234,8 @@ class LLaMAAgent(AbstractConversationAgent):
         """Process a sentence."""
 
         raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
+        prompt_template = self.entry.options.get(CONF_PROMPT_TEMPLATE, DEFAULT_PROMPT_TEMPLATE)
+        template_desc = PROMPT_TEMPLATE_DESCRIPTIONS[prompt_template]
         refresh_system_prompt = self.entry.options.get(CONF_REFRESH_SYSTEM_PROMPT, DEFAULT_REFRESH_SYSTEM_PROMPT)
         remember_conversation = self.entry.options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION)
         remember_num_interactions = self.entry.options.get(CONF_REMEMBER_NUM_INTERACTIONS, False)
@@ -344,7 +346,7 @@ class LLaMAAgent(AbstractConversationAgent):
 
                 # fix certain arguments
                 # make sure brightness is 0-255 and not a percentage
-                if "brightness" in extra_arguments and 0.0 < extra_arguments["brightness"] < 1.0:
+                if "brightness" in extra_arguments and 0.0 < extra_arguments["brightness"] <= 1.0:
                     extra_arguments["brightness"] = int(extra_arguments["brightness"] * 255)
 
                 # convert string "tuple" to a list for RGB colors
@@ -373,7 +375,8 @@ class LLaMAAgent(AbstractConversationAgent):
                         to_say += f"\nFailed to run: {line}"
                         _LOGGER.exception(f"Failed to run: {line}")
 
-        to_say = to_say.replace("<|im_end|>", "") # remove the eos token if it is returned (some backends + the old model does this)
+        if template_desc["assistant"]["suffix"]:
+            to_say = to_say.replace(template_desc["assistant"]["suffix"], "") # remove the eos token if it is returned (some backends + the old model does this)
         
         intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(to_say)
