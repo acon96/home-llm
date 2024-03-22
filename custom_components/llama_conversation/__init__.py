@@ -181,10 +181,9 @@ class LLaMAAgent(AbstractConversationAgent):
             CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE
         )
 
+        self.in_context_examples = None
         if entry.options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES, DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES):
             self._load_icl_examples()
-        else:
-            self.in_context_examples = None
 
         self._load_model(entry)
 
@@ -567,6 +566,7 @@ class LocalLLaMAAgent(LLaMAAgent):
             # n_threads_batch=4,
         )
 
+        self.grammar = None
         if entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
             self._load_grammar()
 
