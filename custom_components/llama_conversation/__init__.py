@@ -376,7 +376,8 @@ class LLaMAAgent(AbstractConversationAgent):
                         to_say += f"\nFailed to run: {line}"
                         _LOGGER.exception(f"Failed to run: {line}")
 
-        to_say = to_say.replace(template_desc["assistant"]["suffix"], "") # remove the eos token if it is returned (some backends + the old model does this)
+        if template_desc["assistant"]["suffix"]:
+            to_say = to_say.replace(template_desc["assistant"]["suffix"], "") # remove the eos token if it is returned (some backends + the old model does this)
         
         intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(to_say)
