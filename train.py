@@ -55,14 +55,14 @@ python3 train.py \
 
 """
 python3 train.py \
-    --run_name stablehome-1_6b-rev2 \
+    --run_name stablehome-1_6b-rev3 \
     --base_model stabilityai/stablelm-2-zephyr-1_6b \
     --bf16 \
     --train_dataset data/home_assistant_train.jsonl \
     --test_dataset data/home_assistant_test.jsonl \
-    --learning_rate 1e-5 \
-    --micro_batch_size 2 --gradient_checkpointing \
-    --ctx_size 2048 --save_steps 200 --save_total_limit 6
+    --learning_rate 1e-5 --batch_size 32 \
+    --micro_batch_size 2 --gradient_checkpointing --group_by_length \
+    --ctx_size 2048 --save_steps 100 --save_total_limit 20
 """
 
 """
@@ -87,6 +87,18 @@ python3 train.py \
     --test_dataset data/home_assistant_test.jsonl \
     --load_as_gptq --use_lora --gradient_checkpointing \
     --add_pad_token --bf16 --micro_batch_size 4 --learning_rate 2e-5
+"""
+
+"""
+python3 train.py \
+    --run_name tinyhome-rev1 \
+    --base_model TinyLlama/TinyLlama-1.1B-Chat-v1.0 \
+    --bf16 \
+    --train_dataset data/home_assistant_train.jsonl \
+    --test_dataset data/home_assistant_test.jsonl \
+    --learning_rate 5e-7 --batch_size 32 \
+    --micro_batch_size 2 --gradient_checkpointing --group_by_length \
+    --ctx_size 2048 --save_steps 100 --save_total_limit 10
 """
 
 @dataclass
