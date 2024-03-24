@@ -51,7 +51,6 @@ CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS = ["F16", "Q8_0", "Q5_K_M", "Q4_K_M",
 DEFAULT_DOWNLOADED_MODEL_QUANTIZATION = "Q4_K_M"
 CONF_DOWNLOADED_MODEL_FILE = "downloaded_model_file"
 DEFAULT_DOWNLOADED_MODEL_FILE = ""
-DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = "5000"
 DEFAULT_SSL = False
 CONF_EXTRA_ATTRIBUTES_TO_EXPOSE = "extra_attributes_to_expose"
@@ -209,7 +208,7 @@ OPTIONS_OVERRIDES = {
 #                 BACKEND_TYPE_GENERIC_OPENAI,
 #             ])
 #         ),
-#         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+#         vol.Optional(CONF_HOST): cv.string,
 #         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 #         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
 #         vol.Optional("options"): vol.Schema(

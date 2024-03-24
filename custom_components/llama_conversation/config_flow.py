@@ -61,7 +61,6 @@ from .const import (
     CONF_TEXT_GEN_WEBUI_CHAT_MODE,
     CONF_OLLAMA_KEEP_ALIVE_MIN,
     DEFAULT_CHAT_MODEL,
-    DEFAULT_HOST,
     DEFAULT_PORT,
     DEFAULT_SSL,
     DEFAULT_MAX_TOKENS,
@@ -154,7 +153,7 @@ def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, ss
 
     return vol.Schema(
         {
-            vol.Required(CONF_HOST, default=host if host else DEFAULT_HOST): str,
+            vol.Required(CONF_HOST, default=host if host else ""): str,
             vol.Required(CONF_PORT, default=port if port else default_port): str,
             vol.Required(CONF_SSL, default=ssl if ssl else DEFAULT_SSL): bool,
             vol.Required(CONF_CHAT_MODEL, default=chat_model if chat_model else DEFAULT_CHAT_MODEL): str,
