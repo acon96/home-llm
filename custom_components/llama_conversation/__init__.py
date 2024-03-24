@@ -99,14 +99,6 @@ async def update_listener(hass, entry):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Local LLaMA Conversation from a config entry."""
 
-    # TODO: figure out how to make this happen as part of the config flow. when I tried it errored out passing options in
-    if len(entry.options) == 0:
-        entry.options = { **DEFAULT_OPTIONS }
-        copy_to_options = [ CONF_REMOTE_USE_CHAT_ENDPOINT, CONF_TEXT_GEN_WEBUI_CHAT_MODE, CONF_TEXT_GEN_WEBUI_PRESET ]
-        for item in copy_to_options:
-            value = entry.data.get(item)
-            if value:
-                entry.options[item] = value
 
     def create_agent(backend_type):
         agent_cls = None
@@ -181,10 +173,9 @@ class LLaMAAgent(AbstractConversationAgent):
             CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE
         )
 
+        self.in_context_examples = None
         if entry.options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES, DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES):
             self._load_icl_examples()
-        else:
-            self.in_context_examples = None
 
         self._load_model(entry)
 
@@ -235,6 +226,8 @@ class LLaMAAgent(AbstractConversationAgent):
         """Process a sentence."""
 
         raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
+        prompt_template = self.entry.options.get(CONF_PROMPT_TEMPLATE, DEFAULT_PROMPT_TEMPLATE)
+        template_desc = PROMPT_TEMPLATE_DESCRIPTIONS[prompt_template]
         refresh_system_prompt = self.entry.options.get(CONF_REFRESH_SYSTEM_PROMPT, DEFAULT_REFRESH_SYSTEM_PROMPT)
         remember_conversation = self.entry.options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION)
         remember_num_interactions = self.entry.options.get(CONF_REMEMBER_NUM_INTERACTIONS, False)
@@ -345,7 +338,7 @@ class LLaMAAgent(AbstractConversationAgent):
 
                 # fix certain arguments
                 # make sure brightness is 0-255 and not a percentage
-                if "brightness" in extra_arguments and 0.0 < extra_arguments["brightness"] < 1.0:
+                if "brightness" in extra_arguments and 0.0 < extra_arguments["brightness"] <= 1.0:
                     extra_arguments["brightness"] = int(extra_arguments["brightness"] * 255)
 
                 # convert string "tuple" to a list for RGB colors
@@ -374,7 +367,8 @@ class LLaMAAgent(AbstractConversationAgent):
                         to_say += f"\nFailed to run: {line}"
                         _LOGGER.exception(f"Failed to run: {line}")
 
-        to_say = to_say.replace("<|im_end|>", "") # remove the eos token if it is returned (some backends + the old model does this)
+        if template_desc["assistant"]["suffix"]:
+            to_say = to_say.replace(template_desc["assistant"]["suffix"], "") # remove the eos token if it is returned (some backends + the old model does this)
         
         intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(to_say)
@@ -567,6 +561,7 @@ class LocalLLaMAAgent(LLaMAAgent):
             # n_threads_batch=4,
         )
 
+        self.grammar = None
         if entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
             self._load_grammar()
 

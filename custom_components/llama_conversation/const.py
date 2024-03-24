@@ -1,14 +1,33 @@
 """Constants for the LLaMa Conversation integration."""
 import types
+# import voluptuous as vol
+# import homeassistant.helpers.config_validation as cv
+# from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 
 DOMAIN = "llama_conversation"
 CONF_PROMPT = "prompt"
 DEFAULT_PROMPT = """You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task ask instructed with the information provided only.
 Services: {{ services }}
 Devices:
+{{ devices }}
+
+Respond to the following user instruction by responding in the same format as the following examples:
+{{ response_examples }}"""
+ICL_NO_SYSTEM_PROMPT = """You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task ask instructed with the information provided only.
+Services: {{ services }}
+Devices:
+{{ devices }}
+
+Respond to the following user instruction by responding in the same format as the following examples:
+{{ response_examples }}
+
+User instruction:"""
+NO_ICL_PROMPT = """You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task ask instructed with the information provided only.
+Services: {{ services }}
+Devices:
 {{ devices }}"""
 CONF_CHAT_MODEL = "huggingface_model"
-DEFAULT_CHAT_MODEL = "TheBloke/phi-2-GGUF" # "microsoft/phi-2"
+DEFAULT_CHAT_MODEL = "acon96/Home-3B-v3-GGUF"
 CONF_MAX_TOKENS = "max_new_tokens"
 DEFAULT_MAX_TOKENS = 128
 CONF_TOP_K = "top_k"
@@ -29,10 +48,9 @@ BACKEND_TYPE_OLLAMA = "ollama"
 DEFAULT_BACKEND_TYPE = BACKEND_TYPE_LLAMA_HF
 CONF_DOWNLOADED_MODEL_QUANTIZATION = "downloaded_model_quantization"
 CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS = ["F16", "Q8_0", "Q5_K_M", "Q4_K_M", "Q3_K_M"]
-DEFAULT_DOWNLOADED_MODEL_QUANTIZATION = "Q5_K_M"
+DEFAULT_DOWNLOADED_MODEL_QUANTIZATION = "Q4_K_M"
 CONF_DOWNLOADED_MODEL_FILE = "downloaded_model_file"
 DEFAULT_DOWNLOADED_MODEL_FILE = ""
-DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = "5000"
 DEFAULT_SSL = False
 CONF_EXTRA_ATTRIBUTES_TO_EXPOSE = "extra_attributes_to_expose"
@@ -90,7 +108,7 @@ PROMPT_TEMPLATE_DESCRIPTIONS = {
 CONF_USE_GBNF_GRAMMAR = "gbnf_grammar"
 DEFAULT_USE_GBNF_GRAMMAR = False
 CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES = "in_context_examples"
-DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES = False
+DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES = True
 CONF_TEXT_GEN_WEBUI_PRESET = "text_generation_webui_preset"
 CONF_OPENAI_API_KEY = "openai_api_key"
 CONF_TEXT_GEN_WEBUI_ADMIN_KEY = "text_generation_webui_admin_key"
@@ -100,7 +118,8 @@ CONF_REMEMBER_NUM_INTERACTIONS = "remember_num_interactions"
 DEFAULT_REFRESH_SYSTEM_PROMPT = True
 DEFAULT_REMEMBER_CONVERSATION = True
 CONF_SERVICE_CALL_REGEX = "service_call_regex"
-DEFAULT_SERVICE_CALL_REGEX = r"```homeassistant\n([\S \t\n]*?)```"
+DEFAULT_SERVICE_CALL_REGEX = r"({[\S \t]*?})"
+FINE_TUNED_SERVICE_CALL_REGEX = r"```homeassistant\n([\S \t\n]*?)```"
 CONF_REMOTE_USE_CHAT_ENDPOINT = "remote_use_chat_endpoint"
 DEFAULT_REMOTE_USE_CHAT_ENDPOINT = False
 CONF_TEXT_GEN_WEBUI_CHAT_MODE = "text_generation_webui_chat_mode"
@@ -127,5 +146,90 @@ DEFAULT_OPTIONS = types.MappingProxyType(
         CONF_SERVICE_CALL_REGEX: DEFAULT_SERVICE_CALL_REGEX,
         CONF_REMOTE_USE_CHAT_ENDPOINT: DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
         CONF_TEXT_GEN_WEBUI_CHAT_MODE: DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
+        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
     }
 )
+
+OPTIONS_OVERRIDES = {
+    "home-3b-v3": {
+        CONF_PROMPT: NO_ICL_PROMPT,
+        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR,
+        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
+        CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
+        CONF_USE_GBNF_GRAMMAR: True,
+    },
+    "home-3b-v2": {
+        CONF_PROMPT: NO_ICL_PROMPT,
+        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
+        CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
+        CONF_USE_GBNF_GRAMMAR: True,
+    },
+    "home-3b-v1": {
+        CONF_PROMPT: NO_ICL_PROMPT,
+        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
+        CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
+    },
+    "home-1b-v2": {
+        CONF_PROMPT: NO_ICL_PROMPT,
+        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
+        CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
+    },
+    "home-1b-v1": {
+        CONF_PROMPT: NO_ICL_PROMPT,
+        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
+        CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
+    },
+    "mistral": {
+        CONF_PROMPT: ICL_NO_SYSTEM_PROMPT,
+        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_MISTRAL,
+    },
+    "mixtral": {
+        CONF_PROMPT: ICL_NO_SYSTEM_PROMPT,
+        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_MISTRAL,
+    },
+    "llama-2": {
+        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_LLAMA2,
+    },
+    "zephyr": {
+        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR,
+    }
+}
+
+# TODO: need to rewrite the internal config_entry key names so they actually make sense before we expose this
+# method of configuring the component. doing so will require writing a config version upgrade migration
+# MODEL_CONFIG_SCHEMA = vol.Schema(
+#     {
+#         vol.Required(CONF_BACKEND_TYPE): vol.All(
+#             vol.In([
+#                 BACKEND_TYPE_LLAMA_EXISTING,
+#                 BACKEND_TYPE_TEXT_GEN_WEBUI,
+#                 BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER,
+#                 BACKEND_TYPE_OLLAMA,
+#                 BACKEND_TYPE_GENERIC_OPENAI,
+#             ])
+#         ),
+#         vol.Optional(CONF_HOST): cv.string,
+#         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+#         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+#         vol.Optional("options"): vol.Schema(
+#             {
+#                 vol.Optional(CONF_PROMPT): cv.string,
+#                 vol.Optional(CONF_PROMPT_TEMPLATE): vol.All(
+#                     vol.In([
+#                         PROMPT_TEMPLATE_ALPACA,
+#                         PROMPT_TEMPLATE_CHATML,
+#                         PROMPT_TEMPLATE_LLAMA2,
+#                         PROMPT_TEMPLATE_MISTRAL,
+#                         PROMPT_TEMPLATE_VICUNA,
+#                         PROMPT_TEMPLATE_ZEPHYR,
+#                     ])
+#                 ),
+#             }
+#         )
+#     }
+# )
+
+# CONFIG_SCHEMA = vol.Schema(
+#     { DOMAIN: vol.All(cv.ensure_list, [MODEL_CONFIG_SCHEMA]) },
+#     extra=vol.ALLOW_EXTRA,
+# )

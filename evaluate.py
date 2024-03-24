@@ -10,23 +10,11 @@ from tqdm import tqdm
 CTX_SIZE = 2048
 
 """
-python3 evaluate.py stablehome-3b-rev7/checkpoint-50 --batch-size 4 --lora && \
-  python3 evaluate.py stablehome-3b-rev7/checkpoint-100 --batch-size 4 --lora && \
-  python3 evaluate.py stablehome-3b-rev7/checkpoint-150 --batch-size 4 --lora && \
-  python3 evaluate.py stablehome-3b-rev7/checkpoint-200 --batch-size 4 --lora && \
-  python3 evaluate.py stablehome-3b-rev7/checkpoint-250 --batch-size 4 --lora && \
-  python3 evaluate.py stablehome-3b-rev7/checkpoint-300 --batch-size 4 --lora && \
-  python3 evaluate.py stablehome-3b-rev7/checkpoint-350 --batch-size 4 --lora && \
-  python3 evaluate.py stablehome-3b-rev7/checkpoint-400 --batch-size 4 --lora && \
-  python3 evaluate.py stablehome-3b-rev7/checkpoint-450 --batch-size 4 --lora && \
-  python3 evaluate.py stablehome-3b-rev7/checkpoint-500 --batch-size 4 --lora && \
-  python3 evaluate.py stablehome-3b-rev7/checkpoint-550 --batch-size 4 --lora && \
-  python3 evaluate.py stablehome-3b-rev7/checkpoint-600 --batch-size 4 --lora && \
-  python3 evaluate.py stablehome-3b-rev7/checkpoint-650 --batch-size 4 --lora && \
-  python3 evaluate.py stablehome-3b-rev7 --batch-size 4 --lora
+python3 evaluate.py stablehome-1_6b-rev3 --batch-size 8 --all-checkpoints
+python3 evaluate.py tinyhome-1b-rev1 --batch-size 8 --all-checkpoints
 """
 
-# TODO: auto detect all the checkpoints to run
+service_call_regex = re.compile(r"```homeassistant\n([\S \t\n]*?)```")
 
 def tokenize(tokenizer, prompt):
     return tokenizer(prompt, return_tensors="pt", padding=True, truncation=True, max_length=CTX_SIZE)
@@ -38,72 +26,10 @@ def generate(model, tokenizer, prompts):
     text = tokenizer.batch_decode(outputs)
     return text
 
-def main():
-    parser = argparse.ArgumentParser(description="Evaluate the function calling for a model")
-    parser.add_argument("model")
-    parser.add_argument("--dataset_file", default="./data/home_assistant_test.jsonl")
-    parser.add_argument("--batch-size", default=8)
-    parser.add_argument("--lora", default=False,action='store_const', const=True)
-
-    args = parser.parse_args()
-    lora_folder = f"./loras/{args.model}"
-    model_folder = f"./models/{args.model}"
-
-    dataset = load_dataset("json", data_files={ "train": args.dataset_file })["train"]
-
-    print(f"Got {len(dataset)} examples to test")
-
-    # filter out examples that are status requests
-    if "text" in dataset:
-        dataset = dataset.filter(lambda example: "```homeassistant" in example["text"])
-    else:
-        dataset = dataset.filter(lambda example: "```homeassistant" in example["conversations"][2]["value"])
-
-    service_call_regex = re.compile(r"```homeassistant\n([\S \t\n]*?)```")
-
-    torch.set_default_device("cuda")
-    
-    if args.lora:
-        adapter_config = PeftConfig.from_pretrained(lora_folder)
-        base_model_name = adapter_config.base_model_name_or_path
-        print(f"Loading lora from {lora_folder} ({base_model_name})...")
-
-        base_model = AutoModelForCausalLM.from_pretrained(
-            base_model_name,
-            trust_remote_code=True,
-            torch_dtype=torch.bfloat16,
-        )
-        trained_tokenizer = AutoTokenizer.from_pretrained(base_model_name, trust_remote_code=True, padding_side='left')
-
-        trained_model =  PeftModel.from_pretrained(base_model, lora_folder, trust_remote_code=True, torch_dtype=torch.bfloat16)
-
-        output_folder = lora_folder
-    else:
-        print(f"Loading model from {model_folder}...")
-        trained_model = AutoModelForCausalLM.from_pretrained(
-            model_folder,
-            trust_remote_code=True,
-            torch_dtype=torch.bfloat16,
-        )
-        trained_tokenizer = AutoTokenizer.from_pretrained(model_folder, trust_remote_code=True, padding_side='left')
-        output_folder = model_folder
-
-    trained_model.generation_config = GenerationConfig(
-        max_new_tokens=128,
-        use_cache=True,
-        do_sample=True,
-        temperature=0.1,
-        top_k=40,
-        top_p=1.0,
-        repetition_penalty=1.15,
-        eos_token_id=trained_model.config.eos_token_id,
-        pad_token_id=trained_model.config.pad_token_id if trained_model.config.pad_token_id else trained_model.config.eos_token_id,
-    )
-
+def evaluate(output_folder, trained_model, trained_tokenizer, dataset, batch_size):
     split = trained_tokenizer.apply_chat_template(conversation=[{"role": "assistant", "content":  r"%%%%%%%%%%%%%%%%"}], tokenize=False).split( r"%%%%%%%%%%%%%%%%")[0]
 
     print("Evaluating...")
-    batch_size = int(args.batch_size)
     correct_answers = 0
     total_answers = 0
     color_mismatches = 0
@@ -192,6 +118,94 @@ def main():
             "color_mismatches": color_mismatches,
             "failed_examples": failed_examples,
         }, f, indent=4)
+
+def load_model(model_name, is_lora, checkpoint_name):
+    lora_folder = f"./loras/{model_name}/"
+    model_folder = f"./models/{model_name}/"
+    
+    # tokenizer isn't saved into checkpoint folders
+    tokenizer_folder = lora_folder if is_lora else model_folder
+
+    if checkpoint_name:
+        lora_folder = lora_folder + f"{checkpoint_name}/"
+        model_folder = model_folder + f"{checkpoint_name}/"
+
+    if is_lora:
+        adapter_config = PeftConfig.from_pretrained(lora_folder)
+        base_model_name = adapter_config.base_model_name_or_path
+        print(f"Loading lora from {lora_folder} ({base_model_name})...")
+
+        base_model = AutoModelForCausalLM.from_pretrained(
+            base_model_name,
+            trust_remote_code=True,
+            torch_dtype=torch.bfloat16,
+        )
+        trained_model =  PeftModel.from_pretrained(base_model, lora_folder, trust_remote_code=True, torch_dtype=torch.bfloat16)
+
+        output_folder = lora_folder
+    else:
+        print(f"Loading model from {model_folder}...")
+        trained_model = AutoModelForCausalLM.from_pretrained(
+            model_folder,
+            trust_remote_code=True,
+            torch_dtype=torch.bfloat16,
+        )
+        trained_tokenizer = AutoTokenizer.from_pretrained(model_folder, trust_remote_code=True, padding_side='left')
+        output_folder = model_folder
+
+    trained_tokenizer = AutoTokenizer.from_pretrained(tokenizer_folder, trust_remote_code=True, padding_side='left')
+
+    trained_model.generation_config = GenerationConfig(
+        max_new_tokens=128,
+        use_cache=True,
+        do_sample=True,
+        temperature=0.1,
+        top_k=40,
+        top_p=1.0,
+        repetition_penalty=1.15,
+        eos_token_id=trained_model.config.eos_token_id,
+        pad_token_id=trained_model.config.pad_token_id if trained_model.config.pad_token_id else trained_model.config.eos_token_id,
+    )
+
+    return trained_model, trained_tokenizer, output_folder
+
+def main():
+    parser = argparse.ArgumentParser(description="Evaluate the function calling for a model")
+    parser.add_argument("model")
+    parser.add_argument("--dataset_file", default="./data/home_assistant_test.jsonl")
+    parser.add_argument("--batch-size", default=8)
+    parser.add_argument("--lora", default=False, action='store_const', const=True)
+    parser.add_argument("--all-checkpoints", default=False, action='store_const', const=True)
+
+    args = parser.parse_args()
+    batch_size = int(args.batch_size)
+
+    dataset = load_dataset("json", data_files={ "train": args.dataset_file })["train"]
+
+    print(f"Got {len(dataset)} examples to test")
+
+    # filter out examples that are status requests
+    if "text" in dataset:
+        dataset = dataset.filter(lambda example: "```homeassistant" in example["text"])
+    else:
+        dataset = dataset.filter(lambda example: "```homeassistant" in example["conversations"][2]["value"])
+
+    torch.set_default_device("cuda")
+    if not args.all_checkpoints:
+        checkpoints = [None]
+    else:
+        if args.lora:
+            ckpt_folder = f"./loras/{args.model}"
+        else:
+            ckpt_folder = f"./models/{args.model}"
+        checkpoints = [x for x in os.listdir(ckpt_folder) if os.path.isdir(os.path.join(ckpt_folder, x)) and "checkpoint" in x]
+        checkpoints.append(None)
+
+        print(f"Found {len(checkpoints) - 1} checkpoints to test (plus the final model)")
+
+    for ckpt in checkpoints:
+        trained_model, trained_tokenizer, output_folder = load_model(args.model, args.lora, ckpt)
+        evaluate(output_folder, trained_model, trained_tokenizer, dataset, batch_size)
 
 
 if __name__ == "__main__":
