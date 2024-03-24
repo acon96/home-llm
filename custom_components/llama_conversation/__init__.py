@@ -99,14 +99,6 @@ async def update_listener(hass, entry):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Local LLaMA Conversation from a config entry."""
 
-    # TODO: figure out how to make this happen as part of the config flow. when I tried it errored out passing options in
-    if len(entry.options) == 0:
-        entry.options = { **DEFAULT_OPTIONS }
-        copy_to_options = [ CONF_REMOTE_USE_CHAT_ENDPOINT, CONF_TEXT_GEN_WEBUI_CHAT_MODE, CONF_TEXT_GEN_WEBUI_PRESET ]
-        for item in copy_to_options:
-            value = entry.data.get(item)
-            if value:
-                entry.options[item] = value
 
     def create_agent(backend_type):
         agent_cls = None

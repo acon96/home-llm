@@ -80,7 +80,6 @@ from .const import (
     DEFAULT_REMEMBER_CONVERSATION,
     DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
     DEFAULT_SERVICE_CALL_REGEX,
-    DEFAULT_OPTIONS,
     DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
     DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
     DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
@@ -95,6 +94,8 @@ from .const import (
     TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT,
     DOMAIN,
+    DEFAULT_OPTIONS,
+    OPTIONS_OVERRIDES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -138,23 +139,18 @@ def STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(*, chat_model=None, downloaded_model_q
         }
     )
 
-def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, ssl=None, chat_model=None, use_chat_endpoint=None, webui_preset="", webui_chat_mode=""):
+def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, ssl=None, chat_model=None):
 
     extra1, extra2 = ({}, {})
     default_port = DEFAULT_PORT
 
     if backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI: 
-        extra1[vol.Optional(CONF_TEXT_GEN_WEBUI_PRESET, default=webui_preset)] = str
-        extra1[vol.Optional(CONF_TEXT_GEN_WEBUI_CHAT_MODE, default=webui_chat_mode)] = SelectSelector(SelectSelectorConfig(
-            options=["", TEXT_GEN_WEBUI_CHAT_MODE_CHAT, TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT, TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT],
-            translation_key=CONF_TEXT_GEN_WEBUI_CHAT_MODE,
-            multiple=False,
-            mode=SelectSelectorMode.DROPDOWN,
-        ))
         extra2[vol.Optional(CONF_TEXT_GEN_WEBUI_ADMIN_KEY)] = TextSelector(TextSelectorConfig(type="password"))
 
     elif backend_type == BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER:
         default_port = "8000"
+    elif backend_type == BACKEND_TYPE_OLLAMA:
+        default_port = "11434"
 
     return vol.Schema(
         {
@@ -162,7 +158,6 @@ def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, ss
             vol.Required(CONF_PORT, default=port if port else default_port): str,
             vol.Required(CONF_SSL, default=ssl if ssl else DEFAULT_SSL): bool,
             vol.Required(CONF_CHAT_MODEL, default=chat_model if chat_model else DEFAULT_CHAT_MODEL): str,
-            vol.Required(CONF_REMOTE_USE_CHAT_ENDPOINT, default=use_chat_endpoint if use_chat_endpoint else DEFAULT_REMOTE_USE_CHAT_ENDPOINT): bool,
             **extra1,
             vol.Optional(CONF_OPENAI_API_KEY): TextSelector(TextSelectorConfig(type="password")),
             **extra2
@@ -203,6 +198,12 @@ class BaseLlamaConversationConfigFlow(FlowHandler, ABC):
         """ Configure a remote model """
 
     @abstractmethod
+    async def async_step_model_parameters(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """ Configure a remote model """
+
+    @abstractmethod
     async def async_step_download(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -223,6 +224,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
     download_task = None
     download_error = None
     model_config: dict[str, Any] = {}
+    options: dict[str, Any] = {}
 
     @property
     def flow_manager(self) -> config_entries.ConfigEntriesFlowManager:
@@ -384,7 +386,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             next_step = "local_model"
         else:
             self.model_config[CONF_DOWNLOADED_MODEL_FILE] = self.download_task.result()
-            next_step = "finish"
+            next_step = "model_parameters"
 
         self.download_task = None
         return self.async_show_progress_done(next_step_id=next_step)
@@ -404,6 +406,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
 
             models_result = requests.get(
                 f"{'https' if self.model_config[CONF_SSL] else 'http'}://{self.model_config[CONF_HOST]}:{self.model_config[CONF_PORT]}/v1/internal/model/list",
+                timeout=5, # quick timeout
                 headers=headers
             )
             models_result.raise_for_status()
@@ -435,6 +438,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
 
             models_result = requests.get(
                 f"{'https' if self.model_config[CONF_SSL] else 'http'}://{self.model_config[CONF_HOST]}:{self.model_config[CONF_PORT]}/api/tags",
+                timeout=5, # quick timeout
                 headers=headers
             )
             models_result.raise_for_status()
@@ -488,12 +492,9 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                         port=user_input[CONF_PORT],
                         ssl=user_input[CONF_SSL],
                         chat_model=user_input[CONF_CHAT_MODEL],
-                        use_chat_endpoint=user_input[CONF_REMOTE_USE_CHAT_ENDPOINT],
-                        webui_preset=user_input.get(CONF_TEXT_GEN_WEBUI_PRESET),
-                        webui_chat_mode=user_input.get(CONF_TEXT_GEN_WEBUI_CHAT_MODE),
                     )
                 else:
-                    return await self.async_step_finish()
+                    return await self.async_step_model_parameters()
 
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
@@ -501,6 +502,35 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
 
         return self.async_show_form(
             step_id="remote_model", data_schema=schema, errors=errors, description_placeholders=description_placeholders,
+        )
+    
+    async def async_step_model_parameters(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        errors = {}
+        description_placeholders = {}
+        backend_type = self.model_config[CONF_BACKEND_TYPE]
+        model_name = self.model_config[CONF_CHAT_MODEL].lower()
+
+        selected_default_options = { **DEFAULT_OPTIONS }
+        for key in OPTIONS_OVERRIDES.keys():
+            if key in model_name:
+                selected_default_options.update(OPTIONS_OVERRIDES[key])
+        
+        schema = vol.Schema(local_llama_config_option_schema(selected_default_options, backend_type))
+
+        if user_input:
+            self.options = user_input
+            try:
+                # validate input
+                schema(user_input)
+                return await self.async_step_finish()
+            except Exception as ex:
+                _LOGGER.exception("An unknown error has occurred!")
+                errors["base"] = "unknown"
+
+        return self.async_show_form(
+            step_id="model_parameters", data_schema=schema, errors=errors, description_placeholders=description_placeholders,
         )
 
     async def async_step_finish(
@@ -517,6 +547,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             title=f"LLM Model '{model_name}' ({location})",
             description="A Large Language Model Chat Agent",
             data=self.model_config,
+            options=self.options,
         )
 
     @staticmethod
