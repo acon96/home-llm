@@ -223,8 +223,8 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
     install_wheel_error = None
     download_task = None
     download_error = None
-    model_config: dict[str, Any] = {}
-    options: dict[str, Any] = {}
+    model_config: dict[str, Any]
+    options: dict[str, Any]
 
     @property
     def flow_manager(self) -> config_entries.ConfigEntriesFlowManager:
@@ -239,6 +239,8 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
+        self.model_config = {}
+        self.options = {}
         return await self.async_step_pick_backend()
 
     async def async_step_pick_backend(

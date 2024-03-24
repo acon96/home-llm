@@ -1,5 +1,8 @@
 """Constants for the LLaMa Conversation integration."""
 import types
+# import voluptuous as vol
+# import homeassistant.helpers.config_validation as cv
+# from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 
 DOMAIN = "llama_conversation"
 CONF_PROMPT = "prompt"
@@ -192,3 +195,42 @@ OPTIONS_OVERRIDES = {
         CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR,
     }
 }
+
+# TODO: need to rewrite the internal config_entry key names so they actually make sense before we expose this
+# method of configuring the component. doing so will require writing a config version upgrade migration
+# MODEL_CONFIG_SCHEMA = vol.Schema(
+#     {
+#         vol.Required(CONF_BACKEND_TYPE): vol.All(
+#             vol.In([
+#                 BACKEND_TYPE_LLAMA_EXISTING,
+#                 BACKEND_TYPE_TEXT_GEN_WEBUI,
+#                 BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER,
+#                 BACKEND_TYPE_OLLAMA,
+#                 BACKEND_TYPE_GENERIC_OPENAI,
+#             ])
+#         ),
+#         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+#         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+#         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+#         vol.Optional("options"): vol.Schema(
+#             {
+#                 vol.Optional(CONF_PROMPT): cv.string,
+#                 vol.Optional(CONF_PROMPT_TEMPLATE): vol.All(
+#                     vol.In([
+#                         PROMPT_TEMPLATE_ALPACA,
+#                         PROMPT_TEMPLATE_CHATML,
+#                         PROMPT_TEMPLATE_LLAMA2,
+#                         PROMPT_TEMPLATE_MISTRAL,
+#                         PROMPT_TEMPLATE_VICUNA,
+#                         PROMPT_TEMPLATE_ZEPHYR,
+#                     ])
+#                 ),
+#             }
+#         )
+#     }
+# )
+
+# CONFIG_SCHEMA = vol.Schema(
+#     { DOMAIN: vol.All(cv.ensure_list, [MODEL_CONFIG_SCHEMA]) },
+#     extra=vol.ALLOW_EXTRA,
+# )
