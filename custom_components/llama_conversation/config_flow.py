@@ -470,7 +470,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         if user_input:
             try:
                 self.model_config.update(user_input)
-                error_reason = None
+                error_message = None
 
                 # validate and load when using text-generation-webui or ollama
                 if backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
