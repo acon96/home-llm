@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import logging
+import threading
 import importlib
-from typing import Literal, Any
+from typing import Literal, Any, Callable
 
 import requests
 import re
@@ -11,6 +12,7 @@ import os
 import json
 import csv
 import random
+import time
 
 import homeassistant.components.conversation as ha_conversation
 from homeassistant.components.conversation import ConversationInput, ConversationResult, AbstractConversationAgent
@@ -18,9 +20,10 @@ from homeassistant.components.conversation.const import DOMAIN as CONVERSATION_D
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_SSL, MATCH_ALL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryError, TemplateError
 from homeassistant.helpers import config_validation as cv, intent, template, entity_registry as er
+from homeassistant.helpers.event import async_track_state_change
 from homeassistant.util import ulid
 
 from .utils import closest_color, flatten_vol_schema, install_llama_cpp_python
@@ -527,6 +530,10 @@ class LocalLLaMAAgent(LLaMAAgent):
     llm: Any
     grammar: Any
     llama_cpp_module: Any
+    prompt_caching: Callable
+    model_lock: threading.Lock
+    fastest_cache_prime_interval: int
+    last_cache_prime: float
 
     def _load_model(self, entry: ConfigEntry) -> None:
         self.model_path = entry.data.get(CONF_DOWNLOADED_MODEL_FILE)
@@ -564,6 +571,12 @@ class LocalLLaMAAgent(LLaMAAgent):
         self.grammar = None
         if entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
             self._load_grammar()
+        
+        self.prompt_caching = None
+        self.last_cache_prime = None
+        self.fastest_cache_prime_interval = 30
+        self.model_lock = threading.Lock()
+        self.set_prompt_caching(enabled=True)
 
     def _load_grammar(self):
         LlamaGrammar = getattr(self.llama_cpp_module, "LlamaGrammar")
@@ -584,12 +597,68 @@ class LocalLLaMAAgent(LLaMAAgent):
             self._load_grammar()
         else:
             self.grammar = None
+
+    def set_prompt_caching(self, *, enabled=True):
+        if enabled and not self.prompt_caching:
+            @callback
+            async def state_change_listener(entity, old_state, new_state):
+                raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
+                prompt = self._format_prompt([
+                    { "role": "system", "message": self._async_generate_system_prompt(raw_prompt)},
+                    { "role": "user", "message": "" }
+                ], include_generation_prompt=False)
+
+                self.hass.async_create_task(self.hass.async_add_executor_job(self._prime_llamacpp_kv_cache, prompt))
+
+            entity_ids = [ 
+                state for state in self.hass.states.async_all() \
+                    if async_should_expose(self.hass, CONVERSATION_DOMAIN, state.entity_id) 
+            ]
+
+            self.prompt_caching = async_track_state_change(self.hass, entity_ids, state_change_listener)
+            raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
+            prompt = self._format_prompt([
+                { "role": "system", "message": self._async_generate_system_prompt(raw_prompt)},
+                { "role": "user", "message": "" }
+            ], include_generation_prompt=False)
+            self._prime_llamacpp_kv_cache(prompt)
+
+        elif not enabled and self.prompt_caching:
+            self.prompt_caching()
+
+    def _prime_llamacpp_kv_cache(self, prompt: str) -> None:
+        current_time = time.time()
+        
+        if self.last_cache_prime and current_time - self.last_cache_prime < self.fastest_cache_prime_interval:
+            return
+        
+        with self.model_lock:
+            input_tokens = self.llm.tokenize(
+                prompt.encode(), add_bos=False
+            )
+
+            temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
+            top_k = int(self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K))
+            top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
+            grammar = self.grammar if self.entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR) else None
+
+            _LOGGER.debug(f"Options: {self.entry.options}")
+
+            _LOGGER.debug(f"Processing {len(input_tokens)} input tokens...")
+
+            # grab just one token. should prime the kv cache with the system prompt
+            next(self.llm.generate(
+                input_tokens,
+                temp=temperature,
+                top_k=top_k,
+                top_p=top_p,
+                grammar=grammar
+            ))
+
+        self.last_cache_prime = time.time()
     
     def _generate(self, conversation: dict) -> str:
         prompt = self._format_prompt(conversation)
-        input_tokens = self.llm.tokenize(
-            prompt.encode(), add_bos=False
-        )
 
         max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
         temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
@@ -598,26 +667,31 @@ class LocalLLaMAAgent(LLaMAAgent):
 
         _LOGGER.debug(f"Options: {self.entry.options}")
 
-        _LOGGER.debug(f"Processing {len(input_tokens)} input tokens...")
-        output_tokens = self.llm.generate(
-            input_tokens,
-            temp=temperature,
-            top_k=top_k,
-            top_p=top_p,
-            grammar=self.grammar
-        )
+        with self.model_lock:
+            input_tokens = self.llm.tokenize(
+                prompt.encode(), add_bos=False
+            )
 
-        result_tokens = []
-        for token in output_tokens:
-            if token == self.llm.token_eos():
-                break
+            _LOGGER.debug(f"Processing {len(input_tokens)} input tokens...")
+            output_tokens = self.llm.generate(
+                input_tokens,
+                temp=temperature,
+                top_k=top_k,
+                top_p=top_p,
+                grammar=self.grammar
+            )
 
-            result_tokens.append(token)
+            result_tokens = []
+            for token in output_tokens:
+                if token == self.llm.token_eos():
+                    break
 
-            if len(result_tokens) >= max_tokens:
-                break
+                result_tokens.append(token)
 
-        result = self.llm.detokenize(result_tokens).decode()
+                if len(result_tokens) >= max_tokens:
+                    break
+
+            result = self.llm.detokenize(result_tokens).decode()
 
         return result
     
