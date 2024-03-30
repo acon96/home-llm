@@ -1,8 +1,5 @@
 """Constants for the LLaMa Conversation integration."""
 import types
-# import voluptuous as vol
-# import homeassistant.helpers.config_validation as cv
-# from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 
 DOMAIN = "llama_conversation"
 CONF_PROMPT = "prompt"
@@ -57,8 +54,6 @@ CONF_EXTRA_ATTRIBUTES_TO_EXPOSE = "extra_attributes_to_expose"
 DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "media_title", "volume_level", "item"]
 CONF_ALLOWED_SERVICE_CALL_ARGUMENTS = "allowed_service_call_arguments"
 DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "hvac_mode", "preset_mode", "item", "duration"]
-GBNF_GRAMMAR_FILE = "output.gbnf"
-IN_CONTEXT_EXAMPLES_FILE = "in_context_examples.csv"
 CONF_PROMPT_TEMPLATE = "prompt_template"
 PROMPT_TEMPLATE_CHATML = "chatml"
 PROMPT_TEMPLATE_ALPACA = "alpaca"
@@ -107,16 +102,25 @@ PROMPT_TEMPLATE_DESCRIPTIONS = {
 }
 CONF_USE_GBNF_GRAMMAR = "gbnf_grammar"
 DEFAULT_USE_GBNF_GRAMMAR = False
+CONF_GBNF_GRAMMAR_FILE = "gbnf_grammar_file"
+DEFAULT_GBNF_GRAMMAR_FILE = "output.gbnf"
 CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES = "in_context_examples"
 DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES = True
+CONF_IN_CONTEXT_EXAMPLES_FILE = "in_context_examples_file"
+DEFAULT_IN_CONTEXT_EXAMPLES_FILE = "in_context_examples.csv"
 CONF_TEXT_GEN_WEBUI_PRESET = "text_generation_webui_preset"
 CONF_OPENAI_API_KEY = "openai_api_key"
 CONF_TEXT_GEN_WEBUI_ADMIN_KEY = "text_generation_webui_admin_key"
 CONF_REFRESH_SYSTEM_PROMPT = "refresh_prompt_per_tern"
-CONF_REMEMBER_CONVERSATION = "remember_conversation"
-CONF_REMEMBER_NUM_INTERACTIONS = "remember_num_interactions"
 DEFAULT_REFRESH_SYSTEM_PROMPT = True
+CONF_REMEMBER_CONVERSATION = "remember_conversation"
 DEFAULT_REMEMBER_CONVERSATION = True
+CONF_REMEMBER_NUM_INTERACTIONS = "remember_num_interactions"
+DEFAULT_REMEMBER_NUM_INTERACTIONS = 5
+CONF_PROMPT_CACHING_ENABLED = "prompt_caching"
+DEFAULT_PROMPT_CACHING_ENABLED = False
+CONF_PROMPT_CACHING_INTERVAL = "prompt_caching_interval"
+DEFAULT_PROMPT_CACHING_INTERVAL = 30
 CONF_SERVICE_CALL_REGEX = "service_call_regex"
 DEFAULT_SERVICE_CALL_REGEX = r"({[\S \t]*?})"
 FINE_TUNED_SERVICE_CALL_REGEX = r"```homeassistant\n([\S \t\n]*?)```"
@@ -194,42 +198,3 @@ OPTIONS_OVERRIDES = {
         CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR,
     }
 }
-
-# TODO: need to rewrite the internal config_entry key names so they actually make sense before we expose this
-# method of configuring the component. doing so will require writing a config version upgrade migration
-# MODEL_CONFIG_SCHEMA = vol.Schema(
-#     {
-#         vol.Required(CONF_BACKEND_TYPE): vol.All(
-#             vol.In([
-#                 BACKEND_TYPE_LLAMA_EXISTING,
-#                 BACKEND_TYPE_TEXT_GEN_WEBUI,
-#                 BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER,
-#                 BACKEND_TYPE_OLLAMA,
-#                 BACKEND_TYPE_GENERIC_OPENAI,
-#             ])
-#         ),
-#         vol.Optional(CONF_HOST): cv.string,
-#         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-#         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-#         vol.Optional("options"): vol.Schema(
-#             {
-#                 vol.Optional(CONF_PROMPT): cv.string,
-#                 vol.Optional(CONF_PROMPT_TEMPLATE): vol.All(
-#                     vol.In([
-#                         PROMPT_TEMPLATE_ALPACA,
-#                         PROMPT_TEMPLATE_CHATML,
-#                         PROMPT_TEMPLATE_LLAMA2,
-#                         PROMPT_TEMPLATE_MISTRAL,
-#                         PROMPT_TEMPLATE_VICUNA,
-#                         PROMPT_TEMPLATE_ZEPHYR,
-#                     ])
-#                 ),
-#             }
-#         )
-#     }
-# )
-
-# CONFIG_SCHEMA = vol.Schema(
-#     { DOMAIN: vol.All(cv.ensure_list, [MODEL_CONFIG_SCHEMA]) },
-#     extra=vol.ALLOW_EXTRA,
-# )

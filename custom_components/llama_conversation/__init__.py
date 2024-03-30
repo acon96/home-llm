@@ -41,13 +41,17 @@ from .const import (
     CONF_ALLOWED_SERVICE_CALL_ARGUMENTS,
     CONF_PROMPT_TEMPLATE,
     CONF_USE_GBNF_GRAMMAR,
+    CONF_GBNF_GRAMMAR_FILE,
     CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
+    CONF_IN_CONTEXT_EXAMPLES_FILE,
     CONF_TEXT_GEN_WEBUI_PRESET,
     CONF_OPENAI_API_KEY,
     CONF_TEXT_GEN_WEBUI_ADMIN_KEY,
     CONF_REFRESH_SYSTEM_PROMPT,
     CONF_REMEMBER_CONVERSATION,
     CONF_REMEMBER_NUM_INTERACTIONS,
+    CONF_PROMPT_CACHING_ENABLED,
+    CONF_PROMPT_CACHING_INTERVAL,
     CONF_SERVICE_CALL_REGEX,
     CONF_REMOTE_USE_CHAT_ENDPOINT,
     CONF_TEXT_GEN_WEBUI_CHAT_MODE,
@@ -63,9 +67,14 @@ from .const import (
     DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS,
     DEFAULT_PROMPT_TEMPLATE,
     DEFAULT_USE_GBNF_GRAMMAR,
+    DEFAULT_GBNF_GRAMMAR_FILE,
     DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
+    DEFAULT_IN_CONTEXT_EXAMPLES_FILE,
     DEFAULT_REFRESH_SYSTEM_PROMPT,
     DEFAULT_REMEMBER_CONVERSATION,
+    DEFAULT_REMEMBER_NUM_INTERACTIONS,
+    DEFAULT_PROMPT_CACHING_ENABLED,
+    DEFAULT_PROMPT_CACHING_INTERVAL,
     DEFAULT_SERVICE_CALL_REGEX,
     DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
     DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
@@ -81,8 +90,6 @@ from .const import (
     TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT,
     DOMAIN,
-    GBNF_GRAMMAR_FILE,
-    IN_CONTEXT_EXAMPLES_FILE,
     PROMPT_TEMPLATE_DESCRIPTIONS,
 )
 
@@ -90,18 +97,23 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-async def update_listener(hass, entry):
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
     """Handle options update."""
     hass.data[DOMAIN][entry.entry_id] = entry
     
     # call update handler
-    agent = await ha_conversation._get_agent_manager(hass).async_get_agent(entry.entry_id)
+    agent: LLaMAAgent = await ha_conversation._get_agent_manager(hass).async_get_agent(entry.entry_id)
     agent._update_options()
+
+    backend_type = entry.data.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE)
+    if backend_type in [ BACKEND_TYPE_LLAMA_HF, BACKEND_TYPE_LLAMA_EXISTING ]:
+        if entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED):
+            hass.async_create_task(agent._async_cache_prompt(None, None, None))
+
     return True
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Local LLaMA Conversation from a config entry."""
-
 
     def create_agent(backend_type):
         agent_cls = None
@@ -132,8 +144,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = entry
 
     if backend_type in [ BACKEND_TYPE_LLAMA_HF, BACKEND_TYPE_LLAMA_EXISTING ]:
-        # if entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED):
-        hass.async_create_task(agent._async_cache_prompt(None, None, None))
+        if entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED):
+            hass.async_create_task(agent._async_cache_prompt(None, None, None))
 
     return True
 
@@ -190,7 +202,8 @@ class LLaMAAgent(AbstractConversationAgent):
 
     def _load_icl_examples(self):
         try:
-            icl_filename = os.path.join(os.path.dirname(__file__), IN_CONTEXT_EXAMPLES_FILE)
+            icl_file = self.entry.options.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE)
+            icl_filename = os.path.join(os.path.dirname(__file__), icl_file)
 
             with open(icl_filename) as f:
                 self.in_context_examples = list(csv.DictReader(f))
@@ -210,7 +223,7 @@ class LLaMAAgent(AbstractConversationAgent):
             self.in_context_examples = None
 
     @property
-    def entry(self):
+    def entry(self) -> ConfigEntry:
         return self.hass.data[DOMAIN][self.entry_id]
 
     @property
@@ -239,7 +252,7 @@ class LLaMAAgent(AbstractConversationAgent):
         template_desc = PROMPT_TEMPLATE_DESCRIPTIONS[prompt_template]
         refresh_system_prompt = self.entry.options.get(CONF_REFRESH_SYSTEM_PROMPT, DEFAULT_REFRESH_SYSTEM_PROMPT)
         remember_conversation = self.entry.options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION)
-        remember_num_interactions = self.entry.options.get(CONF_REMEMBER_NUM_INTERACTIONS, False)
+        remember_num_interactions = self.entry.options.get(CONF_REMEMBER_NUM_INTERACTIONS, DEFAULT_REMEMBER_NUM_INTERACTIONS)
         service_call_regex = self.entry.options.get(CONF_SERVICE_CALL_REGEX, DEFAULT_SERVICE_CALL_REGEX)
         allowed_service_call_arguments = self.entry.options \
             .get(CONF_ALLOWED_SERVICE_CALL_ARGUMENTS, DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS)
@@ -439,9 +452,6 @@ class LLaMAAgent(AbstractConversationAgent):
         """Generate a prompt for the user."""
         entities_to_expose, domains = self._async_get_exposed_entities()
 
-        if True: # TODO: change this to check if prompt caching is enabled
-            self.last_updated_entities
-
         extra_attributes_to_expose = self.entry.options \
             .get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE)
         allowed_service_call_arguments = self.entry.options \
@@ -541,9 +551,8 @@ class LocalLLaMAAgent(LLaMAAgent):
     llama_cpp_module: Any
     remove_prompt_caching_listener: Callable
     model_lock: threading.Lock
-    fastest_cache_prime_interval: int
     last_cache_prime: float
-    last_updated_entities: list[str]
+    # last_updated_entities: list[str]
 
     def _load_model(self, entry: ConfigEntry) -> None:
         self.model_path = entry.data.get(CONF_DOWNLOADED_MODEL_FILE)
@@ -580,7 +589,7 @@ class LocalLLaMAAgent(LLaMAAgent):
 
         self.grammar = None
         if entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
-            self._load_grammar()
+            self._load_grammar(entry.options.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE))
 
         # TODO: check about disk caching
         # self.llm.set_cache(self.llama_cpp_module.LlamaDiskCache(
@@ -590,19 +599,16 @@ class LocalLLaMAAgent(LLaMAAgent):
         
         self.remove_prompt_caching_listener = None
         self.last_cache_prime = None
-        self.fastest_cache_prime_interval = 30
-        # self.fastest_cache_prime_interval = entry.options.get(CONF_PROMPT_CACHING_INTERVAL, DEFAULT_PROMPT_CACHING_INTERVAL)
         self.model_lock = threading.Lock()
 
-        # if entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED):
-        self._set_prompt_caching(enabled=True)
+        if entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED):
+            self._set_prompt_caching(enabled=True)
 
-    def _load_grammar(self):
+    def _load_grammar(self, filename: str):
         LlamaGrammar = getattr(self.llama_cpp_module, "LlamaGrammar")
         _LOGGER.debug("Loading grammar...")
         try:
-            # TODO: make grammar configurable
-            with open(os.path.join(os.path.dirname(__file__), GBNF_GRAMMAR_FILE)) as f:
+            with open(os.path.join(os.path.dirname(__file__), filename)) as f:
                 grammar_str = "".join(f.readlines())
             self.grammar = LlamaGrammar.from_string(grammar_str)
             _LOGGER.debug("Loaded grammar")
@@ -611,18 +617,20 @@ class LocalLLaMAAgent(LLaMAAgent):
             self.grammar = None
 
     def _update_options(self):
-        LLaMAAgent._update_options()
+        LLaMAAgent._update_options(self)
         if self.entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
-            self._load_grammar()
+            self._load_grammar(self.entry.options.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE))
         else:
             self.grammar = None
+
+        self._set_prompt_caching(enabled=self.entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED))
 
     @callback
     async def _async_cache_prompt(self, entity, old_state, new_state):
         raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
 
-        if self.last_updated_entities:
-            self.last_updated_entities
+        # if self.last_updated_entities:
+        #     self.last_updated_entities
 
         # TODO: track which entities are updated most often and sort them to the bottom of the system prompt
         prompt = self._format_prompt([
@@ -651,7 +659,8 @@ class LocalLLaMAAgent(LLaMAAgent):
     def _prime_llamacpp_kv_cache(self, prompt: str) -> None:
         current_time = time.time()
         
-        if self.last_cache_prime and current_time - self.last_cache_prime < self.fastest_cache_prime_interval:
+        fastest_prime_interval = self.entry.options.get(CONF_PROMPT_CACHING_INTERVAL, DEFAULT_PROMPT_CACHING_INTERVAL)
+        if self.last_cache_prime and current_time - self.last_cache_prime < fastest_prime_interval:
             return
         
         with self.model_lock:
