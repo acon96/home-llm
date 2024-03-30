@@ -632,14 +632,19 @@ class LocalLLaMAAgent(LLaMAAgent):
         # if self.last_updated_entities:
         #     self.last_updated_entities
 
+        refresh_start = time.time()
+
         # TODO: track which entities are updated most often and sort them to the bottom of the system prompt
         prompt = self._format_prompt([
             { "role": "system", "message": self._generate_system_prompt(raw_prompt)},
             { "role": "user", "message": "" }
         ], include_generation_prompt=False)
 
-        _LOGGER.info(f"refreshing cached prompt because {entity} changed...")
+        _LOGGER.debug(f"refreshing cached prompt because {entity} changed...")
         await self.hass.async_add_executor_job(self._prime_llamacpp_kv_cache, prompt)
+
+        refresh_end = time.time()
+        _LOGGER.debug(f"cache refresh took {(refresh_end - refresh_start):.2f} sec")
 
     def _set_prompt_caching(self, *, enabled=True):
         if enabled and not self.remove_prompt_caching_listener:
