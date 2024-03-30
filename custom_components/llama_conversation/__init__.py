@@ -120,7 +120,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return agent_cls(hass, entry)
 
     # load the model in an executor job because it takes a while and locks up the UI otherwise
-    agent = await hass.async_add_executor_job(create_agent, entry.data.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE))
+    backend_type = entry.data.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE)
+    agent = await hass.async_add_executor_job(create_agent, backend_type)
 
     # handle updates to the options
     entry.async_on_unload(entry.add_update_listener(update_listener))
@@ -129,6 +130,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = entry
+
+    if backend_type in [ BACKEND_TYPE_LLAMA_HF, BACKEND_TYPE_LLAMA_EXISTING ]:
+        # if entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED):
+        hass.async_create_task(agent._async_cache_prompt(None, None, None))
+
     return True
 
 
@@ -433,6 +439,9 @@ class LLaMAAgent(AbstractConversationAgent):
         """Generate a prompt for the user."""
         entities_to_expose, domains = self._async_get_exposed_entities()
 
+        if True: # TODO: change this to check if prompt caching is enabled
+            self.last_updated_entities
+
         extra_attributes_to_expose = self.entry.options \
             .get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE)
         allowed_service_call_arguments = self.entry.options \
@@ -530,10 +539,11 @@ class LocalLLaMAAgent(LLaMAAgent):
     llm: Any
     grammar: Any
     llama_cpp_module: Any
-    prompt_caching: Callable
+    remove_prompt_caching_listener: Callable
     model_lock: threading.Lock
     fastest_cache_prime_interval: int
     last_cache_prime: float
+    last_updated_entities: list[str]
 
     def _load_model(self, entry: ConfigEntry) -> None:
         self.model_path = entry.data.get(CONF_DOWNLOADED_MODEL_FILE)
@@ -571,12 +581,21 @@ class LocalLLaMAAgent(LLaMAAgent):
         self.grammar = None
         if entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
             self._load_grammar()
+
+        # TODO: check about disk caching
+        # self.llm.set_cache(self.llama_cpp_module.LlamaDiskCache(
+        #     capacity_bytes=(512 * 10e8),
+        #     cache_dir=os.path.join(self.hass.config.media_dirs.get("local", self.hass.config.path("media")), "kv_cache")
+        # ))
         
-        self.prompt_caching = None
+        self.remove_prompt_caching_listener = None
         self.last_cache_prime = None
         self.fastest_cache_prime_interval = 30
+        # self.fastest_cache_prime_interval = entry.options.get(CONF_PROMPT_CACHING_INTERVAL, DEFAULT_PROMPT_CACHING_INTERVAL)
         self.model_lock = threading.Lock()
-        self.set_prompt_caching(enabled=True)
+
+        # if entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED):
+        self._set_prompt_caching(enabled=True)
 
     def _load_grammar(self):
         LlamaGrammar = getattr(self.llama_cpp_module, "LlamaGrammar")
@@ -598,33 +617,36 @@ class LocalLLaMAAgent(LLaMAAgent):
         else:
             self.grammar = None
 
-    def set_prompt_caching(self, *, enabled=True):
-        if enabled and not self.prompt_caching:
-            @callback
-            async def state_change_listener(entity, old_state, new_state):
-                raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
-                prompt = self._format_prompt([
-                    { "role": "system", "message": self._async_generate_system_prompt(raw_prompt)},
-                    { "role": "user", "message": "" }
-                ], include_generation_prompt=False)
+    @callback
+    async def _async_cache_prompt(self, entity, old_state, new_state):
+        raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
 
-                self.hass.async_create_task(self.hass.async_add_executor_job(self._prime_llamacpp_kv_cache, prompt))
+        if self.last_updated_entities:
+            self.last_updated_entities
+
+        # TODO: track which entities are updated most often and sort them to the bottom of the system prompt
+        prompt = self._format_prompt([
+            { "role": "system", "message": self._generate_system_prompt(raw_prompt)},
+            { "role": "user", "message": "" }
+        ], include_generation_prompt=False)
+
+        _LOGGER.info(f"refreshing cached prompt because {entity} changed...")
+        await self.hass.async_add_executor_job(self._prime_llamacpp_kv_cache, prompt)
+
+    def _set_prompt_caching(self, *, enabled=True):
+        if enabled and not self.remove_prompt_caching_listener:
+            _LOGGER.info("enabling prompt caching...")
 
             entity_ids = [ 
-                state for state in self.hass.states.async_all() \
+                state.entity_id for state in self.hass.states.async_all() \
                     if async_should_expose(self.hass, CONVERSATION_DOMAIN, state.entity_id) 
             ]
 
-            self.prompt_caching = async_track_state_change(self.hass, entity_ids, state_change_listener)
-            raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
-            prompt = self._format_prompt([
-                { "role": "system", "message": self._async_generate_system_prompt(raw_prompt)},
-                { "role": "user", "message": "" }
-            ], include_generation_prompt=False)
-            self._prime_llamacpp_kv_cache(prompt)
+            self.remove_prompt_caching_listener = async_track_state_change(self.hass, entity_ids, self._async_cache_prompt)
 
-        elif not enabled and self.prompt_caching:
-            self.prompt_caching()
+        elif not enabled and self.remove_prompt_caching_listener:
+            _LOGGER.info("disabling prompt caching...")
+            self.remove_prompt_caching_listener()
 
     def _prime_llamacpp_kv_cache(self, prompt: str) -> None:
         current_time = time.time()
