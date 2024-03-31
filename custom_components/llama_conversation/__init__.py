@@ -593,6 +593,7 @@ class LocalLLaMAAgent(LLaMAAgent):
         self.remove_prompt_caching_listener = None
         self.last_cache_prime = None
         self.last_updated_entities = {}
+        self.cache_refresh_after_cooldown = False
         self.model_lock = threading.Lock()
 
         if entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED):
@@ -692,24 +693,31 @@ class LocalLLaMAAgent(LLaMAAgent):
         _LOGGER.debug(f"cache refresh took {(refresh_end - refresh_start):.2f} sec")
 
     def _cache_prompt(self) -> None:
-        current_time = time.time()
+        # if a refresh is already scheduled then exit
+        if self.cache_refresh_after_cooldown:
+            return
         
+        # if we are inside the cooldown period, request a refresh and exit
+        current_time = time.time()
         fastest_prime_interval = self.entry.options.get(CONF_PROMPT_CACHING_INTERVAL, DEFAULT_PROMPT_CACHING_INTERVAL)
         if self.last_cache_prime and current_time - self.last_cache_prime < fastest_prime_interval:
             self.cache_refresh_after_cooldown = True
             return
         
-        if self.model_lock.locked():
+        # try to acquire the lock, if we are still running for some reason, request a refresh and exit
+        lock_acquired = self.model_lock.acquire(False)
+        if not lock_acquired:
             self.cache_refresh_after_cooldown = True
             return
         
-        raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
-        prompt = self._format_prompt([
-            { "role": "system", "message": self._generate_system_prompt(raw_prompt)},
-            { "role": "user", "message": "" }
-        ], include_generation_prompt=False)
+        try:
+            raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
+            prompt = self._format_prompt([
+                { "role": "system", "message": self._generate_system_prompt(raw_prompt)},
+                { "role": "user", "message": "" }
+            ], include_generation_prompt=False)
         
-        with self.model_lock:
+        
             input_tokens = self.llm.tokenize(
                 prompt.encode(), add_bos=False
             )
@@ -732,14 +740,29 @@ class LocalLLaMAAgent(LLaMAAgent):
                 grammar=grammar
             ))
 
-        self.last_cache_prime = time.time()
+            self.last_cache_prime = time.time()
+        finally:
+            self.model_lock.release()
 
-        # TODO: figure out the best way to handle this
-        # if self.cache_refresh_after_cooldown:
-        #     # schedule a refresh using async_call_later and reset the flag
-        #     refresh_delay = self.entry.options.get(CONF_PROMPT_CACHING_INTERVAL, DEFAULT_PROMPT_CACHING_INTERVAL)
-        #     async_call_later(self.hass, float(refresh_delay), self._cache_prompt)
-        #     self.cache_refresh_after_cooldown = False
+        
+        # schedule a refresh using async_call_later
+        # if the flag is set after the delay then we do another refresh
+        
+        @callback
+        async def refresh_if_requested(_now):
+            if self.cache_refresh_after_cooldown:
+                self.cache_refresh_after_cooldown = False
+                
+                refresh_start = time.time()
+                _LOGGER.debug(f"refreshing cached prompt after cooldown...")
+                await self.hass.async_add_executor_job(self._cache_prompt)
+
+                refresh_end = time.time()
+                _LOGGER.debug(f"cache refresh took {(refresh_end - refresh_start):.2f} sec")
+
+        refresh_delay = self.entry.options.get(CONF_PROMPT_CACHING_INTERVAL, DEFAULT_PROMPT_CACHING_INTERVAL)
+        async_call_later(self.hass, float(refresh_delay), refresh_if_requested)
+        
     
     def _generate(self, conversation: dict) -> str:
         prompt = self._format_prompt(conversation)
