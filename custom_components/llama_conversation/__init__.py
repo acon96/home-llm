@@ -617,13 +617,16 @@ class LocalLLaMAAgent(LLaMAAgent):
     def _update_options(self):
         LLaMAAgent._update_options(self)
         if self.entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
-            self._load_grammar(self.entry.options.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE))
+            if not self.grammar:
+                self._load_grammar(self.entry.options.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE))
         else:
             self.grammar = None
 
         if self.entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED):
             self._set_prompt_caching(enabled=True)
-            async_call_later(self.hass, 1.0, self._async_cache_prompt(None, None, None))
+            async def cache_current_prompt(_now):
+                await self._async_cache_prompt(None, None, None)
+            async_call_later(self.hass, 1.0, cache_current_prompt)
         else:
             self._set_prompt_caching(enabled=False)
 
