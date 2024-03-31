@@ -56,6 +56,10 @@ from .const import (
     CONF_REMOTE_USE_CHAT_ENDPOINT,
     CONF_TEXT_GEN_WEBUI_CHAT_MODE,
     CONF_OLLAMA_KEEP_ALIVE_MIN,
+    CONF_CONTEXT_LENGTH,
+    CONF_BATCH_SIZE,
+    CONF_THREAD_COUNT,
+    CONF_BATCH_THREAD_COUNT,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
@@ -80,6 +84,10 @@ from .const import (
     DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
     DEFAULT_OPTIONS,
     DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
+    DEFAULT_CONTEXT_LENGTH,
+    DEFAULT_BATCH_SIZE,
+    DEFAULT_THREAD_COUNT,
+    DEFAULT_BATCH_THREAD_COUNT,
     BACKEND_TYPE_LLAMA_HF,
     BACKEND_TYPE_LLAMA_EXISTING,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
@@ -573,11 +581,10 @@ class LocalLLaMAAgent(LLaMAAgent):
         _LOGGER.debug("Loading model...")
         self.llm = Llama(
             model_path=self.model_path,
-            n_ctx=2048,
-            n_batch=2048,
-            # TODO: expose arguments to the user in home assistant UI
-            # n_threads=16,
-            # n_threads_batch=4,
+            n_ctx=self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH),
+            n_batch=self.entry.options.get(CONF_BATCH_SIZE, DEFAULT_BATCH_SIZE),
+            n_threads=self.entry.options.get(CONF_THREAD_COUNT, DEFAULT_THREAD_COUNT),
+            n_threads_batch=self.entry.options.get(CONF_BATCH_THREAD_COUNT, DEFAULT_BATCH_THREAD_COUNT)
         )
 
         self.grammar = None
@@ -752,7 +759,7 @@ class LocalLLaMAAgent(LLaMAAgent):
         async def refresh_if_requested(_now):
             if self.cache_refresh_after_cooldown:
                 self.cache_refresh_after_cooldown = False
-                
+
                 refresh_start = time.time()
                 _LOGGER.debug(f"refreshing cached prompt after cooldown...")
                 await self.hass.async_add_executor_job(self._cache_prompt)
