@@ -223,7 +223,10 @@ class LLaMAAgent(AbstractConversationAgent):
 
     @property
     def entry(self) -> ConfigEntry:
-        return self.hass.data[DOMAIN][self.entry_id]
+        try:
+            return self.hass.data[DOMAIN][self.entry_id]
+        except KeyError as ex:
+            raise Exception("Attempted to use self.entry during startup.") from ex
 
     @property
     def supported_languages(self) -> list[str] | Literal["*"]:
@@ -554,6 +557,7 @@ class LocalLLaMAAgent(LLaMAAgent):
     last_cache_prime: float
     last_updated_entities: dict[str, float]
     cache_refresh_after_cooldown: bool
+    loaded_model_settings: dict[str, Any]
 
     def _load_model(self, entry: ConfigEntry) -> None:
         self.model_path = entry.data.get(CONF_DOWNLOADED_MODEL_FILE)
@@ -578,18 +582,26 @@ class LocalLLaMAAgent(LLaMAAgent):
             
         Llama = getattr(self.llama_cpp_module, "Llama")
 
-        _LOGGER.debug("Loading model...")
+        _LOGGER.debug(f"Loading model '{self.model_path}'...")
+        self.loaded_model_settings = {}
+        self.loaded_model_settings[CONF_CONTEXT_LENGTH] = entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
+        self.loaded_model_settings[CONF_BATCH_SIZE] = entry.options.get(CONF_BATCH_SIZE, DEFAULT_BATCH_SIZE)
+        self.loaded_model_settings[CONF_THREAD_COUNT] = entry.options.get(CONF_THREAD_COUNT, DEFAULT_THREAD_COUNT)
+        self.loaded_model_settings[CONF_BATCH_THREAD_COUNT] = entry.options.get(CONF_BATCH_THREAD_COUNT, DEFAULT_BATCH_THREAD_COUNT)
+
         self.llm = Llama(
             model_path=self.model_path,
-            n_ctx=self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH),
-            n_batch=self.entry.options.get(CONF_BATCH_SIZE, DEFAULT_BATCH_SIZE),
-            n_threads=self.entry.options.get(CONF_THREAD_COUNT, DEFAULT_THREAD_COUNT),
-            n_threads_batch=self.entry.options.get(CONF_BATCH_THREAD_COUNT, DEFAULT_BATCH_THREAD_COUNT)
+            n_ctx=int(self.loaded_model_settings[CONF_CONTEXT_LENGTH]),
+            n_batch=int(self.loaded_model_settings[CONF_BATCH_SIZE]),
+            n_threads=int(self.loaded_model_settings[CONF_THREAD_COUNT]),
+            n_threads_batch=int(self.loaded_model_settings[CONF_BATCH_THREAD_COUNT])
         )
+        _LOGGER.debug("Model loaded")
 
         self.grammar = None
         if entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
             self._load_grammar(entry.options.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE))
+            
 
         # TODO: check about disk caching
         # self.llm.set_cache(self.llama_cpp_module.LlamaDiskCache(
@@ -612,11 +624,12 @@ class LocalLLaMAAgent(LLaMAAgent):
 
     def _load_grammar(self, filename: str):
         LlamaGrammar = getattr(self.llama_cpp_module, "LlamaGrammar")
-        _LOGGER.debug("Loading grammar...")
+        _LOGGER.debug(f"Loading grammar {filename}...")
         try:
             with open(os.path.join(os.path.dirname(__file__), filename)) as f:
                 grammar_str = "".join(f.readlines())
             self.grammar = LlamaGrammar.from_string(grammar_str)
+            self.loaded_model_settings[CONF_GBNF_GRAMMAR_FILE] = filename
             _LOGGER.debug("Loaded grammar")
         except Exception:
             _LOGGER.exception("Failed to load grammar!")
@@ -624,17 +637,47 @@ class LocalLLaMAAgent(LLaMAAgent):
 
     def _update_options(self):
         LLaMAAgent._update_options(self)
+
+        model_reloaded = False
+        if self.loaded_model_settings[CONF_CONTEXT_LENGTH] != self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH) or \
+            self.loaded_model_settings[CONF_BATCH_SIZE] != self.entry.options.get(CONF_BATCH_SIZE, DEFAULT_BATCH_SIZE) or \
+            self.loaded_model_settings[CONF_THREAD_COUNT] != self.entry.options.get(CONF_THREAD_COUNT, DEFAULT_THREAD_COUNT) or \
+            self.loaded_model_settings[CONF_BATCH_THREAD_COUNT] != self.entry.options.get(CONF_BATCH_THREAD_COUNT, DEFAULT_BATCH_THREAD_COUNT):
+
+            _LOGGER.debug(f"Reloading model '{self.model_path}'...")
+            self.loaded_model_settings[CONF_CONTEXT_LENGTH] = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
+            self.loaded_model_settings[CONF_BATCH_SIZE] = self.entry.options.get(CONF_BATCH_SIZE, DEFAULT_BATCH_SIZE)
+            self.loaded_model_settings[CONF_THREAD_COUNT] = self.entry.options.get(CONF_THREAD_COUNT, DEFAULT_THREAD_COUNT)
+            self.loaded_model_settings[CONF_BATCH_THREAD_COUNT] = self.entry.options.get(CONF_BATCH_THREAD_COUNT, DEFAULT_BATCH_THREAD_COUNT)
+
+            Llama = getattr(self.llama_cpp_module, "Llama")
+            self.llm = Llama(
+                model_path=self.model_path,
+                n_ctx=int(self.loaded_model_settings[CONF_CONTEXT_LENGTH]),
+                n_batch=int(self.loaded_model_settings[CONF_BATCH_SIZE]),
+                n_threads=int(self.loaded_model_settings[CONF_THREAD_COUNT]),
+                n_threads_batch=int(self.loaded_model_settings[CONF_BATCH_THREAD_COUNT])
+            )
+            _LOGGER.debug("Model loaded")
+            model_reloaded = True
+
         if self.entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
-            if not self.grammar:
-                self._load_grammar(self.entry.options.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE))
+            current_grammar = self.entry.options.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE)
+            if not self.grammar or self.loaded_model_settings[CONF_GBNF_GRAMMAR_FILE] != current_grammar:
+                self._load_grammar(current_grammar)
         else:
             self.grammar = None
 
         if self.entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED):
             self._set_prompt_caching(enabled=True)
-            async def cache_current_prompt(_now):
-                await self._async_cache_prompt(None, None, None)
-            async_call_later(self.hass, 1.0, cache_current_prompt)
+
+            if self.loaded_model_settings[CONF_PROMPT_CACHING_ENABLED] != self.entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED) or \
+                model_reloaded:
+                self.loaded_model_settings[CONF_PROMPT_CACHING_ENABLED] = self.entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED)
+            
+                async def cache_current_prompt(_now):
+                    await self._async_cache_prompt(None, None, None)
+                async_call_later(self.hass, 1.0, cache_current_prompt)
         else:
             self._set_prompt_caching(enabled=False)
 

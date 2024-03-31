@@ -743,12 +743,12 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_THREAD_COUNT,
                 description={"suggested_value": options.get(CONF_THREAD_COUNT)},
                 default=DEFAULT_THREAD_COUNT,
-            ): NumberSelector(NumberSelectorConfig(min=1, max=256, step=1)),
+            ): NumberSelector(NumberSelectorConfig(min=1, max=(os.cpu_count() * 2), step=1)),
             vol.Required(
                 CONF_BATCH_THREAD_COUNT,
                 description={"suggested_value": options.get(CONF_BATCH_THREAD_COUNT)},
                 default=DEFAULT_BATCH_THREAD_COUNT,
-            ): NumberSelector(NumberSelectorConfig(min=1, max=256, step=1)),
+            ): NumberSelector(NumberSelectorConfig(min=1, max=(os.cpu_count() * 2), step=1)),
             vol.Required(
                 CONF_USE_GBNF_GRAMMAR,
                 description={"suggested_value": options.get(CONF_USE_GBNF_GRAMMAR)},
