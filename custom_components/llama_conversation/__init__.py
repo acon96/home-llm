@@ -195,14 +195,13 @@ class LLaMAAgent(AbstractConversationAgent):
 
         self.in_context_examples = None
         if entry.options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES, DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES):
-            self._load_icl_examples()
+            self._load_icl_examples(entry.options.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE))
 
         self._load_model(entry)
 
-    def _load_icl_examples(self):
+    def _load_icl_examples(self, filename: str):
         try:
-            icl_file = self.entry.options.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE)
-            icl_filename = os.path.join(os.path.dirname(__file__), icl_file)
+            icl_filename = os.path.join(os.path.dirname(__file__), filename)
 
             with open(icl_filename) as f:
                 self.in_context_examples = list(csv.DictReader(f))
@@ -217,7 +216,7 @@ class LLaMAAgent(AbstractConversationAgent):
 
     def _update_options(self):
         if self.entry.options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES, DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES):
-            self._load_icl_examples()
+            self._load_icl_examples(self.entry.options.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE))
         else:
             self.in_context_examples = None
 
@@ -615,7 +614,8 @@ class LocalLLaMAAgent(LLaMAAgent):
         self.cache_refresh_after_cooldown = False
         self.model_lock = threading.Lock()
 
-        if entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED):
+        self.loaded_model_settings[CONF_PROMPT_CACHING_ENABLED] = entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED)
+        if self.loaded_model_settings[CONF_PROMPT_CACHING_ENABLED]:
             @callback
             async def enable_caching_after_startup(_now) -> None:
                 self._set_prompt_caching(enabled=True)

@@ -363,7 +363,8 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             else:
                 model_file = self.model_config[CONF_DOWNLOADED_MODEL_FILE]
                 if os.path.exists(model_file):
-                    return await self.async_step_finish()
+                    self.model_config[CONF_CHAT_MODEL] = os.path.basename(model_file)
+                    return await self.async_step_model_parameters()
                 else:
                     errors["base"] = "missing_model_file"
                     schema = STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA(model_file)
