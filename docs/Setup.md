@@ -42,31 +42,12 @@ After installation, A "LLaMA Conversation" device should show up in the `Setting
 This setup path involves downloading a fine-tuned model from HuggingFace and integrating it with Home Assistant using the Llama.cpp backend. This option is for Home Assistant setups without a dedicated GPU, and the model is capable of running on most devices, and can even run on a Raspberry Pi (although slowly).
 
 ### Step 1: Wheel Installation for llama-cpp-python
-In order to run the Llama.cpp backend as part of Home Assistant, we need to install the binary "wheel" distribution that is pre-built for compatibility with Home Assistant.
-
-The `*.whl` files are located in the [/dist](/dist) folder of this repository.
-
-To ensure compatibility with your Home Assistant and Python versions, select the correct `.whl` file for your hardware's architecture:
-- For Home Assistant `2024.1.4` and older, use the Python 3.11 wheels (`cp311`)
-- For Home Assistant `2024.2.0` and newer, use the Python 3.12 wheels (`cp312`)
-- **ARM devices** (e.g., Raspberry Pi 4/5):
-    - Example filenames:
-        - `llama_cpp_python-{version}-cp311-cp311-musllinux_1_2_aarch64.whl`
-        - `llama_cpp_python-{version}-cp312-cp312-musllinux_1_2_aarch64.whl`
-- **x86_64 devices** (e.g., Intel/AMD desktops):
-    - Example filenames:
-        - `llama_cpp_python-{version}-cp311-cp311-musllinux_1_2_x86_64.whl`
-        - `llama_cpp_python-{version}-cp312-cp312-musllinux_1_2_x86_64.whl`
-
-Download the appropriate wheel and copy it to the `custom_components/llama_conversation/` directory.
-
-After the wheel file has been copied to the correct folder.
 1. In Home Assistant: navigate to `Settings > Devices and Services`
 2. Select the `+ Add Integration` button in the bottom right corner
 3. Search for, and select `LLaMA Conversation`
 4. With the `Llama.cpp (HuggingFace)` backend selected, click `Submit`
 
-This will trigger the installation of the wheel. If you ever need to update the version of Llama.cpp, you can copy a newer wheel file to the same folder, and re-create the integration; this will re-trigger the install process.
+This should download and install `llama-cpp-python` from GitHub. If the installation fails for any reason, follow the manual installation instructions [here](./Backend%20Configuration.md#wheels).
 
 Once `llama-cpp-python` is installed, continue to the model selection.
 

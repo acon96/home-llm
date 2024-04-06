@@ -25,6 +25,35 @@ For details about the sampling parameters, see here: https://github.com/oobaboog
 | Temperature | Sampling parameter; see above link | 0.1 |
 | Enable GBNF Grammar | Restricts the output of the model to follow a pre-defined syntax; eliminates function calling syntax errors on quantized models | Enabled |
 
+## Wheels
+The wheels for `llama-cpp-python` can be built or downloaded manually for installation.
+
+Take the appropriate wheel and copy it to the `custom_components/llama_conversation/` directory.
+
+After the wheel file has been copied to the correct folder, attempt the wheel installation step of the integration setup. The local wheel file should be detected and installed.
+
+## Pre-built
+Pre-built wheel files (`*.whl`) are located as part of the GitHub release for the integration.
+
+To ensure compatibility with your Home Assistant and Python versions, select the correct `.whl` file for your hardware's architecture:
+- For Home Assistant `2024.1.4` and older, use the Python 3.11 wheels (`cp311`)
+- For Home Assistant `2024.2.0` and newer, use the Python 3.12 wheels (`cp312`)
+- **ARM devices** (e.g., Raspberry Pi 4/5):
+    - Example filenames:
+        - `llama_cpp_python-{version}-cp311-cp311-musllinux_1_2_aarch64.whl`
+        - `llama_cpp_python-{version}-cp312-cp312-musllinux_1_2_aarch64.whl`
+- **x86_64 devices** (e.g., Intel/AMD desktops):
+    - Example filenames:
+        - `llama_cpp_python-{version}-cp311-cp311-musllinux_1_2_x86_64.whl`
+        - `llama_cpp_python-{version}-cp312-cp312-musllinux_1_2_x86_64.whl`
+
+## Build your own
+
+1. Clone the repository on the target machine that will be running Home Assistant
+2. Run the `dist/run_docker.sh` script
+3. The wheel files will be placed in the `dist/` folder
+
+
 # text-generation-webui
 | Option Name | Description | Suggested Value |
 | ------------ | --------- | ------------ |
