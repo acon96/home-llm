@@ -1,6 +1,6 @@
 # TODO
-- [ ] setup github actions to build wheels that are optimized for RPIs??
-- [ ] setup github actions to publish docker images for text-gen-webui addon
+- [x] setup github actions to build wheels that are optimized for RPIs??
+- [ ] ~~setup github actions to publish docker images for text-gen-webui addon~~
 - [ ] detection/mitigation of too many entities being exposed & blowing out the context length
 - [ ] areas/room support  
 - [ ] figure out DPO for refusals + fixing incorrect entity id  
