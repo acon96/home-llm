@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import logging
+import threading
 import importlib
-from typing import Literal, Any
+from typing import Literal, Any, Callable
 
 import requests
 import re
@@ -11,6 +12,7 @@ import os
 import json
 import csv
 import random
+import time
 
 import homeassistant.components.conversation as ha_conversation
 from homeassistant.components.conversation import ConversationInput, ConversationResult, AbstractConversationAgent
@@ -18,9 +20,10 @@ from homeassistant.components.conversation.const import DOMAIN as CONVERSATION_D
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_SSL, MATCH_ALL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryError, TemplateError
 from homeassistant.helpers import config_validation as cv, intent, template, entity_registry as er
+from homeassistant.helpers.event import async_track_state_change, async_call_later
 from homeassistant.util import ulid
 
 from .utils import closest_color, flatten_vol_schema, install_llama_cpp_python
@@ -38,17 +41,25 @@ from .const import (
     CONF_ALLOWED_SERVICE_CALL_ARGUMENTS,
     CONF_PROMPT_TEMPLATE,
     CONF_USE_GBNF_GRAMMAR,
+    CONF_GBNF_GRAMMAR_FILE,
     CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
+    CONF_IN_CONTEXT_EXAMPLES_FILE,
     CONF_TEXT_GEN_WEBUI_PRESET,
     CONF_OPENAI_API_KEY,
     CONF_TEXT_GEN_WEBUI_ADMIN_KEY,
     CONF_REFRESH_SYSTEM_PROMPT,
     CONF_REMEMBER_CONVERSATION,
     CONF_REMEMBER_NUM_INTERACTIONS,
+    CONF_PROMPT_CACHING_ENABLED,
+    CONF_PROMPT_CACHING_INTERVAL,
     CONF_SERVICE_CALL_REGEX,
     CONF_REMOTE_USE_CHAT_ENDPOINT,
     CONF_TEXT_GEN_WEBUI_CHAT_MODE,
     CONF_OLLAMA_KEEP_ALIVE_MIN,
+    CONF_CONTEXT_LENGTH,
+    CONF_BATCH_SIZE,
+    CONF_THREAD_COUNT,
+    CONF_BATCH_THREAD_COUNT,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
@@ -60,14 +71,23 @@ from .const import (
     DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS,
     DEFAULT_PROMPT_TEMPLATE,
     DEFAULT_USE_GBNF_GRAMMAR,
+    DEFAULT_GBNF_GRAMMAR_FILE,
     DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
+    DEFAULT_IN_CONTEXT_EXAMPLES_FILE,
     DEFAULT_REFRESH_SYSTEM_PROMPT,
     DEFAULT_REMEMBER_CONVERSATION,
+    DEFAULT_REMEMBER_NUM_INTERACTIONS,
+    DEFAULT_PROMPT_CACHING_ENABLED,
+    DEFAULT_PROMPT_CACHING_INTERVAL,
     DEFAULT_SERVICE_CALL_REGEX,
     DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
     DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
     DEFAULT_OPTIONS,
     DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
+    DEFAULT_CONTEXT_LENGTH,
+    DEFAULT_BATCH_SIZE,
+    DEFAULT_THREAD_COUNT,
+    DEFAULT_BATCH_THREAD_COUNT,
     BACKEND_TYPE_LLAMA_HF,
     BACKEND_TYPE_LLAMA_EXISTING,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
@@ -78,8 +98,6 @@ from .const import (
     TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT,
     DOMAIN,
-    GBNF_GRAMMAR_FILE,
-    IN_CONTEXT_EXAMPLES_FILE,
     PROMPT_TEMPLATE_DESCRIPTIONS,
 )
 
@@ -87,18 +105,18 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-async def update_listener(hass, entry):
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
     """Handle options update."""
     hass.data[DOMAIN][entry.entry_id] = entry
     
     # call update handler
-    agent = await ha_conversation._get_agent_manager(hass).async_get_agent(entry.entry_id)
+    agent: LLaMAAgent = await ha_conversation._get_agent_manager(hass).async_get_agent(entry.entry_id)
     agent._update_options()
+
     return True
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Local LLaMA Conversation from a config entry."""
-
 
     def create_agent(backend_type):
         agent_cls = None
@@ -117,7 +135,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return agent_cls(hass, entry)
 
     # load the model in an executor job because it takes a while and locks up the UI otherwise
-    agent = await hass.async_add_executor_job(create_agent, entry.data.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE))
+    backend_type = entry.data.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE)
+    agent = await hass.async_add_executor_job(create_agent, backend_type)
 
     # handle updates to the options
     entry.async_on_unload(entry.add_update_listener(update_listener))
@@ -126,6 +145,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = entry
+
     return True
 
 
@@ -175,13 +195,13 @@ class LLaMAAgent(AbstractConversationAgent):
 
         self.in_context_examples = None
         if entry.options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES, DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES):
-            self._load_icl_examples()
+            self._load_icl_examples(entry.options.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE))
 
         self._load_model(entry)
 
-    def _load_icl_examples(self):
+    def _load_icl_examples(self, filename: str):
         try:
-            icl_filename = os.path.join(os.path.dirname(__file__), IN_CONTEXT_EXAMPLES_FILE)
+            icl_filename = os.path.join(os.path.dirname(__file__), filename)
 
             with open(icl_filename) as f:
                 self.in_context_examples = list(csv.DictReader(f))
@@ -196,13 +216,16 @@ class LLaMAAgent(AbstractConversationAgent):
 
     def _update_options(self):
         if self.entry.options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES, DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES):
-            self._load_icl_examples()
+            self._load_icl_examples(self.entry.options.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE))
         else:
             self.in_context_examples = None
 
     @property
-    def entry(self):
-        return self.hass.data[DOMAIN][self.entry_id]
+    def entry(self) -> ConfigEntry:
+        try:
+            return self.hass.data[DOMAIN][self.entry_id]
+        except KeyError as ex:
+            raise Exception("Attempted to use self.entry during startup.") from ex
 
     @property
     def supported_languages(self) -> list[str] | Literal["*"]:
@@ -230,7 +253,7 @@ class LLaMAAgent(AbstractConversationAgent):
         template_desc = PROMPT_TEMPLATE_DESCRIPTIONS[prompt_template]
         refresh_system_prompt = self.entry.options.get(CONF_REFRESH_SYSTEM_PROMPT, DEFAULT_REFRESH_SYSTEM_PROMPT)
         remember_conversation = self.entry.options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION)
-        remember_num_interactions = self.entry.options.get(CONF_REMEMBER_NUM_INTERACTIONS, False)
+        remember_num_interactions = self.entry.options.get(CONF_REMEMBER_NUM_INTERACTIONS, DEFAULT_REMEMBER_NUM_INTERACTIONS)
         service_call_regex = self.entry.options.get(CONF_SERVICE_CALL_REGEX, DEFAULT_SERVICE_CALL_REGEX)
         allowed_service_call_arguments = self.entry.options \
             .get(CONF_ALLOWED_SERVICE_CALL_ARGUMENTS, DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS)
@@ -395,7 +418,7 @@ class LLaMAAgent(AbstractConversationAgent):
             entity_states[state.entity_id] = attributes
             domains.add(state.domain)
 
-        _LOGGER.debug(f"Exposed entities: {entity_states}")
+        # _LOGGER.debug(f"Exposed entities: {entity_states}")
 
         return entity_states, list(domains)
 
@@ -487,10 +510,11 @@ class LLaMAAgent(AbstractConversationAgent):
                     result = result + ";" + str(value)
             return result
 
-        device_states = [f"{name} '{attributes.get('friendly_name')}' = {expose_attributes(attributes)}" for name, attributes in entities_to_expose.items()]
+        device_states = []
 
-        # expose devices as their alias as well
+        # expose devices and their alias as well
         for name, attributes in entities_to_expose.items():
+            device_states.append(f"{name} '{attributes.get('friendly_name')}' = {expose_attributes(attributes)}")
             if "aliases" in attributes:
                 for alias in attributes["aliases"]:
                     device_states.append(f"{name} '{alias}' = {expose_attributes(attributes)}")
@@ -527,6 +551,12 @@ class LocalLLaMAAgent(LLaMAAgent):
     llm: Any
     grammar: Any
     llama_cpp_module: Any
+    remove_prompt_caching_listener: Callable
+    model_lock: threading.Lock
+    last_cache_prime: float
+    last_updated_entities: dict[str, float]
+    cache_refresh_after_cooldown: bool
+    loaded_model_settings: dict[str, Any]
 
     def _load_model(self, entry: ConfigEntry) -> None:
         self.model_path = entry.data.get(CONF_DOWNLOADED_MODEL_FILE)
@@ -551,45 +581,241 @@ class LocalLLaMAAgent(LLaMAAgent):
             
         Llama = getattr(self.llama_cpp_module, "Llama")
 
-        _LOGGER.debug("Loading model...")
+        _LOGGER.debug(f"Loading model '{self.model_path}'...")
+        self.loaded_model_settings = {}
+        self.loaded_model_settings[CONF_CONTEXT_LENGTH] = entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
+        self.loaded_model_settings[CONF_BATCH_SIZE] = entry.options.get(CONF_BATCH_SIZE, DEFAULT_BATCH_SIZE)
+        self.loaded_model_settings[CONF_THREAD_COUNT] = entry.options.get(CONF_THREAD_COUNT, DEFAULT_THREAD_COUNT)
+        self.loaded_model_settings[CONF_BATCH_THREAD_COUNT] = entry.options.get(CONF_BATCH_THREAD_COUNT, DEFAULT_BATCH_THREAD_COUNT)
+
         self.llm = Llama(
             model_path=self.model_path,
-            n_ctx=2048,
-            n_batch=2048,
-            # TODO: expose arguments to the user in home assistant UI
-            # n_threads=16,
-            # n_threads_batch=4,
+            n_ctx=int(self.loaded_model_settings[CONF_CONTEXT_LENGTH]),
+            n_batch=int(self.loaded_model_settings[CONF_BATCH_SIZE]),
+            n_threads=int(self.loaded_model_settings[CONF_THREAD_COUNT]),
+            n_threads_batch=int(self.loaded_model_settings[CONF_BATCH_THREAD_COUNT])
         )
+        _LOGGER.debug("Model loaded")
 
         self.grammar = None
         if entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
-            self._load_grammar()
+            self._load_grammar(entry.options.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE))
+            
 
-    def _load_grammar(self):
+        # TODO: check about disk caching
+        # self.llm.set_cache(self.llama_cpp_module.LlamaDiskCache(
+        #     capacity_bytes=(512 * 10e8),
+        #     cache_dir=os.path.join(self.hass.config.media_dirs.get("local", self.hass.config.path("media")), "kv_cache")
+        # ))
+        
+        self.remove_prompt_caching_listener = None
+        self.last_cache_prime = None
+        self.last_updated_entities = {}
+        self.cache_refresh_after_cooldown = False
+        self.model_lock = threading.Lock()
+
+        self.loaded_model_settings[CONF_PROMPT_CACHING_ENABLED] = entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED)
+        if self.loaded_model_settings[CONF_PROMPT_CACHING_ENABLED]:
+            @callback
+            async def enable_caching_after_startup(_now) -> None:
+                self._set_prompt_caching(enabled=True)
+                await self._async_cache_prompt(None, None, None)
+            async_call_later(self.hass, 5.0, enable_caching_after_startup)
+
+    def _load_grammar(self, filename: str):
         LlamaGrammar = getattr(self.llama_cpp_module, "LlamaGrammar")
-        _LOGGER.debug("Loading grammar...")
+        _LOGGER.debug(f"Loading grammar {filename}...")
         try:
-            # TODO: make grammar configurable
-            with open(os.path.join(os.path.dirname(__file__), GBNF_GRAMMAR_FILE)) as f:
+            with open(os.path.join(os.path.dirname(__file__), filename)) as f:
                 grammar_str = "".join(f.readlines())
             self.grammar = LlamaGrammar.from_string(grammar_str)
+            self.loaded_model_settings[CONF_GBNF_GRAMMAR_FILE] = filename
             _LOGGER.debug("Loaded grammar")
         except Exception:
             _LOGGER.exception("Failed to load grammar!")
             self.grammar = None
 
     def _update_options(self):
-        LLaMAAgent._update_options()
+        LLaMAAgent._update_options(self)
+
+        model_reloaded = False
+        if self.loaded_model_settings[CONF_CONTEXT_LENGTH] != self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH) or \
+            self.loaded_model_settings[CONF_BATCH_SIZE] != self.entry.options.get(CONF_BATCH_SIZE, DEFAULT_BATCH_SIZE) or \
+            self.loaded_model_settings[CONF_THREAD_COUNT] != self.entry.options.get(CONF_THREAD_COUNT, DEFAULT_THREAD_COUNT) or \
+            self.loaded_model_settings[CONF_BATCH_THREAD_COUNT] != self.entry.options.get(CONF_BATCH_THREAD_COUNT, DEFAULT_BATCH_THREAD_COUNT):
+
+            _LOGGER.debug(f"Reloading model '{self.model_path}'...")
+            self.loaded_model_settings[CONF_CONTEXT_LENGTH] = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
+            self.loaded_model_settings[CONF_BATCH_SIZE] = self.entry.options.get(CONF_BATCH_SIZE, DEFAULT_BATCH_SIZE)
+            self.loaded_model_settings[CONF_THREAD_COUNT] = self.entry.options.get(CONF_THREAD_COUNT, DEFAULT_THREAD_COUNT)
+            self.loaded_model_settings[CONF_BATCH_THREAD_COUNT] = self.entry.options.get(CONF_BATCH_THREAD_COUNT, DEFAULT_BATCH_THREAD_COUNT)
+
+            Llama = getattr(self.llama_cpp_module, "Llama")
+            self.llm = Llama(
+                model_path=self.model_path,
+                n_ctx=int(self.loaded_model_settings[CONF_CONTEXT_LENGTH]),
+                n_batch=int(self.loaded_model_settings[CONF_BATCH_SIZE]),
+                n_threads=int(self.loaded_model_settings[CONF_THREAD_COUNT]),
+                n_threads_batch=int(self.loaded_model_settings[CONF_BATCH_THREAD_COUNT])
+            )
+            _LOGGER.debug("Model loaded")
+            model_reloaded = True
+
         if self.entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
-            self._load_grammar()
+            current_grammar = self.entry.options.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE)
+            if not self.grammar or self.loaded_model_settings[CONF_GBNF_GRAMMAR_FILE] != current_grammar:
+                self._load_grammar(current_grammar)
         else:
             self.grammar = None
+
+        if self.entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED):
+            self._set_prompt_caching(enabled=True)
+
+            if self.loaded_model_settings[CONF_PROMPT_CACHING_ENABLED] != self.entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED) or \
+                model_reloaded:
+                self.loaded_model_settings[CONF_PROMPT_CACHING_ENABLED] = self.entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED)
+            
+                async def cache_current_prompt(_now):
+                    await self._async_cache_prompt(None, None, None)
+                async_call_later(self.hass, 1.0, cache_current_prompt)
+        else:
+            self._set_prompt_caching(enabled=False)
+
+    def _async_get_exposed_entities(self) -> tuple[dict[str, str], list[str]]:
+        """Takes the super class function results and sorts the entities by most recently updated at the end"""
+        entities, domains = LLaMAAgent._async_get_exposed_entities(self)
+
+        # ignore sorting if prompt caching is disabled
+        if not self.entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED):
+            return entities, domains
+        
+        entity_order = { name: None for name in entities.keys() }
+        entity_order.update(self.last_updated_entities)
+
+        def sort_key(item):
+            item_name, last_updated = item
+            # Handle cases where last updated is None
+            if last_updated is None:
+                return (False, '', item_name)
+            else:
+                return (True, last_updated, '')
+        
+        # Sort the items based on the sort_key function
+        sorted_items = sorted(list(entity_order.items()), key=sort_key)
+
+        _LOGGER.debug(f"sorted_items: {sorted_items}")
+
+        sorted_entities = {}
+        for item_name, _ in sorted_items:
+            sorted_entities[item_name] = entities[item_name]
+
+        return sorted_entities, domains
+
+    def _set_prompt_caching(self, *, enabled=True):
+        if enabled and not self.remove_prompt_caching_listener:
+            _LOGGER.info("enabling prompt caching...")
+
+            entity_ids = [ 
+                state.entity_id for state in self.hass.states.async_all() \
+                    if async_should_expose(self.hass, CONVERSATION_DOMAIN, state.entity_id) 
+            ]
+
+            _LOGGER.debug(f"watching entities: {entity_ids}")
+
+            self.remove_prompt_caching_listener = async_track_state_change(self.hass, entity_ids, self._async_cache_prompt)
+
+        elif not enabled and self.remove_prompt_caching_listener:
+            _LOGGER.info("disabling prompt caching...")
+            self.remove_prompt_caching_listener()
+
+    @callback
+    async def _async_cache_prompt(self, entity, old_state, new_state):
+        refresh_start = time.time()
+
+        # track last update time so we can sort the context efficiently
+        if entity:
+            self.last_updated_entities[entity] = refresh_start
+
+        _LOGGER.debug(f"refreshing cached prompt because {entity} changed...")
+        await self.hass.async_add_executor_job(self._cache_prompt)
+
+        refresh_end = time.time()
+        _LOGGER.debug(f"cache refresh took {(refresh_end - refresh_start):.2f} sec")
+
+    def _cache_prompt(self) -> None:
+        # if a refresh is already scheduled then exit
+        if self.cache_refresh_after_cooldown:
+            return
+        
+        # if we are inside the cooldown period, request a refresh and exit
+        current_time = time.time()
+        fastest_prime_interval = self.entry.options.get(CONF_PROMPT_CACHING_INTERVAL, DEFAULT_PROMPT_CACHING_INTERVAL)
+        if self.last_cache_prime and current_time - self.last_cache_prime < fastest_prime_interval:
+            self.cache_refresh_after_cooldown = True
+            return
+        
+        # try to acquire the lock, if we are still running for some reason, request a refresh and exit
+        lock_acquired = self.model_lock.acquire(False)
+        if not lock_acquired:
+            self.cache_refresh_after_cooldown = True
+            return
+        
+        try:
+            raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
+            prompt = self._format_prompt([
+                { "role": "system", "message": self._generate_system_prompt(raw_prompt)},
+                { "role": "user", "message": "" }
+            ], include_generation_prompt=False)
+        
+        
+            input_tokens = self.llm.tokenize(
+                prompt.encode(), add_bos=False
+            )
+
+            temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
+            top_k = int(self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K))
+            top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
+            grammar = self.grammar if self.entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR) else None
+
+            _LOGGER.debug(f"Options: {self.entry.options}")
+
+            _LOGGER.debug(f"Processing {len(input_tokens)} input tokens...")
+
+            # grab just one token. should prime the kv cache with the system prompt
+            next(self.llm.generate(
+                input_tokens,
+                temp=temperature,
+                top_k=top_k,
+                top_p=top_p,
+                grammar=grammar
+            ))
+
+            self.last_cache_prime = time.time()
+        finally:
+            self.model_lock.release()
+
+        
+        # schedule a refresh using async_call_later
+        # if the flag is set after the delay then we do another refresh
+        
+        @callback
+        async def refresh_if_requested(_now):
+            if self.cache_refresh_after_cooldown:
+                self.cache_refresh_after_cooldown = False
+
+                refresh_start = time.time()
+                _LOGGER.debug(f"refreshing cached prompt after cooldown...")
+                await self.hass.async_add_executor_job(self._cache_prompt)
+
+                refresh_end = time.time()
+                _LOGGER.debug(f"cache refresh took {(refresh_end - refresh_start):.2f} sec")
+
+        refresh_delay = self.entry.options.get(CONF_PROMPT_CACHING_INTERVAL, DEFAULT_PROMPT_CACHING_INTERVAL)
+        async_call_later(self.hass, float(refresh_delay), refresh_if_requested)
+        
     
     def _generate(self, conversation: dict) -> str:
         prompt = self._format_prompt(conversation)
-        input_tokens = self.llm.tokenize(
-            prompt.encode(), add_bos=False
-        )
 
         max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
         temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
@@ -598,26 +824,31 @@ class LocalLLaMAAgent(LLaMAAgent):
 
         _LOGGER.debug(f"Options: {self.entry.options}")
 
-        _LOGGER.debug(f"Processing {len(input_tokens)} input tokens...")
-        output_tokens = self.llm.generate(
-            input_tokens,
-            temp=temperature,
-            top_k=top_k,
-            top_p=top_p,
-            grammar=self.grammar
-        )
+        with self.model_lock:
+            input_tokens = self.llm.tokenize(
+                prompt.encode(), add_bos=False
+            )
 
-        result_tokens = []
-        for token in output_tokens:
-            if token == self.llm.token_eos():
-                break
+            _LOGGER.debug(f"Processing {len(input_tokens)} input tokens...")
+            output_tokens = self.llm.generate(
+                input_tokens,
+                temp=temperature,
+                top_k=top_k,
+                top_p=top_p,
+                grammar=self.grammar
+            )
 
-            result_tokens.append(token)
+            result_tokens = []
+            for token in output_tokens:
+                if token == self.llm.token_eos():
+                    break
 
-            if len(result_tokens) >= max_tokens:
-                break
+                result_tokens.append(token)
 
-        result = self.llm.detokenize(result_tokens).decode()
+                if len(result_tokens) >= max_tokens:
+                    break
+
+            result = self.llm.detokenize(result_tokens).decode()
 
         return result
     

@@ -47,19 +47,27 @@ from .const import (
     CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS,
     CONF_PROMPT_TEMPLATE,
     CONF_USE_GBNF_GRAMMAR,
+    CONF_GBNF_GRAMMAR_FILE,
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
     CONF_ALLOWED_SERVICE_CALL_ARGUMENTS,
     CONF_TEXT_GEN_WEBUI_PRESET,
     CONF_REFRESH_SYSTEM_PROMPT,
     CONF_REMEMBER_CONVERSATION,
     CONF_REMEMBER_NUM_INTERACTIONS,
+    CONF_PROMPT_CACHING_ENABLED,
+    CONF_PROMPT_CACHING_INTERVAL,
     CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
+    CONF_IN_CONTEXT_EXAMPLES_FILE,
     CONF_OPENAI_API_KEY,
     CONF_TEXT_GEN_WEBUI_ADMIN_KEY,
     CONF_SERVICE_CALL_REGEX,
     CONF_REMOTE_USE_CHAT_ENDPOINT,
     CONF_TEXT_GEN_WEBUI_CHAT_MODE,
     CONF_OLLAMA_KEEP_ALIVE_MIN,
+    CONF_CONTEXT_LENGTH,
+    CONF_BATCH_SIZE,
+    CONF_THREAD_COUNT,
+    CONF_BATCH_THREAD_COUNT,
     DEFAULT_CHAT_MODEL,
     DEFAULT_PORT,
     DEFAULT_SSL,
@@ -73,15 +81,24 @@ from .const import (
     DEFAULT_DOWNLOADED_MODEL_QUANTIZATION,
     DEFAULT_PROMPT_TEMPLATE,
     DEFAULT_USE_GBNF_GRAMMAR,
+    DEFAULT_GBNF_GRAMMAR_FILE,
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
     DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS,
     DEFAULT_REFRESH_SYSTEM_PROMPT,
     DEFAULT_REMEMBER_CONVERSATION,
+    DEFAULT_REMEMBER_NUM_INTERACTIONS,
+    DEFAULT_PROMPT_CACHING_ENABLED,
+    DEFAULT_PROMPT_CACHING_INTERVAL,
     DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
+    DEFAULT_IN_CONTEXT_EXAMPLES_FILE,
     DEFAULT_SERVICE_CALL_REGEX,
     DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
     DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
     DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
+    DEFAULT_CONTEXT_LENGTH,
+    DEFAULT_BATCH_SIZE,
+    DEFAULT_THREAD_COUNT,
+    DEFAULT_BATCH_THREAD_COUNT,
     BACKEND_TYPE_LLAMA_HF,
     BACKEND_TYPE_LLAMA_EXISTING,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
@@ -346,7 +363,8 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             else:
                 model_file = self.model_config[CONF_DOWNLOADED_MODEL_FILE]
                 if os.path.exists(model_file):
-                    return await self.async_step_finish()
+                    self.model_config[CONF_CHAT_MODEL] = os.path.basename(model_file)
+                    return await self.async_step_model_parameters()
                 else:
                     errors["base"] = "missing_model_file"
                     schema = STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA(model_file)
@@ -570,9 +588,28 @@ class OptionsFlow(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the options."""
+        errors = {}
+        description_placeholders = {}
+
         if user_input is not None:
-            # TODO: validate that files exist (GBNF + ICL examples)
-            return self.async_create_entry(title="LLaMA Conversation", data=user_input)
+            if not user_input.get(CONF_REFRESH_SYSTEM_PROMPT) and user_input.get(CONF_PROMPT_CACHING_ENABLED):
+                errors["base"] = "sys_refresh_caching_enabled"
+
+            if user_input.get(CONF_USE_GBNF_GRAMMAR):
+                filename = user_input.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE)
+                if not os.path.isfile(os.path.join(os.path.dirname(__file__), filename)):
+                    errors["base"] = "missing_gbnf_file"
+                    description_placeholders["filename"] = filename
+            
+            if user_input.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES):
+                filename = user_input.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE)
+                if not os.path.isfile(os.path.join(os.path.dirname(__file__), filename)):
+                    errors["base"] = "missing_icl_file"
+                    description_placeholders["filename"] = filename
+
+            if len(errors) == 0:
+                return self.async_create_entry(title="LLaMA Conversation", data=user_input)
+            
         schema = local_llama_config_option_schema(
             self.config_entry.options,
             self.config_entry.data[CONF_BACKEND_TYPE],
@@ -580,6 +617,8 @@ class OptionsFlow(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(schema),
+            errors=errors,
+            description_placeholders=description_placeholders,
         )
 
 
@@ -617,6 +656,16 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
             mode=SelectSelectorMode.DROPDOWN,
         )),
         vol.Required(
+            CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
+            description={"suggested_value": options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES)},
+            default=DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
+        ): bool,
+        vol.Required(
+            CONF_IN_CONTEXT_EXAMPLES_FILE,
+            description={"suggested_value": options.get(CONF_IN_CONTEXT_EXAMPLES_FILE)},
+            default=DEFAULT_IN_CONTEXT_EXAMPLES_FILE,
+        ): str,
+        vol.Required(
             CONF_MAX_TOKENS,
             description={"suggested_value": options.get(CONF_MAX_TOKENS)},
             default=DEFAULT_MAX_TOKENS,
@@ -649,12 +698,8 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
         vol.Optional(
             CONF_REMEMBER_NUM_INTERACTIONS,
             description={"suggested_value": options.get(CONF_REMEMBER_NUM_INTERACTIONS)},
+            default=DEFAULT_REMEMBER_NUM_INTERACTIONS,
         ): int,
-        vol.Required(
-            CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
-            description={"suggested_value": options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES)},
-            default=DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
-        ): bool,
     }
 
     if is_local_backend(backend_type):
@@ -675,10 +720,46 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 default=DEFAULT_TEMPERATURE,
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
             vol.Required(
+                CONF_PROMPT_CACHING_ENABLED,
+                description={"suggested_value": options.get(CONF_PROMPT_CACHING_ENABLED)},
+                default=DEFAULT_PROMPT_CACHING_ENABLED,
+            ): bool,
+            vol.Required(
+                CONF_PROMPT_CACHING_INTERVAL,
+                description={"suggested_value": options.get(CONF_PROMPT_CACHING_INTERVAL)},
+                default=DEFAULT_PROMPT_CACHING_INTERVAL,
+            ): NumberSelector(NumberSelectorConfig(min=1, max=60, step=1)),
+            # TODO: add rope_scaling_type
+            vol.Required(
+                CONF_CONTEXT_LENGTH,
+                description={"suggested_value": options.get(CONF_CONTEXT_LENGTH)},
+                default=DEFAULT_CONTEXT_LENGTH,
+            ): NumberSelector(NumberSelectorConfig(min=512, max=32768, step=1)),
+            vol.Required(
+                CONF_BATCH_SIZE,
+                description={"suggested_value": options.get(CONF_BATCH_SIZE)},
+                default=DEFAULT_BATCH_SIZE,
+            ): NumberSelector(NumberSelectorConfig(min=1, max=8192, step=1)),
+            vol.Required(
+                CONF_THREAD_COUNT,
+                description={"suggested_value": options.get(CONF_THREAD_COUNT)},
+                default=DEFAULT_THREAD_COUNT,
+            ): NumberSelector(NumberSelectorConfig(min=1, max=(os.cpu_count() * 2), step=1)),
+            vol.Required(
+                CONF_BATCH_THREAD_COUNT,
+                description={"suggested_value": options.get(CONF_BATCH_THREAD_COUNT)},
+                default=DEFAULT_BATCH_THREAD_COUNT,
+            ): NumberSelector(NumberSelectorConfig(min=1, max=(os.cpu_count() * 2), step=1)),
+            vol.Required(
                 CONF_USE_GBNF_GRAMMAR,
                 description={"suggested_value": options.get(CONF_USE_GBNF_GRAMMAR)},
                 default=DEFAULT_USE_GBNF_GRAMMAR,
-            ): bool
+            ): bool,
+            vol.Required(
+                CONF_GBNF_GRAMMAR_FILE,
+                description={"suggested_value": options.get(CONF_GBNF_GRAMMAR_FILE)},
+                default=DEFAULT_GBNF_GRAMMAR_FILE,
+            ): str
         })
     elif backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
         result = insert_after_key(result, CONF_MAX_TOKENS, {
@@ -761,7 +842,12 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_USE_GBNF_GRAMMAR,
                 description={"suggested_value": options.get(CONF_USE_GBNF_GRAMMAR)},
                 default=DEFAULT_USE_GBNF_GRAMMAR,
-            ): bool
+            ): bool,
+            vol.Required(
+                CONF_GBNF_GRAMMAR_FILE,
+                description={"suggested_value": options.get(CONF_GBNF_GRAMMAR_FILE)},
+                default=DEFAULT_GBNF_GRAMMAR_FILE,
+            ): str
         })
     elif backend_type == BACKEND_TYPE_OLLAMA:
         result = insert_after_key(result, CONF_MAX_TOKENS, {
