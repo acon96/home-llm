@@ -301,7 +301,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         install_exception = self.install_wheel_task.exception()
         if install_exception:
             _LOGGER.warning("Failed to install wheel: %s", repr(install_exception))
-            self.install_wheel_error = install_exception
+            self.install_wheel_error = "pip_wheel_error"
             next_step = "pick_backend"
         else:
             wheel_install_result = self.install_wheel_task.result()

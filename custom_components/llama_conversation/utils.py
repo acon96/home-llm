@@ -11,6 +11,11 @@ from huggingface_hub import hf_hub_download, HfFileSystem
 from homeassistant.requirements import pip_kwargs
 from homeassistant.util.package import install_package, is_installed
 
+from .const import (
+    INTEGRATION_VERSION,
+    EMBEDDED_LLAMA_CPP_PYTHON_VERSION,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 def closest_color(requested_color):
@@ -60,38 +65,37 @@ def download_model_from_hf(model_name: str, quantization_type: str, storage_fold
     )
 
 def install_llama_cpp_python(config_dir: str):
+
+    if is_installed("llama-cpp-python"):
+        _LOGGER.info("llama-cpp-python is already installed")
+        return True
+    
     platform_suffix = platform.machine()
     if platform_suffix == "arm64":
         platform_suffix = "aarch64"
+
+    runtime_version = f"cp{sys.version_info.major}{sys.version_info.minor}"
+    
+    github_release_url = f"https://github.com/acon96/home-llm/releases/download/v{INTEGRATION_VERSION}/llama_cpp_python-{EMBEDDED_LLAMA_CPP_PYTHON_VERSION}-{runtime_version}-{runtime_version}-musllinux_1_2_{platform_suffix}.whl"
+    if install_package(github_release_url, pip_kwargs(config_dir)):
+        _LOGGER.info("llama-cpp-python successfully installed from GitHub release")
+        return True
+    
     folder = os.path.dirname(__file__)
     potential_wheels = sorted([ path for path in os.listdir(folder) if path.endswith(f"{platform_suffix}.whl") ], reverse=True)
     potential_wheels = [ wheel for wheel in potential_wheels if f"cp{sys.version_info.major}{sys.version_info.minor}" in wheel ]
     if len(potential_wheels) == 0:
-        # someone who is better at async can figure out why this is necessary
-        time.sleep(0.5)
-
-        if is_installed("llama-cpp-python"):
-            _LOGGER.info("llama-cpp-python is already installed")
-            return True
         
         _LOGGER.error(
             "Error installing llama-cpp-python. Could not find any wheels that match the following filters. " + \
             f"platform: {platform_suffix}, python version: {sys.version_info.major}.{sys.version_info.minor}. " + \
             "If you recently updated Home Assistant, then you may need to use a different wheel than previously. " + \
-            "Make sure that the correct .whl file is located in config/custom_components/llama_conversation/*"
+            "Make sure that you download the correct .whl file from the GitHub releases page"
         )
-        raise Exception("missing_wheels")
+        return False
     
     latest_wheel = potential_wheels[0]
-    latest_version = latest_wheel.split("-")[1]
 
-    if not is_installed("llama-cpp-python") or version("llama-cpp-python") != latest_version:
-        _LOGGER.info("Installing llama-cpp-python from wheel")
-        _LOGGER.debug(f"Wheel location: {latest_wheel}")
-        return install_package(os.path.join(folder, latest_wheel), pip_kwargs(config_dir))
-    else:
-        # someone who is better at async can figure out why this is necessary
-        time.sleep(0.5)
-
-        _LOGGER.info("llama-cpp-python is already installed")
-        return True
+    _LOGGER.info("Installing llama-cpp-python from local wheel")
+    _LOGGER.debug(f"Wheel location: {latest_wheel}")
+    return install_package(os.path.join(folder, latest_wheel), pip_kwargs(config_dir))
