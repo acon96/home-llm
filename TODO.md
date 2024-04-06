@@ -7,7 +7,7 @@
 - [x] mixtral + prompting (no fine tuning)  
     - add in context learning variables to sys prompt template
     - add new options to setup process for setting prompt style + picking fine-tuned/ICL  
-- [ ] prime kv cache with current "state" so that requests are faster  
+- [x] prime kv cache with current "state" so that requests are faster  
 - [ ] support fine-tuning with RoPE for longer contexts  
 - [ ] support config via yaml instead of configflow
 - [x] ChatML format (actually need to add special tokens)  
