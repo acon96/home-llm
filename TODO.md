@@ -34,6 +34,10 @@
     - the model predicts special tokens as the first few tokens of its output  
     - the requested content is added to the context after the request tokens and then generation continues  
     - needs more complicated training b/c multi-turn + there will be some weird masking going on for training the responses properly  
+- [ ] integrate with llava for checking camera feeds in home assistant
+    - can check still frames to describe what is there
+    - for remote backends that support images, could also support this
+    - depends on context requests because we don't want to feed camera feeds into the context every time
 - [ ] RAG for getting info for setting up new devices  
     - set up vectordb  
     - ingest home assistant docs  

@@ -31,6 +31,7 @@ from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
 )
+from homeassistant.util.package import is_installed
 
 from .utils import download_model_from_hf, install_llama_cpp_python
 from .const import (
@@ -277,18 +278,10 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             local_backend = is_local_backend(user_input[CONF_BACKEND_TYPE])
             self.model_config.update(user_input)
             if local_backend:
-                return await self.async_step_install_local_wheels()
-                # this check isn't working right now
-                # for key, value in self.hass.data.get(DOMAIN, {}).items():
-                #     other_backend_type = value.data.get(CONF_BACKEND_TYPE)
-                #     if other_backend_type == BACKEND_TYPE_LLAMA_HF or \
-                #         other_backend_type == BACKEND_TYPE_LLAMA_EXISTING:
-                #         errors["base"] = "other_existing_local"
-                #         schema = STEP_INIT_DATA_SCHEMA(
-                #             backend_type=user_input[CONF_BACKEND_TYPE],
-                #         )
-                # if "base" not in errors:
-                #     return await self.async_step_install_local_wheels()
+                if is_installed("llama-cpp-python"):
+                    return await self.async_step_local_model()
+                else:
+                    return await self.async_step_install_local_wheels()
             else:
                 return await self.async_step_remote_model()
         elif self.install_wheel_error:
