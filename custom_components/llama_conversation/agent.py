@@ -412,6 +412,10 @@ class LLaMAAgent(AbstractConversationAgent):
                 if x["service"] in service_names and x["service"].split(".")[0] in entity_domains:
                     selected_in_context_examples.append(x)
 
+            # if we filtered everything then just sample randomly
+            if len(selected_in_context_examples) == 0:
+                selected_in_context_examples = self.in_context_examples
+
             random.shuffle(selected_in_context_examples)
             random.shuffle(entity_names)
             

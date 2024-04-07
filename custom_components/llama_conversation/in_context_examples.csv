@@ -1,17 +1,13 @@
 service,response
-blinds.open,Opening the blinds for you.
-blinds.close,Closing the blinds as you requested.
-blinds.stop,Stopping the blinds now.
-blinds.toggle,Toggling the blinds state for you.
 fan.turn_on,Turning on the fan for you.
 fan.turn_off,Switching off the fan as requested.
 fan.toggle,I'll toggle the fan's state for you.
 fan.increase_speed,Increasing the fan speed for you.
 fan.decrease_speed,Reducing the fan speed as you requested.
-garage_door.cover_open,Opening the garage door for you.
-garage_door.cover_close,Closing the garage door as requested.
-garage_door.stop_cover,Stopping the garage door now.
-garage_door.toggle,Toggling the garage door state for you.
+cover.open_cover,Opening the garage door for you.
+cover.close_cover,Closing the garage door as requested.
+cover.stop_cover,Stopping the garage door now.
+cover.toggle,Toggling the garage door state for you.
 light.turn_on,Turning on the light for you.
 light.turn_off,Turning off the light as requested.
 light.toggle,Toggling the light for you.
