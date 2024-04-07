@@ -709,14 +709,14 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 default=DEFAULT_TOP_K,
             ): NumberSelector(NumberSelectorConfig(min=1, max=256, step=1)),
             vol.Required(
-                CONF_TOP_P,
-                description={"suggested_value": options.get(CONF_TOP_P)},
-                default=DEFAULT_TOP_P,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Required(
                 CONF_TEMPERATURE,
                 description={"suggested_value": options.get(CONF_TEMPERATURE)},
                 default=DEFAULT_TEMPERATURE,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=3, step=0.05)),
+            vol.Required(
+                CONF_TOP_P,
+                description={"suggested_value": options.get(CONF_TOP_P)},
+                default=DEFAULT_TOP_P,
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
             vol.Required(
                 CONF_PROMPT_CACHING_ENABLED,
@@ -763,6 +763,26 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
     elif backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
         result = insert_after_key(result, CONF_MAX_TOKENS, {
             vol.Required(
+                CONF_CONTEXT_LENGTH,
+                description={"suggested_value": options.get(CONF_CONTEXT_LENGTH)},
+                default=DEFAULT_CONTEXT_LENGTH,
+            ): NumberSelector(NumberSelectorConfig(min=512, max=32768, step=1)),
+            vol.Required(
+                CONF_TOP_K,
+                description={"suggested_value": options.get(CONF_TOP_K)},
+                default=DEFAULT_TOP_K,
+            ): NumberSelector(NumberSelectorConfig(min=1, max=256, step=1)),
+            vol.Required(
+                CONF_TEMPERATURE,
+                description={"suggested_value": options.get(CONF_TEMPERATURE)},
+                default=DEFAULT_TEMPERATURE,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=3, step=0.05)),
+            vol.Required(
+                CONF_TOP_P,
+                description={"suggested_value": options.get(CONF_TOP_P)},
+                default=DEFAULT_TOP_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Required(
                 CONF_REQUEST_TIMEOUT,
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
                 default=DEFAULT_REQUEST_TIMEOUT,
@@ -790,28 +810,15 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
     elif backend_type == BACKEND_TYPE_GENERIC_OPENAI:
         result = insert_after_key(result, CONF_MAX_TOKENS, {
             vol.Required(
-                CONF_REQUEST_TIMEOUT,
-                description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
-                default=DEFAULT_REQUEST_TIMEOUT,
-            ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
-            vol.Required(
-                CONF_REMOTE_USE_CHAT_ENDPOINT,
-                description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
-                default=DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
-            ): bool,
-            vol.Required(
                 CONF_TEMPERATURE,
                 description={"suggested_value": options.get(CONF_TEMPERATURE)},
                 default=DEFAULT_TEMPERATURE,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            ): NumberSelector(NumberSelectorConfig(min=0, max=3, step=0.05)),
             vol.Required(
                 CONF_TOP_P,
                 description={"suggested_value": options.get(CONF_TOP_P)},
                 default=DEFAULT_TOP_P,
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-        })
-    elif backend_type == BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER:
-        result = insert_after_key(result, CONF_MAX_TOKENS, {
             vol.Required(
                 CONF_REQUEST_TIMEOUT,
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
@@ -822,6 +829,9 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
                 default=DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
             ): bool,
+        })
+    elif backend_type == BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER:
+        result = insert_after_key(result, CONF_MAX_TOKENS, {
             vol.Required(
                 CONF_TOP_K,
                 description={"suggested_value": options.get(CONF_TOP_K)},
@@ -831,7 +841,7 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_TEMPERATURE,
                 description={"suggested_value": options.get(CONF_TEMPERATURE)},
                 default=DEFAULT_TEMPERATURE,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            ): NumberSelector(NumberSelectorConfig(min=0, max=3, step=0.05)),
             vol.Required(
                 CONF_TOP_P,
                 description={"suggested_value": options.get(CONF_TOP_P)},
@@ -846,10 +856,40 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_GBNF_GRAMMAR_FILE,
                 description={"suggested_value": options.get(CONF_GBNF_GRAMMAR_FILE)},
                 default=DEFAULT_GBNF_GRAMMAR_FILE,
-            ): str
+            ): str,
+            vol.Required(
+                CONF_REQUEST_TIMEOUT,
+                description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
+                default=DEFAULT_REQUEST_TIMEOUT,
+            ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
+            vol.Required(
+                CONF_REMOTE_USE_CHAT_ENDPOINT,
+                description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
+                default=DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
+            ): bool,
         })
     elif backend_type == BACKEND_TYPE_OLLAMA:
         result = insert_after_key(result, CONF_MAX_TOKENS, {
+            vol.Required(
+                CONF_CONTEXT_LENGTH,
+                description={"suggested_value": options.get(CONF_CONTEXT_LENGTH)},
+                default=DEFAULT_CONTEXT_LENGTH,
+            ): NumberSelector(NumberSelectorConfig(min=512, max=32768, step=1)),
+            vol.Required(
+                CONF_TOP_K,
+                description={"suggested_value": options.get(CONF_TOP_K)},
+                default=DEFAULT_TOP_K,
+            ): NumberSelector(NumberSelectorConfig(min=1, max=256, step=1)),
+            vol.Required(
+                CONF_TEMPERATURE,
+                description={"suggested_value": options.get(CONF_TEMPERATURE)},
+                default=DEFAULT_TEMPERATURE,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=3, step=0.05)),
+            vol.Required(
+                CONF_TOP_P,
+                description={"suggested_value": options.get(CONF_TOP_P)},
+                default=DEFAULT_TOP_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
             vol.Required(
                 CONF_REQUEST_TIMEOUT,
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
@@ -865,16 +905,6 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
                 default=DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
             ): bool,
-            vol.Required(
-                CONF_TEMPERATURE,
-                description={"suggested_value": options.get(CONF_TEMPERATURE)},
-                default=DEFAULT_TEMPERATURE,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Required(
-                CONF_TOP_P,
-                description={"suggested_value": options.get(CONF_TOP_P)},
-                default=DEFAULT_TOP_P,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
         })
 
     return result

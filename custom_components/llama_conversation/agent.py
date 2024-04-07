@@ -175,6 +175,13 @@ class LLaMAAgent(AbstractConversationAgent):
         return await self.hass.async_add_executor_job(
             self._generate, conversation
         )
+    
+    def _warn_context_size(self):
+        num_entities = len(self._async_get_exposed_entities()[0])
+        context_size = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
+        _LOGGER.error("There were too many entities exposed when attempting to generate a response for " +
+                      f"{self.entry.data[CONF_CHAT_MODEL]} and it exceeded the context size for the model. " +
+                      f"Please reduce the number of entities exposed ({num_entities}) or increase the model's context size ({int(context_size)})")
 
     async def async_process(
         self, user_input: ConversationInput
@@ -766,6 +773,10 @@ class LocalLLaMAAgent(LLaMAAgent):
                 prompt.encode(), add_bos=False
             )
 
+            context_len = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
+            if len(input_tokens) + max_tokens >= context_len:
+                self._warn_context_size()
+
             _LOGGER.debug(f"Processing {len(input_tokens)} input tokens...")
             output_tokens = self.llm.generate(
                 input_tokens,
@@ -924,6 +935,9 @@ class TextGenerationWebuiAgent(GenericOpenAIAPIAgent):
         elif chat_mode == TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT:
             request_params["instruction_template"] = self.entry.options.get(CONF_PROMPT_TEMPLATE, DEFAULT_PROMPT_TEMPLATE)
 
+        request_params["truncation_length"] = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
+        request_params["top_k"] = self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K)
+
         return endpoint, request_params
     
     def _completion_params(self, conversation: dict) -> (str, dict):
@@ -934,12 +948,20 @@ class TextGenerationWebuiAgent(GenericOpenAIAPIAgent):
         if preset:
             request_params["preset"] = preset
 
+        request_params["truncation_length"] = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
+        request_params["top_k"] = self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K)
+
         return endpoint, request_params
     
     def _extract_response(self, response_json: dict) -> str:
         choices = response_json["choices"]
         if choices[0]["finish_reason"] != "stop":
             _LOGGER.warn("Model response did not end on a stop token (unfinished sentence)")
+
+        context_len = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
+        max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
+        if response_json["usage"]["prompt_tokens"] + max_tokens > context_len:
+            self._warn_context_size()
 
         # text-gen-webui has a typo where it is 'chat.completions' not 'chat.completion'
         if response_json["object"] == "chat.completions":
@@ -1025,12 +1047,19 @@ class OllamaAPIAgent(LLaMAAgent):
 
         endpoint = "/api/generate"
         request_params["prompt"] = self._format_prompt(conversation)
+        request_params["raw"] = True # ignore prompt template
 
         return endpoint, request_params
     
     def _extract_response(self, response_json: dict) -> str:        
         if response_json["done"] != "true":
             _LOGGER.warn("Model response did not end on a stop token (unfinished sentence)")
+        
+        # TODO: this doesn't work because ollama caches prompts and doesn't always return the full prompt length
+        # context_len = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
+        # max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
+        # if response_json["prompt_eval_count"] + max_tokens > context_len:
+        #     self._warn_context_size()
 
         if "response" in response_json:
             return response_json["response"]
@@ -1038,23 +1067,26 @@ class OllamaAPIAgent(LLaMAAgent):
             return response_json["message"]["content"]
     
     def _generate(self, conversation: dict) -> str:
+        context_length = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
         max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
         temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
         top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
+        top_k = self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K)
         timeout = self.entry.options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
         keep_alive = self.entry.options.get(CONF_OLLAMA_KEEP_ALIVE_MIN, DEFAULT_OLLAMA_KEEP_ALIVE_MIN)
         use_chat_api = self.entry.options.get(CONF_REMOTE_USE_CHAT_ENDPOINT, DEFAULT_REMOTE_USE_CHAT_ENDPOINT)
         
-
         request_params = {
             "model": self.model_name,
             "stream": False,
             "keep_alive": f"{keep_alive}m", # prevent ollama from unloading the model
             "options": {
+                "num_ctx": context_length,
                 "top_p": top_p,
+                "top_k": top_k,
                 "temperature": temperature,
                 "num_predict": max_tokens,
-            }   
+            }
         }
         
         if use_chat_api:
