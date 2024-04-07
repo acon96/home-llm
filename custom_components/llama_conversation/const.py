@@ -25,6 +25,7 @@ Devices:
 {{ devices }}"""
 CONF_CHAT_MODEL = "huggingface_model"
 DEFAULT_CHAT_MODEL = "acon96/Home-3B-v3-GGUF"
+RECOMMENDED_CHAT_MODELS = [ "acon96/Home-3B-v3-GGUF", "acon96/Home-1B-v2-GGUF", "TheBloke/Mistral-7B-Instruct-v0.2-GGUF" ]
 CONF_MAX_TOKENS = "max_new_tokens"
 DEFAULT_MAX_TOKENS = 128
 CONF_TOP_K = "top_k"

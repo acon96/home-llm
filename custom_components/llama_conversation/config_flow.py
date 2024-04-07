@@ -112,6 +112,7 @@ from .const import (
     DOMAIN,
     DEFAULT_OPTIONS,
     OPTIONS_OVERRIDES,
+    RECOMMENDED_CHAT_MODELS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -150,7 +151,12 @@ def STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA(model_file=None):
 def STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(*, chat_model=None, downloaded_model_quantization=None):
     return vol.Schema(
         {
-            vol.Required(CONF_CHAT_MODEL, default=chat_model if chat_model else DEFAULT_CHAT_MODEL): str,
+            vol.Required(CONF_CHAT_MODEL, default=chat_model if chat_model else DEFAULT_CHAT_MODEL): SelectSelector(SelectSelectorConfig(
+                options=RECOMMENDED_CHAT_MODELS,
+                custom_value=True,
+                multiple=False,
+                mode=SelectSelectorMode.DROPDOWN,
+            )),
             vol.Required(CONF_DOWNLOADED_MODEL_QUANTIZATION, default=downloaded_model_quantization if downloaded_model_quantization else DEFAULT_DOWNLOADED_MODEL_QUANTIZATION): vol.In(CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS),
         }
     )

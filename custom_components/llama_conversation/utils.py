@@ -68,6 +68,9 @@ def install_llama_cpp_python(config_dir: str):
 
     if is_installed("llama-cpp-python"):
         _LOGGER.info("llama-cpp-python is already installed")
+
+        # not sure why this is still needed
+        time.sleep(0.1)
         return True
     
     platform_suffix = platform.machine()
