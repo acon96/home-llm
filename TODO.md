@@ -1,15 +1,12 @@
 # TODO
-- [ ] setup github actions to build wheels that are optimized for RPIs??
-- [ ] setup github actions to publish docker images for text-gen-webui addon
 - [ ] detection/mitigation of too many entities being exposed & blowing out the context length
 - [ ] areas/room support  
-- [ ] figure out DPO for refusals + fixing incorrect entity id  
+- [ ] figure out DPO to improve response quality
+- [x] setup github actions to build wheels that are optimized for RPIs
 - [x] mixtral + prompting (no fine tuning)  
     - add in context learning variables to sys prompt template
     - add new options to setup process for setting prompt style + picking fine-tuned/ICL  
-- [ ] prime kv cache with current "state" so that requests are faster  
-- [ ] support fine-tuning with RoPE for longer contexts  
-- [ ] support config via yaml instead of configflow
+- [x] prime kv cache with current "state" so that requests are faster  
 - [x] ChatML format (actually need to add special tokens)  
 - [x] Vicuna dataset merge (yahma/alpaca-cleaned)  
 - [x] Phi-2 fine tuning  
@@ -19,7 +16,6 @@
 - [x] Licenses + Attributions  
 - [x] Finish Readme/docs for initial release  
 - [x] Function calling as JSON  
-- [ ] multi-turn prompts; better instruct dataset like dolphin/wizardlm?  
 - [x] Fine tune Phi-1.5 version  
 - [x] make llama-cpp-python wheels for "llama-cpp-python>=0.2.24"  
 - [x] make a proper evaluation framework to run. not just loss. should test accuracy on the function calling  

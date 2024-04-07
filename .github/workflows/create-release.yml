@@ -1,0 +1,88 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_notes: 
+        description: "Release Notes"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.arch }} (HA ${{ matrix.home_assistant_version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        home_assistant_version: ["2023.12.4", "2024.2.1"]
+        arch: ["aarch64", "armhf", "amd64", "i386"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Read llama-cpp-python version
+        run: cat custom_components/llama_conversation/const.py | grep "EMBEDDED_LLAMA_CPP_PYTHON_VERSION" | tr -d ' ' | tr -d '"' >> $GITHUB_ENV
+
+      - name: Build artifact
+        uses: uraimo/run-on-arch-action@v2
+        id: build
+        with:
+          arch: none
+          distro: none
+          base_image: homeassistant/${{ matrix.arch }}-homeassistant:${{ matrix.home_assistant_version }}
+
+          # Create an artifacts directory
+          setup: |
+            mkdir -p "${PWD}/artifacts"
+
+          # Mount the artifacts directory as /artifacts in the container
+          dockerRunArgs: |
+            --volume "${PWD}/artifacts:/artifacts"
+
+          # The shell to run commands with in the container
+          shell: /bin/bash
+
+          # Produce a binary artifact and place it in the mounted volume
+          run: |
+            apk update
+            apk add build-base python3-dev cmake
+            pip3 install build
+
+            cd /tmp
+            git clone --quiet --recurse-submodules https://github.com/abetlen/llama-cpp-python --branch "v${{ env.EMBEDDED_LLAMA_CPP_PYTHON_VERSION }}"
+            cd llama-cpp-python
+            
+            export CMAKE_ARGS="-DLLAVA_BUILD=OFF"
+            python3 -m build --wheel
+            cp -f ./dist/*.whl /artifacts/
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          path: ./artifacts/*.whl
+          name: artifact_${{ matrix.arch }}_${{ matrix.home_assistant_version }}
+
+  release:
+    name: Create Release
+    needs: [ build_wheels ]
+    runs-on: ubuntu-latest
+    if: "startsWith(github.event.ref, 'refs/tags/v')" # only create a release if this was run on a tag
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          body: ${{ inputs.release_notes }}
+          make_latest: true

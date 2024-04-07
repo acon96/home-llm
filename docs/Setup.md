@@ -42,38 +42,20 @@ After installation, A "LLaMA Conversation" device should show up in the `Setting
 This setup path involves downloading a fine-tuned model from HuggingFace and integrating it with Home Assistant using the Llama.cpp backend. This option is for Home Assistant setups without a dedicated GPU, and the model is capable of running on most devices, and can even run on a Raspberry Pi (although slowly).
 
 ### Step 1: Wheel Installation for llama-cpp-python
-In order to run the Llama.cpp backend as part of Home Assistant, we need to install the binary "wheel" distribution that is pre-built for compatibility with Home Assistant.
-
-The `*.whl` files are located in the [/dist](/dist) folder of this repository.
-
-To ensure compatibility with your Home Assistant and Python versions, select the correct `.whl` file for your hardware's architecture:
-- For Home Assistant `2024.1.4` and older, use the Python 3.11 wheels (`cp311`)
-- For Home Assistant `2024.2.0` and newer, use the Python 3.12 wheels (`cp312`)
-- **ARM devices** (e.g., Raspberry Pi 4/5):
-    - Example filenames:
-        - `llama_cpp_python-{version}-cp311-cp311-musllinux_1_2_aarch64.whl`
-        - `llama_cpp_python-{version}-cp312-cp312-musllinux_1_2_aarch64.whl`
-- **x86_64 devices** (e.g., Intel/AMD desktops):
-    - Example filenames:
-        - `llama_cpp_python-{version}-cp311-cp311-musllinux_1_2_x86_64.whl`
-        - `llama_cpp_python-{version}-cp312-cp312-musllinux_1_2_x86_64.whl`
-Download the appropriate wheel and copy it to the `custom_components/llama_conversation/` directory.
-
-After the wheel file has been copied to the correct folder.
 1. In Home Assistant: navigate to `Settings > Devices and Services`
 2. Select the `+ Add Integration` button in the bottom right corner
 3. Search for, and select `LLaMA Conversation`
 4. With the `Llama.cpp (HuggingFace)` backend selected, click `Submit`
 
-This will trigger the installation of the wheel. If you ever need to update the version of Llama.cpp, you can copy a newer wheel file to the same folder, and re-create the integration; this will re-trigger the install process.
+This should download and install `llama-cpp-python` from GitHub. If the installation fails for any reason, follow the manual installation instructions [here](./Backend%20Configuration.md#wheels).
 
 Once `llama-cpp-python` is installed, continue to the model selection.
 
 ### Step 2: Model Selection
-The next step is to specify which model will be used by the integration. You may select any repository on HuggingFace that has a model in GGUF format in it.  We will use `acon96/Home-3B-v3-GGUF` for this example.  If you have less than 4GB of RAM then use ``acon96/Home-1B-v2-GGUF`.
+The next step is to specify which model will be used by the integration. You may select any repository on HuggingFace that has a model in GGUF format in it.  We will use `acon96/Home-3B-v3-GGUF` for this example.  If you have less than 4GB of RAM then use `acon96/Home-1B-v2-GGUF`.
 
-**Model Name**: Use either `acon96/Home-3B-v3-GGUF` or `acon96/Home-1B-v2-GGUF`
-**Quantization Level**: The model will be downloaded in the selected quantization level from the HuggingFace repository. If unsure which level to choose, select `Q4_K_M`.
+**Model Name**: Use either `acon96/Home-3B-v3-GGUF` or `acon96/Home-1B-v2-GGUF`  
+**Quantization Level**: The model will be downloaded in the selected quantization level from the HuggingFace repository. If unsure which level to choose, select `Q4_K_M`.  
 
 Pressing `Submit` will download the model from HuggingFace.
 
@@ -86,7 +68,7 @@ The model will be loaded into memory and should now be available to select as a 
 
 ## Path 2: Using Mistral-Instruct-7B with Ollama Backend
 ### Overview
-For those who have access to a GPU, you can also use the Mistral-Instruct-7B model to power your conversation agent. This path requires a separate machine that has a GPU that has [Ollama](https://ollama.com/) already installed on it.  This path utilizes in-context learning examples, to prompt the model to produce the output that we expect.
+For those who have access to a GPU, you can also use the Mistral-Instruct-7B model to power your conversation agent. This path requires a separate machine that has a GPU and has [Ollama](https://ollama.com/) already installed on it.  This path utilizes in-context learning examples, to prompt the model to produce the output that we expect.
 
 ### Step 1: Downloading and serving the Model
 Mistral can be easily set up and downloaded on the serving machine using the `ollama pull mistral` command.
@@ -112,6 +94,8 @@ In order to access the model from another machine, we need to run the Ollama API
 This step allows you to configure how the model is "prompted". See [here](./Model%20Prompting.md) for more information on how that works.
 
 For now, defaults for the model should have been populated and you can just scroll to the bottom and click `Submit`.
+
+> NOTE: The key settings in this case are that our prompt references the `{{ response_examples }}` variable and the `Enable in context learning (ICL) examples` option is turned on.
 
 ## Configuring the Integration as a Conversation Agent
 Now that the integration is configured and providing the conversation agent, we need to configure Home Assistant to use our conversation agent instead of the built in intent recognition system.
