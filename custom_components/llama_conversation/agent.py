@@ -43,6 +43,7 @@ from .const import (
     CONF_GBNF_GRAMMAR_FILE,
     CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
     CONF_IN_CONTEXT_EXAMPLES_FILE,
+    CONF_NUM_IN_CONTEXT_EXAMPLES,
     CONF_TEXT_GEN_WEBUI_PRESET,
     CONF_OPENAI_API_KEY,
     CONF_TEXT_GEN_WEBUI_ADMIN_KEY,
@@ -55,6 +56,7 @@ from .const import (
     CONF_REMOTE_USE_CHAT_ENDPOINT,
     CONF_TEXT_GEN_WEBUI_CHAT_MODE,
     CONF_OLLAMA_KEEP_ALIVE_MIN,
+    CONF_OLLAMA_JSON_MODE,
     CONF_CONTEXT_LENGTH,
     CONF_BATCH_SIZE,
     CONF_THREAD_COUNT,
@@ -73,6 +75,7 @@ from .const import (
     DEFAULT_GBNF_GRAMMAR_FILE,
     DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
     DEFAULT_IN_CONTEXT_EXAMPLES_FILE,
+    DEFAULT_NUM_IN_CONTEXT_EXAMPLES,
     DEFAULT_REFRESH_SYSTEM_PROMPT,
     DEFAULT_REMEMBER_CONVERSATION,
     DEFAULT_REMEMBER_NUM_INTERACTIONS,
@@ -82,6 +85,7 @@ from .const import (
     DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
     DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
     DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
+    DEFAULT_OLLAMA_JSON_MODE,
     DEFAULT_CONTEXT_LENGTH,
     DEFAULT_BATCH_SIZE,
     DEFAULT_THREAD_COUNT,
@@ -486,8 +490,8 @@ class LLaMAAgent(AbstractConversationAgent):
         }
 
         if self.in_context_examples:
-            # TODO: make number of examples configurable
-            render_variables["response_examples"] = "\n".join(icl_example_generator(4, list(entities_to_expose.keys()), all_service_names))
+            num_examples = int(self.entry.options.get(CONF_NUM_IN_CONTEXT_EXAMPLES, DEFAULT_NUM_IN_CONTEXT_EXAMPLES))
+            render_variables["response_examples"] = "\n".join(icl_example_generator(num_examples, list(entities_to_expose.keys()), all_service_names))
         
         return template.Template(prompt_template, self.hass).async_render(
             render_variables,
@@ -1051,7 +1055,7 @@ class OllamaAPIAgent(LLaMAAgent):
 
         endpoint = "/api/generate"
         request_params["prompt"] = self._format_prompt(conversation)
-        request_params["raw"] = True # ignore prompt template
+        # request_params["raw"] = True # ignore prompt template
 
         return endpoint, request_params
     
@@ -1079,6 +1083,7 @@ class OllamaAPIAgent(LLaMAAgent):
         timeout = self.entry.options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
         keep_alive = self.entry.options.get(CONF_OLLAMA_KEEP_ALIVE_MIN, DEFAULT_OLLAMA_KEEP_ALIVE_MIN)
         use_chat_api = self.entry.options.get(CONF_REMOTE_USE_CHAT_ENDPOINT, DEFAULT_REMOTE_USE_CHAT_ENDPOINT)
+        json_mode = self.entry.options.get(CONF_OLLAMA_JSON_MODE, DEFAULT_OLLAMA_JSON_MODE)
         
         request_params = {
             "model": self.model_name,
@@ -1092,6 +1097,9 @@ class OllamaAPIAgent(LLaMAAgent):
                 "num_predict": max_tokens,
             }
         }
+
+        if json_mode:
+            request_params["format"] = "json"
         
         if use_chat_api:
             endpoint, additional_params = self._chat_completion_params(conversation)

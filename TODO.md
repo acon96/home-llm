@@ -1,5 +1,5 @@
 # TODO
-- [ ] detection/mitigation of too many entities being exposed & blowing out the context length
+- [x] detection/mitigation of too many entities being exposed & blowing out the context length
 - [ ] areas/room support  
 - [ ] figure out DPO to improve response quality
 - [x] setup github actions to build wheels that are optimized for RPIs
