@@ -9,3 +9,7 @@ pandas
 sentencepiece
 
 homeassistant
+hassil
+home-assistant-intents
+pytest
+pytest-asynciop
