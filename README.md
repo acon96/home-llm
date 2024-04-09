@@ -1,10 +1,12 @@
 # Home LLM
-This project provides the required "glue" components to control your Home Assistant installation with a completely local Large Language Model acting as a personal assistant. The goal is to provide a drop in solution to be used as a "conversation agent" component by Home Assistant.
+![Banner Logo](/docs/banner.svg)  
+
+This project provides the required "glue" components to control your Home Assistant installation with a completely local Large Language Model acting as a personal assistant. The goal is to provide a drop in solution to be used as a "conversation agent" component by Home Assistant.  The 2 main pieces of this solution are Home LLM and Llama Conversation.
 
 ## Quick Start
 Please see the [Setup Guide](./docs/Setup.md) for more information on installation.
 
-## Home Assistant Component
+## LLama Conversation Integration
 In order to integrate with Home Assistant, we provide a `custom_component` that exposes the locally running LLM as a "conversation agent".
 
 This component can be interacted with in a few ways:  
@@ -15,7 +17,7 @@ The component can either run the model directly as part of the Home Assistant so
 
 When doing this, you can host the model yourself and point the add-on at machine where the model is hosted, or you can run the model using text-generation-webui using the provided [custom Home Assistant add-on](./addon).
 
-## Model
+## Home LLM Model
 The "Home" models are a fine tuning of the Phi model series from Microsoft and the StableLM model series from StabilityAI.  The model is able to control devices in the user's house as well as perform basic question and answering.  The fine tuning dataset is a [custom synthetic dataset](./data) designed to teach the model function calling based on the device information in the context.
 
 The latest models can be found on HuggingFace:  
