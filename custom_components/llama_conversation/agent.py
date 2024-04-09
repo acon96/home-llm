@@ -142,8 +142,12 @@ class LLaMAAgent(AbstractConversationAgent):
 
                 if set(self.in_context_examples[0].keys()) != set(["service", "response" ]):
                     raise Exception("ICL csv file did not have 2 columns: service & response")
-
-            _LOGGER.debug(f"Loaded {len(self.in_context_examples)} examples for ICL")
+                
+            if len(self.in_context_examples) == 0:
+                _LOGGER.warning(f"There were no in context learning examples found in the file '{filename}'!")
+                self.in_context_examples = None
+            else:
+                _LOGGER.debug(f"Loaded {len(self.in_context_examples)} examples for ICL")
         except Exception:
             _LOGGER.exception("Failed to load in context learning examples!")
             self.in_context_examples = None
@@ -422,8 +426,12 @@ class LLaMAAgent(AbstractConversationAgent):
 
             random.shuffle(selected_in_context_examples)
             random.shuffle(entity_names)
+
+            num_examples_to_generate = min(num_examples, len(selected_in_context_examples))
+            if num_examples_to_generate < num_examples:
+                _LOGGER.warning(f"Attempted to generate {num_examples} ICL examples for conversation, but only {len(selected_in_context_examples)} are available!")
             
-            for x in range(num_examples):
+            for x in range(num_examples_to_generate):
                 chosen_example = selected_in_context_examples.pop()
                 chosen_service = chosen_example["service"]
                 device = [ x for x in entity_names if x.split(".")[0] == chosen_service.split(".")[0] ][0]
