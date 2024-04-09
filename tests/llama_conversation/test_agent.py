@@ -78,7 +78,6 @@ from custom_components.llama_conversation.const import (
     DEFAULT_OPTIONS,
 )
 
-import homeassistant.helpers.template
 from homeassistant.components.conversation import ConversationInput
 from homeassistant.const import (
     CONF_HOST,
@@ -102,19 +101,6 @@ class MockConfigEntry:
         self.entry_id = entry_id
         self.data = WarnDict(data)
         self.options = WarnDict(options)
-    
-
-# @pytest.fixture
-# def patch_dependency_group1():
-#     with patch('path.to.dependency1') as mock1, \
-#          patch('path.to.dependency2') as mock2:
-#         yield mock1, mock2
-
-# @pytest.fixture
-# def patch_dependency_group2():
-#     with patch('path.to.dependency3') as mock3, \
-#          patch('path.to.dependency4') as mock4:
-#         yield mock3, mock4
         
 
 @pytest.fixture
@@ -195,34 +181,77 @@ def local_llama_agent_fixture(config_entry, home_assistant_mock):
 
         yield agent_obj, all_mocks
 
+# TODO: test base llama agent (ICL loading other languages)
 
-@pytest.mark.asyncio  # This decorator is necessary for pytest to run async test functions
 async def test_local_llama_agent(local_llama_agent_fixture):
 
     local_llama_agent: LocalLLaMAAgent
     all_mocks: dict[str, MagicMock]
     local_llama_agent, all_mocks = local_llama_agent_fixture
     
+    # invoke the conversation agent
     conversation_id = "test-conversation"
     result = await local_llama_agent.async_process(ConversationInput(
         "turn on the kitchen lights", MagicMock(), conversation_id, None, "en"
     ))
 
+    # assert on results + check side effects
     assert result.response.speech['plain']['speech'] == "I am saying something!"
 
     all_mocks["llama_class"].assert_called_once_with(
-        model_path=ANY,
-        n_ctx=ANY,
-        n_batch=ANY,
-        n_threads=ANY,
-        n_threads_batch=ANY,
+        model_path=local_llama_agent.entry.data.get(CONF_DOWNLOADED_MODEL_FILE),
+        n_ctx=local_llama_agent.entry.options.get(CONF_CONTEXT_LENGTH),
+        n_batch=local_llama_agent.entry.options.get(CONF_BATCH_SIZE),
+        n_threads=local_llama_agent.entry.options.get(CONF_THREAD_COUNT),
+        n_threads_batch=local_llama_agent.entry.options.get(CONF_BATCH_THREAD_COUNT),
     )
 
     all_mocks["tokenize"].assert_called_once()
     all_mocks["generate"].assert_called_once_with(
         ANY,
-        temp=ANY,
-        top_k=ANY,
-        top_p=ANY,
+        temp=local_llama_agent.entry.options.get(CONF_TEMPERATURE),
+        top_k=local_llama_agent.entry.options.get(CONF_TOP_K),
+        top_p=local_llama_agent.entry.options.get(CONF_TOP_P),
         grammar=ANY,
     )
+
+    # reset mock stats
+    for mock in all_mocks.values():
+        mock.reset_mock()
+
+    # change options then apply them
+    local_llama_agent.entry.options[CONF_CONTEXT_LENGTH] = 1024
+    local_llama_agent.entry.options[CONF_BATCH_SIZE] = 1024
+    local_llama_agent.entry.options[CONF_THREAD_COUNT] = 24
+    local_llama_agent.entry.options[CONF_BATCH_THREAD_COUNT] = 24
+    local_llama_agent.entry.options[CONF_TEMPERATURE] = 2.0
+    local_llama_agent.entry.options[CONF_TOP_K] = 20
+    local_llama_agent.entry.options[CONF_TOP_P] = 0.9
+
+    local_llama_agent._update_options()
+
+    all_mocks["llama_class"].assert_called_once_with(
+        model_path=local_llama_agent.entry.data.get(CONF_DOWNLOADED_MODEL_FILE),
+        n_ctx=local_llama_agent.entry.options.get(CONF_CONTEXT_LENGTH),
+        n_batch=local_llama_agent.entry.options.get(CONF_BATCH_SIZE),
+        n_threads=local_llama_agent.entry.options.get(CONF_THREAD_COUNT),
+        n_threads_batch=local_llama_agent.entry.options.get(CONF_BATCH_THREAD_COUNT),
+    )
+
+    # do another turn of the same conversation
+    result = await local_llama_agent.async_process(ConversationInput(
+        "turn off the office lights", MagicMock(), conversation_id, None, "en"
+    ))
+
+    assert result.response.speech['plain']['speech'] == "I am saying something!"
+
+    all_mocks["tokenize"].assert_called_once()
+    all_mocks["generate"].assert_called_once_with(
+        ANY,
+        temp=local_llama_agent.entry.options.get(CONF_TEMPERATURE),
+        top_k=local_llama_agent.entry.options.get(CONF_TOP_K),
+        top_p=local_llama_agent.entry.options.get(CONF_TOP_P),
+        grammar=ANY,
+    )
+
+# TODO: test backends: text-gen-webui, ollama, generic openai

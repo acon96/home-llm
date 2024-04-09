@@ -12,4 +12,5 @@ homeassistant
 hassil
 home-assistant-intents
 pytest
-pytest-asynciop
+pytest-asyncio
+pytest-homeassistant-custom-component

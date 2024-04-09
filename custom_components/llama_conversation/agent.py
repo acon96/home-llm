@@ -137,7 +137,7 @@ class LLaMAAgent(AbstractConversationAgent):
         try:
             icl_filename = os.path.join(os.path.dirname(__file__), filename)
 
-            with open(icl_filename) as f:
+            with open(icl_filename, encoding="utf-8-sig") as f:
                 self.in_context_examples = list(csv.DictReader(f))
 
                 if set(self.in_context_examples[0].keys()) != set(["service", "response" ]):
