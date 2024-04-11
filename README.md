@@ -129,19 +129,19 @@ In order to facilitate running the project entirely on the system where Home Ass
 
 
 ## Version History
-| Version | Description                                                                                                                                                                                      |
-| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| v0.2.12 | Fix cover ICL examples, allow setting number of ICL examples, add min P and typical P sampler options, add JSON mode for Ollama backend, fix missing default options                                                                      |
-| v0.2.11 | Add prompt caching, expose llama.cpp runtime settings, build llama-cpp-python wheels using GitHub actions, and install wheels directly from GitHub                                               |
-| v0.2.10 | Allow configuring the model parameters during initial setup, attempt to auto-detect defaults for recommended models, Fix to allow lights to be set to max brightness                             |
-| v0.2.9  | Fix HuggingFace Download, Fix llama.cpp wheel installation, Fix light color changing, Add in-context-learning support                                                                            | 
-| v0.2.8  | Fix ollama model names with colons                                                                                                                                                               |
-| v0.2.7  | Publish model v3, Multiple Ollama backend improvements, Updates for HA 2024.02, support for voice assistant aliases                                                                              |
-| v0.2.6  | Bug fixes, add options for limiting chat history, HTTPS endpoint support, added zephyr prompt format.                                                                                            |
-| v0.2.5  | Fix Ollama max tokens parameter, fix GGUF download from Hugging Face, update included llama-cpp-python to 0.2.32, and add parameters to function calling for dataset + component, & model update |
-| v0.2.4  | Fix API key auth on model load for text-generation-webui, and add support for Ollama API backend                                                                                                 |
-| v0.2.3  | Fix API key auth, Support chat completion endpoint, and refactor to make it easier to add more remote backends                                                                                   |
-| v0.2.2  | Fix options window after upgrade, fix training script for new Phi model format, and release new models                                                                                           |
-| v0.2.1  | Properly expose generation parameters for each backend, handle config entry updates without reloading, support remote backends with an API key                                                   |
-| v0.2    | Bug fixes, support more backends, support for climate + switch devices, JSON style function calling with parameters, GBNF grammars                                                               |
-| v0.1    | Initial Release                                                                                                                                                                                  |
+| Version | Description                                                                                                                                                                                         |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| v0.2.12 | Fix cover ICL examples, allow setting number of ICL examples, add min P and typical P sampler options, recommend models during setup, add JSON mode for Ollama backend, fix missing default options |
+| v0.2.11 | Add prompt caching, expose llama.cpp runtime settings, build llama-cpp-python wheels using GitHub actions, and install wheels directly from GitHub                                                  |
+| v0.2.10 | Allow configuring the model parameters during initial setup, attempt to auto-detect defaults for recommended models, Fix to allow lights to be set to max brightness                                |
+| v0.2.9  | Fix HuggingFace Download, Fix llama.cpp wheel installation, Fix light color changing, Add in-context-learning support                                                                               | 
+| v0.2.8  | Fix ollama model names with colons                                                                                                                                                                  |
+| v0.2.7  | Publish model v3, Multiple Ollama backend improvements, Updates for HA 2024.02, support for voice assistant aliases                                                                                 |
+| v0.2.6  | Bug fixes, add options for limiting chat history, HTTPS endpoint support, added zephyr prompt format.                                                                                               |
+| v0.2.5  | Fix Ollama max tokens parameter, fix GGUF download from Hugging Face, update included llama-cpp-python to 0.2.32, and add parameters to function calling for dataset + component, & model update    |
+| v0.2.4  | Fix API key auth on model load for text-generation-webui, and add support for Ollama API backend                                                                                                    |
+| v0.2.3  | Fix API key auth, Support chat completion endpoint, and refactor to make it easier to add more remote backends                                                                                      |
+| v0.2.2  | Fix options window after upgrade, fix training script for new Phi model format, and release new models                                                                                              |
+| v0.2.1  | Properly expose generation parameters for each backend, handle config entry updates without reloading, support remote backends with an API key                                                      |
+| v0.2    | Bug fixes, support more backends, support for climate + switch devices, JSON style function calling with parameters, GBNF grammars                                                                  |
+| v0.1    | Initial Release                                                                                                                                                                                     |
