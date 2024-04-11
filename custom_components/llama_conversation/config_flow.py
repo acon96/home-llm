@@ -30,6 +30,8 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
     TextSelector,
     TextSelectorConfig,
+    BooleanSelector,
+    BooleanSelectorConfig,
 )
 from homeassistant.util.package import is_installed
 
@@ -674,7 +676,7 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
             CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
             description={"suggested_value": options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES)},
             default=DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
-        ): bool,
+        ): BooleanSelector(BooleanSelectorConfig()),
         vol.Required(
             CONF_IN_CONTEXT_EXAMPLES_FILE,
             description={"suggested_value": options.get(CONF_IN_CONTEXT_EXAMPLES_FILE)},
@@ -709,12 +711,12 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
             CONF_REFRESH_SYSTEM_PROMPT,
             description={"suggested_value": options.get(CONF_REFRESH_SYSTEM_PROMPT)},
             default=DEFAULT_REFRESH_SYSTEM_PROMPT,
-        ): bool,
+        ): BooleanSelector(BooleanSelectorConfig()),
         vol.Required(
             CONF_REMEMBER_CONVERSATION,
             description={"suggested_value": options.get(CONF_REMEMBER_CONVERSATION)},
             default=DEFAULT_REMEMBER_CONVERSATION,
-        ): bool,
+        ): BooleanSelector(BooleanSelectorConfig()),
         vol.Optional(
             CONF_REMEMBER_NUM_INTERACTIONS,
             description={"suggested_value": options.get(CONF_REMEMBER_NUM_INTERACTIONS)},
@@ -753,7 +755,7 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_PROMPT_CACHING_ENABLED,
                 description={"suggested_value": options.get(CONF_PROMPT_CACHING_ENABLED)},
                 default=DEFAULT_PROMPT_CACHING_ENABLED,
-            ): bool,
+            ): BooleanSelector(BooleanSelectorConfig()),
             vol.Required(
                 CONF_PROMPT_CACHING_INTERVAL,
                 description={"suggested_value": options.get(CONF_PROMPT_CACHING_INTERVAL)},
@@ -784,7 +786,7 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_USE_GBNF_GRAMMAR,
                 description={"suggested_value": options.get(CONF_USE_GBNF_GRAMMAR)},
                 default=DEFAULT_USE_GBNF_GRAMMAR,
-            ): bool,
+            ): BooleanSelector(BooleanSelectorConfig()),
             vol.Required(
                 CONF_GBNF_GRAMMAR_FILE,
                 description={"suggested_value": options.get(CONF_GBNF_GRAMMAR_FILE)},
@@ -832,7 +834,7 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_REMOTE_USE_CHAT_ENDPOINT,
                 description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
                 default=DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
-            ): bool,
+            ): BooleanSelector(BooleanSelectorConfig()),
             vol.Optional(
                 CONF_TEXT_GEN_WEBUI_PRESET,
                 description={"suggested_value": options.get(CONF_TEXT_GEN_WEBUI_PRESET)},
@@ -869,7 +871,7 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_REMOTE_USE_CHAT_ENDPOINT,
                 description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
                 default=DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
-            ): bool,
+            ): BooleanSelector(BooleanSelectorConfig()),
         })
     elif backend_type == BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER:
         result = insert_after_key(result, CONF_MAX_TOKENS, {
@@ -892,7 +894,7 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_USE_GBNF_GRAMMAR,
                 description={"suggested_value": options.get(CONF_USE_GBNF_GRAMMAR)},
                 default=DEFAULT_USE_GBNF_GRAMMAR,
-            ): bool,
+            ): BooleanSelector(BooleanSelectorConfig()),
             vol.Required(
                 CONF_GBNF_GRAMMAR_FILE,
                 description={"suggested_value": options.get(CONF_GBNF_GRAMMAR_FILE)},
@@ -907,7 +909,7 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_REMOTE_USE_CHAT_ENDPOINT,
                 description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
                 default=DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
-            ): bool,
+            ): BooleanSelector(BooleanSelectorConfig()),
         })
     elif backend_type == BACKEND_TYPE_OLLAMA:
         result = insert_after_key(result, CONF_MAX_TOKENS, {
@@ -940,7 +942,7 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_OLLAMA_JSON_MODE,
                 description={"suggested_value": options.get(CONF_OLLAMA_JSON_MODE)},
                 default=DEFAULT_OLLAMA_JSON_MODE,
-            ): bool,
+            ): BooleanSelector(BooleanSelectorConfig()),
             vol.Required(
                 CONF_REQUEST_TIMEOUT,
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
@@ -955,7 +957,7 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_REMOTE_USE_CHAT_ENDPOINT,
                 description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
                 default=DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
-            ): bool,
+            ): BooleanSelector(BooleanSelectorConfig()),
         })
 
     return result
