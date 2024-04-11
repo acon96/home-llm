@@ -846,7 +846,7 @@ class GenericOpenAIAPIAgent(LLaMAAgent):
     def _extract_response(self, response_json: dict) -> str:
         choices = response_json["choices"]
         if choices[0]["finish_reason"] != "stop":
-            _LOGGER.warn("Model response did not end on a stop token (unfinished sentence)")
+            _LOGGER.warning("Model response did not end on a stop token (unfinished sentence)")
 
         if response_json["object"] == "chat.completion":
             return choices[0]["message"]["content"]
@@ -972,7 +972,7 @@ class TextGenerationWebuiAgent(GenericOpenAIAPIAgent):
     def _extract_response(self, response_json: dict) -> str:
         choices = response_json["choices"]
         if choices[0]["finish_reason"] != "stop":
-            _LOGGER.warn("Model response did not end on a stop token (unfinished sentence)")
+            _LOGGER.warning("Model response did not end on a stop token (unfinished sentence)")
 
         context_len = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
         max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
@@ -1069,7 +1069,7 @@ class OllamaAPIAgent(LLaMAAgent):
     
     def _extract_response(self, response_json: dict) -> str:        
         if response_json["done"] != "true":
-            _LOGGER.warn("Model response did not end on a stop token (unfinished sentence)")
+            _LOGGER.warning("Model response did not end on a stop token (unfinished sentence)")
         
         # TODO: this doesn't work because ollama caches prompts and doesn't always return the full prompt length
         # context_len = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
