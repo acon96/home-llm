@@ -18,6 +18,8 @@ from custom_components.llama_conversation.const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
+    CONF_MIN_P,
+    CONF_TYPICAL_P,
     CONF_REQUEST_TIMEOUT,
     CONF_BACKEND_TYPE,
     CONF_DOWNLOADED_MODEL_FILE,
@@ -58,6 +60,8 @@ from custom_components.llama_conversation.const import (
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
+    DEFAULT_MIN_P,
+    DEFAULT_TYPICAL_P,
     DEFAULT_BACKEND_TYPE,
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
@@ -251,6 +255,7 @@ async def test_validate_config_flow_ollama(mock_setup_entry, hass: HomeAssistant
         CONF_TOP_P: DEFAULT_TOP_P,
         CONF_TOP_K: DEFAULT_TOP_K,
         CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
+        CONF_TYPICAL_P: DEFAULT_MIN_P,
         CONF_REQUEST_TIMEOUT: DEFAULT_REQUEST_TIMEOUT,
         CONF_PROMPT_TEMPLATE: DEFAULT_PROMPT_TEMPLATE,
         CONF_EXTRA_ATTRIBUTES_TO_EXPOSE: DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
@@ -285,6 +290,8 @@ async def test_validate_config_flow_ollama(mock_setup_entry, hass: HomeAssistant
     assert result4["options"] == options_dict
     mock_setup_entry.assert_called_once()
 
+# TODO: write tests for configflow setup for llama.cpp (both versions) + text-generation-webui
+
 def test_validate_options_schema():
 
     universal_options = [
@@ -296,7 +303,7 @@ def test_validate_options_schema():
 
     options_llama_hf = local_llama_config_option_schema(None, BACKEND_TYPE_LLAMA_HF)
     assert set(options_llama_hf.keys()) == set(universal_options + [
-        CONF_TOP_K, CONF_TEMPERATURE, CONF_TOP_P, # supports all sampling parameters
+        CONF_TOP_K, CONF_TEMPERATURE, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P, # supports all sampling parameters
         CONF_BATCH_SIZE, CONF_THREAD_COUNT, CONF_BATCH_THREAD_COUNT, # llama.cpp specific
         CONF_CONTEXT_LENGTH, # supports context length
         CONF_USE_GBNF_GRAMMAR, CONF_GBNF_GRAMMAR_FILE, # supports GBNF
@@ -305,7 +312,7 @@ def test_validate_options_schema():
 
     options_llama_existing = local_llama_config_option_schema(None, BACKEND_TYPE_LLAMA_EXISTING)
     assert set(options_llama_existing.keys()) == set(universal_options + [
-        CONF_TOP_K, CONF_TEMPERATURE, CONF_TOP_P, # supports all sampling parameters
+        CONF_TOP_K, CONF_TEMPERATURE, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P, # supports all sampling parameters
         CONF_BATCH_SIZE, CONF_THREAD_COUNT, CONF_BATCH_THREAD_COUNT, # llama.cpp specific
         CONF_CONTEXT_LENGTH, # supports context length
         CONF_USE_GBNF_GRAMMAR, CONF_GBNF_GRAMMAR_FILE, # supports GBNF
@@ -314,7 +321,7 @@ def test_validate_options_schema():
 
     options_ollama = local_llama_config_option_schema(None, BACKEND_TYPE_OLLAMA)
     assert set(options_ollama.keys()) == set(universal_options + [
-        CONF_TOP_K, CONF_TEMPERATURE, CONF_TOP_P, # supports all sampling parameters
+        CONF_TOP_K, CONF_TEMPERATURE, CONF_TOP_P, CONF_TYPICAL_P, # supports top_k temperature, top_p and typical_p samplers
         CONF_OLLAMA_KEEP_ALIVE_MIN, CONF_OLLAMA_JSON_MODE, # ollama specific
         CONF_CONTEXT_LENGTH, # supports context length
         CONF_REMOTE_USE_CHAT_ENDPOINT, CONF_REQUEST_TIMEOUT, # is a remote backend
@@ -322,7 +329,7 @@ def test_validate_options_schema():
 
     options_text_gen_webui = local_llama_config_option_schema(None, BACKEND_TYPE_TEXT_GEN_WEBUI)
     assert set(options_text_gen_webui.keys()) == set(universal_options + [
-        CONF_TOP_K, CONF_TEMPERATURE, CONF_TOP_P, # supports all sampling parameters
+        CONF_TOP_K, CONF_TEMPERATURE, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P, # supports all sampling parameters
         CONF_TEXT_GEN_WEBUI_CHAT_MODE, CONF_TEXT_GEN_WEBUI_PRESET, # text-gen-webui specific
         CONF_CONTEXT_LENGTH, # supports context length
         CONF_REMOTE_USE_CHAT_ENDPOINT, CONF_REQUEST_TIMEOUT, # is a remote backend
@@ -336,7 +343,7 @@ def test_validate_options_schema():
 
     options_llama_cpp_python_server = local_llama_config_option_schema(None, BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER)
     assert set(options_llama_cpp_python_server.keys()) == set(universal_options + [
-        CONF_TOP_K, CONF_TEMPERATURE, CONF_TOP_P, # supports all sampling parameters
+        CONF_TOP_K, CONF_TEMPERATURE, CONF_TOP_P, # supports top_k, temperature, and top p sampling
         CONF_USE_GBNF_GRAMMAR, CONF_GBNF_GRAMMAR_FILE, # supports GBNF
         CONF_REMOTE_USE_CHAT_ENDPOINT, CONF_REQUEST_TIMEOUT, # is a remote backend
     ])

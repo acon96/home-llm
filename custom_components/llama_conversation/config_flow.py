@@ -41,6 +41,8 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
+    CONF_MIN_P,
+    CONF_TYPICAL_P,
     CONF_REQUEST_TIMEOUT,
     CONF_BACKEND_TYPE,
     CONF_DOWNLOADED_MODEL_FILE,
@@ -79,6 +81,8 @@ from .const import (
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
+    DEFAULT_MIN_P,
+    DEFAULT_TYPICAL_P,
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_BACKEND_TYPE,
     DEFAULT_DOWNLOADED_MODEL_QUANTIZATION,
@@ -728,6 +732,16 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 default=DEFAULT_TOP_P,
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
             vol.Required(
+                CONF_MIN_P,
+                description={"suggested_value": options.get(CONF_MIN_P)},
+                default=DEFAULT_MIN_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Required(
+                CONF_TYPICAL_P,
+                description={"suggested_value": options.get(CONF_TYPICAL_P)},
+                default=DEFAULT_TYPICAL_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Required(
                 CONF_PROMPT_CACHING_ENABLED,
                 description={"suggested_value": options.get(CONF_PROMPT_CACHING_ENABLED)},
                 default=DEFAULT_PROMPT_CACHING_ENABLED,
@@ -790,6 +804,16 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_TOP_P,
                 description={"suggested_value": options.get(CONF_TOP_P)},
                 default=DEFAULT_TOP_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Required(
+                CONF_MIN_P,
+                description={"suggested_value": options.get(CONF_MIN_P)},
+                default=DEFAULT_MIN_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Required(
+                CONF_TYPICAL_P,
+                description={"suggested_value": options.get(CONF_TYPICAL_P)},
+                default=DEFAULT_TYPICAL_P,
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
             vol.Required(
                 CONF_REQUEST_TIMEOUT,
@@ -898,6 +922,11 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_TOP_P,
                 description={"suggested_value": options.get(CONF_TOP_P)},
                 default=DEFAULT_TOP_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Required(
+                CONF_TYPICAL_P,
+                description={"suggested_value": options.get(CONF_TYPICAL_P)},
+                default=DEFAULT_TYPICAL_P,
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
             vol.Required(
                 CONF_OLLAMA_JSON_MODE,

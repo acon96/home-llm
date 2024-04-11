@@ -12,6 +12,8 @@ from custom_components.llama_conversation.const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
+    CONF_MIN_P,
+    CONF_TYPICAL_P,
     CONF_REQUEST_TIMEOUT,
     CONF_BACKEND_TYPE,
     CONF_DOWNLOADED_MODEL_FILE,
@@ -46,6 +48,8 @@ from custom_components.llama_conversation.const import (
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
+    DEFAULT_MIN_P,
+    DEFAULT_TYPICAL_P,
     DEFAULT_BACKEND_TYPE,
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
@@ -212,6 +216,8 @@ async def test_local_llama_agent(local_llama_agent_fixture):
         temp=local_llama_agent.entry.options.get(CONF_TEMPERATURE),
         top_k=local_llama_agent.entry.options.get(CONF_TOP_K),
         top_p=local_llama_agent.entry.options.get(CONF_TOP_P),
+        typical_p=local_llama_agent.entry.options[CONF_TYPICAL_P],
+        min_p=local_llama_agent.entry.options[CONF_MIN_P],
         grammar=ANY,
     )
 
@@ -227,6 +233,8 @@ async def test_local_llama_agent(local_llama_agent_fixture):
     local_llama_agent.entry.options[CONF_TEMPERATURE] = 2.0
     local_llama_agent.entry.options[CONF_TOP_K] = 20
     local_llama_agent.entry.options[CONF_TOP_P] = 0.9
+    local_llama_agent.entry.options[CONF_MIN_P] = 0.2
+    local_llama_agent.entry.options[CONF_TYPICAL_P] = 0.95
 
     local_llama_agent._update_options()
 
@@ -251,10 +259,10 @@ async def test_local_llama_agent(local_llama_agent_fixture):
         temp=local_llama_agent.entry.options.get(CONF_TEMPERATURE),
         top_k=local_llama_agent.entry.options.get(CONF_TOP_K),
         top_p=local_llama_agent.entry.options.get(CONF_TOP_P),
+        typical_p=local_llama_agent.entry.options[CONF_TYPICAL_P],
+        min_p=local_llama_agent.entry.options[CONF_MIN_P],
         grammar=ANY,
     )
-
-# TODO: test backends: text-gen-webui, ollama, generic openai
     
 @pytest.fixture
 def ollama_agent_fixture(config_entry, home_assistant_mock):
@@ -343,6 +351,7 @@ async def test_ollama_agent(ollama_agent_fixture):
                 "num_ctx": ollama_agent.entry.options[CONF_CONTEXT_LENGTH],
                 "top_p": ollama_agent.entry.options[CONF_TOP_P],
                 "top_k": ollama_agent.entry.options[CONF_TOP_K],
+                "typical_p": ollama_agent.entry.options[CONF_TYPICAL_P],
                 "temperature": ollama_agent.entry.options[CONF_TEMPERATURE],
                 "num_predict": ollama_agent.entry.options[CONF_MAX_TOKENS],
             },
@@ -365,6 +374,7 @@ async def test_ollama_agent(ollama_agent_fixture):
     ollama_agent.entry.options[CONF_TEMPERATURE] = 2.0
     ollama_agent.entry.options[CONF_TOP_K] = 20
     ollama_agent.entry.options[CONF_TOP_P] = 0.9
+    ollama_agent.entry.options[CONF_TYPICAL_P] = 0.5
 
     # do another turn of the same conversation
     result = await ollama_agent.async_process(ConversationInput(
@@ -385,6 +395,7 @@ async def test_ollama_agent(ollama_agent_fixture):
                 "num_ctx": ollama_agent.entry.options[CONF_CONTEXT_LENGTH],
                 "top_p": ollama_agent.entry.options[CONF_TOP_P],
                 "top_k": ollama_agent.entry.options[CONF_TOP_K],
+                "typical_p": ollama_agent.entry.options[CONF_TYPICAL_P],
                 "temperature": ollama_agent.entry.options[CONF_TEMPERATURE],
                 "num_predict": ollama_agent.entry.options[CONF_MAX_TOKENS],
             },
@@ -482,6 +493,8 @@ async def test_text_generation_webui_agent(text_generation_webui_agent_fixture):
             "top_p": text_generation_webui_agent.entry.options[CONF_TOP_P],
             "top_k": text_generation_webui_agent.entry.options[CONF_TOP_K],
             "temperature": text_generation_webui_agent.entry.options[CONF_TEMPERATURE],
+            "min_p": text_generation_webui_agent.entry.options[CONF_MIN_P],
+            "typical_p": text_generation_webui_agent.entry.options[CONF_TYPICAL_P],
             "truncation_length": text_generation_webui_agent.entry.options[CONF_CONTEXT_LENGTH],
             "max_tokens": text_generation_webui_agent.entry.options[CONF_MAX_TOKENS],
             "prompt": ANY
@@ -510,6 +523,8 @@ async def test_text_generation_webui_agent(text_generation_webui_agent_fixture):
             "top_p": text_generation_webui_agent.entry.options[CONF_TOP_P],
             "top_k": text_generation_webui_agent.entry.options[CONF_TOP_K],
             "temperature": text_generation_webui_agent.entry.options[CONF_TEMPERATURE],
+            "min_p": text_generation_webui_agent.entry.options[CONF_MIN_P],
+            "typical_p": text_generation_webui_agent.entry.options[CONF_TYPICAL_P],
             "truncation_length": text_generation_webui_agent.entry.options[CONF_CONTEXT_LENGTH],
             "max_tokens": text_generation_webui_agent.entry.options[CONF_MAX_TOKENS],
             "preset": "Some Preset",
@@ -525,6 +540,8 @@ async def test_text_generation_webui_agent(text_generation_webui_agent_fixture):
     text_generation_webui_agent.entry.options[CONF_REMOTE_USE_CHAT_ENDPOINT] = True
     text_generation_webui_agent.entry.options[CONF_TEMPERATURE] = 2.0
     text_generation_webui_agent.entry.options[CONF_TOP_P] = 0.9
+    text_generation_webui_agent.entry.options[CONF_MIN_P] = 0.2
+    text_generation_webui_agent.entry.options[CONF_TYPICAL_P] = 0.95
     text_generation_webui_agent.entry.options[CONF_TEXT_GEN_WEBUI_PRESET] = ""
 
     response_mock.json.return_value = {
@@ -572,6 +589,8 @@ async def test_text_generation_webui_agent(text_generation_webui_agent_fixture):
             "top_p": text_generation_webui_agent.entry.options[CONF_TOP_P],
             "top_k": text_generation_webui_agent.entry.options[CONF_TOP_K],
             "temperature": text_generation_webui_agent.entry.options[CONF_TEMPERATURE],
+            "min_p": text_generation_webui_agent.entry.options[CONF_MIN_P],
+            "typical_p": text_generation_webui_agent.entry.options[CONF_TYPICAL_P],
             "truncation_length": text_generation_webui_agent.entry.options[CONF_CONTEXT_LENGTH],
             "max_tokens": text_generation_webui_agent.entry.options[CONF_MAX_TOKENS],
             "mode": text_generation_webui_agent.entry.options[CONF_TEXT_GEN_WEBUI_CHAT_MODE],
@@ -601,6 +620,8 @@ async def test_text_generation_webui_agent(text_generation_webui_agent_fixture):
             "top_p": text_generation_webui_agent.entry.options[CONF_TOP_P],
             "top_k": text_generation_webui_agent.entry.options[CONF_TOP_K],
             "temperature": text_generation_webui_agent.entry.options[CONF_TEMPERATURE],
+            "min_p": text_generation_webui_agent.entry.options[CONF_MIN_P],
+            "typical_p": text_generation_webui_agent.entry.options[CONF_TYPICAL_P],
             "truncation_length": text_generation_webui_agent.entry.options[CONF_CONTEXT_LENGTH],
             "max_tokens": text_generation_webui_agent.entry.options[CONF_MAX_TOKENS],
             "mode": text_generation_webui_agent.entry.options[CONF_TEXT_GEN_WEBUI_CHAT_MODE],
@@ -630,6 +651,8 @@ async def test_text_generation_webui_agent(text_generation_webui_agent_fixture):
             "model":  text_generation_webui_agent.entry.data[CONF_CHAT_MODEL],
             "top_p": text_generation_webui_agent.entry.options[CONF_TOP_P],
             "top_k": text_generation_webui_agent.entry.options[CONF_TOP_K],
+            "min_p": text_generation_webui_agent.entry.options[CONF_MIN_P],
+            "typical_p": text_generation_webui_agent.entry.options[CONF_TYPICAL_P],
             "temperature": text_generation_webui_agent.entry.options[CONF_TEMPERATURE],
             "truncation_length": text_generation_webui_agent.entry.options[CONF_CONTEXT_LENGTH],
             "max_tokens": text_generation_webui_agent.entry.options[CONF_MAX_TOKENS],
