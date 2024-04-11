@@ -215,8 +215,8 @@ async def test_validate_config_flow_ollama(mock_setup_entry, hass: HomeAssistant
 
     # simulate incorrect settings on first try
     validate_connections_mock.side_effect = [
-        ("failed_to_connect", Exception("ConnectionError")),
-        (None, None)
+        ("failed_to_connect", Exception("ConnectionError"), []),
+        (None, None, [])
     ]
 
     result3 = await hass.config_entries.flow.async_configure(
