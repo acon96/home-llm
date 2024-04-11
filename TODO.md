@@ -1,8 +1,11 @@
 # TODO
-- [ ] detection/mitigation of too many entities being exposed & blowing out the context length
+- [x] detection/mitigation of too many entities being exposed & blowing out the context length
 - [ ] areas/room support  
 - [ ] figure out DPO to improve response quality
-- [x] setup github actions to build wheels that are optimized for RPIs
+- [ ] train the model to respond to house events  
+    - present the model with an event + a "prompt" from the user of what you want it to do (i.e. turn on the lights when I get home = the model turns on lights when your entity presence triggers as being home)  
+    - basically lets you write automations in plain english  
+- [x] setup github actions to build wheels that  are optimized for RPIs
 - [x] mixtral + prompting (no fine tuning)  
     - add in context learning variables to sys prompt template
     - add new options to setup process for setting prompt style + picking fine-tuned/ICL  
@@ -34,6 +37,10 @@
     - the model predicts special tokens as the first few tokens of its output  
     - the requested content is added to the context after the request tokens and then generation continues  
     - needs more complicated training b/c multi-turn + there will be some weird masking going on for training the responses properly  
+- [ ] integrate with llava for checking camera feeds in home assistant
+    - can check still frames to describe what is there
+    - for remote backends that support images, could also support this
+    - depends on context requests because we don't want to feed camera feeds into the context every time
 - [ ] RAG for getting info for setting up new devices  
     - set up vectordb  
     - ingest home assistant docs  

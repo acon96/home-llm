@@ -31,6 +31,7 @@ from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
 )
+from homeassistant.util.package import is_installed
 
 from .utils import download_model_from_hf, install_llama_cpp_python
 from .const import (
@@ -40,6 +41,8 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
+    CONF_MIN_P,
+    CONF_TYPICAL_P,
     CONF_REQUEST_TIMEOUT,
     CONF_BACKEND_TYPE,
     CONF_DOWNLOADED_MODEL_FILE,
@@ -58,12 +61,14 @@ from .const import (
     CONF_PROMPT_CACHING_INTERVAL,
     CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
     CONF_IN_CONTEXT_EXAMPLES_FILE,
+    CONF_NUM_IN_CONTEXT_EXAMPLES,
     CONF_OPENAI_API_KEY,
     CONF_TEXT_GEN_WEBUI_ADMIN_KEY,
     CONF_SERVICE_CALL_REGEX,
     CONF_REMOTE_USE_CHAT_ENDPOINT,
     CONF_TEXT_GEN_WEBUI_CHAT_MODE,
     CONF_OLLAMA_KEEP_ALIVE_MIN,
+    CONF_OLLAMA_JSON_MODE,
     CONF_CONTEXT_LENGTH,
     CONF_BATCH_SIZE,
     CONF_THREAD_COUNT,
@@ -76,6 +81,8 @@ from .const import (
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
+    DEFAULT_MIN_P,
+    DEFAULT_TYPICAL_P,
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_BACKEND_TYPE,
     DEFAULT_DOWNLOADED_MODEL_QUANTIZATION,
@@ -91,10 +98,12 @@ from .const import (
     DEFAULT_PROMPT_CACHING_INTERVAL,
     DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
     DEFAULT_IN_CONTEXT_EXAMPLES_FILE,
+    DEFAULT_NUM_IN_CONTEXT_EXAMPLES,
     DEFAULT_SERVICE_CALL_REGEX,
     DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
     DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
     DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
+    DEFAULT_OLLAMA_JSON_MODE,
     DEFAULT_CONTEXT_LENGTH,
     DEFAULT_BATCH_SIZE,
     DEFAULT_THREAD_COUNT,
@@ -112,6 +121,7 @@ from .const import (
     DOMAIN,
     DEFAULT_OPTIONS,
     OPTIONS_OVERRIDES,
+    RECOMMENDED_CHAT_MODELS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -150,12 +160,17 @@ def STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA(model_file=None):
 def STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(*, chat_model=None, downloaded_model_quantization=None):
     return vol.Schema(
         {
-            vol.Required(CONF_CHAT_MODEL, default=chat_model if chat_model else DEFAULT_CHAT_MODEL): str,
+            vol.Required(CONF_CHAT_MODEL, default=chat_model if chat_model else DEFAULT_CHAT_MODEL): SelectSelector(SelectSelectorConfig(
+                options=RECOMMENDED_CHAT_MODELS,
+                custom_value=True,
+                multiple=False,
+                mode=SelectSelectorMode.DROPDOWN,
+            )),
             vol.Required(CONF_DOWNLOADED_MODEL_QUANTIZATION, default=downloaded_model_quantization if downloaded_model_quantization else DEFAULT_DOWNLOADED_MODEL_QUANTIZATION): vol.In(CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS),
         }
     )
 
-def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, ssl=None, chat_model=None):
+def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, ssl=None, chat_model=None, available_chat_models=[]):
 
     extra1, extra2 = ({}, {})
     default_port = DEFAULT_PORT
@@ -173,7 +188,12 @@ def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, ss
             vol.Required(CONF_HOST, default=host if host else ""): str,
             vol.Required(CONF_PORT, default=port if port else default_port): str,
             vol.Required(CONF_SSL, default=ssl if ssl else DEFAULT_SSL): bool,
-            vol.Required(CONF_CHAT_MODEL, default=chat_model if chat_model else DEFAULT_CHAT_MODEL): str,
+            vol.Required(CONF_CHAT_MODEL, default=chat_model if chat_model else DEFAULT_CHAT_MODEL): SelectSelector(SelectSelectorConfig(
+                options=available_chat_models,
+                custom_value=True,
+                multiple=False,
+                mode=SelectSelectorMode.DROPDOWN,
+            )),
             **extra1,
             vol.Optional(CONF_OPENAI_API_KEY): TextSelector(TextSelectorConfig(type="password")),
             **extra2
@@ -271,18 +291,10 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             local_backend = is_local_backend(user_input[CONF_BACKEND_TYPE])
             self.model_config.update(user_input)
             if local_backend:
-                return await self.async_step_install_local_wheels()
-                # this check isn't working right now
-                # for key, value in self.hass.data.get(DOMAIN, {}).items():
-                #     other_backend_type = value.data.get(CONF_BACKEND_TYPE)
-                #     if other_backend_type == BACKEND_TYPE_LLAMA_HF or \
-                #         other_backend_type == BACKEND_TYPE_LLAMA_EXISTING:
-                #         errors["base"] = "other_existing_local"
-                #         schema = STEP_INIT_DATA_SCHEMA(
-                #             backend_type=user_input[CONF_BACKEND_TYPE],
-                #         )
-                # if "base" not in errors:
-                #     return await self.async_step_install_local_wheels()
+                if is_installed("llama-cpp-python"):
+                    return await self.async_step_local_model()
+                else:
+                    return await self.async_step_install_local_wheels()
             else:
                 return await self.async_step_remote_model()
         elif self.install_wheel_error:
@@ -290,7 +302,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             self.install_wheel_error = None
 
         return self.async_show_form(
-            step_id="pick_backend", data_schema=schema, errors=errors
+            step_id="pick_backend", data_schema=schema, errors=errors, last_step=False
         )
 
     async def async_step_install_local_wheels(
@@ -370,7 +382,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                     schema = STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA(model_file)
 
         return self.async_show_form(
-            step_id="local_model", data_schema=schema, errors=errors, description_placeholders=description_placeholders,
+            step_id="local_model", data_schema=schema, errors=errors, description_placeholders=description_placeholders, last_step=False
         )
 
     async def async_step_download(
@@ -410,7 +422,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         self.download_task = None
         return self.async_show_progress_done(next_step_id=next_step)
     
-    def _validate_text_generation_webui(self, user_input: dict) -> str:
+    def _validate_text_generation_webui(self, user_input: dict) -> tuple:
         """
         Validates a connection to text-generation-webui and that the model exists on the remote server
 
@@ -434,15 +446,15 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
 
             for model in models["model_names"]:
                 if model == self.model_config[CONF_CHAT_MODEL].replace("/", "_"):
-                    return None, None
+                    return None, None, []
 
-            return "missing_model_api", None
+            return "missing_model_api", None, models["model_names"]
 
         except Exception as ex:
             _LOGGER.info("Connection error was: %s", repr(ex))
-            return "failed_to_connect", ex
+            return "failed_to_connect", ex, []
         
-    def _validate_ollama(self, user_input: dict) -> str:
+    def _validate_ollama(self, user_input: dict) -> tuple:
         """
         Validates a connection to ollama and that the model exists on the remote server
 
@@ -468,15 +480,15 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                 model_name = self.model_config[CONF_CHAT_MODEL]
                 if ":" in model_name:
                     if model["name"] == model_name:
-                        return None, None
+                        return (None, None, [])
                 elif model["name"].split(":")[0] == model_name:
-                    return None, None
+                    return (None, None, [])
                 
-            return "missing_model_api", None
+            return "missing_model_api", None, [x["name"] for x in models]
 
         except Exception as ex:
             _LOGGER.info("Connection error was: %s", repr(ex))
-            return "failed_to_connect", ex
+            return "failed_to_connect", ex, []
 
     async def async_step_remote_model(
         self, user_input: dict[str, Any] | None = None
@@ -493,13 +505,15 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
 
                 # validate and load when using text-generation-webui or ollama
                 if backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
-                    error_message, ex = await self.hass.async_add_executor_job(
+                    error_message, ex, possible_models = await self.hass.async_add_executor_job(
                         self._validate_text_generation_webui, user_input
                     )
                 elif backend_type == BACKEND_TYPE_OLLAMA:
-                    error_message, ex = await self.hass.async_add_executor_job(
+                    error_message, ex, possible_models = await self.hass.async_add_executor_job(
                         self._validate_ollama, user_input
                     )
+                else:
+                    possible_models = []
 
                 if error_message:
                     errors["base"] = error_message
@@ -511,6 +525,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                         port=user_input[CONF_PORT],
                         ssl=user_input[CONF_SSL],
                         chat_model=user_input[CONF_CHAT_MODEL],
+                        available_chat_models=possible_models,
                     )
                 else:
                     return await self.async_step_model_parameters()
@@ -520,7 +535,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                 errors["base"] = "unknown"
 
         return self.async_show_form(
-            step_id="remote_model", data_schema=schema, errors=errors, description_placeholders=description_placeholders,
+            step_id="remote_model", data_schema=schema, errors=errors, description_placeholders=description_placeholders, last_step=False
         )
     
     async def async_step_model_parameters(
@@ -666,6 +681,11 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
             default=DEFAULT_IN_CONTEXT_EXAMPLES_FILE,
         ): str,
         vol.Required(
+            CONF_NUM_IN_CONTEXT_EXAMPLES,
+            description={"suggested_value": options.get(CONF_NUM_IN_CONTEXT_EXAMPLES)},
+            default=DEFAULT_NUM_IN_CONTEXT_EXAMPLES,
+        ): NumberSelector(NumberSelectorConfig(min=1, max=16, step=1)),
+        vol.Required(
             CONF_MAX_TOKENS,
             description={"suggested_value": options.get(CONF_MAX_TOKENS)},
             default=DEFAULT_MAX_TOKENS,
@@ -710,14 +730,24 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 default=DEFAULT_TOP_K,
             ): NumberSelector(NumberSelectorConfig(min=1, max=256, step=1)),
             vol.Required(
+                CONF_TEMPERATURE,
+                description={"suggested_value": options.get(CONF_TEMPERATURE)},
+                default=DEFAULT_TEMPERATURE,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=3, step=0.05)),
+            vol.Required(
                 CONF_TOP_P,
                 description={"suggested_value": options.get(CONF_TOP_P)},
                 default=DEFAULT_TOP_P,
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
             vol.Required(
-                CONF_TEMPERATURE,
-                description={"suggested_value": options.get(CONF_TEMPERATURE)},
-                default=DEFAULT_TEMPERATURE,
+                CONF_MIN_P,
+                description={"suggested_value": options.get(CONF_MIN_P)},
+                default=DEFAULT_MIN_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Required(
+                CONF_TYPICAL_P,
+                description={"suggested_value": options.get(CONF_TYPICAL_P)},
+                default=DEFAULT_TYPICAL_P,
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
             vol.Required(
                 CONF_PROMPT_CACHING_ENABLED,
@@ -764,6 +794,36 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
     elif backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
         result = insert_after_key(result, CONF_MAX_TOKENS, {
             vol.Required(
+                CONF_CONTEXT_LENGTH,
+                description={"suggested_value": options.get(CONF_CONTEXT_LENGTH)},
+                default=DEFAULT_CONTEXT_LENGTH,
+            ): NumberSelector(NumberSelectorConfig(min=512, max=32768, step=1)),
+            vol.Required(
+                CONF_TOP_K,
+                description={"suggested_value": options.get(CONF_TOP_K)},
+                default=DEFAULT_TOP_K,
+            ): NumberSelector(NumberSelectorConfig(min=1, max=256, step=1)),
+            vol.Required(
+                CONF_TEMPERATURE,
+                description={"suggested_value": options.get(CONF_TEMPERATURE)},
+                default=DEFAULT_TEMPERATURE,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=3, step=0.05)),
+            vol.Required(
+                CONF_TOP_P,
+                description={"suggested_value": options.get(CONF_TOP_P)},
+                default=DEFAULT_TOP_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Required(
+                CONF_MIN_P,
+                description={"suggested_value": options.get(CONF_MIN_P)},
+                default=DEFAULT_MIN_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Required(
+                CONF_TYPICAL_P,
+                description={"suggested_value": options.get(CONF_TYPICAL_P)},
+                default=DEFAULT_TYPICAL_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Required(
                 CONF_REQUEST_TIMEOUT,
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
                 default=DEFAULT_REQUEST_TIMEOUT,
@@ -791,28 +851,15 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
     elif backend_type == BACKEND_TYPE_GENERIC_OPENAI:
         result = insert_after_key(result, CONF_MAX_TOKENS, {
             vol.Required(
-                CONF_REQUEST_TIMEOUT,
-                description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
-                default=DEFAULT_REQUEST_TIMEOUT,
-            ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
-            vol.Required(
-                CONF_REMOTE_USE_CHAT_ENDPOINT,
-                description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
-                default=DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
-            ): bool,
-            vol.Required(
                 CONF_TEMPERATURE,
                 description={"suggested_value": options.get(CONF_TEMPERATURE)},
                 default=DEFAULT_TEMPERATURE,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            ): NumberSelector(NumberSelectorConfig(min=0, max=3, step=0.05)),
             vol.Required(
                 CONF_TOP_P,
                 description={"suggested_value": options.get(CONF_TOP_P)},
                 default=DEFAULT_TOP_P,
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-        })
-    elif backend_type == BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER:
-        result = insert_after_key(result, CONF_MAX_TOKENS, {
             vol.Required(
                 CONF_REQUEST_TIMEOUT,
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
@@ -823,6 +870,9 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
                 default=DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
             ): bool,
+        })
+    elif backend_type == BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER:
+        result = insert_after_key(result, CONF_MAX_TOKENS, {
             vol.Required(
                 CONF_TOP_K,
                 description={"suggested_value": options.get(CONF_TOP_K)},
@@ -832,7 +882,7 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_TEMPERATURE,
                 description={"suggested_value": options.get(CONF_TEMPERATURE)},
                 default=DEFAULT_TEMPERATURE,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            ): NumberSelector(NumberSelectorConfig(min=0, max=3, step=0.05)),
             vol.Required(
                 CONF_TOP_P,
                 description={"suggested_value": options.get(CONF_TOP_P)},
@@ -847,10 +897,50 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_GBNF_GRAMMAR_FILE,
                 description={"suggested_value": options.get(CONF_GBNF_GRAMMAR_FILE)},
                 default=DEFAULT_GBNF_GRAMMAR_FILE,
-            ): str
+            ): str,
+            vol.Required(
+                CONF_REQUEST_TIMEOUT,
+                description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
+                default=DEFAULT_REQUEST_TIMEOUT,
+            ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
+            vol.Required(
+                CONF_REMOTE_USE_CHAT_ENDPOINT,
+                description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
+                default=DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
+            ): bool,
         })
     elif backend_type == BACKEND_TYPE_OLLAMA:
         result = insert_after_key(result, CONF_MAX_TOKENS, {
+            vol.Required(
+                CONF_CONTEXT_LENGTH,
+                description={"suggested_value": options.get(CONF_CONTEXT_LENGTH)},
+                default=DEFAULT_CONTEXT_LENGTH,
+            ): NumberSelector(NumberSelectorConfig(min=512, max=32768, step=1)),
+            vol.Required(
+                CONF_TOP_K,
+                description={"suggested_value": options.get(CONF_TOP_K)},
+                default=DEFAULT_TOP_K,
+            ): NumberSelector(NumberSelectorConfig(min=1, max=256, step=1)),
+            vol.Required(
+                CONF_TEMPERATURE,
+                description={"suggested_value": options.get(CONF_TEMPERATURE)},
+                default=DEFAULT_TEMPERATURE,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=3, step=0.05)),
+            vol.Required(
+                CONF_TOP_P,
+                description={"suggested_value": options.get(CONF_TOP_P)},
+                default=DEFAULT_TOP_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Required(
+                CONF_TYPICAL_P,
+                description={"suggested_value": options.get(CONF_TYPICAL_P)},
+                default=DEFAULT_TYPICAL_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Required(
+                CONF_OLLAMA_JSON_MODE,
+                description={"suggested_value": options.get(CONF_OLLAMA_JSON_MODE)},
+                default=DEFAULT_OLLAMA_JSON_MODE,
+            ): bool,
             vol.Required(
                 CONF_REQUEST_TIMEOUT,
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
@@ -866,16 +956,6 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
                 default=DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
             ): bool,
-            vol.Required(
-                CONF_TEMPERATURE,
-                description={"suggested_value": options.get(CONF_TEMPERATURE)},
-                default=DEFAULT_TEMPERATURE,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Required(
-                CONF_TOP_P,
-                description={"suggested_value": options.get(CONF_TOP_P)},
-                default=DEFAULT_TOP_P,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
         })
 
     return result

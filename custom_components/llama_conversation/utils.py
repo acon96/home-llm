@@ -67,7 +67,6 @@ def download_model_from_hf(model_name: str, quantization_type: str, storage_fold
 def install_llama_cpp_python(config_dir: str):
 
     if is_installed("llama-cpp-python"):
-        _LOGGER.info("llama-cpp-python is already installed")
         return True
     
     platform_suffix = platform.machine()
@@ -76,26 +75,28 @@ def install_llama_cpp_python(config_dir: str):
 
     runtime_version = f"cp{sys.version_info.major}{sys.version_info.minor}"
     
+    folder = os.path.dirname(__file__)
+    potential_wheels = sorted([ path for path in os.listdir(folder) if path.endswith(f"{platform_suffix}.whl") ], reverse=True)
+    potential_wheels = [ wheel for wheel in potential_wheels if runtime_version in wheel ]
+    if len(potential_wheels) > 0:
+
+        latest_wheel = potential_wheels[0]
+
+        _LOGGER.info("Installing llama-cpp-python from local wheel")
+        _LOGGER.debug(f"Wheel location: {latest_wheel}")
+        return install_package(os.path.join(folder, latest_wheel), pip_kwargs(config_dir))
+        
     github_release_url = f"https://github.com/acon96/home-llm/releases/download/v{INTEGRATION_VERSION}/llama_cpp_python-{EMBEDDED_LLAMA_CPP_PYTHON_VERSION}-{runtime_version}-{runtime_version}-musllinux_1_2_{platform_suffix}.whl"
     if install_package(github_release_url, pip_kwargs(config_dir)):
         _LOGGER.info("llama-cpp-python successfully installed from GitHub release")
         return True
     
-    folder = os.path.dirname(__file__)
-    potential_wheels = sorted([ path for path in os.listdir(folder) if path.endswith(f"{platform_suffix}.whl") ], reverse=True)
-    potential_wheels = [ wheel for wheel in potential_wheels if f"cp{sys.version_info.major}{sys.version_info.minor}" in wheel ]
-    if len(potential_wheels) == 0:
-        
-        _LOGGER.error(
-            "Error installing llama-cpp-python. Could not find any wheels that match the following filters. " + \
-            f"platform: {platform_suffix}, python version: {sys.version_info.major}.{sys.version_info.minor}. " + \
-            "If you recently updated Home Assistant, then you may need to use a different wheel than previously. " + \
-            "Make sure that you download the correct .whl file from the GitHub releases page"
-        )
-        return False
+    _LOGGER.error(
+        "Error installing llama-cpp-python. Could not install the binary wheels from GitHub for " + \
+        f"platform: {platform_suffix}, python version: {sys.version_info.major}.{sys.version_info.minor}. " + \
+        "Please manually build or download the wheels and place them in the `/config/custom_components/llama_conversation` directory." + \
+        "Make sure that you download the correct .whl file for your platform and python version from the GitHub releases page."
+    )
+    return False
     
-    latest_wheel = potential_wheels[0]
 
-    _LOGGER.info("Installing llama-cpp-python from local wheel")
-    _LOGGER.debug(f"Wheel location: {latest_wheel}")
-    return install_package(os.path.join(folder, latest_wheel), pip_kwargs(config_dir))

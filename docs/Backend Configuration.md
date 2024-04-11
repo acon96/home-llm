@@ -33,7 +33,7 @@ Take the appropriate wheel and copy it to the `custom_components/llama_conversat
 After the wheel file has been copied to the correct folder, attempt the wheel installation step of the integration setup. The local wheel file should be detected and installed.
 
 ## Pre-built
-Pre-built wheel files (`*.whl`) are located as part of the GitHub release for the integration.
+Pre-built wheel files (`*.whl`) are provided as part of the [GitHub release](https://github.com/acon96/home-llm/releases/latest) for the integration.
 
 To ensure compatibility with your Home Assistant and Python versions, select the correct `.whl` file for your hardware's architecture:
 - For Home Assistant `2024.1.4` and older, use the Python 3.11 wheels (`cp311`)
@@ -50,8 +50,8 @@ To ensure compatibility with your Home Assistant and Python versions, select the
 ## Build your own
 
 1. Clone the repository on the target machine that will be running Home Assistant
-2. Run the `dist/run_docker.sh` script
-3. The wheel files will be placed in the `dist/` folder
+2. Run the `scripts/run_docker_to_make_wheels.sh` script
+3. The wheel files will be placed in the folder you executed the script from
 
 
 # text-generation-webui
