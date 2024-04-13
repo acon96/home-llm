@@ -20,7 +20,7 @@
                     "downloaded_model_quantization": "Downloaded model quantization",
                     "huggingface_model": "HuggingFace Model"
                 },
-                "description": "Please select the model to use",
+                "description": "Please select a model to use.\n\n**Models supported out of the box:**\n1. [Home LLM](https://huggingface.co/collections/acon96/home-llm-6618762669211da33bb22c5a): Home 3B & Home 1B\n2. Mistral: [Mistral 7B](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2) or [Mixtral 8x7B](https://huggingface.co/mistralai/Mixtral-8x7B-Instruct-v0.1)",
                 "title": "Select Model"
             },
             "remote_model": {
@@ -35,8 +35,8 @@
                     "remote_use_chat_endpoint": "Use chat completions endpoint",
                     "text_generation_webui_chat_mode": "Chat Mode"
                 },
-                "description": "Provide the connection details to connect to the API that is hosting the model.",
-                "title": "Configure connection to remote Model API"
+                "description": "Provide the connection details to connect to the API that is hosting the model.\n\n**Models supported out of the box:**\n1. [Home LLM](https://huggingface.co/collections/acon96/home-llm-6618762669211da33bb22c5a): Home 3B & Home 1B\n2. Mistral: [Mistral 7B](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2) or [Mixtral 8x7B](https://huggingface.co/mistralai/Mixtral-8x7B-Instruct-v0.1)",
+                "title": "Configure connection to remote API"
             },
             "pick_backend": {
                 "data": {
@@ -91,7 +91,7 @@
                     "gbnf_grammar": "Forces the model to output properly formatted responses. Ensure the file specified below exists in the integration directory.",
                     "prompt_caching": "Prompt caching attempts to pre-process the prompt (house state) and cache the processing that needs to be done to understand the prompt. Enabling this will cause the model to re-process the prompt any time an entity state changes in the house, restricted by the interval below."
                 },
-                "description": "Please configure the model according to how it should be prompted. There are many different options and selecting the correct ones for your model is essential to getting optimal performance.\n\n**Some defaults may have been chosen for you based on the name of the selected model.** If you renamed any files after download, these settings may not have been detected properly.",
+                "description": "Please configure the model according to how it should be prompted. There are many different options and selecting the correct ones for your model is essential to getting optimal performance. See [here](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) for more information about the options on this page.\n\n**Some defaults may have been chosen for you based on the name of the selected model name or filename.** If you renamed a file or are using a fine-tuning of a supported model, then the defaults may not have been detected.",
                 "title": "Configure the selected model"
             }
         }
