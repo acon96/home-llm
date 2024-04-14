@@ -23,7 +23,7 @@ RUN \
         python3-venv \
         python3-pip \
     \
-    && git clone https://github.com/oobabooga/text-generation-webui.git ${APP_DIR} --branch snapshot-2024-04-07 \
+    && git clone https://github.com/oobabooga/text-generation-webui.git ${APP_DIR} --branch snapshot-2024-04-14 \
     && python3 -m pip install torch torchvision torchaudio py-cpuinfo==9.0.0 \
     && python3 -m pip install -r ${APP_DIR}/requirements_cpu_only_noavx2.txt llama-cpp-python \
     && apt-get purge -y --auto-remove \
