@@ -856,7 +856,7 @@ class GenericOpenAIAPIAgent(LLaMAAgent):
         if choices[0]["finish_reason"] != "stop":
             _LOGGER.warning("Model response did not end on a stop token (unfinished sentence)")
 
-        if response_json["object"] == "chat.completion":
+        if response_json["object"] in ["chat.completion", "chat.completion.chunk"]:
             return choices[0]["message"]["content"]
         else:
             return choices[0]["text"]
