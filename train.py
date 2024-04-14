@@ -80,7 +80,7 @@ python3 train.py \
 """
 
 """
-accelerate launch train.py \
+accelerate launch --config_file fsdp_config.yaml train.py \
     --run_name stablehome-3b-rev9 \
     --base_model stabilityai/stablelm-zephyr-3b \
     --bf16 \

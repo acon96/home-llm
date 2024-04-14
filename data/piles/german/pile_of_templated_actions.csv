@@ -134,8 +134,8 @@ fan,turn_on,"Stellen Sie sicher, dass <device_name> ausgeführt wird",1
 switch,turn_on,Können Sie <device_name> aktivieren?,1
 switch,turn_off,Bitte schalten Sie <device_name> aus.,1
 switch,toggle,Könnten Sie <device_name> umschalten?,1
-switch,turn_on,"Ich brauche <device_name>> auf,1
-switch,turn_off,<Gerätename> ausschalten",1
+switch,turn_on,Ich muss <device_name> aktivieren,1
+switch,turn_off,Schalten Sie <device_name> aus,1
 switch,toggle,Kann <device_name> umgeschaltet werden?,1
 switch,turn_on,Aktivieren Sie <device_name>.,1
 switch,turn_off,<device_name> deaktivieren.,1
@@ -143,42 +143,42 @@ switch,toggle,"Ist es möglich, den <device_name> umzuschalten?",1
 switch,turn_on,Lassen Sie uns <device_name> aktivieren.,1
 switch,turn_off,Wir brauchen <device_name> nicht mehr.,1
 switch,toggle,Schalten Sie <device_name> für mich um.,1
-switch,turn_on,"Schalten Sie <device_name> ein,1
-switch,turn_off,Ich möchte <device_name> jetzt ausschalten.",1
+switch,turn_on,Schalten Sie <device_name> ein,1
+switch,turn_off,Ich möchte <device_name> jetzt deaktivieren.,1
 switch,toggle,Können Sie den Status von <device_name> ändern?,1
 switch,turn_on,Bitte schalten Sie <device_name> ein.,1
-switch,turn_off,"Schalten Sie <device_name>> aus,1
-switch,toggle,Ein schnelles Umschalten von <Gerätename>",1
+switch,turn_off,Schalten Sie <device_name> aus,1
+switch,toggle,Ein kurzes Umschalten von <device_name>,1
 switch,turn_on,<device_name> muss eingeschaltet sein.,1
 switch,turn_off,"Es ist Zeit, <device_name> auszuschalten.",1
 media_player,volume_up,Erhöhen Sie die Lautstärke auf <device_name>.,1
 media_player,volume_up,Drehen Sie <device_name> etwas auf.,1
-media_player,volume_up,"Lauter auf <device_name>>,1
-media_player,volume_down,Können Sie die Lautstärke von <Gerätename> verringern?“",1
+media_player,volume_up,Lauter auf <device_name>,1
+media_player,volume_down,Können Sie die Lautstärke von <device_name> verringern?,1
 media_player,volume_down,Verringern Sie die Lautstärke auf <device_name>.,1
-media_player,volume_down,"<device_name>> ausschalten,1
-media_player,volume_mute,Mute <Gerätename>",1
+media_player,volume_down,Deaktivieren Sie <device_name>,1
+media_player,volume_mute,Schalten Sie <device_name> stumm,1
 media_player,volume_mute,Bringen Sie <device_name> für einen Moment zum Schweigen.,1
 media_player,volume_mute,Können Sie <device_name> stummschalten?,1
 media_player,media_play,Beginnen Sie mit der Wiedergabe auf <device_name>.,1
 media_player,media_play,Können Sie <device_name> spielen?,1
-media_player,media_play,"Spielen Sie die Medien auf <device_name>>,1 ab
-media_player,media_pause,Pause <Gerätename>.“",1
+media_player,media_play,Spielen Sie die Medien auf <device_name> ab,1
+media_player,media_pause,<device_name> anhalten.,1
 media_player,media_pause,Können Sie <device_name> pausieren?,1
-media_player,media_pause,"Halten Sie die Wiedergabe auf <device_name>,1
-media_player,media_stop,<device_name> vollständig stoppen.“",1
+media_player,media_pause,Halten Sie die Wiedergabe auf <device_name> an,1
+media_player,media_stop,Stoppen Sie <device_name> vollständig.,1
 media_player,media_stop,Können Sie die Wiedergabe auf <device_name> stoppen?,1
-media_player,media_stop,"Beenden Sie die Sitzung auf <device_name>>,1
-media_player,media_next_track,Nächster Titel auf <Gerätename>",1
+media_player,media_stop,Beenden Sie die Sitzung auf <device_name>,1
+media_player,media_next_track,Nächster Titel auf <device_name>,1
 media_player,media_next_track,Gehen Sie mit <device_name> zum nächsten Lied.,1
 media_player,media_next_track,Überspringen Sie diesen Titel auf <device_name>.,1
-media_player,media_previous_track,"Vorheriger Titel auf <device_name>>,1
-media_player,media_ previous_track,Spülen Sie zum vorherigen Lied auf <Gerätename> zurück.",1
+media_player,media_previous_track,Vorheriger Titel auf <device_name>,1
+media_player,media_previous_track,Zurückspulen zum vorherigen Lied auf <device_name>.,1
 media_player,media_previous_track,Können wir einen Titel auf <device_name> zurückgehen?,1
 climate,set_temperature,Stellen Sie die Temperatur auf <temp_f> Grad ein.,8
 climate,set_temperature,Können Sie die Temperatur auf <temp_c> Celsius ändern?,8
-climate,set_temperature,"Ich möchte den Raum bei <temp_f> Grad Fahrenheit,8 haben
-Climate,set_temperature,Bitte stellen Sie die Temperatur auf <temp_f> Grad ein.“",8
+climate,set_temperature,"Ich möchte, dass der Raum <temp_f> Grad Fahrenheit hat",8
+climate,set_temperature,Bitte stellen Sie die Temperatur auf <temp_f> Grad ein.,8
 climate,set_temperature,Können Sie die Temperatur auf <temp_c> senken?,8
 climate,set_temperature,Erhöhen Sie die Temperatur auf <temp_f> Grad,8
 climate,set_humidity,Erhöhen Sie die Luftfeuchtigkeit auf <humidity>.,8
@@ -202,8 +202,8 @@ light,turn_on,Können Sie <device_name> <color> erstellen?,8
 light,turn_on,Ändern Sie die Farbe von <device_name> in <color>.,8
 light,turn_on,Ändern Sie <device_name> in einen <color>-Farbton.,8
 light,turn_on,Legen Sie <device_name> auf <color> fest.,8
-light,turn_on,"Ich möchte, dass <device_name>><color>> ist,8
-light,turn_on,Können Sie <Gerätename> in <Farbe> erstrahlen lassen?“",8
+light,turn_on,"Ich möchte, dass <device_name> <color> ist",8
+light,turn_on,Können Sie <device_name> in <color> zum Leuchten bringen?,8
 light,turn_on,Verwandeln Sie <device_name> in einen <color>-Farbton.,8
 light,turn_on,Schalten Sie <device_name> <color> ein.,8
 light,turn_on,Ich möchte <device_name> mit einer <color>-Einstellung.,8

@@ -134,8 +134,8 @@ fan,turn_on,Make certain the <device_name> is running,1
 switch,turn_on,"Can you turn on <device_name>?",1
 switch,turn_off,"Please switch off <device_name>.",1
 switch,toggle,"Could you toggle <device_name>?",1
-switch,turn_on,"I need <device_name> on,1
-switch,turn_off,"Turn off <device_name>,1
+switch,turn_on,"I need <device_name> on",1
+switch,turn_off,"Turn off <device_name>",1
 switch,toggle,"Can <device_name> be toggled?",1
 switch,turn_on,"Activate <device_name>.",1
 switch,turn_off,"Deactivate <device_name>.",1
@@ -143,41 +143,41 @@ switch,toggle,"Is it possible to toggle the <device_name>?",1
 switch,turn_on,"Let's have <device_name> on.",1
 switch,turn_off,"We don't need <device_name> on anymore.",1
 switch,toggle,"Toggle <device_name> for me.",1
-switch,turn_on,"Switch on <device_name>,1
+switch,turn_on,"Switch on <device_name>",1
 switch,turn_off,"I'd like <device_name> off now.",1
 switch,toggle,"Can you change the state of <device_name>?",1
 switch,turn_on,"Please turn on <device_name>.",1
-switch,turn_off,"Shut off <device_name>,1
-switch,toggle,"A quick toggle of <device_name>,1
+switch,turn_off,"Shut off <device_name>",1
+switch,toggle,"A quick toggle of <device_name>",1
 switch,turn_on,"<device_name> needs to be on.",1
 switch,turn_off,"Time to turn <device_name> off.",1
 media_player,volume_up,"Increase the volume on <device_name>.",1
 media_player,volume_up,"Turn up <device_name> a bit.",1
-media_player,volume_up,"Louder on <device_name>,1
+media_player,volume_up,"Louder on <device_name>",1
 media_player,volume_down,"Can you lower <device_name>'s volume?",1
 media_player,volume_down,"Decrease the volume on <device_name>.",1
-media_player,volume_down,"Turn down <device_name>,1
-media_player,volume_mute,"Mute <device_name>,1
+media_player,volume_down,"Turn down <device_name>",1
+media_player,volume_mute,"Mute <device_name>",1
 media_player,volume_mute,"Silence <device_name> for a moment.",1
 media_player,volume_mute,"Can you mute <device_name>?",1
 media_player,media_play,"Start playing on <device_name>.",1
 media_player,media_play,"Can you play <device_name>?",1
-media_player,media_play,"Play the media on <device_name>,1
+media_player,media_play,"Play the media on <device_name>",1
 media_player,media_pause,"Pause <device_name>.",1
 media_player,media_pause,"Can you pause <device_name>?",1
-media_player,media_pause,"Hold the playback on <device_name>,1
+media_player,media_pause,"Hold the playback on <device_name>",1
 media_player,media_stop,"Stop <device_name> completely.",1
 media_player,media_stop,"Can you stop playback on <device_name>?",1
-media_player,media_stop,"End the session on <device_name>,1
-media_player,media_next_track,"Next track on <device_name>,1
+media_player,media_stop,"End the session on <device_name>",1
+media_player,media_next_track,"Next track on <device_name>",1
 media_player,media_next_track,"Advance <device_name> to the next song.",1
 media_player,media_next_track,"Skip this track on <device_name>.",1
-media_player,media_previous_track,"Previous track on <device_name>,1
+media_player,media_previous_track,"Previous track on <device_name>",1
 media_player,media_previous_track,"Rewind to the previous song on <device_name>.",1
 media_player,media_previous_track,"Can we go back a track on <device_name>?",1
 climate,set_temperature,"Set the temperature to <temp_f> degrees.",8
 climate,set_temperature,"Can you change the temperature to <temp_c> Celsius?",8
-climate,set_temperature,"I'd like the room at <temp_f> degrees Fahrenheit,8
+climate,set_temperature,"I'd like the room at <temp_f> degrees Fahrenheit",8
 climate,set_temperature,"Please adjust the temperature to <temp_f> degrees.",8
 climate,set_temperature,"Can you lower the temperature to <temp_c>?",8
 climate,set_temperature,"Raise the temperature to <temp_f> degrees",8
@@ -202,7 +202,7 @@ light,turn_on,"Can you make <device_name> <color>?",8
 light,turn_on,"Change the color of <device_name> to <color>.",8
 light,turn_on,"Change <device_name> to a <color> hue.",8
 light,turn_on,"Set <device_name> to be <color>.",8
-light,turn_on,"I want <device_name> to be <color>"",8
+light,turn_on,"I want <device_name> to be <color>",8
 light,turn_on,"Can you make <device_name> shine in <color>?",8
 light,turn_on,"Turn <device_name> to a <color> shade.",8
 light,turn_on,"Turn <device_name> <color>.",8

@@ -134,8 +134,8 @@ fan,turn_on,Assurez-vous que <device_name> est en cours d'exécution,1
 switch,turn_on,Pouvez-vous activer <device_name> ?,1
 switch,turn_off,Veuillez éteindre <device_name>.,1
 switch,toggle,Pourriez-vous activer <device_name> ?,1
-switch,turn_on,"J'ai besoin de <device_name> activé,1
-switch,turn_off,Éteindre <device_name>",1
+switch,turn_on,J'ai besoin de <device_name> sur,1
+switch,turn_off,Éteignez <device_name>,1
 switch,toggle,<device_name> peut-il être activé ?,1
 switch,turn_on,Activez <device_name>.,1
 switch,turn_off,Désactivez <device_name>.,1
@@ -143,42 +143,42 @@ switch,toggle,Est-il possible de basculer le <device_name> ?,1
 switch,turn_on,Allumons <device_name>.,1
 switch,turn_off,Nous n'avons plus besoin de <device_name>.,1
 switch,toggle,Activez <device_name> pour moi.,1
-switch,turn_on,"Allumez <device_name>,1
-switch,turn_off,j'aimerais que <device_name> soit éteint maintenant.""",1
+switch,turn_on,Allumez <device_name>,1
+switch,turn_off,J'aimerais que <device_name> soit désactivé maintenant.,1
 switch,toggle,Pouvez-vous modifier l'état de <device_name> ?,1
 switch,turn_on,Veuillez activer <device_name>.,1
-switch,turn_off,"Éteignez <device_name>,1
-switch,toggle,Une bascule rapide de <device_name>",1
+switch,turn_off,Éteignez <device_name>,1
+switch,toggle,Une bascule rapide de <device_name>,1
 switch,turn_on,<device_name> doit être activé.,1
 switch,turn_off,Il est temps d'éteindre <device_name>.,1
 media_player,volume_up,Augmentez le volume sur <device_name>.,1
 media_player,volume_up,Augmentez un peu <device_name>.,1
-media_player,volume_up,"Plus fort sur <device_name>,1
-media_player,volume_down,Pouvez-vous baisser le volume de <device_name> ?""",1
+media_player,volume_up,Plus fort sur <device_name>,1
+media_player,volume_down,Pouvez-vous baisser le volume de <device_name> ?,1
 media_player,volume_down,Diminuez le volume sur <device_name>.,1
-media_player,volume_down,"Désactivez <device_name>,1
-media_player,volume_mute,Mute <device_name>",1
+media_player,volume_down,Désactivez <device_name>,1
+media_player,volume_mute,Muet <device_name>,1
 media_player,volume_mute,Faites taire <device_name> pendant un moment.,1
 media_player,volume_mute,Pouvez-vous désactiver <device_name> ?,1
 media_player,media_play,Commencez à jouer sur <device_name>.,1
 media_player,media_play,Pouvez-vous jouer à <device_name> ?,1
-media_player,media_play,"Lire le contenu multimédia sur <device_name>,1
-media_player,media_pause,Pause <device_name>.""",1
+media_player,media_play,Lire le contenu multimédia sur <device_name>,1
+media_player,media_pause,Mettez en pause <device_name>.,1
 media_player,media_pause,Pouvez-vous suspendre <device_name> ?,1
-media_player,media_pause,"Maintenez la lecture sur <device_name>,1
-media_player,media_stop,Arrêtez complètement <device_name>.""",1
+media_player,media_pause,Suspendez la lecture sur <device_name>,1
+media_player,media_stop,Arrêtez complètement <device_name>.,1
 media_player,media_stop,Pouvez-vous arrêter la lecture sur <device_name> ?,1
-media_player,media_stop,"Terminez la session sur <device_name>,1
-media_player,media_next_track,Piste suivante sur <device_name>",1
+media_player,media_stop,Terminer la session sur <device_name>,1
+media_player,media_next_track,Piste suivante sur <device_name>,1
 media_player,media_next_track,Avancez <device_name> jusqu’à la chanson suivante.,1
 media_player,media_next_track,Ignorez cette piste sur <device_name>.,1
-media_player,media_previous_track,"Piste précédente sur <device_name>,1
-media_player,media_previous_track,Rembobiner à la chanson précédente sur <device_name>.""",1
+media_player,media_previous_track,Piste précédente sur <device_name>,1
+media_player,media_previous_track,Revenez à la chanson précédente sur <device_name>.,1
 media_player,media_previous_track,Pouvons-nous revenir en arrière sur <device_name> ?,1
 climate,set_temperature,Réglez la température sur <temp_f> degrés.,8
 climate,set_temperature,Pouvez-vous changer la température en <temp_c> Celsius ?,8
-climate,set_temperature,"Je voudrais la pièce à <temp_f> degrés Fahrenheit,8
-climat,set_temperature,Veuillez régler la température à <temp_f> degrés.""",8
+climate,set_temperature,Je voudrais que la pièce soit à <temp_f> degrés Fahrenheit,8
+climate,set_temperature,Veuillez régler la température à <temp_f> degrés.,8
 climate,set_temperature,Pouvez-vous baisser la température à <temp_c> ?,8
 climate,set_temperature,Augmenter la température à <temp_f> degrés,8
 climate,set_humidity,Augmentez l’humidité à <humidity>.,8
@@ -202,8 +202,8 @@ light,turn_on,Pouvez-vous créer <device_name> <color> ?,8
 light,turn_on,Changez la couleur de <device_name> en <color>.,8
 light,turn_on,Remplacez <device_name> par une teinte <color>.,8
 light,turn_on,Définissez <device_name> sur <color>.,8
-light,turn_on,"Je veux que <device_name> soit <color>"",8
-light,turn_on,Pouvez-vous faire briller <device_name> en <color> ?""",8
+light,turn_on,Je veux que <device_name> soit <color>,8
+light,turn_on,Pouvez-vous faire briller <device_name> en <color> ?,8
 light,turn_on,Transformez <device_name> en une teinte <color>.,8
 light,turn_on,Tournez <device_name> <color>.,8
 light,turn_on,Je veux <device_name> avec un paramètre <color>.,8
