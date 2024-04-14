@@ -1,4 +1,4 @@
-device_type,service,english_phrase,multiplier
+device_type,service,phrase,multiplier
 blinds,close_cover,Close the <device_name>,1
 blinds,close_cover,Lower the <device_name>,1
 blinds,close_cover,Shut the <device_name>,1

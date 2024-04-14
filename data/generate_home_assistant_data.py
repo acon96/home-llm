@@ -38,6 +38,17 @@ STATE_CLEANING: Final = "cleaning"
 STATE_DOCKED: Final = "docked"
 STATE_RETURNING: Final = "returning"
 
+# define piles for global access
+pile_of_durations = None
+pile_of_media_names = None
+pile_of_todo_items = None
+stacks_of_device_names = None
+pile_of_templated_actions = None
+pile_of_specific_actions = None
+pile_of_responses = None
+pile_of_status_requests = None
+pile_of_system_prompts = None
+
 def closest_color(requested_color):
     min_colors = {}
     for key, name in webcolors.CSS3_HEX_TO_NAMES.items():
@@ -47,6 +58,16 @@ def closest_color(requested_color):
         bd = (b_c - requested_color[2]) ** 2
         min_colors[(rd + gd + bd)] = name
     return min_colors[min(min_colors.keys())]
+
+var_pattern = re.compile("<(.*?)>")
+def get_included_vars(response: str):
+    result = []
+    for var in var_pattern.findall(response):
+        if var == "device_name":
+            continue
+        result.append(var)
+
+    return ",".join(sorted(result))
 
 @dataclass
 class DeviceType:
@@ -140,16 +161,6 @@ class ClimateDeviceType(DeviceType):
             state = state + ";" + self.get_random_parameter("preset_mode")
 
         return state
-    
-with open("piles/pile_of_durations.csv") as f:
-    reader = csv.DictReader(f)
-    pile_of_durations = { x["duration"]: x["english_name"] for x in reader }
-    
-with open("piles/pile_of_media_names.txt") as f:
-    pile_of_media_names = [ x.strip() for x in f.readlines() ]
-
-with open("piles/pile_of_todo_items.txt") as f:
-    pile_of_todo_items = [ x.strip() for x in f.readlines() ]
 
 class MediaPlayerDeviceType(DeviceType):
     def __init__(self):
@@ -308,75 +319,23 @@ SUPPORTED_DEVICES = {
     ),
 }
 
-stacks_of_device_names = { x: [] for x in SUPPORTED_DEVICES.keys() }
-with open("piles/pile_of_device_names.csv") as f:
-    reader = csv.DictReader(f)
-    pile_of_device_names = list(reader)
-    for device_dict in pile_of_device_names:
-        try:
-            device_type = device_dict["device_name"].split(".")[0]
-            stacks_of_device_names[device_type].append(device_dict)
-        except KeyError as ex:
-            print(ex)
-
-with open("piles/pile_of_templated_actions.csv") as f:
-    reader = csv.DictReader(f)
-    pile_of_templated_actions = list(reader)
-    processed_pile_of_templated_actions = []
-    for action in pile_of_templated_actions:
-        try:
-            multiplier = int(action["multiplier"])
-        except Exception:
-            raise Exception(f"line has a bad multiplier: {action}")
-        for x in range(multiplier):
-            processed_pile_of_templated_actions.append(action)
-
-    pile_of_templated_actions = processed_pile_of_templated_actions
-
-with open("piles/pile_of_specific_actions.csv") as f:
-    reader = csv.DictReader(f)
-    pile_of_specific_actions = list(reader)
-
-pile_of_responses = pandas.read_csv("piles/pile_of_responses.csv")
-
-var_pattern = re.compile("<(.*?)>")
-def get_included_vars(response: str):
-    result = []
-    for var in var_pattern.findall(response):
-        if var == "device_name":
-            continue
-        result.append(var)
-
-    return ",".join(sorted(result))
-
-pile_of_responses["contains_vars"] = pile_of_responses["response"].apply(get_included_vars)
-
 class NoResponseAvailableException(Exception):
     pass
 
-def get_random_response(*, service: str, language: str, persona: str, question_template: str, short: bool) -> str:
+def get_random_response(*, service: str, persona: str, question_template: str, short: bool) -> str:
 
     required_vars = list(set([var for var in var_pattern.findall(question_template) if "device_name" not in var]))
     
     possible_results = pile_of_responses.loc[(pile_of_responses['service']==service) & 
-                          (pile_of_responses['language']==language) & 
                           (pile_of_responses['persona']==persona) &
                           (pile_of_responses['short']==(1 if short else 0)) &
                           (pile_of_responses['contains_vars']==",".join(sorted(required_vars)))
                         ]
     
     if len(possible_results) == 0:
-        raise NoResponseAvailableException(f"No responses matched the provided filters: {persona}, {service}, {language}, {required_vars}, {short}")
+        raise NoResponseAvailableException(f"No responses matched the provided filters: {persona}, {service}, {required_vars}, {short}")
     
     return possible_results.sample()["response"].values[0]
-
-with open("piles/pile_of_status_requests.csv") as f:
-    reader = csv.DictReader(f)
-    pile_of_status_requests = list(reader)
-
-with open("piles/pile_of_system_prompts.csv") as f:
-    reader = csv.DictReader(f)
-    pile_of_system_prompts = { line["persona"]: line["prompt"] for line in reader }
 
 def format_device_line(*, device_name: str, friendly_name: str, state: str):
     return (f"{device_name} '{friendly_name}' = {state}")
@@ -441,8 +400,8 @@ def random_device_list(max_devices: int, avoid_device_names: list[str]):
 
     return device_lines, list(device_types), list(extra_exposed_attributes)
 
-def generate_static_example(action: dict, language: str, persona: str, max_devices: int = 32):
-    question = action["english_phrase"]
+def generate_static_example(action: dict, persona: str, max_devices: int = 32):
+    question = action["phrase"]
     service_name = action["service_name"]
     device_type = service_name.split(".")[0]
     target_device = f"{device_type}.{action['device_name']}"
@@ -468,7 +427,6 @@ def generate_static_example(action: dict, language: str, persona: str, max_devic
 
     response = get_random_response(
         service=action["service_name"],
-        language=language,
         persona=persona,
         question_template="",
         short=False
@@ -484,10 +442,10 @@ def generate_static_example(action: dict, language: str, persona: str, max_devic
         "service_calls": [ { "service": service_name, "target_device": target_device } ]
     }
 
-def generate_templated_example(template: dict, language: str, persona: str, max_devices: int = 32):
+def generate_templated_example(template: dict, persona: str, max_devices: int = 32):
     template_device_types: list[str] = template["device_type"].split("|")
     service_names: list[str] = [ f"{x}.{y}" for x, y in zip(template_device_types, template["service"].split("|")) ]
-    question_template: str = template["english_phrase"]
+    question_template: str = template["phrase"]
 
     # choose a random device for this template
     chosen_devices = []
@@ -533,10 +491,8 @@ def generate_templated_example(template: dict, language: str, persona: str, max_
 
     # pick an appropriate response and generate the question
     if len(template_device_types) == 1:
-        # TODO: pick correct resonse here (also probaly need to pass in language and persona)
         answer_template = get_random_response(
             service=service_names[0],
-            language=language,
             persona=persona,
             question_template=question_template,
             short=False
@@ -551,7 +507,6 @@ def generate_templated_example(template: dict, language: str, persona: str, max_
             question = question.replace(f"<device_name{(i + 1)}>", chosen_devices[i]["description"])
             answer = get_random_response(
                 service=service_names[i],
-                language=language,
                 persona=persona,
                 question_template=question_template,
                 short=True
@@ -640,10 +595,10 @@ def generate_templated_example(template: dict, language: str, persona: str, max_
         "service_calls": service_calls
     }
 
-def generate_status_request(template: dict, language: str, persona: str, max_devices: int = 32):
+def generate_status_request(template: dict, persona: str, max_devices: int = 32):
     device_type: str = template["device_type"]
     state_name: str = template["state"]
-    question_template: str = template["english_phrase"]
+    question_template: str = template["phrase"]
     answer_template: str = template["assistant_response"]
 
     # choose a random device for this template
@@ -729,8 +684,8 @@ def generate_status_request(template: dict, language: str, persona: str, max_dev
         "service_calls": []
     }
 
-def generate_dpo_wrong_argument(template: dict, language: str, persona: str, max_devices: int = 32):
-    example = generate_templated_example(template, language, persona, max_devices)
+def generate_dpo_wrong_argument(template: dict, persona: str, max_devices: int = 32):
+    example = generate_templated_example(template, persona, max_devices)
     rejected_example = {**example}
 
     call_idx = random.randint(0, len(example["service_calls"]))
@@ -852,40 +807,39 @@ def format_example_dpo(example, persona):
         "rejected": rejected_assistant_block,
     }
 
-def generate_example_file(filename: str, seed: int, format_func: Callable, languages: list[str], personas: list[str], *, static_factor: int, template_factor: int, status_request_factor: int):
+def generate_example_file(filename: str, seed: int, format_func: Callable, personas: list[str], *, static_factor: int, template_factor: int, status_request_factor: int):
     random.seed(seed)
     np.random.seed(seed)
 
     print("Generating...")
 
-    def run_factor_times(func, examples, data, language, persona, factor):
+    def run_factor_times(func, examples, data, persona, factor):
         if factor >= 1:
             for i in range(factor):
-                examples.append(format_func(func(data, language, persona), persona))
+                examples.append(format_func(func(data, persona), persona))
         else:
             if random.random() < factor:
-                examples.append(format_func(func(data, language, persona), persona))
+                examples.append(format_func(func(data, persona), persona))
     
     generated_examples = []
 
     missing_responses = set()
 
-    for lang in languages:
-        for person in personas:
-            for action in tqdm(pile_of_specific_actions):
-                try:
-                    run_factor_times(generate_static_example, generated_examples, action, lang, person, static_factor)
-                except NoResponseAvailableException as ex:
-                    missing_responses.add(str(ex))
+    for person in personas:
+        for action in tqdm(pile_of_specific_actions):
+            try:
+                run_factor_times(generate_static_example, generated_examples, action, person, static_factor)
+            except NoResponseAvailableException as ex:
+                missing_responses.add(str(ex))
 
-            for templated_action in tqdm(pile_of_templated_actions):
-                try:
-                    run_factor_times(generate_templated_example, generated_examples, templated_action, lang, person, template_factor)
-                except NoResponseAvailableException as ex:
-                    missing_responses.add(str(ex))
+        for templated_action in tqdm(pile_of_templated_actions):
+            try:
+                run_factor_times(generate_templated_example, generated_examples, templated_action, person, template_factor)
+            except NoResponseAvailableException as ex:
+                missing_responses.add(str(ex))
 
     for status_request in tqdm(pile_of_status_requests):
-        run_factor_times(generate_status_request, generated_examples, status_request, "en", "assistant", status_request_factor)
+        run_factor_times(generate_status_request, generated_examples, status_request, "assistant", status_request_factor)
 
     print(f"Generated {len(generated_examples)} examples. Saving...")
 
@@ -942,6 +896,72 @@ def merge_with_dataset(dataset_name, seed, output_name, format_function, dataset
     combined_dataset_train.to_json(f"home_assistant_{output_name}_merged_train.jsonl")
     combined_dataset_test.to_json(f"home_assistant_{output_name}_merged_test.jsonl")
 
+def merge_languages(filename_prefix: str, languages: list):
+    all_examples = []
+    for language in languages:
+        with open(f"{filename_prefix}_{language}.jsonl") as f:
+            all_examples.extend(f.readlines())
+
+    with open(f"{filename_prefix}.jsonl", "w") as f:
+        f.writelines(all_examples)
+
+
+def load_dataset_piles(language):
+    global pile_of_durations, pile_of_media_names, pile_of_todo_items, stacks_of_device_names, \
+        pile_of_templated_actions, pile_of_specific_actions, pile_of_responses, pile_of_status_requests, \
+        pile_of_system_prompts
+    
+    with open(f"piles/{language}/pile_of_durations.csv") as f:
+        reader = csv.DictReader(f)
+        pile_of_durations = { x["duration"]: x["name"] for x in reader }
+        
+    # media names are not translated
+    with open(f"piles/english/pile_of_media_names.txt") as f:
+        pile_of_media_names = [ x.strip() for x in f.readlines() ]
+
+    with open(f"piles/{language}/pile_of_todo_items.txt") as f:
+        pile_of_todo_items = [ x.strip() for x in f.readlines() ]
+
+    stacks_of_device_names = { x: [] for x in SUPPORTED_DEVICES.keys() }
+    with open(f"piles/{language}/pile_of_device_names.csv") as f:
+        reader = csv.DictReader(f)
+        pile_of_device_names = list(reader)
+        for device_dict in pile_of_device_names:
+            try:
+                device_type = device_dict["device_name"].split(".")[0]
+                stacks_of_device_names[device_type].append(device_dict)
+            except KeyError as ex:
+                print(ex)
+
+    with open(f"piles/{language}/pile_of_templated_actions.csv") as f:
+        reader = csv.DictReader(f)
+        pile_of_templated_actions = list(reader)
+        processed_pile_of_templated_actions = []
+        for action in pile_of_templated_actions:
+            try:
+                multiplier = int(action["multiplier"])
+            except Exception:
+                raise Exception(f"line has a bad multiplier: {action}")
+            for x in range(multiplier):
+                processed_pile_of_templated_actions.append(action)
+
+        pile_of_templated_actions = processed_pile_of_templated_actions
+
+    with open(f"piles/{language}/pile_of_specific_actions.csv") as f:
+        reader = csv.DictReader(f)
+        pile_of_specific_actions = list(reader)
+
+    pile_of_responses = pandas.read_csv(f"piles/{language}/pile_of_responses.csv")
+    pile_of_responses["contains_vars"] = pile_of_responses["response"].apply(get_included_vars)
+
+    with open(f"piles/{language}/pile_of_status_requests.csv") as f:
+        reader = csv.DictReader(f)
+        pile_of_status_requests = list(reader)
+
+    with open(f"piles/{language}/pile_of_system_prompts.csv") as f:
+        reader = csv.DictReader(f)
+        pile_of_system_prompts = { line["persona"]: line["prompt"] for line in reader }
+
 # TODO: add examples for ambiguous requests. asking a clarifying question
 # TODO: support rejection when asking to do a service that isn't exposed
 # TODO: make more randomized names for devices (random words or people's names)
@@ -954,6 +974,7 @@ def main():
     parser.add_argument("--test", action="store_true", help="Set this flag to enable generation of the train dataset..")
     parser.add_argument("--train", action="store_true", help="Set this flag to enable generation of the train dataset.")
     parser.add_argument("--merge", help="Set this flag to merge the generated datasets with the specified dataset.")
+    parser.add_argument("--language", nargs="+", default=["english"], help="List of languages to generate")
 
     train_size_group = parser.add_mutually_exclusive_group()
     train_size_group.add_argument('--small', action='store_const', const='small', dest='size')
@@ -967,9 +988,6 @@ def main():
 
     args = parser.parse_args()
 
-    languages = ["en"]
-    personas = ["assistant", "pirate", "robot"]
-
     if not args.sample and not args.train and not args.test and not args.merge:
         parser.print_usage()
     
@@ -978,21 +996,34 @@ def main():
     elif args.format == "sharegpt":
         format_func = format_example_sharegpt
 
-    if args.sample:
-        generate_example_file("sample", 42, format_func, languages, personas, static_factor=1, template_factor=1, status_request_factor=1)
-    if args.train:
-        if args.size == "small":
-            generate_example_file("home_assistant_train", 42, format_func, languages, personas, static_factor=1, template_factor=10, status_request_factor=8)
-        elif args.size == "medium":
-            generate_example_file("home_assistant_train", 42, format_func, languages, personas, static_factor=5, template_factor=15, status_request_factor=12)
-        elif args.size == "large":
-            generate_example_file("home_assistant_train", 42, format_func, languages, personas, static_factor=5, template_factor=20, status_request_factor=15)
-        elif args.size == "xl":
-            generate_example_file("home_assistant_train", 42, format_func, languages, personas, static_factor=7, template_factor=25, status_request_factor=18)
-        else:
-            raise Exception(f"Unrecognized dataset size: {args.size}")
-    if args.test:
-        generate_example_file("home_assistant_test", 12345, format_func, languages, personas, static_factor=0.25, template_factor=1, status_request_factor=2)
+    for language in args.language:
+        load_dataset_piles(language)
+        personas = list(pile_of_system_prompts.keys())
+        suffix = f"_{language}" if len(args.language) > 1 else ""
+
+        if args.sample:
+            generate_example_file(f"sample{suffix}", 42, format_func, personas, static_factor=1, template_factor=1, status_request_factor=1)
+        if args.train:
+            if args.size == "small":
+                generate_example_file(f"home_assistant_train{suffix}", 42, format_func, personas, static_factor=1, template_factor=10, status_request_factor=8)
+            elif args.size == "medium":
+                generate_example_file(f"home_assistant_train{suffix}", 42, format_func, personas, static_factor=5, template_factor=15, status_request_factor=12)
+            elif args.size == "large":
+                generate_example_file(f"home_assistant_train{suffix}", 42, format_func, personas, static_factor=5, template_factor=20, status_request_factor=15)
+            elif args.size == "xl":
+                generate_example_file(f"home_assistant_train{suffix}", 42, format_func, personas, static_factor=7, template_factor=25, status_request_factor=18)
+            else:
+                raise Exception(f"Unrecognized dataset size: {args.size}")
+        if args.test:
+            generate_example_file(f"home_assistant_test{suffix}", 12345, format_func, personas, static_factor=0.25, template_factor=1, status_request_factor=2)
+
+    if len(args.language) > 1:
+        if args.sample:
+            merge_languages("sample", args.language)
+        if args.train:
+            merge_languages("home_assistant_train", args.language)
+        if args.test:
+            merge_languages("home_assistant_test", args.language)
 
     if args.merge == "alpaca":
         merge_with_dataset("yahma/alpaca-cleaned", 42, "alpaca", format_alpaca, ["input", "output", "instruction"], format_func)

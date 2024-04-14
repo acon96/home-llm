@@ -1,0 +1,601 @@
+service_name,device_name,phrase
+blinds.close_cover,cocina,Bajar las persianas de la cocina
+blinds.close_cover,sala_de_estar,Cierra las persianas del salón.
+blinds.close_cover,recamara_principal,Cierra las persianas del dormitorio principal.
+blinds.open_cover,cocina,¿Podrías subir las persianas de la cocina?
+blinds.open_cover,sala_de_estar,Abre las persianas del salón.
+blinds.open_cover,recamara_principal,Levanta las persianas del dormitorio principal.
+blinds.stop_cover,cocina,Detén las persianas de la cocina donde están.
+blinds.stop_cover,sala_de_estar,Deja de ajustar las persianas del salón
+blinds.stop_cover,recamara_principal,"Por favor, detengan las persianas del dormitorio principal."
+blinds.toggle,cocina,Cambiar el estado de las persianas de la cocina.
+blinds.toggle,sala_de_estar,Alternar las persianas de la sala de estar.
+blinds.toggle,recamara_principal,Invierte las persianas del dormitorio principal
+fan.decrease_speed,ático_1,Reduzca la velocidad del ventilador del ático
+fan.decrease_speed,ático_1,Baja el ventilador del ático
+fan.decrease_speed,ático,Reduzca la velocidad del ventilador en el ático.
+fan.decrease_speed,dormitorio_master,Reduzca la velocidad del ventilador del dormitorio principal
+fan.decrease_speed,cochera,Baja el ventilador del garaje
+fan.decrease_speed,habitación_de_huéspedes,Disminuir la velocidad del ventilador en la habitación de invitados.
+fan.decrease_speed,pasillo,Bajar la velocidad del ventilador en el pasillo.
+fan.decrease_speed,cocina,Reducir la velocidad del ventilador de la cocina
+fan.decrease_speed,cocina,Baja el ventilador de la cocina
+fan.decrease_speed,sala_de_estar,Disminuir la velocidad del ventilador del salón.
+fan.decrease_speed,sala_de_estar,Baja el ventilador de la sala
+fan.decrease_speed,estudiar,Reducir la velocidad del ventilador en el estudio.
+fan.increase_speed,ático_1,Aumentar la velocidad del ventilador del ático.
+fan.increase_speed,ático,Acelera el ventilador en el ático.
+fan.increase_speed,dormitorio_master,Aumente la velocidad del ventilador del dormitorio principal
+fan.increase_speed,cochera,Sube el ventilador en el garaje.
+fan.increase_speed,habitación_de_huéspedes,Aumentar la velocidad del ventilador en la habitación de invitados.
+fan.increase_speed,pasillo,Aumenta la velocidad del ventilador en el pasillo.
+fan.increase_speed,sala_de_estar,Aumentar la velocidad del ventilador del salón.
+fan.increase_speed,estudiar,Aumente la velocidad del ventilador en el estudio.
+fan.toggle,ático_2,Activar el ventilador del ático
+fan.toggle,ático,Cambiar el estado del ventilador en el ático.
+fan.toggle,sótano,Activar el ventilador del sótano
+fan.toggle,dormitorio_master,Cambiar el estado del ventilador del dormitorio principal.
+fan.toggle,dormitorio,Activar el ventilador del dormitorio
+fan.toggle,mesa_de_comedor_arriba,Encienda el ventilador encima de la mesa del comedor.
+fan.toggle,entrada_de_coches,Gira el ventilador de entrada
+fan.toggle,cochera,Gira el ventilador en el garaje.
+fan.toggle,habitación_de_huéspedes,¿Puedes encender el ventilador de la habitación de invitados?
+fan.toggle,pasillo,Cambia el estado del ventilador en el pasillo.
+fan.toggle,cocina,Activar el ventilador de la cocina
+fan.toggle,sala_de_estar,Activa el ventilador en la sala de estar.
+fan.toggle,oficina,Alternar el ventilador de la oficina
+fan.toggle,exterior,Activar el ventilador exterior
+fan.toggle,piscina,Cambiar el estado del ventilador de la piscina
+fan.toggle,cobertizo,Encender o apagar el ventilador del cobertizo
+fan.toggle,estudiar,Modificar el estado del ventilador en el estudio.
+fan.turn_off,ático_1,Desactivar el ventilador del ático
+fan.turn_off,dormitorio_master,Desactivar el ventilador del dormitorio principal
+fan.turn_off,comedor,"Por favor, apague el ventilador del comedor."
+fan.turn_off,comedor,Apagar el ventilador del comedor.
+fan.turn_off,cochera,Apague el ventilador del garaje
+fan.turn_off,cochera,Apague el ventilador del garaje
+fan.turn_off,habitación_de_huéspedes,Apague el ventilador de la habitación de invitados.
+fan.turn_off,cocina,Apagar el ventilador de la cocina
+fan.turn_off,sala_de_estar,Apaga el ventilador de la sala
+fan.turn_off,oficina,¿Podrías desactivar el ventilador de la oficina?
+fan.turn_off,oficina,Apaga el ventilador de la oficina
+fan.turn_off,patio,Apague el ventilador del patio
+fan.turn_off,estudiar,Apagar el ventilador del estudio.
+fan.turn_off,estudiar,Apaga el ventilador del estudio.
+fan.turn_on,baño,Activar el ventilador del baño.
+fan.turn_on,baño,Enciende el ventilador del baño.
+fan.turn_on,dormitorio_master,Activa el ventilador del dormitorio principal.
+fan.turn_on,comedor,"Por favor, encienda el ventilador del comedor."
+fan.turn_on,cochera,Enciende el ventilador del garaje
+fan.turn_on,pasillo,Habilitar el ventilador del pasillo
+fan.turn_on,cocina,Habilitar el ventilador de la cocina.
+fan.turn_on,sala_de_estar,Enciende el ventilador de la sala
+fan.turn_on,sala_de_estar,Enciende el ventilador de la sala
+fan.turn_on,oficina,¿Podrías habilitar el ventilador de la oficina?
+fan.turn_on,estudiar,Activar el ventilador de estudio.
+fan.turn_on,estudiar,Enciende el ventilador del estudio.
+garage_door.close_cover,almacenamiento_bicicletas,Desactivar el garaje para guardar bicicletas
+garage_door.close_cover,principal,Cierra la puerta principal del garaje.
+garage_door.close_cover,un_coche,Asegúrate de que el garaje para un solo auto esté cerrado.
+garage_door.close_cover,lado,Bajar la puerta lateral del garaje.
+garage_door.open_cover,sótano,"Por favor, levante la puerta del garaje del sótano."
+garage_door.open_cover,almacenamiento_bicicletas,Activar el garaje para guardar bicicletas
+garage_door.open_cover,principal,Abre la puerta principal del garaje.
+garage_door.open_cover,lado,¿Podrías levantar la puerta lateral del garaje?
+garage_door.open_cover,dos_car,Abre el garaje para dos coches.
+garage_door.stop_cover,principal,Detener la puerta principal del garaje.
+garage_door.stop_cover,lado,Detener la puerta lateral del garaje
+garage_door.toggle,principal,Alternar la puerta principal del garaje
+garage_door.toggle,lado,Cambiar el estado de la puerta lateral del garaje.
+light.toggle,ático,Cambiar el estado de las luces en el ático.
+light.toggle,dormitorio_1,Alternar la luz del dormitorio
+light.toggle,mesa_de_comedor_arriba,Encienda la luz sobre la mesa del comedor.
+light.toggle,entrada_de_coches,Gira la luz de la entrada
+light.toggle,cochera,Enciende la luz del garaje.
+light.toggle,habitación_de_huéspedes,¿Podrías encender la luz de la habitación de invitados?
+light.toggle,habitación_de_huéspedes,Alternar la luz de la habitación de invitados
+light.toggle,pasillo,Cambia el estado de la luz en el pasillo.
+light.toggle,pasillo,Alternar la luz del pasillo
+light.toggle,cocina_1,Activar la luz de la cocina
+light.toggle,cocina_2,Activar la luz de la cocina
+light.toggle,oficina,Alternar la luz de la oficina
+light.toggle,exterior,Alternar la luz exterior
+light.toggle,patio,Alternar la luz del patio
+light.toggle,piscina,Cambiar el estado de la luz de la piscina
+light.toggle,cobertizo,Encender o apagar la luz del cobertizo
+light.toggle,estudiar,Modificar el estado de la luz en el estudio.
+light.toggle,estudiar,Alternar la luz del estudio
+light.turn_off,baño_1,Por favor apaga la luz del baño.
+light.turn_off,baño,Apaga la luz del baño.
+light.turn_off,baño,Apaga la luz del baño
+light.turn_off,dormitorio_1,Desactivar la luz del dormitorio
+light.turn_off,dormitorio_2,Apaga la luz del dormitorio
+light.turn_off,comedor,Apagar la luz del comedor
+light.turn_off,comedor,Apaga la luz del comedor
+light.turn_off,jardín_1,Desactivar la luz del jardín
+light.turn_off,habitación_de_huéspedes,Desactivar la luz de la habitación de invitados
+light.turn_off,habitación_de_huéspedes,Apagar la luz de la habitación de invitados.
+light.turn_off,pasillo,Apagar la luz del pasillo
+light.turn_off,pasillo,Apaga la luz del pasillo
+light.turn_off,cocina_2,Apaga la luz de la cocina
+light.turn_off,encimera_de_la_cocina,Apagar la luz de la encimera de la cocina.
+light.turn_off,salón_1,Apagar la luz del salón
+light.turn_off,sala_de_estar,Apaga la luz del salón
+light.turn_off,dormitorio_principal_1,Desactivar la luz del dormitorio principal
+light.turn_off,lámpara_dormitorio_principal,Apaga la luz del dormitorio.
+light.turn_off,oficina,Desactivar la luz de la oficina
+light.turn_off,patio,Desactivar la luz del patio
+light.turn_off,patio,Desactivar la luz del patio.
+light.turn_off,piscina,Apaga la luz de la piscina
+light.turn_off,estudiar,Apaga la luz del estudio.
+light.turn_on,baño_1,¿Podrías iluminar el baño?
+light.turn_on,baño,Activa la luz del baño.
+light.turn_on,dormitorio_1,Activa la luz del dormitorio.
+light.turn_on,comedor_1,Activa las luces del comedor.
+light.turn_on,comedor,Activa la luz del comedor
+light.turn_on,entrada_de_coches,Enciende la luz de la entrada
+light.turn_on,cochera,Activar la luz del garaje.
+light.turn_on,cochera,Encender la luz del garaje
+light.turn_on,jardín_1,Enciende la luz del jardín.
+light.turn_on,jardín_1,Enciende la luz del jardín
+light.turn_on,jardín_2,Activa la luz del jardín.
+light.turn_on,jardín,Enciende la luz del jardín.
+light.turn_on,habitación_de_huéspedes,Enciende la luz de la habitación de invitados.
+light.turn_on,pasillo,Enciende la luz del pasillo
+light.turn_on,cocina_1,Enciende las luces de la cocina.
+light.turn_on,cocina_1,Enciende la luz de la cocina
+light.turn_on,encimera_de_la_cocina,Encender la luz de la encimera de la cocina.
+light.turn_on,sala_de_estar,Enciende la luz del salón
+light.turn_on,dormitorio_principal_1,Por favor active la luz del dormitorio principal.
+light.turn_on,oficina_1,Habilitar la luz de la oficina.
+light.turn_on,patio,Habilitar la luz del patio.
+light.turn_on,patio,Enciende la luz del patio.
+light.turn_on,patio,Enciende la luz del patio
+light.turn_on,piscina,Activar la luz de la piscina.
+light.turn_on,piscina,Enciende la luz de la piscina
+light.turn_on,cobertizo,Activar la luz del cobertizo
+light.turn_on,cobertizo,Enciende la luz del cobertizo
+light.turn_on,estudiar,Activa la luz de estudio.
+light.turn_on,comedor_candelabro,Enciende la luz del comedor
+light.turn_on,candelabro_frente_pasillo,"Oye, ¿puedes encender la lámpara de araña del pasillo delantero?"
+lock.lock,puerta_trasera,Enganche la cerradura de la puerta trasera
+lock.lock,puerta_principal,Cierra la puerta principal
+lock.lock,guardería,¿Puedes asegurar la puerta de la guardería?
+lock.lock,oficina,Por favor cierre la oficina
+lock.lock,bodega,¿Podrías cerrar la bodega?
+lock.lock,puerta_principal,"Por favor, cierre la puerta principal."
+lock.lock,puerta_de_la_cochera,Necesito que la puerta del garaje esté cerrada.
+lock.lock,puerta_principal,Asegúrese de que la puerta principal esté cerrada con llave.
+lock.lock,puerta_oficina,¿Podemos cerrar la puerta de la oficina?
+lock.lock,puerta_sótano,Cierra la puerta del sótano.
+lock.lock,puerta_del_jardín,"Por favor, asegure la puerta del jardín."
+lock.lock,puerta_de_la_bodega,La puerta del sótano debería estar cerrada con llave ahora.
+lock.lock,puerta_cobertizo,Asegúrese de que la puerta del cobertizo esté bien cerrada.
+lock.lock,puerta_cuarto_lavandería,¿Puedes cerrar la puerta del lavadero?
+lock.lock,puerta_habitación_huéspedes,"Por favor, cierre la puerta de la habitación de invitados."
+lock.lock,puerta_de_la_cerca,Asegúrese de que la puerta de la cerca esté cerrada con llave.
+lock.lock,puerta_del_ático,Es necesario cerrar la puerta del ático.
+lock.lock,puerta_trastero,"Por favor, cierre la puerta del trastero."
+lock.lock,puerta_cochera,La puerta del garaje debe estar cerrada con llave.
+lock.lock,puerta_del_porche_frontal,Cierra la puerta del porche delantero.
+lock.lock,bodega,Asegúrese de que la bodega esté cerrada con llave.
+lock.lock,oficina_en_casa,Me gustaría que la oficina central estuviera cerrada.
+lock.lock,estudio_de_arte,El estudio de arte debería estar cerrado.
+lock.lock,gimnasio_en_casa,Cierra la puerta del gimnasio en casa.
+lock.lock,puerta_biblioteca,"Por favor, cierre la puerta de la biblioteca."
+lock.unlock,puerta_trasera,¿Podrías desactivar la cerradura de la puerta trasera?
+lock.unlock,almacenamiento_bicicletas,Desactivar el bloqueo del almacenamiento de bicicletas.
+lock.unlock,puerta_principal,Desbloquea la puerta principal
+lock.unlock,oficina,Por favor desbloquea la oficina
+lock.unlock,cobertizo_para_herramientas,Desbloquear el cobertizo de herramientas
+lock.unlock,puerta_trasera,¿Puedes desbloquear la puerta trasera?
+lock.unlock,puerta_del_patio,"Abre la puerta del patio, por favor."
+lock.unlock,ventana_cocina,Abre la cerradura de la ventana de la cocina.
+lock.unlock,ventana_dormitorio,La ventana del dormitorio debe estar desbloqueada.
+lock.unlock,ventana_baño,¿Podrías abrir la ventana del baño?
+lock.unlock,puerta_azotea,Abra la cerradura de la puerta de la azotea.
+lock.unlock,puerta_piscina,Me gustaría que se abriera la puerta de la piscina.
+lock.unlock,puerta_balcon,Abre la puerta del balcón por mí.
+lock.unlock,puerta_guardería,Es necesario desbloquear la puerta de la guardería.
+lock.unlock,entrada_lateral,Desbloquea nuestra entrada lateral.
+lock.unlock,puerta_del_garaje,La puerta lateral del garaje debe estar desbloqueada.
+lock.unlock,salida_de_incendios,¿Puedes desbloquear la escalera de incendios?
+lock.unlock,puerta_cobertizo_para_botes,Abre la puerta del cobertizo para botes.
+lock.unlock,puerta_patio_trasero,¿Podemos desbloquear la puerta del patio trasero?
+lock.unlock,puerta_terraza_trasera,Abra la cerradura de la puerta trasera de la terraza.
+lock.unlock,puerta_solárium,"Por favor, abra la puerta del solárium."
+lock.unlock,puerta_cuarto_de_juegos,¿Puedes desbloquear la puerta de la sala de juegos?
+lock.unlock,sala_de_música,"Desbloquee la sala de música, por favor."
+lock.unlock,sala_de_cine,La sala de cine debe estar desbloqueada.
+lock.unlock,conservatorio,¿Se puede desbloquear el invernadero?
+media_player.media_next_track,sala_de_estar,Saltar a la siguiente pista en la sala de estar.
+media_player.media_next_track,sótano_home_theater,Salta a la siguiente pista en el sótano.
+media_player.media_next_track,reproductor_de_musica_gimnasio,Salta a la siguiente canción en el gimnasio.
+media_player.media_next_track,música_sala_yoga,Próxima pista para la música de la sala de yoga.
+media_player.media_next_track,musica_jardin,Siguiente tema de la música del jardín.
+media_player.media_pause,recamara_principal,Pausa los medios en el dormitorio principal.
+media_player.media_pause,baño_audio,Pausa el audio del baño.
+media_player.media_pause,loft_tv,Pausa el televisor en el desván.
+media_player.media_pause,radio_cuarto_lavandería,Pausa la radio en el cuarto de lavado.
+media_player.media_pause,corredor_intercomunicador,Pausa el intercomunicador del pasillo.
+media_player.media_play,guardería,Por favor reproduzca los medios en la guardería.
+media_player.media_play,altavoz_patio,Comience a reproducir música en el altavoz del patio.
+media_player.media_play,solárium_estéreo,Pon el estéreo en el solárium.
+media_player.media_play,kids_room_narrador,Inicie el cuentacuentos en la habitación de los niños.
+media_player.media_play,bodega_jukebox,Toca la máquina de discos en el sótano.
+media_player.media_previous_track,cocina,Reproduce la pista anterior en la cocina.
+media_player.media_previous_track,canción_de_cuna_cuna,Vuelve a la canción de cuna anterior en la guardería.
+media_player.media_previous_track,radio_sala_de_estudio,Vuelve a la estación anterior en la sala de estudio.
+media_player.media_previous_track,conservatorio_cd_player,Pista anterior en el reproductor de CD del conservatorio.
+media_player.media_previous_track,altavoces_entrada,Pista anterior en los parlantes de la entrada.
+media_player.media_stop,guardería,Detener a los medios en la guardería
+media_player.media_stop,habitación_huésped_media,Detenga el reproductor multimedia de la habitación de invitados.
+media_player.media_stop,piscina_media,Detenga el sistema multimedia junto a la piscina.
+media_player.media_stop,altavoces_balcon,Detén los altavoces del balcón.
+media_player.media_stop,sistema_sonido_porche,Detenga el sistema de sonido del porche.
+media_player.turn_off,radio_cocina,Apague la radio de la cocina.
+media_player.turn_off,salón_entretenimiento,Apague el centro de entretenimiento del salón.
+media_player.turn_off,entrada_echo,Apague el Echo en la entrada.
+media_player.turn_off,altavoces_bodega_vino,Apague los parlantes de la bodega.
+media_player.turn_off,mudroom_media_player,Apague el reproductor multimedia del vestíbulo.
+media_player.turn_on,cocina,¿Podrías iniciar los medios en la cocina?
+media_player.turn_on,sala_de_estar,Activa los medios en la sala de estar.
+media_player.turn_on,recamara_principal,Encienda el reproductor multimedia del dormitorio principal
+media_player.turn_on,salón_sala_tv,"Por favor, encienda el televisor de la sala."
+media_player.turn_on,deck_music_system,Encienda el sistema de música de la plataforma.
+media_player.turn_on,altavoces_patio_trasero,Enciende los parlantes del patio trasero.
+media_player.turn_on,sistema_de_sonido_del_foyer,Encienda el sistema de sonido del vestíbulo.
+media_player.turn_on,pasillo_audio,Encienda el sistema de audio del pasillo.
+media_player.volume_down,guardería,Baja el volumen en la guardería
+media_player.volume_down,oficina,¿Puedes bajar el volumen en la oficina?
+media_player.volume_down,sistema_de_sonido_de_oficina,Bajar el volumen en la oficina.
+media_player.volume_down,altavoces_sala_de_juegos,Baje los parlantes de la sala de juegos.
+media_player.volume_down,taller_sistema_sonido,Bajar el volumen del sistema de sonido en el taller.
+media_player.volume_down,sistema_audio_ático,Disminuya el volumen del sistema de audio del ático.
+media_player.volume_down,cobertizo_sistema_de_sonido,Baje el sistema de sonido del cobertizo.
+media_player.volume_mute,sala_de_estar,Silencia el reproductor multimedia en la sala de estar.
+media_player.volume_mute,garaje_estéreo,Silencia el estéreo en el garaje.
+media_player.volume_mute,biblioteca_barra_de_sonido,Silencia la barra de sonido en la biblioteca.
+media_player.volume_mute,art_studio_player,Silencia el reproductor multimedia en el estudio de arte.
+media_player.volume_mute,cobertizo_estéreo,Silencia el estéreo en el cobertizo para botes.
+media_player.volume_mute,altavoces_casadelarbol,Silencia los parlantes de la casa del árbol.
+media_player.volume_up,cocina,Por favor suban el volumen en la cocina.
+media_player.volume_up,sala_de_estar,Sube el volumen en el salón
+media_player.volume_up,recamara_principal,¿Puedes aumentar el volumen del reproductor multimedia del dormitorio principal?
+media_player.volume_up,altavoz_dormitorio,¿Puedes aumentar el volumen en el dormitorio?
+media_player.volume_up,comedor_area_jukebox,Aumente el volumen de la máquina de discos en el comedor.
+media_player.volume_up,terraza_azotea_audio,Sube el volumen del audio de la azotea.
+media_player.volume_up,radio_invernadero,Aumente el volumen de la radio del invernadero.
+media_player.volume_up,radio_cuarto_utilidad,Sube el volumen de la radio del lavadero.
+switch.toggle,tp_link_kasa_porche,Enciende las luces del porche.
+switch.toggle,honeywell_home_office,Enciende las luces de la oficina.
+switch.toggle,sonoff_comedor,Enciende las luces del comedor.
+switch.toggle,osram_pasillo,Enciende las luces del pasillo.
+switch.toggle,sótano_koogeek,Activa las luces del sótano.
+switch.toggle,arlo_floodlights,Activa los focos de seguridad.
+switch.toggle,broadlink_cocina_americana,Enciende las luces de la cocina.
+switch.toggle,kasa_living_room,Enciende las luces de la sala.
+switch.toggle,atenuador_oficina_hogar,Activa el atenuador de la oficina en casa.
+switch.toggle,cocina_debajo_gabinete,Encienda las luces de la cocina debajo del gabinete.
+switch.turn_off,belkin_wemo_garage,Apague el interruptor del garaje.
+switch.turn_off,lutron_caseta_dormitorio,Apaga las luces del dormitorio.
+switch.turn_off,samsung_smartthings_seguridad,Apague el sistema de seguridad.
+switch.turn_off,fibaro_pool,Apague las luces de la piscina.
+switch.turn_off,ecobee_garden,Apaga las luces del jardín.
+switch.turn_off,insteon_patio,Apague las luces del patio.
+switch.turn_off,yeelight_sunroom,Apague las luces del solárium.
+switch.turn_off,pasarela_meross,Apague la iluminación del pasillo.
+switch.turn_off,xiaomi_cama,Apague la lámpara de noche.
+switch.turn_off,ikea_habitación_de_invitados,Apague las luces de la habitación de invitados.
+switch.turn_off,tuya_shed,Apague el interruptor de la luz del cobertizo.
+switch.turn_off,tono_dormitorio_2,Apague las luces del segundo dormitorio.
+switch.turn_off,oficina_radiante,Apaga las luces de la oficina.
+switch.turn_off,z_wave_baño_invitado,Apague el ventilador del baño de visitas.
+switch.turn_off,interruptor_calentador_patio,Apague el calentador del patio.
+switch.turn_off,ventilador_de_cocina,Por favor apague el ventilador de la cocina.
+switch.turn_off,linternas_alberca,Desactive las linternas de la piscina.
+switch.turn_off,reflector_patio_trasero,¿Puedes apagar el reflector del patio trasero?
+switch.turn_off,aréa_de_lavandería,Por favor apague las luces del área de lavado.
+switch.turn_off,apliques_sótano,¿Podemos bajar los apliques del sótano?
+switch.turn_off,persianas_solárium,"Quisiera cerrar las persianas del solárium, por favor."
+switch.turn_off,patio_string_lights,Apague las luces de cadena del patio.
+switch.turn_off,isla_de_cocina,Desactive las luces de la isla de la cocina.
+switch.turn_off,luz_de_trabajo_garaje,¿Podemos apagar la luz de trabajo del garaje?
+switch.turn_off,cine_en_casa,Apague las luces del cine en casa.
+switch.turn_off,atenuador_comedor,Apaga las luces del comedor.
+switch.turn_off,art_studio_spots,Desactive los focos del estudio de arte.
+switch.turn_off,entrada_atrás,Apague las luces de la entrada trasera.
+switch.turn_off,veranda_fairy_lights,"Apague las luces de la terraza, por favor."
+switch.turn_off,walk_in_closet,Desactive las luces del vestidor.
+switch.turn_off,espejo_de_baño,¿Puedes apagar la luz del espejo del baño?
+switch.turn_off,trastero,Por favor apague las luces del cuarto de almacenamiento.
+switch.turn_off,área_de_conservación,Desactivar la iluminación del área de conservación.
+switch.turn_off,cuarto_hobby,¿Podemos apagar las luces de la sala de pasatiempos?
+switch.turn_off,terraza_trasera,¿Puedes atenuar las luces de la terraza trasera?
+switch.turn_on,philips_hue_living_room,Enciende las luces de la sala.
+switch.turn_on,legrand_radiant_cocina,Enciende las luces de la cocina.
+switch.turn_on,ge_z_wave_baño,Enciende el ventilador del baño.
+switch.turn_on,eve_energy_balcony,Enciende la iluminación del balcón.
+switch.turn_on,nido_termostato_terraza,Enciende el termostato de la terraza.
+switch.turn_on,wink_relay_driveway,Enciende las luces de la entrada.
+switch.turn_on,cubierta_sengled,Encienda la iluminación de la terraza.
+switch.turn_on,gosund_ático,Encienda el interruptor de la luz del ático.
+switch.turn_on,escalera_nanoleaf,Enciende las luces de las escaleras.
+switch.turn_on,estudio_wyze,Enciende las luces de la sala de estudio.
+switch.turn_on,netatmo_front_yard,Encienda la iluminación del jardín delantero.
+switch.turn_on,gimnasio_moeshouse,Enciende la iluminación del gimnasio.
+switch.turn_on,wemo_laundry_room,Enciende las luces del lavadero.
+switch.turn_on,caseta_pasillo_2,Enciende las luces del segundo pasillo.
+switch.turn_on,luz_cámara_seguridad,Enciende la luz de la cámara de seguridad.
+switch.turn_on,atenuador_pasillo,¿Podrías atenuar las luces del pasillo?
+switch.turn_on,focos_jardin,Activa los focos del jardín.
+switch.turn_on,sensor_porche_frontal,Encienda la luz del sensor del porche delantero.
+switch.turn_on,escalera_tira_luz,¿Podrías iluminar la tira de luces de la escalera?
+switch.turn_on,lámpara_de_escritorio_de_oficina,Ilumina la lámpara del escritorio de mi oficina.
+switch.turn_on,techo_biblioteca,Enciende las luces del techo de la biblioteca.
+switch.turn_on,baño_de_visitas,"Ilumina el baño de visitas, por favor."
+switch.turn_on,entrada_candelabro,Ilumina el candelabro de la entrada.
+switch.turn_on,iluminación_pista_dormitorio,Ilumina la iluminación del riel del dormitorio.
+switch.turn_on,iluminación_ambiental_del_balcón,Active la iluminación ambiental en el balcón.
+switch.turn_on,sala_de_juegos_luz_nocturna,¿Puedes encender la luz nocturna de la sala de juegos?
+switch.turn_on,aplique_de_pared_foyer,Ilumina el aplique de pared del vestíbulo.
+switch.turn_on,corredor_pista,Ilumina las luces del riel del pasillo.
+switch.turn_on,master_suite,Configure la suite principal en modo nocturno.
+switch.turn_on,cubierta_de_la_azotea,Encienda la iluminación de la cubierta del techo.
+switch.turn_on,bodega,Ilumina la bodega.
+switch.turn_on,techo_gimnasio,Enciende las luces del techo del gimnasio.
+switch.turn_on,jardín_de_enfrente,Active los focos del jardín delantero.
+vacuum.start,cocina,"Por favor, encienda la aspiradora de la cocina."
+vacuum.start,sala_de_estar,¿Podrías activar la aspiradora de la sala?
+vacuum.start,comedor,Es necesario poner en marcha el aspirador del comedor.
+vacuum.start,dormitorio1,Empecemos a aspirar el dormitorio uno.
+vacuum.start,dormitorio2,¿Puedes encender la aspiradora del dormitorio dos?
+vacuum.start,estudiar,Se debe activar el vacío del estudio.
+vacuum.start,biblioteca,¿Puedo pedirle que inicie la aspiradora de la biblioteca?
+vacuum.start,oficina,Por favor inicie el vacío de la oficina.
+vacuum.start,entrada_hall,¿Podrías encender la aspiradora del vestíbulo de entrada?
+vacuum.start,terraza_acristalada,Es necesario poner en marcha la aspiradora del solarium.
+vacuum.start,patio,Activemos la aspiradora del patio.
+vacuum.start,cochera,"¿Podemos limpiar el garaje, por favor?"
+vacuum.start,taller,¿Puedo pedirle que encienda la aspiradora del taller?
+vacuum.start,lavadero,Por favor limpie el cuarto de servicio.
+vacuum.start,cuarto_de_barro,¿Podrías por favor limpiar el cuarto de barro?
+vacuum.start,tocador,Es necesario limpiar el tocador.
+vacuum.start,pasillo,Encendamos la aspiradora del pasillo.
+vacuum.start,escalera,¿Podemos encender la aspiradora de escaleras?
+vacuum.start,balcón,¿Puedo pedirte que limpies el balcón?
+vacuum.start,cubierta_de_la_azotea,"Por favor, la cubierta del techo está sucia."
+vacuum.start,ático,Comencemos con la aspiradora del ático.
+vacuum.start,sótano,"¿Podemos encender la aspiradora del sótano, por favor?"
+vacuum.start,área_de_piscina,Es necesario iniciar la aspiración del área de la piscina.
+vacuum.start,jardín,¿Podrías activar la aspiradora del jardín?
+vacuum.start,terraza,¿Puedo pedirle que ponga en marcha la aspiradora de terraza?
+vacuum.start,porche,Por favor inicie la aspiradora del porche.
+vacuum.start,cobertizo,"¿Podemos encender la aspiradora del cobertizo, por favor?"
+vacuum.start,taller2,El segundo taller está bastante sucio ahora mismo.
+vacuum.start,estudio,¿Puedo pedirte que enciendas la aspiradora del estudio?
+vacuum.start,invernadero,Por favor inicie el vacío del invernadero.
+vacuum.start,cobertizo,"¿Podemos encender la aspiradora del cobertizo para macetas, por favor?"
+vacuum.start,casa_de_verano,Es necesario poner en funcionamiento la aspiradora de la casa de verano.
+vacuum.start,garaje2,Empecemos con la segunda aspiradora de garaje.
+vacuum.start,cobertizo_para_herramientas,¿Puedo solicitarle que active la aspiradora del cobertizo para herramientas?
+vacuum.start,granero,¿Podríamos encender la aspiradora del granero?
+vacuum.start,bodega,Se debe limpiar la bodega.
+vacuum.start,trastero,Iniciemos la limpieza del trastero.
+vacuum.start,invernadero2,¿Puedo pedirle que active la segunda aspiradora del invernadero?
+vacuum.start,cobertizo,Encienda la aspiradora de la casa flotante.
+vacuum.start,puerto_pequeño,¿Podríamos iniciar la aspiradora del puerto deportivo?
+vacuum.start,bb8,Enciende BB8.
+vacuum.start,c3po,¿Puedes iniciar C3PO?
+vacuum.start,hal,Por favor enciende a Hal.
+vacuum.start,r2d2,¿Puedes decirle a R2D2 que limpie?
+light.turn_off,barra_luz,Por favor apaga la luz de la barra.
+light.turn_off,barra_luz,Apagar la luz de la barra
+light.turn_off,barra_luz,Apaga la luz de la barra
+light.turn_off,luz_comedor,Desactivar luz del comedor
+light.turn_off,luz_comedor,Apagar la luz del comedor
+light.turn_off,luz_comedor,Activar la luz del comedor
+light.turn_off,luz_delantera,¿Podemos apagar la luz delantera?
+light.turn_off,luz_delantera,¿Podemos apagar la luz delantera?
+light.turn_off,luz_delantera,¿Puedes apagar las luces del frente?
+light.turn_off,gimnasio_luz,¿Puedes apagar la luz del gimnasio?
+light.turn_off,gimnasio_luz,¿Puedes apagar la luz del gimnasio?
+light.turn_off,gimnasio_luz,¿Podemos apagar las luces del gimnasio?
+light.turn_off,luz_isla,¿Podrías desactivar la luz de la isla?
+light.turn_off,luz_isla,Desactivar la luz de la isla
+light.turn_off,luz_isla,Desactive la iluminación del área de la isla.
+light.turn_off,luz_cocina,Desactivar la luz de la cocina
+light.turn_off,luz_cocina,Desactiva las luces de la cocina.
+light.turn_off,luz_cocina,Apague las luces de la cocina.
+light.turn_off,luz_sala_salon,luz del salón apagada
+light.turn_off,luz_sala_salon,Desactiva las luces del salón.
+light.turn_off,luz_sala_salon,"Por favor, desactive la luz del salón."
+light.turn_off,luz_del_sótano_principal,Por favor apague la luz principal del sótano.
+light.turn_off,luz_del_sótano_principal,Apague las luces del sótano principal.
+light.turn_off,luz_del_sótano_principal,"Por favor, apague la luz principal del sótano."
+light.turn_off,hombre_cueva_luz,"Por favor, apague las luces del área de la cueva del hombre."
+light.turn_off,hombre_cueva_luz,"Por favor, apaga las luces de la cueva del hombre."
+light.turn_off,hombre_cueva_luz,"Por favor, apaga la luz de la cueva del hombre."
+light.turn_off,luz_dormitorio_principal,Apague las luces del dormitorio principal.
+light.turn_off,luz_dormitorio_principal,Apague las luces del dormitorio principal.
+light.turn_off,luz_dormitorio_principal,Apague las luces del dormitorio principal.
+light.turn_off,luz_mesa_piscina,Apagar la luz de la mesa de billar.
+light.turn_off,luz_mesa_piscina,Apagar la luz de la mesa de billar.
+light.turn_off,luz_mesa_piscina,"Apague la luz de la mesa de billar, por favor."
+light.turn_off,luz_mesa_piscina,Apague la luz de la mesa de billar ahora
+light.turn_off,luz_mesa_piscina,Apagar las luces de la mesa de billar.
+light.turn_off,luz_mesa_piscina,Apaga la luz de la mesa de billar.
+light.turn_off,luz_mesa_piscina,Apagar la luz de la mesa de billar.
+light.turn_off,luz_mesa_piscina,Apaga la luz de la mesa de billar
+light.turn_off,luz_mesa_piscina,Apaga la luz de la mesa de billar por favor.
+light.turn_off,luz_mesa_piscina,Apaga la luz de la mesa de billar ahora
+light.turn_off,luz_mesa_piscina,Ya puedes apagar la luz de la mesa de billar.
+light.turn_off,luz_mesa_piscina,Apague las luces de la mesa de billar.
+light.turn_off,luz_mesa_piscina,"Apague la luz de la mesa de billar, por favor."
+light.turn_off,luz_mesa_piscina,Apaga la luz de la mesa de billar
+light.turn_off,luz_mesa_piscina,Apaga la luz de la mesa de billar.
+light.turn_off,luz_mesa_piscina,Apaga la luz de la mesa de billar
+light.turn_off,luz_mesa_piscina,Apaga la luz de la mesa de billar.
+light.turn_off,luz_mesa_piscina,Apaga la luz de la mesa de billar
+light.turn_off,luz_del_porche,Por favor apaga la luz del porche.
+light.turn_off,luz_del_porche,Apagar la luz del porche
+light.turn_off,luz_del_porche,Apaga la luz del porche
+light.turn_off,luz_del_porche,Desactivar la luz del porche
+light.turn_off,luz_del_porche,Apagar la luz del porche
+light.turn_off,luz_del_porche,Alternar la luz del porche
+light.turn_off,luz_del_porche,¿Podemos apagar la luz del porche?
+light.turn_off,luz_del_porche,¿Podemos bajar la luz del porche?
+light.turn_off,luz_del_porche,¿Puedes apagar las luces del porche?
+light.turn_off,luz_del_porche,¿Puedes apagar la luz del porche?
+light.turn_off,luz_del_porche,¿Puedes apagar la luz del porche?
+light.turn_off,luz_del_porche,¿Podemos apagar las luces del porche?
+light.turn_off,luz_del_porche,¿Podrías desactivar la luz del porche?
+light.turn_off,luz_del_porche,Desactivar la luz del porche
+light.turn_off,luz_del_porche,Desactivar la iluminación de la zona del porche.
+light.turn_off,luz_del_porche,Desactivar la luz del porche
+light.turn_off,luz_del_porche,Desactivar la luz del porche
+light.turn_off,luz_del_porche,Desactivar la luz del porche
+light.turn_off,luz_del_porche,Desactivar la luz del porche
+light.turn_off,luz_del_porche,Desactivar la luz del porche
+light.turn_off,luz_del_porche,Desactiva las luces del porche.
+light.turn_off,luz_del_porche,Apague las luces del porche.
+light.turn_off,luz_del_porche,luz del porche apagada
+light.turn_off,luz_del_porche,Desactive las luces del porche.
+light.turn_off,luz_del_porche,Desactive la luz del porche.
+light.turn_off,luz_del_porche,Por favor apaga la luz del porche.
+light.turn_off,luz_del_porche,Por favor apague las luces del porche.
+light.turn_off,luz_del_porche,Por favor apaga la luz del porche.
+light.turn_off,luz_del_porche,Apague las luces del área del porche.
+light.turn_off,luz_del_porche,Por favor apague las luces del porche.
+light.turn_off,luz_del_porche,Por favor apague la luz del porche.
+light.turn_off,luz_del_porche,Apague las luces del porche.
+light.turn_off,luz_del_porche,Apague las luces del porche.
+light.turn_off,luz_del_porche,Apague las luces del porche.
+light.turn_off,luz_del_porche,Apaga la luz del porche
+light.turn_off,luz_del_porche,Apagar la luz del porche
+light.turn_off,luz_del_porche,"Apague la luz del porche, por favor."
+light.turn_off,luz_del_porche,Apague la luz del porche ahora
+light.turn_off,luz_del_porche,Apaga las luces del porche
+light.turn_off,luz_del_porche,Apaga la luz del porche.
+light.turn_off,luz_del_porche,Apagar la luz del porche
+light.turn_off,luz_del_porche,Apaga la luz del porche
+light.turn_off,luz_del_porche,Apaga la luz del porche por favor.
+light.turn_off,luz_del_porche,Apaga la luz del porche ahora
+light.turn_off,luz_del_porche,Puedes apagar la luz del porche ahora.
+light.turn_off,luz_del_porche,Apaga las luces del porche.
+light.turn_off,luz_del_porche,"Apague la luz del porche, por favor."
+light.turn_off,luz_del_porche,Apaga la luz del porche
+light.turn_off,luz_del_porche,Apaga la luz del porche.
+light.turn_off,luz_del_porche,Apaga la luz del porche
+light.turn_off,luz_del_porche,Apaga la luz del porche.
+light.turn_off,luz_del_porche,Apaga la luz del porche
+light.turn_off,luz_ducha,"Por favor, apaga la luz de la ducha."
+light.turn_off,luz_ducha,Apagar la luz de la ducha
+light.turn_off,luz_ducha,Apaga la luz de la ducha
+light.turn_off,luz_ducha,Desactivar luz de ducha
+light.turn_off,luz_ducha,Apagar la luz de la ducha
+light.turn_off,luz_escalera,luz de escalera apagada
+light.turn_off,luz_escalera,Desactiva las luces de las escaleras.
+light.turn_off,luz_escalera,Apagar la luz de la escalera
+light.turn_off,luz_escalera,Activar la luz de la escalera
+light.turn_off,luz_escalera,¿Podemos apagar la luz de la escalera?
+light.turn_off,luz_de_techo,Por favor apague la luz del techo.
+light.turn_off,luz_de_techo,Apagar la luz del techo
+light.turn_off,luz_de_techo,Apaga la luz del techo
+light.turn_off,pasarela_luz,Apague las luces del pasillo.
+light.turn_off,pasarela_luz,Apaga la luz del pasillo
+light.turn_off,pasarela_luz,Apaga la luz del pasillo
+light.turn_off,bobs_lamp,Por favor apaga la luz de Bob.
+light.turn_off,janets_lamp,Apaga la luz de Janet
+light.turn_off,lámpara_ruths,Por favor apaga la lámpara de Ruth.
+light.turn_off,lámpara_colins,Apaga la lámpara de Colin.
+light.turn_off,lámpara_neenas,Apaga la lámpara de Neena.
+light.turn_off,lampara_roberts,Desactivar la lámpara de Robert
+light.turn_off,paulus_lampara,Apaga la lámpara de Paulus.
+light.turn_off,peters_lamp,Alternar la lámpara de Peter
+light.turn_off,angelas_lampara,¿Podemos apagar la lámpara de Ángela?
+light.turn_off,lámpara_entrada,Por favor apague la lámpara de entrada.
+light.turn_off,lámpara_entrada,Apagar la lámpara de entrada
+light.turn_off,lámpara_entrada,Por favor apague la lámpara de la entrada.
+light.turn_off,lámpara_entrada,Por favor apague la lámpara de la entrada.
+light.turn_off,lámpara_entrada,Apague las lámparas del área de entrada.
+light.turn_off,lámpara_entrada,Desactivar luz de entrada
+light.turn_on,barra_luz,Ilumina la luz de mi bar.
+light.turn_on,barra_luz,Ilumina la barra.
+light.turn_on,barra_luz,Luz de barra encendida
+light.turn_on,barra_luz,Ilumina la barra.
+light.turn_on,luz_comedor,Activa las luces del comedor.
+light.turn_on,luz_comedor,Encienda la luz del comedor por favor.
+light.turn_on,luz_comedor,Enciende las luces del comedor.
+light.turn_on,luz_delantera,Activa la luz delantera por favor.
+light.turn_on,luz_delantera,Por favor activa la luz delantera.
+light.turn_on,luz_delantera,Activa la luz delantera ahora
+light.turn_on,gimnasio_luz,Enciende la luz del gimnasio por favor.
+light.turn_on,gimnasio_luz,Enciende la luz del gimnasio
+light.turn_on,gimnasio_luz,luz del gimnasio encendida
+light.turn_on,luz_isla,Enciende la luz de la isla
+light.turn_on,luz_isla,luz de la isla encendida
+light.turn_on,luz_isla,Encender la luz de la isla
+light.turn_on,luz_cocina,luz de la cocina encendida
+light.turn_on,luz_cocina,Enciende la luz de la cocina
+light.turn_on,luz_cocina,"Oye, ¿puedes encender la luz de la cocina?"
+light.turn_on,luz_sala_salon,Enciende las luces de la sala.
+light.turn_on,luz_sala_salon,"Encienda las luces de la sala, por favor."
+light.turn_on,luz_sala_salon,Por favor encienda las luces de la sala.
+light.turn_on,luz_sala_salon,Enciende la iluminación del salón.
+light.turn_on,luz_del_sótano_principal,Enciende la luz principal del sótano.
+light.turn_on,luz_del_sótano_principal,Encienda la luz principal del sótano
+light.turn_on,hombre_cueva_luz,Activa la luz del hombre de las cavernas.
+light.turn_on,hombre_cueva_luz,Activa las luces en la cueva del hombre.
+light.turn_on,hombre_cueva_luz,¿Podrías iluminar la cueva del hombre?
+light.turn_on,hombre_cueva_luz,Habilitar la luz de la cueva del hombre
+light.turn_on,luz_dormitorio_principal,¿Podrías iluminar el dormitorio principal?
+light.turn_on,piscina_mesa_bar_luz,Luz de la barra de la mesa de billar encendida.
+light.turn_on,piscina_mesa_bar_luz,Encender la luz de la barra de la mesa de billar.
+light.turn_on,piscina_mesa_bar_luz,¿Puedes encender la luz de la barra de la mesa de billar?
+light.turn_on,luz_mesa_piscina,"Encienda la luz de la mesa de billar, por favor."
+light.turn_on,luz_del_porche,Enciende la luz del porche
+light.turn_on,luz_del_porche,¿Puedes encender la luz del porche?
+light.turn_on,luz_del_porche,"¿Podrías encender la luz del porche, por favor?"
+light.turn_on,luz_ducha,Enciende la luz de la ducha
+light.turn_on,luz_ducha,Enciende la luz de la ducha
+light.turn_on,luz_ducha,Activa la luz de la ducha.
+light.turn_on,luz_ducha,¿Podrías iluminar la ducha por favor?
+light.turn_on,luz_ducha,Enciende las luces en la ducha.
+light.turn_on,luz_ducha,Enciende la ducha por favor
+light.turn_on,luz_ducha,Enciende la luz de la ducha por favor.
+light.turn_on,luz_ducha,Enciende la luz de la ducha
+light.turn_on,luz_ducha,luz de la ducha encendida
+light.turn_on,luz_escalera,Activa la luz de la escalera por favor.
+light.turn_on,luz_escalera,Por favor activa la luz de la escalera.
+light.turn_on,luz_escalera,"¿Puedes iluminar la escalera, por favor?"
+light.turn_on,luz_escalera,Por favor activa la luz de la escalera.
+light.turn_on,luz_escalera,Encienda la luz de la zona de la escalera.
+light.turn_on,luz_de_techo,Por favor enciende la luz del techo.
+light.turn_on,luz_de_techo,Enciende la luz del techo por favor.
+light.turn_on,luz_de_techo,¿Puedes encender la luz del techo?
+light.turn_on,pasarela_luz,Por favor active la luz del pasillo.
+light.turn_on,pasarela_luz,"Por favor, encienda la luz del área de paso."
+light.turn_on,pasarela_luz,Encienda la iluminación de la pasarela.
+light.turn_on,freds_lamp,Enciende la luz de Fred
+light.turn_on,lámpara_colins,Enciende la luz de Colin
+light.turn_on,lampara_roberts,Activa la luz de Robert.
+light.turn_on,pierres_lampara,Enciende la luz de Pierre por favor.
+light.turn_on,jennifer_lampara,Enciende la luz de Jenn
+light.turn_on,julia_lampara,La luz de Julia encendida
+light.turn_on,lámpara_neenas,Enciende la luz de Neena
+light.turn_on,patricks_lampara,¿Puedes encender la luz de Patrick?
+light.turn_on,lámpara_sams,Ilumina el de Sam.
+light.turn_on,lámpara_johns,Ilumina la luz de John.
+light.turn_on,lámpara_jordan,Activa la iluminación de Jordan.
+light.turn_on,lámpara_lebrons,Enciende las luces de Lebron.
+light.turn_on,angies_lamp,¿Puedes encender la lámpara de Angie?
+light.turn_on,luis_lampara,"¿Podrías encender la lámpara de Louis, por favor?"
+light.turn_on,lámpara_katniss,¿Podrías habilitar la lámpara de Katniss?
+light.turn_on,lámpara_waynes,Habilitar la lámpara de Wayne
+light.turn_on,lámpara_samuels,Habilite la lámpara de Samuel por favor.
+light.turn_on,lámpara_entrada,Encender la lámpara de entrada
+light.turn_on,lámpara_entrada,Por favor active la lámpara de la entrada.
+light.turn_on,lámpara_entrada,Encienda la lámpara del área de entrada.
+light.turn_on,lámpara_entrada,Enciende la luz de entrada
+light.turn_on,lámpara_entrada,Encienda la iluminación de la entrada.

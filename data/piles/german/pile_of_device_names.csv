@@ -1,0 +1,647 @@
+device_name,description
+blinds.back_window,Jalousien für die Hinterfenster
+blinds.keller,Kellerjalousien
+blinds.badezimmer_1,Erste Badezimmerjalousien
+blinds.badezimmer,Badezimmerjalousien
+blinds.bastelraum,Bastelraumjalousien
+blinds.esszimmer,Esszimmerjalousien
+blinds.frontscheibe,Jalousien für die Vorderfenster
+blinds.garage,Garagenjalousien
+blinds.gäste_wc,Jalousien für das Gästebad
+blinds.gästezimmer,Jalousien für Gästezimmer
+blinds.flur_1,Erste Flurjalousien
+blinds.flur_2,Jalousien im zweiten Flur
+blinds.flur,Flurjalousien
+blinds.ikea_smart,Intelligente Jalousien von Ikea
+blinds.kinderzimmer,Jalousien für Kinderzimmer
+blinds.kitchen_window,Jalousien für Küchenfenster
+blinds.küche,Küchenjalousien
+blinds.wohnzimmer_groß,Jalousien im Hauptwohnzimmer
+blinds.wohnzimmer,Wohnzimmerjalousien
+blinds.hauptschlafzimmer,Jalousien für das Hauptschlafzimmer
+blinds.kindergarten,Kinderzimmerjalousien
+blinds.büro,Bürojalousien
+blinds.office_window,Jalousien für Bürofenster
+blinds.terrasse,Terrassenjalousien
+blinds.dachfenster,Oberlichtjalousien
+blinds.dachfenster,Oberlichtjalousien
+blinds.somfy_kitchen,Küchenjalousien
+blinds.somfy_living,Wohnzimmerjalousien
+blinds.wintergarten,Wintergartenjalousien
+blinds.theater_raum,Jalousien für Heimkino
+fan.dachboden_1,Dachbodenventilatoren
+fan.dachboden_2,Dachbodenventilatoren
+fan.dachboden_3,Dachbodenventilatoren
+fan.dachbodenlüftung,Ventilator für Dachbodenlüftung
+fan.dachboden,Dachbodenventilator
+fan.hinterhof,Ventilator auf der hinteren Veranda
+fan.balkon,Balkonventilator
+fan.keller,Kellerventilator
+fan.badezimmer_unten,Ventilator im Badezimmer im Erdgeschoss
+fan.badezimmer,Badezimmerventilator
+fan.schlafzimmer_master,Ventilator im Hauptschlafzimmer
+fan.schlafzimmer_rechts,Schlafzimmerventilator auf der rechten Seite
+fan.schlafzimmer,Schlafzimmerventilator
+fan.decke_1,Deckenventilatoren
+fan.decke_2,Deckenventilatoren
+fan.essbereich,Ventilator für den Essbereich
+fan.esszimmer,Esszimmerventilator
+fan.dyson_pure,Dyson Pure Ventilator
+fan.front_porch,Ventilator auf der Veranda
+fan.garage_workshop,Garagen-Werkstatt-Fan
+fan.garage,Garagenfan
+fan.gästezimmer,Ventilator im Gästezimmer
+fan.gästezimmer,Ventilator im Gästezimmer
+fan.flur,Flurventilator
+fan.honeywell_turbo,Honeywell Turbo-Lüfter
+fan.indoor_fitnessstudio,Ventilator für den Innenbereich
+fan.kinderzimmer,Ventilator für Kinderzimmer
+fan.küche_1,Küchenventilatoren
+fan.küche_2,Küchenventilatoren
+fan.kücheninsel,Kühlender Küchenventilator
+fan.küche,Küchenventilator
+fan.wäschekammer,Ventilator für die Waschküche
+fan.wohnzimmer_1,Wohnzimmerventilator
+fan.wohnzimmer_2,Wohnzimmerventilator
+fan.wohnzimmer_mitte,Zentraler Wohnzimmerventilator
+fan.wohnzimmer,Wohnzimmerventilator
+fan.master_bath,Master-Badezimmerventilator
+fan.kindergarten,Kinderzimmer-Fan
+fan.büro,Büro-Fan
+fan.outdoor_küche,Küchenventilator für den Außenbereich
+fan.outdoor_terrasse,Terrassenventilator für den Außenbereich
+fan.draussen,Outdoor-Ventilator
+fan.terrasse,Terrassenventilator
+fan.veranda,Deckenventilator für die Veranda
+fan.baracke,Schuppenventilator
+fan.studie_1,Studienfan
+fan.studie_2,Studienfan
+fan.studie,Studienfan
+garage_door.keller,Keller-Garagentür
+garage_door.fahrradschuppen,Tür zum Fahrradschuppen
+garage_door.fahrrad_aufbewahrung,Fahrradgarage
+garage_door.boot,Garagentor für Boote
+garage_door.boot,Lagertür für Boote
+garage_door.carport,Carport-Garagentor
+garage_door.carport,Carporttür
+garage_door.chamberlain_1,Kammerherr
+garage_door.chamberlain_2,Kammerherr
+garage_door.golfwagen,Golfwagen-Garage
+garage_door.golfwagen,Golfwagentür
+garage_door.gewächshaus,Gewächshaustür
+garage_door.gast,Gästegaragentor
+garage_door.rasenausrüstung,Tür für Rasengeräte
+garage_door.liftmaster_1,LiftMaster
+garage_door.liftmaster_2,LiftMaster
+garage_door.main_1,Primäres Garagentor
+garage_door.hauptsächlich,Hauptgaragentor
+garage_door.motorrad,Motorradgarage
+garage_door.ein_auto,Garage für ein Auto
+garage_door.pet_entry,Haustier-Eingangstür
+garage_door.rv_storage,Stauraumtür für Wohnmobile
+garage_door.rv,Wohnmobil-Garagentür
+garage_door.schuppen_1,Erste Schuppentür
+garage_door.schuppen_2,Zweite Schuppentür
+garage_door.geschäft,Werkstatt Garagentor
+garage_door.left_door,Linkes Garagentor
+garage_door.seite_2,Seitliches Garagentor
+garage_door.seite,Seitliches Garagentor
+garage_door.ersatzteil,Ersatzgaragentor
+garage_door.two_car,Garage für zwei Autos
+garage_door.höheres_niveau,Garage auf der oberen Ebene
+garage_door.weinkeller,Weinkellertür
+light.above_esstisch,Esstischleuchte
+light.aquarium,Aquariumlicht
+light.dachboden,Dachbodenlicht
+light.hinterhof,Hinterhoflicht
+light.keller,Kellerlicht
+light.badezimmer_1,Badezimmerleuchte
+light.badezimmer_2,Badezimmerleuchte
+light.badezimmerspiegel,Spiegellichter
+light.badezimmer,Badezimmerleuchte
+light.schlafzimmer_1,Schlafzimmerlicht
+light.schlafzimmer_2,Schlafzimmerlicht
+light.schlafzimmer_3,Schlafzimmerlicht
+light.schlafzimmer,Schlafzimmerlicht
+light.closet_under_stairs,Schranklicht unter der Treppe
+light.deck_left,Linkes Decklicht
+light.esszimmer_1,Esszimmerlicht
+light.esszimmer_2,Esszimmerlicht
+light.esszimmer_3,Esszimmerlicht
+light.esszimmer,Esszimmerlicht
+light.einfahrt_1,Erste Einfahrtsleuchte
+light.auffahrt,Einfahrtslicht
+light.front_porch,Verandalicht
+light.vorgarten,Beleuchtung des Vorgartens
+light.garage,Garagenlicht
+light.garten_1,Gartenlicht
+light.garten_2,Gartenlicht
+light.gartenweg,Gartenwegbeleuchtung
+light.garten,Gartenlicht
+light.gästezimmer,Gästezimmerbeleuchtung
+light.flur_oben,Licht im Flur im Obergeschoss
+light.flur,Flurbeleuchtung
+light.flur,Flurlicht
+light.whirlpool,Whirlpool-Beleuchtung
+light.küche_1,Hauptküchenlicht
+light.küche_2,Zweites Küchenlicht
+light.küchentheke,Küchenthekenleuchte
+light.küchentheke,Küchenarbeitsplattenleuchten
+light.küchentisch,Küchentischleuchte
+light.küche,Küchenlicht
+light.lifx_master,Meisterlicht
+light.wohnzimmer_1,Wohnzimmerbeleuchtung
+light.wohnzimmer_2,Wohnzimmerbeleuchtung
+light.wohnzimmerdecke,Wohnzimmer-Deckenleuchte
+light.wohnzimmerdecke,Helle Deckenleuchte
+light.wohnzimmer,Wohnzimmerlicht
+light.master_schlafzimmer_1,Hauptschlafzimmerbeleuchtung
+light.master_schlafzimmer_2,Hauptschlafzimmerbeleuchtung
+light.master_schlafzimmer_lampe,Hauptschlafzimmerlampe
+light.kindergarten,Kinderzimmerlicht
+light.büro_1,Bürolicht
+light.büro_2,Bürolicht
+light.schreibtisch,Büro-Schreibtischleuchte
+light.büro,Bürolicht
+light.draussen,Außenleuchten
+light.terrasse_1,Terrassenleuchte für den Außenbereich
+light.terrasse,Terrassenleuchten
+light.terrasse,Terrassenlicht
+light.philips_hue_1,Philips Hue
+light.philips_hue_2,Philips Hue
+light.schwimmbad,Poollicht
+light.baracke,Bringen Sie Licht ins Dunkel
+light.studie_1,Studienleuchten
+light.studie_2,Studienleuchten
+light.studie_3,Studienleuchten
+light.studie,Studiere Licht
+light.werkbank,Garagen-Werkbankleuchte
+light.yeelight_smart,Yeelight Smart Light
+light.upstairs_master_schlafzimmer_hue,Farbton des Hauptschlafzimmers im Obergeschoss
+light.downstairs_guest_schlafzimmer_zigbee,Licht im Gästezimmer im Erdgeschoss
+light.front_office_mqtt,Vorderes Bürolicht
+light.back_family_room_warm,Zurück Familienzimmer Warmes Licht
+light.kitchen_counter_cool,Kühles Licht für die Küchentheke
+light.upstairs_bathroom_homekit,Badezimmerleuchte im Obergeschoss
+light.downstairs_livingroom_lifx,Wohnzimmerleuchte im Erdgeschoss
+light.front_porch_zwave,Verandalicht
+light.side_hallway_hue,Farbton des Seitenflurs
+light.garage_osram,Garage Osram
+light.keller_workshop_mqtt,Keller-Werkstattleuchte
+light.upstairs_children_schlafzimmer_zigbee,Kinderzimmerlampe im Obergeschoss
+light.downstairs_master_schlafzimmer_homekit,Licht im Hauptschlafzimmer im Erdgeschoss
+light.front_living_room_ge,Vorderes Wohnzimmerlicht
+light.back_schlafzimmer_warm,Warmes Licht im hinteren Schlafzimmer
+light.kitchen_island_cool,Kühles Licht der Kücheninsel
+light.upstairs_hallway_zwave,Flurleuchte im Obergeschoss
+light.downstairs_bathroom_warm,Warmes Licht im Badezimmer im Erdgeschoss
+light.front_yard_osram,Vorgarten Osram
+light.back_yard_zwave,Hinterhoflicht
+light.upstairs_guest_schlafzimmer_zigbee,Licht im Gästezimmer im Obergeschoss
+light.downstairs_office_mqtt,Bürolicht im Erdgeschoss
+light.front_schlafzimmer_homekit,Schlafzimmerlicht vorn
+light.back_office_lifx,Backoffice-Licht
+light.kitchen_table_warm,Küchentisch warmes Licht
+light.upstairs_tv_room_zigbee,TV-Raumlicht im Obergeschoss
+light.downstairs_tv_room_homekit,TV-Raumbeleuchtung im Erdgeschoss
+light.front_tv_room_ge,TV-Raumbeleuchtung vorn
+light.back_tv_room_warm,Hinterer Fernsehraum mit warmem Licht
+light.kitchen_sink_cool,Kühles Licht für die Küchenspüle
+light.upstairs_pantry_zwave,Speisekammerbeleuchtung im Obergeschoss
+light.downstairs_pantry_mqtt,Pantry-Licht im Erdgeschoss
+light.front_pantry_homekit,Vordere Speisekammerbeleuchtung
+light.back_pantry_lifx,Hintere Speisekammerbeleuchtung
+light.kitchen_cabinet_warm,"Küchenschrank, warmes Licht"
+light.upstairs_corridor_zigbee,Flurbeleuchtung im Obergeschoss
+light.downstairs_corridor_mqtt,Flurlicht im Erdgeschoss
+light.front_corridor_homekit,Vorderes Flurlicht
+light.back_corridor_lifx,Hinteres Flurlicht
+light.garage_workbench_cool,"Garagenwerkbank, kühles Licht"
+light.upstairs_nursery_zwave,Kinderzimmerlampe im Obergeschoss
+light.downstairs_nursery_mqtt,Kinderzimmerlicht im Erdgeschoss
+light.front_nursery_homekit,Vorderes Kinderzimmerlicht
+light.back_nursery_warm,Zurück Kinderzimmer warmes Licht
+light.kitchen_ceiling_cool,Kühles Deckenlicht für die Küche
+light.upstairs_lounge_zigbee,Lounge-Licht im Obergeschoss
+light.downstairs_lounge_homekit,Lounge-Licht im Erdgeschoss
+light.front_lounge_ge,Lounge-Licht vorn
+light.back_lounge_warm,Warmes Licht im Back-Lounge-Bereich
+light.keller_storage_cool,"Kelleraufbewahrung, kühles Licht"
+light.upstairs_closet_zwave,Schranklicht im Obergeschoss
+light.downstairs_closet_mqtt,Schranklicht im Erdgeschoss
+light.front_closet_homekit,Vorderes Schranklicht
+light.back_closet_warm,"Hinterer Schrank, warmes Licht"
+light.upstairs_den_zigbee,Höhlenlicht im Obergeschoss
+light.downstairs_den_homekit,Höhlenlicht im Erdgeschoss
+light.front_den_ge,Vorderes Höhlenlicht
+light.back_den_warm,Back Den Warmes Licht
+light.kitchen_window_cool,Kühles Licht am Küchenfenster
+light.upstairs_entryway_zwave,Eingangsbeleuchtung im Obergeschoss
+light.downstairs_entryway_mqtt,Eingangsbeleuchtung im Erdgeschoss
+light.front_entryway_homekit,Vordere Eingangsbeleuchtung
+light.back_entryway_lifx,Hintere Eingangsbeleuchtung
+light.kitchen_desk_warm,"Küchenschreibtisch, warmes Licht"
+light.upstairs_mudroom_zigbee,Mudroom-Licht im Obergeschoss
+light.downstairs_mudroom_homekit,Mudroom-Licht im Erdgeschoss
+light.front_mudroom_ge,Vorderes Mudroom-Licht
+light.back_mudroom_warm,Warmes Licht im hinteren Schlammraum
+light.kitchen_floor_cool,Kühles Licht auf dem Küchenboden
+light.upstairs_attic_zwave,Dachbodenleuchte im Obergeschoss
+light.downstairs_attic_mqtt,Dachbodenbeleuchtung im Erdgeschoss
+light.front_attic_homekit,Vordere Dachbodenleuchte
+light.back_attic_lifx,Hintere Dachbodenleuchte
+light.kitchen_drawer_warm,"Küchenschublade, warmes Licht"
+light.upstairs_sunroom_zigbee,Licht im Wintergarten im Obergeschoss
+light.downstairs_sunroom_homekit,Licht im Wintergarten im Erdgeschoss
+light.front_sunroom_ge,Licht im vorderen Wintergarten
+light.back_sunroom_warm,Hinterer Wintergarten mit warmem Licht
+light.kitchen_rack_cool,Küchenregal Cool Light
+light.upstairs_study_zwave,Arbeitszimmerlampe im Obergeschoss
+light.downstairs_study_mqtt,Arbeitslicht im Erdgeschoss
+light.front_study_homekit,Vorderes Studienlicht
+light.back_study_lifx,Rückseitiges Studienlicht
+light.kitchen_bar_warm,"Küchenbar, warmes Licht"
+light.upstairs_dining_zigbee,Esszimmerlicht im Obergeschoss
+light.downstairs_dining_homekit,Esszimmerlicht im Erdgeschoss
+light.front_dining_ge,Esszimmerleuchte vorne
+light.back_dining_warm,Zurück Essen warmes Licht
+light.kitchen_wall_cool,Kühles Wandlicht für die Küche
+light.upstairs_fireplace_zwave,Kaminlicht im Obergeschoss
+light.downstairs_fireplace_mqtt,Kaminlicht im Erdgeschoss
+light.front_fireplace_homekit,Kaminlicht vorne
+light.back_fireplace_lifx,Hinteres Kaminlicht
+light.kitchen_bookshelf_warm,"Küchen-Bücherregal, warmes Licht"
+light.upstairs_sideyard_zigbee,Seitenlicht im Obergeschoss
+light.downstairs_sideyard_homekit,Unten seitliches Hoflicht
+light.front_sideyard_ge,Hoflicht vorne
+light.back_sideyard_warm,Warmes Licht auf der Rückseite des Hofes
+light.kitchen_cupboard_cool,"Küchenschrank, kühles Licht"
+light.upstairs_cinema_zwave,Kinolicht im Obergeschoss
+light.downstairs_cinema_mqtt,Kinolicht im Erdgeschoss
+light.front_cinema_homekit,Kinolicht vorne
+light.back_cinema_lifx,Zurück Kinolicht
+light.kitchen_oven_warm,Küchenofen warmes Licht
+light.upstairs_mancave_zigbee,Oben Menschenhöhlenlicht
+light.downstairs_mancave_homekit,Menschenhöhlenlicht im Erdgeschoss
+light.front_mancave_ge,Frontmann-Höhlenlicht
+light.back_mancave_warm,Zurück Man Cave Warmes Licht
+light.kitchen_shelf_cool,Küchenregal Cool Light
+light.upstairs_balcony_zwave,Balkonbeleuchtung im Obergeschoss
+light.downstairs_balcony_mqtt,Balkonlicht im Erdgeschoss
+light.front_balcony_homekit,Vorderes Balkonlicht
+light.back_balcony_lifx,Hinteres Balkonlicht
+light.kitchen_cornice_warm,Küchengesims warmes Licht
+light.upstairs_stairwell_zigbee,Treppenlicht im Obergeschoss
+light.downstairs_stairwell_homekit,Licht im Treppenhaus im Erdgeschoss
+light.front_stairwell_ge,Vorderes Treppenhauslicht
+light.back_stairwell_warm,"Hinteres Treppenhaus, warmes Licht"
+light.kitchen_mirror_cool,"Küchenspiegel, kühles Licht"
+light.upstairs_basement_zwave,Kellerlicht im Obergeschoss
+light.downstairs_basement_mqtt,Kellerlicht im Erdgeschoss
+light.front_basement_homekit,Kellerlicht vorne
+light.back_basement_lifx,Hinteres Kellerlicht
+light.kitchen_windowseat_warm,"Küchenfenstersitz, warmes Licht"
+light.upstairs_recreation_zigbee,Erholungslicht im Obergeschoss
+light.downstairs_recreation_homekit,Erholungslicht im Erdgeschoss
+light.front_recreation_ge,Vorderes Freizeitlicht
+light.back_recreation_warm,Zurück Erholung Warmes Licht
+light.kitchen_sideboard_cool,Küchen-Sideboard Cool Light
+light.upstairs_courtyard_zwave,Licht im Innenhof im Obergeschoss
+light.downstairs_courtyard_mqtt,Hoflicht im Erdgeschoss
+light.front_courtyard_homekit,Vorhoflicht
+light.back_courtyard_lifx,Hinterhoflicht
+light.kitchen_winecellar_warm,Küche Weinkeller Warmes Licht
+light.upstairs_arcade_zigbee,Arcade-Licht im Obergeschoss
+light.downstairs_arcade_homekit,Arcade-Licht im Erdgeschoss
+light.front_arcade_ge,Vorderes Arcade-Licht
+light.back_arcade_warm,Zurück Arcade Warmes Licht
+light.kitchen_pantry_cool,"Küche, Speisekammer, kühles Licht"
+light.upstairs_washroom_zwave,Badezimmerbeleuchtung im Obergeschoss
+light.downstairs_washroom_mqtt,Badezimmerbeleuchtung im Erdgeschoss
+light.front_washroom_homekit,Waschraumbeleuchtung vorn
+light.back_washroom_lifx,Hintere Toilettenbeleuchtung
+light.kitchen_fridge_warm,"Küche, Kühlschrank, warmes Licht"
+light.upstairs_library_zigbee,Bibliothekslicht im Obergeschoss
+light.downstairs_library_homekit,Bibliothekslicht im Erdgeschoss
+light.front_library_ge,Vordere Bibliotheksleuchte
+light.back_library_warm,Zurück Bibliothek Warmes Licht
+light.kitchen_coffeecorner_cool,"Küche, Kaffeeecke, kühles Licht"
+light.upstairs_playroom_zwave,Spielzimmerbeleuchtung im Obergeschoss
+light.downstairs_playroom_mqtt,Licht im Spielzimmer im Erdgeschoss
+light.front_playroom_homekit,Vorderes Spielzimmerlicht
+light.back_playroom_lifx,Hinteres Spielzimmerlicht
+light.kitchen_microwave_warm,"Küche, Mikrowelle, warmes Licht"
+light.upstairs_observatory_zigbee,Observatoriumslicht im Obergeschoss
+light.downstairs_observatory_homekit,Observatoriumslicht im Erdgeschoss
+light.front_observatory_ge,Vorderes Observatoriumslicht
+light.back_observatory_warm,Zurück Observatorium Warmes Licht
+light.kitchen_toaster_cool,Küchentoaster Cool Light
+light.upstairs_workout_zwave,Trainingslicht im Obergeschoss
+light.downstairs_workout_mqtt,Trainingslicht im Erdgeschoss
+light.front_workout_homekit,Vorderes Trainingslicht
+light.back_workout_lifx,Rückentrainingslicht
+light.kitchen_display_warm,Küchendisplay mit warmem Licht
+light.upstairs_utility_zigbee,Versorgungslicht im Obergeschoss
+light.downstairs_utility_homekit,Versorgungslicht im Erdgeschoss
+light.front_utility_ge,Vorderes Nutzlicht
+light.back_utility_warm,Zurück Utility Warm Light
+light.kitchen_trashbin_cool,"Küchenabfalleimer, kühles Licht"
+light.upstairs_sitting_zwave,Wohnzimmerlampe im Obergeschoss
+light.downstairs_sitting_mqtt,Wohnzimmerlicht im Erdgeschoss
+light.front_sitting_homekit,Vorderes Wohnzimmerlicht
+light.back_sitting_lifx,Hinteres Wohnzimmerlicht
+light.kitchen_freezer_warm,Küchen-Gefrierschrank-Licht
+light.upstairs_zen_zigbee,Oben Zen-Licht
+light.downstairs_zen_homekit,Unten Zen-Licht
+light.front_zen_ge,Vorderlicht
+light.back_zen_warm,Zurück Zen-Licht
+light.esszimmer_kronleuchter,Esszimmer-Kronleuchter
+light.kronleuchter_front_hallway,Kronleuchter für den vorderen Flur
+lock.hintertür,Hintertürschloss
+lock.hintertür,Schloss für den Hinterhofeingang
+lock.keller,Kellerschloss
+lock.fahrradständer,Fahrradträgerschloss
+lock.fahrrad_aufbewahrung,Fahrradaufbewahrungsschloss
+lock.aktenschrank,Aktenschrankschloss
+lock.front_door_1,Haupteingangsschleuse
+lock.haustür,Vordertürschloss
+lock.garage,Garagentorschloss
+lock.gästezimmer,Gästezimmerschloss
+lock.gun_safe,Waffentresorschloss
+lock.briefkasten,Sicheres Postfachschloss
+lock.hauptschlafzimmer,Hauptschlafzimmerschloss
+lock.kindergarten,Türschloss für Kinderzimmer
+lock.büro,Büroschloss
+lock.terrassentür,Schiebetür für die Terrasse
+lock.pool_gate,Pooltorschloss
+lock.pool_gate,Schwimmbadtor
+lock.sicherheitskaution,Safe
+lock.schlage_smart,Schlage Smart Lock
+lock.schuppen_2,Zweites Schuppenschloss
+lock.werkzeugschuppen,Schloss für Geräteschuppen
+lock.werkzeugschuppen,Schloss für Geräteschuppen
+lock.allzweckraum,Hauswirtschaftsraumschloss
+lock.weinkeller,Weinkellerschloss
+lock.weinkeller,Weinkellerschloss
+lock.yale_kitchen,Yale Kitchen
+lock.yale_living,Yale-Wohnzimmer
+lock.yoga_raum,Yoga-Raumschloss
+lock.dachboden,Dachbodentürschloss
+lock.balkon_tür,Zugangssperre zum Balkon
+lock.schlafzimmer_2,Zweites Schlafzimmerschloss
+lock.schlafzimmer_3,Drittes Schlafzimmerschloss
+lock.bootshaus,Bootshausschleuse
+lock.kleiderschrank,Schranktürschloss
+lock.wintergarten,Wintergartenschloss
+lock.höhle,Höhlenschloss
+lock.esszimmer,Esszimmerschloss
+lock.einfahrtstor,Einfahrtstorschloss
+lock.elektrisches_tor,Elektrisches Torschloss
+lock.aufzug,Private Aufzugsschleuse
+lock.zauntür,Zauntorschloss
+lock.ablageraum,Aktenraumschloss
+lock.eingangstor,Vordertorschloss
+lock.gartentor,Gartentorschloss
+lock.gewächshaus,Gewächshausschloss
+lock.fitnessstudio,Heim-Fitnessstudio-Schloss
+lock.flur_closet,Schrankschloss für den Flur
+lock.heimkino,Heimkino-Sperre
+lock.zwinger,Tierhüttenschloss
+lock.kitchen_door,Kücheneingangsschloss
+lock.wäschekammer,Waschküchenschloss
+lock.wohnzimmer,Wohnzimmerschloss
+lock.dachgeschoss,Loft-Schloss
+lock.schlammraum,Mudroom-Schloss
+lock.musikzimmer,Musikraumschloss
+lock.office_cabinet,Büroschrankschloss
+lock.speisekammer,Speisekammerschloss
+lock.spielzimmer,Spielzimmerschloss
+lock.porch_door,Veranda-Türschloss
+lock.rear_gate,Heckklappenschloss
+lock.rooftop_door,Zugangsschleuse auf dem Dach
+lock.sauna,Sauna-Türschloss
+lock.secure_storage,Sicheres Aufbewahrungsschloss
+lock.dienstboteneingang,Service-Eingangsschleuse
+lock.seitentür,Seitliches Einstiegsschloss
+lock.seiteneingang,Seitliches Torschloss
+lock.ski_storage,Skiaufbewahrungsschloss
+lock.stair_gate,Treppentorschloss
+lock.lagerraum,Lagerraumschloss
+lock.studio,Studioschloss
+lock.wintergarten,Wintergartenschloss
+lock.terrassentür,Terrassentürschloss
+lock.fahrzeug_gate,Fahrzeugtorschloss
+lock.begehbarer_kleiderschrank,Begehbares Schrankschloss
+lock.werkstatt,Werkstattschloss
+lock.werkstattkabinett,Werkstattschrankschloss
+lock.yard_shed,Hofschuppenschloss
+media_player.apple_tv,Apple TV-Mediaplayer
+media_player.keller,Keller-Mediaplayer
+media_player.bose_schlafzimmer,Bose-Schlafzimmer
+media_player.bose_living,Bose-Wohnzimmer
+media_player.chrome_cast_schlafzimmer,Schlafzimmer-Chromecast
+media_player.chromecast,Chromecast-Medien
+media_player.echo_dot,Küche Echo Dot
+media_player.fire_tv_stick,Fire TV Stick
+media_player.fire_tv,Fire TV-Medien
+media_player.garage,Garage Media Player
+media_player.gästezimmer,Gästezimmermedien
+media_player.heimkino,Heimkino-Medien
+media_player.ipad_kitchen,Küchen-iPad
+media_player.küche,Küchen-Mediaplayer
+media_player.laptop_stream,Streaming-Laptop
+media_player.wohnzimmer,Wohnzimmermedien
+media_player.hauptschlafzimmer,Medien im Hauptschlafzimmer
+media_player.nintendo_switch,Nintendo-Switch
+media_player.kindergarten,Kindergarten-Mediaplayer
+media_player.büro,Office Media Player
+media_player.terrasse,Terrassen-Mediaplayer
+media_player.ps5_living_room,Wohnzimmer PS5
+media_player.roku_schlafzimmer,Roku-Hauptschlafzimmer
+media_player.roku_schlafzimmer,Schlafzimmer-Roku-Spieler
+media_player.roku_living,Roku-Wohnzimmer
+media_player.samsung_tv,Fernseher im Wohnzimmer
+media_player.sonos_schlafzimmer,Sonos Hauptschlafzimmer
+media_player.sonos_kitchen,Sonos-Küche
+media_player.sonos_kitchen,Sonos-Lautsprecher für die Küche
+media_player.sonos_living,Sonos-Wohnzimmer
+media_player.soundbar_living_room,Soundbar im Wohnzimmer
+media_player.xbox_den,Die Xbox-Konsole
+media_player.sony_bravia_tv,Sony Smart LED-Fernseher
+media_player.samsung_qled_tv,Samsung Quantum Dot-Fernseher
+media_player.lg_oled_tv,LG OLED-Fernseher
+media_player.panasonic_4k_bluray_player,Panasonic Blueray-Player
+media_player.denon_av_receiver,Denon Audio-Video-Receiver
+media_player.onkyo_tx_sr,Onkyo Heimkino-Receiver
+media_player.google_nest_hub,Google Assistant Smart Display
+media_player.amazon_echo_show,Amazon Echo Smart Screen
+media_player.apple_tv_4k,Apple 4K-Streaming-Gerät
+media_player.roku_ultra,Roku Hochleistungs-Streamer
+media_player.xbox_one,Xbox One
+media_player.playstation_5,Sony PS5
+media_player.joes_ps5,Joes PS5
+media_player.nintendo_switch_dock,Nintendo-Konsolendock
+media_player.sony_4k_projector,Heimkinoprojektor von Sony
+media_player.epson_home_cinema,Epson-Videoprojektor
+media_player.bose_home_speaker,Bose Wireless-Lautsprecher
+media_player.sonos_beam,Sonos Kompakt-Soundbar
+media_player.harman_kardon_aura,Harman Kardon Glaslautsprecher
+media_player.bang_olufsen_beovision,B&O High-End-Fernseher
+media_player.philips_ambilight_tv,Philips LED-Fernseher mit Hintergrundbeleuchtung
+media_player.vizio_smartcast_tv,Vizio Cast-fähiger Fernseher
+media_player.sony_ps_lx310bt,Bluetooth-Plattenspieler von Sony
+media_player.audio_technica_at_lp120,Audio-Technica-Plattenspieler
+media_player.samsung_hw_q90r,Samsung Surround-Soundbar
+media_player.sonos_arc,Sonos Smart Soundbar
+media_player.home_theater_system_living_room,Heimkino im Wohnzimmer
+media_player.desktop_computer_media_suite,Desktop-Computer Media Center
+media_player.wandmontierter_tv_schlafzimmer,Wandfernseher im Schlafzimmer
+media_player.kitchen_radio,Küchenradio-Player
+media_player.badezimmer_lautsprechersystem,Wasserdichter Badezimmerlautsprecher
+media_player.garage_workshop_stereo,Garagen-Werkstatt-Stereoanlage
+media_player.patio_outdoor_speakers,Terrassen-Außenlautsprecher
+media_player.keller_projektor_setup,Kellerprojektorsystem
+media_player.office_pc_speakers,Lautsprecher für Bürocomputer
+media_player.bedside_alarm_clock_radio,Radiowecker am Bett
+media_player.game_room_console,Spielzimmerkonsole
+media_player.lounge_hi_fi_system,Lounge-HiFi-Audio
+media_player.dining_room_jukebox,Esszimmer-Jukebox
+media_player.guest_room_tv_set,Fernseher im Gästezimmer
+media_player.study_room_audio_book_player,Studieren Sie den Hörbuch-Player
+media_player.sunroom_cd_player,Wintergarten-CD-Player
+media_player.attic_vinyl_turntable,Dachboden-Schallplattenspieler
+media_player.backyard_outdoor_projector,Hinterhofprojektor
+media_player.entryway_voice_assistant,Sprachassistent im Eingangsbereich
+media_player.flur_wall_speaker,Wandlautsprecher für den Flur
+switch.attic_lights,Lichtschalter für den Dachboden
+switch.balkon_beleuchtung,Steuerung der Balkonbeleuchtung
+switch.keller_lichter,Kellerlichtschalter
+switch.badezimmer_fan,Schalter für Badezimmerventilator
+switch.schlafzimmer_lichter,Schlafzimmerlichtschalter
+switch.boathouse_lights,Bootshaus-Lichtschalter
+switch.closet_lighting,Steuerung der Schrankbeleuchtung
+switch.wintergarten_lichter,Wintergarten-Lichtschalter
+switch.deck_lights,Deckbeleuchtungsschalter
+switch.den_lights,Höhlenlichtschalter
+switch.dining_room_lights,Lichtschalter für das Esszimmer
+switch.einfahrtslichter,Steuerung der Einfahrtsbeleuchtung
+switch.front_gate_lighting,Schalter für die Vordertorbeleuchtung
+switch.front_yard_lights,Schalter für die Vorgartenbeleuchtung
+switch.garagentor_öffner,Garagentoröffnerschalter
+switch.gartenlichter,Steuerung der Gartenbeleuchtung
+switch.guest_room_lights,Lichtschalter im Gästezimmer
+switch.flur_lichter,Flurlichtschalter
+switch.home_theater_lighting,Steuerung der Heimkinobeleuchtung
+switch.kitchen_lights,Küchenlichtschalter
+switch.laundry_room_lights,Lichtschalter für Waschküche
+switch.living_room_lights,Wohnzimmer-Lichtschalter
+switch.loft_lights,Loft-Lichtschalter
+switch.master_schlafzimmer_lichter,Lichtschalter im Hauptschlafzimmer
+switch.office_lights,Schalter für Bürobeleuchtung
+switch.outdoor_security_lights,Schalter für Sicherheitsbeleuchtung im Außenbereich
+switch.pantry_lights,Schalter für Speisekammerbeleuchtung
+switch.terrassenlichter,Schalter für Terrassenbeleuchtung
+switch.spielzimmer_lichter,Lichtschalter für Spielzimmer
+switch.pool_area_lighting,Steuerung der Poolbereichsbeleuchtung
+switch.porch_lights,Schalter für die Verandabeleuchtung
+switch.rear_yard_lights,Schalter für die Hinterhofbeleuchtung
+switch.sauna_lights,Saunalichtschalter
+switch.sicherheitssystem,Schalter des Sicherheitssystems
+switch.shed_lights,Schuppenlichtschalter
+switch.stairway_lights,Treppenlichtschalter
+switch.study_room_lights,Lichtschalter im Arbeitszimmer
+switch.sunroom_lights,Wintergarten-Lichtschalter
+switch.terrassenbeleuchtung,Steuerung der Terrassenbeleuchtung
+switch.under_cabinet_lights,Schalter für die Beleuchtung unter dem Schrank
+switch.utility_room_lights,Lichtschalter für Hauswirtschaftsräume
+switch.walkway_lights,Gehwegbeleuchtungsschalter
+switch.warehouse_lights,Lagerlichtschalter
+switch.wasser_feature_lights,Lichtschalter für Wasserspiele
+switch.werkstattbeleuchtung,Werkstattlichtschalter
+switch.yard_floodlights,Schalter für Hofscheinwerfer
+switch.zoo_enclosure_lighting,Steuerung der Zoogehegebeleuchtung
+switch.pool_pump,Schalter für Poolpumpe
+switch.bewässerungssystem,Bewässerungssystemschalter
+switch.garage_workshop_lights,Lichtschalter für Garage und Werkstatt
+climate.nest_learning,Nest-Lernthermostat
+climate.ecobee_smart,Ecobee SmartThermostat
+climate.honeywell_lyric_t6,Honeywell Lyric T6 Pro
+climate.emerson_sensi_touch,Emerson Sensi Touch WLAN-Thermostat
+climate.bosch_bcc100,Bosch BCC100 Connected Control
+climate.johnson_glas,Johnson Controls GLAS Smart Thermostat
+climate.thermostat_lux_geo,Lux Geo WLAN-Thermostat
+climate.tado_smart,Tado Smart-Thermostat
+climate.trane_comfortlink_ii,Trane ComfortLink II XL1050
+climate.carrier_cor,Carrier Cor WLAN-Thermostat
+climate.netatmo_smart,Smartes Thermostat von Netatmo
+climate.sinope_smart,Intelligentes Thermostat von Sinopé
+climate.kono_thermostat,Kono Smart-Thermostat
+climate.mysa_smart_thermostat,Mysa Smart Thermostat für elektrische Fußleistenheizungen
+climate.zen_wifi_thermostat,Zen Thermostat WiFi Edition
+vacuum.living_room_roomba,Wohnzimmerstaubsauger
+vacuum.kitchen_xiaomi,Küchenstaubsauger
+vacuum.upstairs_dyson,Staubzerstörer im Obergeschoss
+vacuum.keller_deebot,Keller-Deebot
+vacuum.master_schlafzimmer_shark,Staubsauger im Hauptschlafzimmer
+vacuum.garage_roomba_2,Garagenreinigungsbot
+vacuum.under_sofa_cleaner,Untersofareiniger
+vacuum.dining_area_bissel,Schmutzentferner für den Essbereich
+vacuum.flur_neato,Wegreiniger für den Flur
+vacuum.entryway_eufy,Staubsammler im Eingangsbereich
+vacuum.patio_doorway_vac,Reiniger für Terrassentüren
+vacuum.left_corner_bot,Schmutzsauger in der linken Ecke
+vacuum.right_stairwell_sweeper,Rechter Treppenhausreiniger
+vacuum.upstairs_bathroom_vac,Badezimmerhelfer im Obergeschoss
+vacuum.downstairs_guest_room,Staubsauger im Gästezimmer im Erdgeschoss
+vacuum.smart_home_automator,Smart-Home-Reinigungsbot
+vacuum.above_stairs_robot,Staubgerät über der Treppe
+vacuum.under_bed_cleaner,Staubsammler unter dem Bett
+vacuum.front_hall_samsung,Kehrender Bot in der Eingangshalle
+vacuum.back_deck_sweeper,Reiniger für den Hinterdeckbereich
+todo.daily_chores_list,Täglicher Aufgaben-Tracker
+todo.lebensmittelgeschäft_einkaufsliste,Lebensmitteleinkaufsorganisator
+todo.wochenendprojekte,Liste der DIY-Wochenendprojekte
+todo.family_event_planner,Familien-Eventplaner
+todo.workout_routine_tracker,Planer für Trainingsroutinen
+todo.kids_homework_deadlines,Fristen für Hausaufgaben für Kinder
+todo.pet_vaccination_schedule,Impfplaner für Haustiere
+todo.car_maintenance_log,Autowartungs-Tracker
+todo.geburtstagserinnerungsliste,Geburtstagserinnerungsliste
+todo.jubiläumsplaner,Jubiläums-Eventplaner
+todo.urlaubsplanung,Assistent für die Urlaubsplanung
+todo.book_reading_list,Leselisten-Organizer
+todo.movie_watchlist,Merkliste für Filmabende
+todo.rezeptsammlung,Rezeptsammlung
+todo.home_renovation_planner,Planer für Hausrenovierungen
+todo.garden_care_schedule,Gartenpflegeplaner
+todo.bill_paid_reminders,Zahlungserinnerungen für Rechnungen
+todo.insurance_renewal_alerts,Benachrichtigungen zur Versicherungsverlängerung
+todo.abonnementverwaltung,Abonnementverwaltungstool
+todo.warranty_tracker,Garantieablauf-Tracker
+timer.kitchen_oven,Küchenofen-Timer
+timer.wäscherei_maschine_1,Wäschezyklus-Tracker
+timer.gartenbewässerung,Gartenbewässerungsplaner
+timer.front_porch_lights,Lichttimer für die Veranda
+timer.hinterhof_flutlichter,Controller für Hinterhof-Flutlicht
+timer.garage_door_1,Garagentor-Timer
+timer.bedroom_lamp_timer,Lampenplaner für das Schlafzimmer
+timer.dining_room_dimmer,Lichttimer für das Esszimmer
+timer.upstairs_hallway,Timer für den Flur im Obergeschoss
+timer.downstairs_closet_light,Unten Schrank-Timer
+timer.eingangsbereich_kronleuchter,Kronleuchter-Timer für den Eingangsbereich
+timer.terrassenbeleuchtung,Terrassen-Ambiente-Timer
+timer.einfahrt_sicherheitsbeleuchtung,Einfahrt-Sicherheitstimer
+timer.kids_room_nightlight,Nachtlicht-Timer für das Kinderzimmer
+timer.timer0,Allzweck-Timer
+timer.timer7,Benutzerdefinierter Timer 7
+timer.mein_timer,Personalisierter Timer
+timer.küchenuhr,Küchen-Countdown
+timer.wäscherei_countdown,Wäschezyklus-Timer
+timer.morgenalarm,Weckalarm am Morgen
+timer.workout_timer,Trainings-Timer
+timer.study_session,Lernfokus-Timer
+timer.meditationsuhr,Meditationsdauer-Tracker
+timer.baby_nap_timer,Baby-Nickerchen-Monitor
+timer.tea_steeping,Countdown zum Einweichen des Tees
+timer.game_timer,Brettspiel-Timer
+timer.morgen_kaffee,Timer für die Kaffeezubereitung am Morgen

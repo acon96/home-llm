@@ -1,0 +1,601 @@
+service_name,device_name,phrase
+blinds.close_cover,küche,Lassen Sie die Jalousien in der Küche herunter
+blinds.close_cover,wohnzimmer,Schließen Sie die Jalousien im Wohnzimmer
+blinds.close_cover,hauptschlafzimmer,Schließen Sie die Jalousien im Hauptschlafzimmer
+blinds.open_cover,küche,Könnten Sie die Küchenjalousien hochziehen?
+blinds.open_cover,wohnzimmer,Öffnen Sie die Jalousien im Wohnzimmer
+blinds.open_cover,hauptschlafzimmer,Heben Sie die Jalousien im Hauptschlafzimmer an
+blinds.stop_cover,küche,"Halten Sie die Küchenjalousien dort an, wo sie sind"
+blinds.stop_cover,wohnzimmer,"Hören Sie auf, die Jalousien im Wohnzimmer zu verstellen"
+blinds.stop_cover,hauptschlafzimmer,Bitte halten Sie die Jalousien im Hauptschlafzimmer an
+blinds.toggle,küche,Schalten Sie den Zustand der Küchenjalousien um
+blinds.toggle,wohnzimmer,Schalten Sie die Jalousien im Wohnzimmer um
+blinds.toggle,hauptschlafzimmer,Drehen Sie die Jalousien im Hauptschlafzimmer um
+fan.decrease_speed,dachboden_1,Machen Sie den Dachbodenventilator langsamer
+fan.decrease_speed,dachboden_1,Drehen Sie den Dachbodenventilator herunter
+fan.decrease_speed,dachboden,Verlangsamen Sie den Ventilator auf dem Dachboden
+fan.decrease_speed,schlafzimmer_master,Verlangsamen Sie den Ventilator im Hauptschlafzimmer
+fan.decrease_speed,garage,Drehen Sie den Ventilator in der Garage herunter
+fan.decrease_speed,gästezimmer,Verringern Sie die Lüftergeschwindigkeit im Gästezimmer
+fan.decrease_speed,flur,Verringern Sie die Ventilatorgeschwindigkeit im Flur
+fan.decrease_speed,küche,Schalten Sie den Küchenventilator langsamer aus
+fan.decrease_speed,küche,Drehen Sie den Küchenventilator herunter
+fan.decrease_speed,wohnzimmer,Verringern Sie die Geschwindigkeit des Wohnzimmerventilators
+fan.decrease_speed,wohnzimmer,Drehen Sie den Ventilator im Wohnzimmer herunter
+fan.decrease_speed,studie,Reduzieren Sie die Lüftergeschwindigkeit im Arbeitszimmer
+fan.increase_speed,dachboden_1,Erhöhen Sie die Geschwindigkeit des Dachbodenventilators
+fan.increase_speed,dachboden,Beschleunigen Sie den Ventilator auf dem Dachboden
+fan.increase_speed,schlafzimmer_master,Erhöhen Sie die Lüftergeschwindigkeit im Hauptschlafzimmer
+fan.increase_speed,garage,Drehen Sie den Ventilator in der Garage auf
+fan.increase_speed,gästezimmer,Erhöhen Sie die Lüftergeschwindigkeit im Gästezimmer
+fan.increase_speed,flur,Erhöhen Sie die Lüftergeschwindigkeit im Flur
+fan.increase_speed,wohnzimmer,Erhöhen Sie die Geschwindigkeit des Wohnzimmerventilators
+fan.increase_speed,studie,Erhöhen Sie die Lüftergeschwindigkeit im Arbeitszimmer
+fan.toggle,dachboden_2,Schalten Sie den Dachbodenventilator um
+fan.toggle,dachboden,Ändern Sie den Ventilatorstatus auf dem Dachboden
+fan.toggle,keller,Schalten Sie den Kellerventilator um
+fan.toggle,schlafzimmer_master,Schalten Sie den Status des Ventilators im Hauptschlafzimmer um
+fan.toggle,schlafzimmer,Schalten Sie den Schlafzimmerventilator ein
+fan.toggle,dining_table_above,Bitte schalten Sie den Ventilator über dem Esstisch ein
+fan.toggle,auffahrt,Drehen Sie den Einfahrtsventilator um
+fan.toggle,garage,Drehen Sie den Ventilator in der Garage um
+fan.toggle,gästezimmer,Kann man den Ventilator im Gästezimmer ein-/ausschalten?
+fan.toggle,flur,Schalten Sie den Zustand des Ventilators im Flur um
+fan.toggle,küche,Schalten Sie den Küchenventilator um
+fan.toggle,wohnzimmer,Schalten Sie den Ventilator im Wohnzimmer ein
+fan.toggle,büro,Schalten Sie den Büroventilator um
+fan.toggle,draussen,Schalten Sie den Außenventilator um
+fan.toggle,schwimmbad,Ändern Sie den Status des Poolventilators
+fan.toggle,baracke,Schalten Sie den Stallventilator ein oder aus
+fan.toggle,studie,Ändern Sie den Lüfterstatus in der Studie
+fan.turn_off,dachboden_1,Deaktivieren Sie den Dachbodenventilator
+fan.turn_off,schlafzimmer_master,Deaktivieren Sie den Ventilator im Hauptschlafzimmer
+fan.turn_off,essbereich,Bitte schalten Sie den Ventilator im Essbereich aus
+fan.turn_off,esszimmer,Schalten Sie den Ventilator im Esszimmer aus
+fan.turn_off,garage,Schalten Sie den Garagenventilator aus
+fan.turn_off,garage,Schalten Sie den Garagenventilator aus
+fan.turn_off,gästezimmer,Schalten Sie den Ventilator im Gästezimmer aus
+fan.turn_off,küche,Schalten Sie den Küchenventilator aus
+fan.turn_off,wohnzimmer,Schalten Sie den Ventilator im Wohnzimmer aus
+fan.turn_off,büro,Könnten Sie den Bürolüfter deaktivieren?
+fan.turn_off,büro,Schalten Sie den Büroventilator aus
+fan.turn_off,terrasse,Schalten Sie den Terrassenventilator aus
+fan.turn_off,studie,Schalten Sie den Studienventilator aus
+fan.turn_off,studie,Schalten Sie den Studienventilator aus
+fan.turn_on,badezimmer,Aktivieren Sie den Badezimmerventilator
+fan.turn_on,badezimmer,Schalten Sie den Badezimmerventilator ein
+fan.turn_on,schlafzimmer_master,Aktivieren Sie den Ventilator im Hauptschlafzimmer
+fan.turn_on,essbereich,Bitte schalten Sie den Ventilator im Essbereich ein
+fan.turn_on,garage,Schalten Sie den Garagenventilator ein
+fan.turn_on,flur,Schalten Sie den Flurventilator ein
+fan.turn_on,küche,Schalten Sie den Küchenventilator ein
+fan.turn_on,wohnzimmer,Starten Sie den Ventilator im Wohnzimmer
+fan.turn_on,wohnzimmer,Schalten Sie den Ventilator im Wohnzimmer ein
+fan.turn_on,büro,Könnten Sie den Bürolüfter aktivieren?
+fan.turn_on,studie,Aktivieren Sie den Lernfächer
+fan.turn_on,studie,Schalten Sie den Studienventilator ein
+garage_door.close_cover,fahrrad_aufbewahrung,Deaktivieren Sie die Fahrradgarage
+garage_door.close_cover,hauptsächlich,Schließen Sie das Hauptgaragentor
+garage_door.close_cover,ein_auto,"Stellen Sie sicher, dass die Garage für ein Auto geschlossen ist"
+garage_door.close_cover,seite,Senken Sie das seitliche Garagentor ab
+garage_door.open_cover,keller,Bitte öffnen Sie das Garagentor im Keller
+garage_door.open_cover,fahrrad_aufbewahrung,Aktivieren Sie die Fahrradgarage
+garage_door.open_cover,hauptsächlich,Öffnen Sie das Hauptgaragentor
+garage_door.open_cover,seite,Könnten Sie das seitliche Garagentor anheben?
+garage_door.open_cover,two_car,Öffnen Sie die Garage für zwei Autos
+garage_door.stop_cover,hauptsächlich,Stoppen Sie das Hauptgaragentor
+garage_door.stop_cover,seite,Halten Sie das seitliche Garagentor an
+garage_door.toggle,hauptsächlich,Öffnen Sie das Hauptgaragentor
+garage_door.toggle,seite,Ändern Sie den Zustand des seitlichen Garagentors
+light.toggle,dachboden,Ändern Sie den Lichtstatus auf dem Dachboden
+light.toggle,schlafzimmer_1,Schalten Sie das Schlafzimmerlicht ein
+light.toggle,dining_table_above,Bitte schalten Sie das Licht über dem Esstisch ein
+light.toggle,auffahrt,Schalten Sie das Einfahrtslicht um
+light.toggle,garage,Schalten Sie das Licht in der Garage ein
+light.toggle,gästezimmer,Könnten Sie das Licht im Gästezimmer einschalten?
+light.toggle,gästezimmer,Schalten Sie das Licht im Gästezimmer ein
+light.toggle,flur,Schalten Sie den Zustand des Lichts im Flur um
+light.toggle,flur,Schalten Sie das Flurlicht ein
+light.toggle,küche_1,Schalten Sie das Küchenlicht ein
+light.toggle,küche_2,Schalten Sie das Küchenlicht ein
+light.toggle,büro,Schalten Sie das Bürolicht ein
+light.toggle,draussen,Schalten Sie das Außenlicht ein
+light.toggle,terrasse,Schalten Sie das Terrassenlicht ein
+light.toggle,schwimmbad,Ändern Sie den Status der Poolbeleuchtung
+light.toggle,baracke,Schalten Sie das Schuppenlicht ein oder aus
+light.toggle,studie,Ändern Sie den Lichtzustand im Arbeitszimmer
+light.toggle,studie,Schalten Sie das Arbeitslicht ein
+light.turn_off,badezimmer_1,Bitte löschen Sie das Badezimmerlicht
+light.turn_off,badezimmer,Schalten Sie das Badezimmerlicht aus
+light.turn_off,badezimmer,Schalten Sie das Badezimmerlicht aus
+light.turn_off,schlafzimmer_1,Schalten Sie das Schlafzimmerlicht aus
+light.turn_off,schlafzimmer_2,Schalten Sie das Schlafzimmerlicht aus
+light.turn_off,esszimmer,Schalten Sie das Licht im Esszimmer aus
+light.turn_off,esszimmer,Schalten Sie das Licht im Esszimmer aus
+light.turn_off,garten_1,Deaktivieren Sie das Gartenlicht
+light.turn_off,gästezimmer,Deaktivieren Sie die Beleuchtung im Gästezimmer
+light.turn_off,gästezimmer,Schalten Sie das Licht im Gästezimmer aus
+light.turn_off,flur,Schalten Sie das Flurlicht aus
+light.turn_off,flur,Schalten Sie das Flurlicht aus
+light.turn_off,küche_2,Schalten Sie das Küchenlicht aus
+light.turn_off,küchentheke,Schalten Sie das Licht auf der Küchentheke aus
+light.turn_off,wohnzimmer_1,Schalten Sie das Wohnzimmerlicht aus
+light.turn_off,wohnzimmer,Schalten Sie das Licht im Wohnzimmer aus
+light.turn_off,master_schlafzimmer_1,Deaktivieren Sie das Licht im Hauptschlafzimmer
+light.turn_off,master_schlafzimmer_lampe,Schalten Sie das Licht im Schlafzimmer aus
+light.turn_off,büro,Deaktivieren Sie das Bürolicht
+light.turn_off,terrasse,Deaktivieren Sie das Terrassenlicht
+light.turn_off,terrasse,Deaktivieren Sie die Terrassenbeleuchtung
+light.turn_off,schwimmbad,Schalten Sie das Poollicht aus
+light.turn_off,studie,Schalten Sie das Arbeitslicht aus
+light.turn_on,badezimmer_1,Könnten Sie das Badezimmer beleuchten?
+light.turn_on,badezimmer,Aktivieren Sie das Badezimmerlicht
+light.turn_on,schlafzimmer_1,Aktivieren Sie das Schlafzimmerlicht
+light.turn_on,esszimmer_1,Schalten Sie das Licht im Esszimmer ein
+light.turn_on,esszimmer,Aktivieren Sie das Esszimmerlicht
+light.turn_on,auffahrt,Schalten Sie das Einfahrtslicht ein
+light.turn_on,garage,Aktivieren Sie das Garagenlicht
+light.turn_on,garage,Schalten Sie das Garagenlicht ein
+light.turn_on,garten_1,Schalten Sie das Gartenlicht ein
+light.turn_on,garten_1,Schalten Sie das Gartenlicht ein
+light.turn_on,garten_2,Aktivieren Sie das Gartenlicht
+light.turn_on,garten,Schalten Sie das Gartenlicht ein
+light.turn_on,gästezimmer,Schalten Sie das Licht im Gästezimmer ein
+light.turn_on,flur,Schalten Sie das Flurlicht ein
+light.turn_on,küche_1,Schalten Sie die Küchenbeleuchtung ein
+light.turn_on,küche_1,Schalten Sie das Küchenlicht ein
+light.turn_on,küchentheke,Schalten Sie die Küchenarbeitsplattenbeleuchtung ein
+light.turn_on,wohnzimmer,Schalten Sie das Wohnzimmerlicht ein
+light.turn_on,master_schlafzimmer_1,Bitte aktivieren Sie das Licht im Hauptschlafzimmer
+light.turn_on,büro_1,Schalten Sie das Bürolicht ein
+light.turn_on,terrasse,Aktivieren Sie das Terrassenlicht
+light.turn_on,terrasse,Schalten Sie die Terrassenbeleuchtung ein
+light.turn_on,terrasse,Schalten Sie das Terrassenlicht ein
+light.turn_on,schwimmbad,Aktivieren Sie die Poolbeleuchtung
+light.turn_on,schwimmbad,Schalten Sie das Poollicht ein
+light.turn_on,baracke,Aktivieren Sie das Schuppenlicht
+light.turn_on,baracke,Schalten Sie das Schuppenlicht ein
+light.turn_on,studie,Aktivieren Sie das Studienlicht
+light.turn_on,esszimmer_kronleuchter,Schalten Sie das Licht im Esszimmer ein
+light.turn_on,kronleuchter_front_hallway,"Hey, kannst du den Kronleuchter im vorderen Flur anmachen?"
+lock.lock,hintertür,Betätigen Sie das Schloss der Hintertür
+lock.lock,haustür,Verriegeln Sie die Vordertür
+lock.lock,kindergarten,Können Sie die Kinderzimmertür sichern?
+lock.lock,büro,Bitte schließen Sie das Büro ab
+lock.lock,weinkeller,Könnten Sie den Weinkeller abschließen?
+lock.lock,haustür,Bitte schließen Sie die Haustür ab.
+lock.lock,garagentor,Ich muss das Garagentor abschließen.
+lock.lock,haupteingang,"Stellen Sie sicher, dass das Haupttor verschlossen ist."
+lock.lock,office_door,Können wir die Bürotür abschließen?
+lock.lock,kellertür,Schließe die Kellertür ab.
+lock.lock,gartentor,Bitte sichern Sie das Gartentor.
+lock.lock,kellertür,Die Kellertür sollte jetzt verschlossen sein.
+lock.lock,shed_door,"Stellen Sie sicher, dass die Schuppentür sicher verschlossen ist."
+lock.lock,washing_room_door,Kann man die Tür zum Waschraum abschließen?
+lock.lock,guest_room_door,Bitte schließen Sie die Tür zum Gästezimmer ab.
+lock.lock,zauntür,"Stellen Sie sicher, dass das Zauntor verschlossen ist."
+lock.lock,attic_door,Dachbodentür muss verschlossen werden.
+lock.lock,storage_room_door,Bitte schließen Sie die Lagerraumtür ab.
+lock.lock,carport_gate,Das Carport-Tor muss verschlossen werden.
+lock.lock,front_porch_door,Verriegeln Sie die vordere Verandatür.
+lock.lock,weinkeller,"Stellen Sie sicher, dass der Weinkeller verschlossen ist."
+lock.lock,heimbüro,"Ich möchte, dass das Homeoffice verschlossen bleibt."
+lock.lock,kunstatelier,Das Kunstatelier sollte verschlossen sein.
+lock.lock,home_gym,Schließen Sie die Tür des Heimfitnessstudios ab.
+lock.lock,bibliothekstür,Bitte schließen Sie die Bibliothekstür ab.
+lock.unlock,hintertür,Könnten Sie das Schloss der Hintertür entriegeln?
+lock.unlock,fahrrad_aufbewahrung,Lösen Sie das Schloss am Fahrradkeller
+lock.unlock,haustür,Entriegeln Sie die Vordertür
+lock.unlock,büro,Bitte schließen Sie das Büro auf
+lock.unlock,werkzeugschuppen,Öffne den Geräteschuppen
+lock.unlock,hintertür,Kannst du die Hintertür aufschließen?
+lock.unlock,terrassentür,Bitte schließen Sie die Terrassentür auf.
+lock.unlock,kitchen_window,Öffne das Schloss am Küchenfenster.
+lock.unlock,schlafzimmer_fenster,Das Schlafzimmerfenster muss entriegelt werden.
+lock.unlock,badezimmer_fenster,Könnten Sie das Badezimmerfenster aufschließen?
+lock.unlock,rooftop_door,Öffnen Sie das Schloss der Dachtür.
+lock.unlock,pool_gate,"Ich möchte, dass das Pooltor aufgeschlossen wird."
+lock.unlock,balkon_tür,Öffne mir die Balkontür.
+lock.unlock,nursery_door,Die Kinderzimmertür muss entriegelt werden.
+lock.unlock,seiteneingang,Öffne unseren Seiteneingang.
+lock.unlock,garage_side_door,Die Seitentür der Garage sollte entriegelt sein.
+lock.unlock,notausgang,Kannst du die Feuerleiter aufschließen?
+lock.unlock,boathouse_door,Öffne die Bootshaustür.
+lock.unlock,backyard_gate,Können wir das Hinterhoftor aufschließen lassen?
+lock.unlock,back_terrace_door,Öffnen Sie das Schloss an der hinteren Terrassentür.
+lock.unlock,sunroom_door,Bitte schließen Sie die Wintergartentür auf.
+lock.unlock,spielzimmer_tür,Kannst du die Tür zum Spielzimmer aufschließen?
+lock.unlock,musikzimmer,Bitte schließen Sie das Musikzimmer auf.
+lock.unlock,kino_raum,Der Kinoraum muss freigeschaltet werden.
+lock.unlock,wintergarten,Kann der Wintergarten aufgeschlossen werden?
+media_player.media_next_track,wohnzimmer,Springen Sie zum nächsten Titel im Wohnzimmer
+media_player.media_next_track,keller_home_theater,Springe zum nächsten Titel im Keller.
+media_player.media_next_track,gym_music_player,Springen Sie im Fitnessstudio zum nächsten Lied.
+media_player.media_next_track,yoga_room_music,Nächster Titel für die Yoga-Raummusik.
+media_player.media_next_track,gartenmusik,Nächster Titel für die Gartenmusik.
+media_player.media_pause,hauptschlafzimmer,Halten Sie die Medien im Hauptschlafzimmer an
+media_player.media_pause,badezimmer_audio,Pausieren Sie den Badezimmerton.
+media_player.media_pause,loft_tv,Halten Sie den Fernseher auf dem Dachboden an.
+media_player.media_pause,laundry_room_radio,Schalten Sie das Radio in der Waschküche aus.
+media_player.media_pause,korridor_gegensprechanlage,Unterbrechen Sie die Türsprechanlage im Flur.
+media_player.media_play,kindergarten,Bitte spielen Sie die Medien im Kindergarten ab
+media_player.media_play,patio_speaker,Beginnen Sie mit der Musikwiedergabe über den Terrassenlautsprecher.
+media_player.media_play,sunroom_stereo,Spielen Sie die Stereoanlage im Wintergarten.
+media_player.media_play,kinderzimmer_geschichtenerzähler,Starten Sie den Geschichtenerzähler im Kinderzimmer.
+media_player.media_play,cellar_jukebox,Spielen Sie die Jukebox im Keller.
+media_player.media_previous_track,küche,Spielen Sie den vorherigen Titel in der Küche ab
+media_player.media_previous_track,nursery_lullaby,Kehren Sie zum vorherigen Schlaflied im Kinderzimmer zurück.
+media_player.media_previous_track,study_room_radio,Gehen Sie zurück zur vorherigen Station im Lernzimmer.
+media_player.media_previous_track,conservatory_cd_player,Vorheriger Titel auf dem CD-Player des Wintergartens.
+media_player.media_previous_track,einfahrtslautsprecher,Vorheriger Titel auf den Einfahrtslautsprechern.
+media_player.media_stop,kindergarten,Stoppen Sie die Medien im Kinderzimmer
+media_player.media_stop,guest_room_media,Stoppen Sie den Mediaplayer im Gästezimmer.
+media_player.media_stop,poolside_media,Stoppen Sie das Mediensystem am Pool.
+media_player.media_stop,balkon_lautsprecher,Stoppen Sie die Balkonlautsprecher.
+media_player.media_stop,porch_sound_system,Stoppen Sie das Soundsystem auf der Veranda.
+media_player.turn_off,kitchen_radio,Schalten Sie das Küchenradio aus.
+media_player.turn_off,lounge_entertainment,Schalten Sie das Lounge-Entertainment-Center aus.
+media_player.turn_off,einfahrt_echo,Schalten Sie das Echo im Eingangsbereich aus.
+media_player.turn_off,wine_cellar_speakers,Schalten Sie die Lautsprecher im Weinkeller aus.
+media_player.turn_off,mudroom_media_player,Schalten Sie den Mudroom-Mediaplayer aus.
+media_player.turn_on,küche,Könnten Sie die Medien in der Küche starten?
+media_player.turn_on,wohnzimmer,Aktivieren Sie die Medien im Wohnzimmer
+media_player.turn_on,hauptschlafzimmer,Schalten Sie den Mediaplayer im Hauptschlafzimmer ein
+media_player.turn_on,wohnzimmer_fernseher,Bitte schalten Sie den Fernseher im Wohnzimmer ein.
+media_player.turn_on,deck_music_system,Schalten Sie das Musiksystem des Decks ein.
+media_player.turn_on,backyard_speakers,Schalten Sie die Lautsprecher im Hinterhof ein.
+media_player.turn_on,foyer_sound_system,Schalten Sie das Foyer-Soundsystem ein.
+media_player.turn_on,flur_audio,Schalten Sie die Audioanlage im Flur ein.
+media_player.volume_down,kindergarten,Drehen Sie die Lautstärke im Kinderzimmer herunter
+media_player.volume_down,büro,Können Sie die Lautstärke im Büro verringern?
+media_player.volume_down,office_sound_system,Verringern Sie die Lautstärke im Büro.
+media_player.volume_down,game_room_speakers,Drehen Sie die Lautsprecher im Spielzimmer leiser.
+media_player.volume_down,werkstatt_soundsystem,Verringern Sie die Lautstärke des Soundsystems in der Werkstatt.
+media_player.volume_down,attic_audio_system,Verringern Sie die Lautstärke der Dachboden-Audioanlage.
+media_player.volume_down,shed_sound_system,Drehen Sie die Tonanlage im Schuppen leiser.
+media_player.volume_mute,wohnzimmer,Schalten Sie den Mediaplayer im Wohnzimmer stumm
+media_player.volume_mute,garage_stereo,Schalten Sie die Stereoanlage in der Garage stumm.
+media_player.volume_mute,bibliothek_soundbar,Schalten Sie die Soundbar in der Bibliothek stumm.
+media_player.volume_mute,art_studio_player,Schalten Sie den Mediaplayer im Kunstatelier stumm.
+media_player.volume_mute,boathouse_stereo,Schalten Sie die Stereoanlage im Bootshaus stumm.
+media_player.volume_mute,treehouse_speakers,Schalten Sie die Baumhauslautsprecher stumm.
+media_player.volume_up,küche,Bitte erhöhen Sie die Lautstärke in der Küche
+media_player.volume_up,wohnzimmer,Erhöhen Sie die Lautstärke im Wohnzimmer
+media_player.volume_up,hauptschlafzimmer,Können Sie die Lautstärke des Mediaplayers im Hauptschlafzimmer erhöhen?
+media_player.volume_up,schlafzimmer_lautsprecher,Kann man die Lautstärke im Schlafzimmer erhöhen?
+media_player.volume_up,dining_area_jukebox,Erhöhen Sie die Lautstärke der Jukebox im Essbereich.
+media_player.volume_up,rooftop_deck_audio,Erhöhen Sie die Audiolautstärke auf dem Dach.
+media_player.volume_up,gewächshaus_radio,Erhöhen Sie die Lautstärke des Gewächshausradios.
+media_player.volume_up,utility_room_radio,Drehen Sie das Radio im Hauswirtschaftsraum auf.
+switch.toggle,tp_link_kasa_porch,Schalten Sie die Lichter auf der Veranda ein.
+switch.toggle,honeywell_home_office,Schalten Sie die Bürobeleuchtung ein.
+switch.toggle,sonoff_dining_room,Schalten Sie die Esszimmerbeleuchtung ein.
+switch.toggle,osram_hallway,Schalten Sie die Flurbeleuchtung ein.
+switch.toggle,koogeek_basement,Schalten Sie die Kellerbeleuchtung ein.
+switch.toggle,arlo_floodlights,Schalten Sie die Sicherheitsscheinwerfer ein.
+switch.toggle,broadlink_kitchenette,Schalten Sie die Küchenbeleuchtung ein.
+switch.toggle,kasa_living_room,Schalten Sie die Wohnzimmerbeleuchtung ein.
+switch.toggle,home_office_dimmer,Schalten Sie den Home-Office-Dimmer um.
+switch.toggle,kitchen_under_cabinet,Schalten Sie die Küchenunterschrankbeleuchtung ein.
+switch.turn_off,belkin_wemo_garage,Schalten Sie den Garagenschalter aus.
+switch.turn_off,lutron_caseta_schlafzimmer,Schalten Sie das Schlafzimmerlicht aus.
+switch.turn_off,samsung_smartthings_security,Schalten Sie das Sicherheitssystem aus.
+switch.turn_off,fibaro_pool,Schalten Sie die Poolbeleuchtung aus.
+switch.turn_off,ecobee_garden,Schalten Sie die Gartenbeleuchtung aus.
+switch.turn_off,insteon_patio,Schalten Sie die Terrassenbeleuchtung aus.
+switch.turn_off,yeelight_sunroom,Schalten Sie die Lichter im Wintergarten aus.
+switch.turn_off,meross_walkway,Schalten Sie die Gehwegbeleuchtung aus.
+switch.turn_off,xiaomi_bedside,Schalten Sie die Nachttischlampe aus.
+switch.turn_off,ikea_guest_room,Schalten Sie die Beleuchtung im Gästezimmer aus.
+switch.turn_off,tuya_shed,Schalten Sie den Lichtschalter im Schuppen aus.
+switch.turn_off,hue_schlafzimmer_2,Schalten Sie das Licht im zweiten Schlafzimmer aus.
+switch.turn_off,strahlendes_büro,Schalten Sie die Bürobeleuchtung aus.
+switch.turn_off,z_wave_guest_bathroom,Schalten Sie den Ventilator im Gästebad aus.
+switch.turn_off,patio_heater_switch,Schalten Sie die Terrassenheizung aus.
+switch.turn_off,kitchen_fan,Bitte schalten Sie den Küchenventilator aus.
+switch.turn_off,poolside_lanterns,Deaktivieren Sie die Laternen am Pool.
+switch.turn_off,hinterhof_flutlicht,Können Sie das Flutlicht im Hinterhof ausschalten?
+switch.turn_off,wäschebereich,Bitte schalten Sie die Beleuchtung im Wäschebereich aus.
+switch.turn_off,keller_leuchten,Können wir die Wandleuchten im Keller ausschalten?
+switch.turn_off,sunroom_blinds,"Ich möchte bitte, dass die Jalousien im Wintergarten geschlossen werden."
+switch.turn_off,patio_string_lights,Schalten Sie die Lichterketten auf der Terrasse aus.
+switch.turn_off,kücheninsel,Deaktivieren Sie die Beleuchtung der Kücheninsel.
+switch.turn_off,garage_worklight,Können wir den Garagen-Arbeitsscheinwerfer ausschalten?
+switch.turn_off,heimkino,Bitte schalten Sie das Licht im Heimkino aus.
+switch.turn_off,dining_room_dimmer,Schalten Sie die Beleuchtung im Esszimmer aus.
+switch.turn_off,art_studio_spots,Bitte deaktivieren Sie die Scheinwerfer des Kunststudios.
+switch.turn_off,back_entry,Schalten Sie die hinteren Einstiegslichter aus.
+switch.turn_off,veranda_fairy_lights,Schalten Sie bitte die Lichterketten auf der Veranda aus.
+switch.turn_off,begehbarer_kleiderschrank,Schalten Sie die Beleuchtung im begehbaren Kleiderschrank aus.
+switch.turn_off,badezimmerspiegel,Kann man das Licht im Badezimmerspiegel ausschalten?
+switch.turn_off,lagerraum,Bitte schalten Sie die Beleuchtung im Lagerraum aus.
+switch.turn_off,naturschutzgebiet,Deaktivieren Sie die Beleuchtung des Denkmalschutzgebiets.
+switch.turn_off,hobby_room,Könnten wir die Beleuchtung im Hobbyraum ausschalten?
+switch.turn_off,hintere_terrasse,Können Sie das Licht auf der hinteren Terrasse dimmen?
+switch.turn_on,philips_hue_living_room,Schalten Sie die Wohnzimmerbeleuchtung ein.
+switch.turn_on,legrand_radiant_kitchen,Schalten Sie die Küchenbeleuchtung ein.
+switch.turn_on,ge_z_wave_bathroom,Schalten Sie den Badezimmerventilator ein.
+switch.turn_on,eve_energy_balcony,Schalten Sie die Balkonbeleuchtung ein.
+switch.turn_on,nest_thermostat_terrace,Schalten Sie den Terrassenthermostat ein.
+switch.turn_on,wink_relay_driveway,Schalten Sie die Einfahrtsbeleuchtung ein.
+switch.turn_on,sengled_deck,Schalten Sie die Deckbeleuchtung ein.
+switch.turn_on,gosund_attic,Schalten Sie den Lichtschalter auf dem Dachboden ein.
+switch.turn_on,nanoleaf_stairway,Schalten Sie die Treppenbeleuchtung ein.
+switch.turn_on,wyze_study,Schalten Sie die Beleuchtung im Arbeitszimmer ein.
+switch.turn_on,netatmo_front_yard,Schalten Sie die Vorgartenbeleuchtung ein.
+switch.turn_on,moeshouse_gym,Schalten Sie die Beleuchtung im Fitnessstudio ein.
+switch.turn_on,wemo_laundry_room,Schalten Sie die Beleuchtung im Waschraum ein.
+switch.turn_on,caseta_hallway_2,Schalten Sie die Beleuchtung im zweiten Flur ein.
+switch.turn_on,security_camera_light,Schalten Sie das Licht der Überwachungskamera ein.
+switch.turn_on,flur_dimmer,Könnten Sie die Flurbeleuchtung dimmen?
+switch.turn_on,garden_spotlights,Aktivieren Sie die Gartenstrahler.
+switch.turn_on,front_porch_sensor,Schalten Sie die Sensorleuchte der Veranda ein.
+switch.turn_on,stair_light_strip,Könnten Sie den Treppenlichtstreifen beleuchten?
+switch.turn_on,office_desk_lamp,Beleuchte die Schreibtischlampe in meinem Büro.
+switch.turn_on,bibliotheksdecke,Schalten Sie die Deckenleuchten in der Bibliothek ein.
+switch.turn_on,gäste_wc,Beleuchten Sie bitte das Gästebad.
+switch.turn_on,eingangsbereich_kronleuchter,Beleuchten Sie den Kronleuchter im Eingangsbereich.
+switch.turn_on,bedroom_track_lighting,Erhellen Sie die Schienenbeleuchtung im Schlafzimmer.
+switch.turn_on,balkon_mood_lighting,Aktivieren Sie die stimmungsvolle Beleuchtung auf dem Balkon.
+switch.turn_on,playroom_nightlight,Kannst du das Nachtlicht im Spielzimmer einschalten?
+switch.turn_on,foyer_wall_sconce,Beleuchten Sie die Wandleuchte im Foyer.
+switch.turn_on,korridor_track,Erhellen Sie die Schienenlichter im Flur.
+switch.turn_on,master_suite,Stellen Sie die Master-Suite auf Nachtmodus ein.
+switch.turn_on,dachterrasse,Schalten Sie die Beleuchtung der Dachterrasse ein.
+switch.turn_on,weinkeller,Beleuchten Sie den Weinkeller.
+switch.turn_on,gym_decke,Beleuchten Sie die Deckenleuchten im Fitnessstudio.
+switch.turn_on,vorgarten,Aktivieren Sie die Scheinwerfer vor dem Rasen.
+vacuum.start,küche,Bitte schalten Sie den Küchenstaubsauger ein.
+vacuum.start,wohnzimmer,Könnten Sie bitte den Staubsauger im Wohnzimmer aktivieren?
+vacuum.start,esszimmer,Der Staubsauger im Esszimmer muss gestartet werden.
+vacuum.start,schlafzimmer1,Lass uns den Staubsauger in Schlafzimmer eins starten.
+vacuum.start,schlafzimmer2,Könnten Sie bitte den Staubsauger für Schlafzimmer zwei einschalten?
+vacuum.start,studie,Das Studienvakuum soll aktiviert werden.
+vacuum.start,bibliothek,"Darf ich Sie bitten, das Bibliotheksvakuum zu starten?"
+vacuum.start,büro,Bitte leiten Sie das Bürovakuum ein.
+vacuum.start,eingangshalle,Könnten Sie bitte den Staubsauger im Eingangsbereich einschalten?
+vacuum.start,wintergarten,Der Staubsauger im Wintergarten muss gestartet werden.
+vacuum.start,terrasse,Lassen Sie uns den Terrassenstaubsauger aktivieren.
+vacuum.start,garage,Können wir bitte die Garage aufräumen?
+vacuum.start,werkstatt,"Darf ich Sie bitten, den Werkstattstaubsauger einzuschalten?"
+vacuum.start,allzweckraum,Bitte reinigen Sie den Hauswirtschaftsraum.
+vacuum.start,mud_room,Könnten Sie bitte den Schlammraum aufräumen?
+vacuum.start,gästetoilette,Die Gästetoilette muss gereinigt werden.
+vacuum.start,flur,Lass uns den Staubsauger im Flur anmachen.
+vacuum.start,treppe,Können wir bitte den Treppenstaubsauger starten?
+vacuum.start,balkon,"Darf ich Sie bitten, den Balkon zu reinigen?"
+vacuum.start,dachterrasse,Bitte Dachterrasse ist schmutzig.
+vacuum.start,dachboden,Beginnen wir mit dem Staubsaugen auf dem Dachboden.
+vacuum.start,keller,Können wir bitte den Kellerstaubsauger anmachen?
+vacuum.start,poolbereich,Der Staubsauger im Poolbereich muss gestartet werden.
+vacuum.start,garten,Könnten Sie bitte den Gartenstaubsauger aktivieren?
+vacuum.start,terrasse,"Darf ich Sie bitten, den Terrassensauger zu starten?"
+vacuum.start,veranda,Bitte starten Sie den Staubsauger auf der Veranda.
+vacuum.start,baracke,Können wir bitte den Staubsauger im Schuppen einschalten?
+vacuum.start,werkstatt2,Der zweite Workshop ist momentan ziemlich dreckig.
+vacuum.start,studio,"Darf ich Sie bitten, den Studiostaubsauger zu starten?"
+vacuum.start,gewächshaus,Bitte leiten Sie das Vakuum im Gewächshaus ein.
+vacuum.start,potting_shed,Können wir bitte den Staubsauger im Blumenschuppen einschalten?
+vacuum.start,sommerhaus,Der Gartenhausstaubsauger muss gestartet werden.
+vacuum.start,garage2,Beginnen wir mit dem zweiten Garagenstaubsauger.
+vacuum.start,werkzeugschuppen,"Darf ich Sie bitten, den Staubsauger im Geräteschuppen zu aktivieren?"
+vacuum.start,scheune,Könnten wir bitte den Stallstaubsauger einschalten?
+vacuum.start,weinkeller,Der Weinkeller sollte gereinigt werden.
+vacuum.start,lagerraum,Beginnen wir mit der Aufräumung des Lagerraums.
+vacuum.start,gewächshaus2,"Darf ich Sie bitten, das zweite Gewächshausvakuum zu aktivieren?"
+vacuum.start,bootshaus,Bitte schalten Sie den Staubsauger im Bootshaus ein.
+vacuum.start,yachthafen,Könnten wir bitte den Staubsauger im Jachthafen starten?
+vacuum.start,bb8,Schalten Sie BB8 ein.
+vacuum.start,c3po,Können Sie C3PO starten?
+vacuum.start,hal,Bitte schalten Sie Hal ein.
+vacuum.start,r2d2,"Können Sie R2D2 anweisen, aufzuräumen?"
+light.turn_off,bar_light,Bitte schalten Sie das Barlicht aus
+light.turn_off,bar_light,Schalten Sie das Licht der Bar aus
+light.turn_off,bar_light,Schalten Sie das Licht der Bar aus
+light.turn_off,dining_room_light,Esszimmerlicht ausschalten
+light.turn_off,dining_room_light,Esszimmerlicht ausschalten
+light.turn_off,dining_room_light,Schalten Sie das Licht im Esszimmer ein
+light.turn_off,vorderlicht,Können wir das Frontlicht ausschalten?
+light.turn_off,vorderlicht,Können wir das Frontlicht ausschalten?
+light.turn_off,vorderlicht,Kann man das Licht vorne ausschalten?
+light.turn_off,gym_light,Kannst du das Licht im Fitnessstudio ausschalten?
+light.turn_off,gym_light,Kannst du das Licht im Fitnessstudio ausschalten?
+light.turn_off,gym_light,Könnten wir das Licht im Fitnessstudio ausschalten?
+light.turn_off,island_light,Könnten Sie das Insellicht deaktivieren?
+light.turn_off,island_light,Deaktivieren Sie das Insellicht
+light.turn_off,island_light,Deaktivieren Sie die Beleuchtung des Inselbereichs.
+light.turn_off,kitchen_light,Deaktivieren Sie das Küchenlicht
+light.turn_off,kitchen_light,Schalten Sie das Licht in der Küche aus.
+light.turn_off,kitchen_light,Schalten Sie das Licht in der Küche aus.
+light.turn_off,wohnzimmer_licht,Wohnzimmerlicht aus
+light.turn_off,wohnzimmer_licht,Deaktivieren Sie die Beleuchtung im Wohnzimmer.
+light.turn_off,wohnzimmer_licht,Bitte deaktivieren Sie die Wohnzimmerbeleuchtung.
+light.turn_off,main_basement_light,Bitte löschen Sie das Hauptlicht im Keller
+light.turn_off,main_basement_light,Bitte schalten Sie das Licht im Hauptkeller aus.
+light.turn_off,main_basement_light,Bitte schalten Sie das Hauptlicht im Keller aus
+light.turn_off,man_cave_light,Bitte schalten Sie die Lichter im Männerhöhlenbereich aus.
+light.turn_off,man_cave_light,Bitte schalten Sie die Lichter der Männerhöhle aus.
+light.turn_off,man_cave_light,Bitte schalten Sie das Männerhöhlenlicht aus.
+light.turn_off,master_schlafzimmer_licht,Schalten Sie das Licht im Hauptschlafzimmer aus.
+light.turn_off,master_schlafzimmer_licht,Schalten Sie die Beleuchtung im Hauptschlafzimmer aus.
+light.turn_off,master_schlafzimmer_licht,Schalten Sie die Lichter im Hauptschlafzimmer aus.
+light.turn_off,pool_table_light,Schalten Sie die Billardtischbeleuchtung aus
+light.turn_off,pool_table_light,Schalten Sie die Billardtischbeleuchtung aus
+light.turn_off,pool_table_light,Schalten Sie bitte die Billardtischbeleuchtung aus
+light.turn_off,pool_table_light,Schalten Sie jetzt die Billardtischbeleuchtung aus
+light.turn_off,pool_table_light,Schalten Sie die Beleuchtung des Billardtisches aus
+light.turn_off,pool_table_light,Schalten Sie das Licht am Billardtisch aus
+light.turn_off,pool_table_light,Schalten Sie die Billardtischbeleuchtung aus
+light.turn_off,pool_table_light,Schalten Sie das Licht am Billardtisch aus
+light.turn_off,pool_table_light,Schalten Sie bitte das Licht am Billardtisch aus
+light.turn_off,pool_table_light,Schalten Sie jetzt die Billardtischbeleuchtung aus
+light.turn_off,pool_table_light,Sie können jetzt die Billardtischbeleuchtung ausschalten
+light.turn_off,pool_table_light,Schalten Sie die Beleuchtung des Billardtisches aus.
+light.turn_off,pool_table_light,Schalten Sie bitte das Licht am Billardtisch aus.
+light.turn_off,pool_table_light,Schalten Sie das Licht am Billardtisch aus
+light.turn_off,pool_table_light,Schalten Sie das Licht am Billardtisch aus.
+light.turn_off,pool_table_light,Schalten Sie das Licht am Billardtisch aus
+light.turn_off,pool_table_light,Schalten Sie das Licht am Billardtisch aus
+light.turn_off,pool_table_light,Schalten Sie die Billardtischbeleuchtung aus
+light.turn_off,porch_light,Bitte schalten Sie das Licht auf der Veranda aus
+light.turn_off,porch_light,Schalten Sie das Licht auf der Veranda aus
+light.turn_off,porch_light,Schalten Sie das Licht auf der Veranda aus
+light.turn_off,porch_light,Verandalicht deaktivieren
+light.turn_off,porch_light,Schalten Sie das Licht auf der Veranda aus
+light.turn_off,porch_light,Schalten Sie das Licht auf der Veranda ein
+light.turn_off,porch_light,Können wir das Licht auf der Veranda ausschalten?
+light.turn_off,porch_light,Können wir das Licht auf der Veranda ausschalten?
+light.turn_off,porch_light,Kannst du das Licht auf der Veranda ausschalten?
+light.turn_off,porch_light,Kannst du das Licht auf der Veranda ausschalten?
+light.turn_off,porch_light,Kannst du das Licht auf der Veranda ausschalten?
+light.turn_off,porch_light,Könnten wir die Lichter auf der Veranda ausschalten?
+light.turn_off,porch_light,Könnten Sie das Licht auf der Veranda ausschalten?
+light.turn_off,porch_light,Deaktivieren Sie das Verandalicht
+light.turn_off,porch_light,Deaktivieren Sie die Beleuchtung des Verandabereichs.
+light.turn_off,porch_light,Deaktivieren Sie das Verandalicht
+light.turn_off,porch_light,Schalten Sie das Licht auf der Veranda aus
+light.turn_off,porch_light,Deaktivieren Sie das Verandalicht
+light.turn_off,porch_light,Deaktivieren Sie das Verandalicht
+light.turn_off,porch_light,Deaktivieren Sie das Verandalicht
+light.turn_off,porch_light,Schalten Sie das Licht auf der Veranda aus.
+light.turn_off,porch_light,Schalten Sie die Lichter auf der Veranda aus.
+light.turn_off,porch_light,Verandalicht aus
+light.turn_off,porch_light,Deaktivieren Sie die Verandabeleuchtung.
+light.turn_off,porch_light,Bitte deaktivieren Sie das Licht auf der Veranda.
+light.turn_off,porch_light,Bitte löschen Sie das Licht auf der Veranda
+light.turn_off,porch_light,Bitte schalten Sie die Lichter auf der Veranda aus.
+light.turn_off,porch_light,Bitte schalten Sie das Licht auf der Veranda aus
+light.turn_off,porch_light,Bitte schalten Sie die Lichter im Verandabereich aus.
+light.turn_off,porch_light,Bitte schalten Sie die Lichter auf der Veranda aus.
+light.turn_off,porch_light,Bitte schalten Sie das Licht auf der Veranda aus.
+light.turn_off,porch_light,Schalten Sie das Licht auf der Veranda aus.
+light.turn_off,porch_light,Schalten Sie die Verandabeleuchtung aus.
+light.turn_off,porch_light,Schalten Sie die Lichter auf der Veranda aus.
+light.turn_off,porch_light,Mach das Licht auf der Veranda aus
+light.turn_off,porch_light,Schalten Sie das Licht auf der Veranda aus
+light.turn_off,porch_light,Schalten Sie bitte das Licht auf der Veranda aus
+light.turn_off,porch_light,Schalten Sie jetzt das Licht auf der Veranda aus
+light.turn_off,porch_light,Schalten Sie die Lichter auf der Veranda aus
+light.turn_off,porch_light,Schalten Sie das Licht auf der Veranda aus
+light.turn_off,porch_light,Schalten Sie das Licht auf der Veranda aus
+light.turn_off,porch_light,Schalten Sie das Licht auf der Veranda aus
+light.turn_off,porch_light,Schalten Sie bitte das Licht auf der Veranda aus
+light.turn_off,porch_light,Schalten Sie jetzt das Licht auf der Veranda aus
+light.turn_off,porch_light,Sie können jetzt das Licht auf der Veranda ausschalten
+light.turn_off,porch_light,Schalten Sie die Lichter auf der Veranda aus.
+light.turn_off,porch_light,Schalten Sie bitte das Licht auf der Veranda aus.
+light.turn_off,porch_light,Schalten Sie das Licht auf der Veranda aus
+light.turn_off,porch_light,Schalten Sie das Licht auf der Veranda aus.
+light.turn_off,porch_light,Schalten Sie das Licht auf der Veranda aus
+light.turn_off,porch_light,Schalten Sie das Licht auf der Veranda aus
+light.turn_off,porch_light,Schalten Sie das Licht auf der Veranda aus
+light.turn_off,duschlicht,Bitte schalten Sie das Duschlicht aus
+light.turn_off,duschlicht,Schalten Sie das Duschlicht aus
+light.turn_off,duschlicht,Schalten Sie das Duschlicht aus
+light.turn_off,duschlicht,Duschlicht deaktivieren
+light.turn_off,duschlicht,Duschlicht ausschalten
+light.turn_off,stair_light,Treppenlicht aus
+light.turn_off,stair_light,Deaktivieren Sie die Treppenbeleuchtung.
+light.turn_off,stair_light,Treppenlicht ausschalten
+light.turn_off,stair_light,Schalten Sie das Treppenhauslicht ein
+light.turn_off,stair_light,Können wir das Licht im Treppenhaus ausschalten?
+light.turn_off,dachlicht,Bitte schalten Sie das Dachlicht aus
+light.turn_off,dachlicht,Dachlicht ausschalten
+light.turn_off,dachlicht,Schalten Sie das Dachlicht aus
+light.turn_off,walkway_light,Schalten Sie die Gehwegbeleuchtung aus.
+light.turn_off,walkway_light,Schalten Sie das Gehweglicht aus
+light.turn_off,walkway_light,Schalten Sie die Gehwegbeleuchtung aus
+light.turn_off,bobs_lamp,Bitte schalten Sie Bobs Licht aus
+light.turn_off,janets_lamp,Mach Janets Licht aus
+light.turn_off,ruths_lamp,Bitte schalten Sie Ruths Lampe aus
+light.turn_off,colins_lamp,Schalte Colins Lampe aus
+light.turn_off,neenas_lamp,Schalten Sie Neenas Lampe aus
+light.turn_off,roberts_lamp,Deaktiviere Roberts Lampe
+light.turn_off,paulus_lamp,Schalte Paulus' Lampe aus
+light.turn_off,peters_lamp,Peters Lampe ein-/ausschalten
+light.turn_off,angelas_lamp,Können wir Angelas Lampe ausschalten?
+light.turn_off,eintragslampe,Bitte Einstiegsleuchte ausschalten
+light.turn_off,eintragslampe,Einstiegsleuchte ausschalten
+light.turn_off,eintragslampe,Bitte löschen Sie die Eingangslampe
+light.turn_off,eintragslampe,Bitte schalten Sie die Eingangsbeleuchtung aus
+light.turn_off,eintragslampe,Bitte schalten Sie die Lampen im Eingangsbereich aus.
+light.turn_off,eintragslampe,Eingangsbeleuchtung deaktivieren
+light.turn_on,bar_light,Erleuchte das Licht in meiner Bar.
+light.turn_on,bar_light,Beleuchten Sie die Leiste.
+light.turn_on,bar_light,Balkenlicht an
+light.turn_on,bar_light,Beleuchten Sie die Bar.
+light.turn_on,dining_room_light,Schalten Sie das Licht im Esszimmer ein
+light.turn_on,dining_room_light,Schalten Sie bitte das Licht im Esszimmer ein
+light.turn_on,dining_room_light,Schalten Sie die Lichter im Esszimmer ein.
+light.turn_on,vorderlicht,Schalten Sie bitte das Frontlicht ein
+light.turn_on,vorderlicht,Bitte aktivieren Sie das Frontlicht
+light.turn_on,vorderlicht,Aktivieren Sie jetzt das Frontlicht
+light.turn_on,gym_light,Schalten Sie bitte das Licht im Fitnessstudio ein
+light.turn_on,gym_light,Schalten Sie das Licht im Fitnessstudio ein
+light.turn_on,gym_light,Turnhallenlicht an
+light.turn_on,island_light,Schalten Sie das Insellicht ein
+light.turn_on,island_light,Insellicht an
+light.turn_on,island_light,Schalten Sie das Insellicht ein
+light.turn_on,kitchen_light,Küchenlicht an
+light.turn_on,kitchen_light,Schalten Sie das Küchenlicht ein
+light.turn_on,kitchen_light,"Hey, kannst du das Küchenlicht anmachen?"
+light.turn_on,wohnzimmer_licht,Schalten Sie die Wohnzimmerbeleuchtung ein.
+light.turn_on,wohnzimmer_licht,Schalten Sie bitte das Licht im Wohnzimmer ein.
+light.turn_on,wohnzimmer_licht,Bitte schalten Sie die Wohnzimmerbeleuchtung ein.
+light.turn_on,wohnzimmer_licht,Schalten Sie die Wohnzimmerbeleuchtung ein.
+light.turn_on,main_basement_light,Schalten Sie das Hauptlicht im Keller ein
+light.turn_on,main_basement_light,Schalten Sie das Hauptlicht im Keller ein
+light.turn_on,man_cave_light,Aktivieren Sie das Menschenhöhlenlicht.
+light.turn_on,man_cave_light,Aktiviere die Lichter in der Männerhöhle
+light.turn_on,man_cave_light,Könntest du die Männerhöhle erhellen?
+light.turn_on,man_cave_light,Aktivieren Sie das Männerhöhlenlicht
+light.turn_on,master_schlafzimmer_licht,Könnten Sie das Hauptschlafzimmer beleuchten?
+light.turn_on,pool_table_bar_light,Billardtisch-Bar-Licht an
+light.turn_on,pool_table_bar_light,Schalten Sie das Licht der Billardtischbar ein
+light.turn_on,pool_table_bar_light,Können Sie das Licht an der Billardtischbar einschalten?
+light.turn_on,pool_table_light,Schalten Sie bitte die Billardtischbeleuchtung ein
+light.turn_on,porch_light,Schalten Sie das Licht auf der Veranda ein
+light.turn_on,porch_light,Kannst du das Licht auf der Veranda anmachen?
+light.turn_on,porch_light,Könnten Sie bitte das Licht auf der Veranda anmachen?
+light.turn_on,duschlicht,Schalten Sie das Duschlicht ein
+light.turn_on,duschlicht,Schalten Sie das Duschlicht ein
+light.turn_on,duschlicht,Aktivieren Sie das Duschlicht
+light.turn_on,duschlicht,Könnten Sie bitte die Dusche beleuchten?
+light.turn_on,duschlicht,Schalten Sie das Licht an der Dusche ein
+light.turn_on,duschlicht,Beleuchten Sie bitte die Dusche
+light.turn_on,duschlicht,Schalten Sie bitte das Duschlicht ein
+light.turn_on,duschlicht,Schalten Sie das Duschlicht ein
+light.turn_on,duschlicht,Duschlicht an
+light.turn_on,stair_light,Bitte aktivieren Sie das Treppenlicht
+light.turn_on,stair_light,Bitte aktivieren Sie das Treppenlicht
+light.turn_on,stair_light,Könnten Sie bitte das Treppenhaus beleuchten?
+light.turn_on,stair_light,Bitte aktivieren Sie das Treppenhauslicht
+light.turn_on,stair_light,Bitte schalten Sie die Beleuchtung im Treppenhausbereich ein
+light.turn_on,dachlicht,Bitte schalten Sie das Dachlicht ein.
+light.turn_on,dachlicht,Schalten Sie bitte das Dachlicht ein
+light.turn_on,dachlicht,Kannst du das Licht im Dach anmachen?
+light.turn_on,walkway_light,Bitte aktivieren Sie die Gehwegbeleuchtung
+light.turn_on,walkway_light,Bitte schalten Sie die Gehwegbereichsbeleuchtung ein
+light.turn_on,walkway_light,Schalten Sie die Gehwegbeleuchtung ein.
+light.turn_on,freds_lamp,Mach Freds Licht an
+light.turn_on,colins_lamp,Mach Colins Licht an
+light.turn_on,roberts_lamp,Aktiviere Roberts Licht
+light.turn_on,pierres_lamp,Schalten Sie bitte Pierres Licht an
+light.turn_on,jennifers_lamp,Mach Jenns Licht an
+light.turn_on,julias_lamp,Julias Licht an
+light.turn_on,neenas_lamp,Schalten Sie Neenas Licht ein
+light.turn_on,patricks_lamp,Kannst du Patricks Licht anmachen?
+light.turn_on,sams_lamp,Bringen Sie Sam's zum Leuchten.
+light.turn_on,johns_lamp,Erhelle Johns Licht.
+light.turn_on,jordans_lamp,Schalten Sie Jordans Beleuchtung ein.
+light.turn_on,lebrons_lamp,Zünde Lebrons Lichter an.
+light.turn_on,angies_lamp,Kannst du Angies Lampe anmachen?
+light.turn_on,louis_lamp,Könntest du bitte Louis' Lampe anmachen?
+light.turn_on,katniss_lamp,Könnten Sie Katniss' Lampe aktivieren?
+light.turn_on,waynes_lamp,Aktivieren Sie Waynes Lampe
+light.turn_on,samuels_lamp,Bitte aktivieren Sie Samuels Lampe
+light.turn_on,eintragslampe,Einstiegsleuchte einschalten
+light.turn_on,eintragslampe,Bitte Eingangsbeleuchtung aktivieren
+light.turn_on,eintragslampe,Bitte schalten Sie die Eingangsbereichslampe ein
+light.turn_on,eintragslampe,Eingangsbeleuchtung einschalten
+light.turn_on,eintragslampe,Eingangsbeleuchtung einschalten.

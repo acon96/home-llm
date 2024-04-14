@@ -1,4 +1,4 @@
-device_type,state,english_phrase,assistant_response
+device_type,state,phrase,assistant_response
 light,on,Is the <device_name> on,The <device_name> is currently on
 light,on,Can you tell me the status of the <device_name>,The <device_name> is on
 light,off,What is the <device_name> doing,The <device_name> is off
