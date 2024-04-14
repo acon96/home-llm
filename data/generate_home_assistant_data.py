@@ -49,6 +49,7 @@ pile_of_specific_actions = None
 pile_of_responses = None
 pile_of_status_requests = None
 pile_of_system_prompts = None
+pile_of_hallucinated_service_names = None
 
 def closest_color(requested_color):
     min_colors = {}
@@ -311,8 +312,6 @@ SUPPORTED_DEVICES = {
         possible_states=[ (f"{i}", (1/32)) for i in range(32) ],
         services={
             "add_item": ["item"],
-            "pause": [],
-            "cancel": [],
         },
         random_parameter_generator={
             "todo": lambda: random.choice(pile_of_todo_items),
@@ -706,7 +705,11 @@ def generate_dpo_wrong_argument(template: dict, persona: str, max_devices: int =
         potential_devices = [ x for x in example["states"] if x.split(".")[0] == target_device_type]
         random_device = random.choice(potential_devices).split(" ")[0]
 
-        # print(f"{target_device_type} = {len(potential_devices)}")
+        for device in stacks_of_device_names[call["target_device"].split(".")[0]]:
+            similarity_ratio = SequenceMatcher(None, call["target_device"], device["device_name"]).ratio()
+
+            if similarity_ratio > 0.7 and device["device_name"] != call["target_device"]:
+                potential_devices.append(device["device_name"])
         
         if len(potential_devices) > 1:
             while random_device == call["target_device"]:
@@ -715,13 +718,10 @@ def generate_dpo_wrong_argument(template: dict, persona: str, max_devices: int =
             random_device = None
 
         # random service should probably be "related"
-        random_service = random.choice([ x for x in example["available_services"] if call["service"] not in x ])[:-2]
-
+        available_services = [ x[:-2] for x in example["available_services"] if call["service"] not in x ]
+        hallucinated_services = [ x["hallucinated_service"] for x in pile_of_hallucinated_service_names if x["real_service"] == call["service"].split(".")[1]]
+        random_service = random.choice(available_services + hallucinated_services)
         random_argument = None # based on the service, add arguments that might be there like rgb, temperature, etc
-
-        # need examples of hallucinated names, not incorrect names
-        # need examples of hallucinated service names, not incorrect service
-        # should make a csv that maps "real name" to "hallucinated name"
 
         update_choices = []
         if random_device:
@@ -1003,7 +1003,7 @@ def merge_languages(filename_prefix: str, languages: list):
 def load_dataset_piles(language):
     global pile_of_durations, pile_of_media_names, pile_of_todo_items, stacks_of_device_names, \
         pile_of_templated_actions, pile_of_specific_actions, pile_of_responses, pile_of_status_requests, \
-        pile_of_system_prompts
+        pile_of_system_prompts, pile_of_hallucinated_service_names
     
     with open(f"piles/{language}/pile_of_durations.csv", encoding="utf8") as f:
         reader = csv.DictReader(f)
@@ -1055,6 +1055,11 @@ def load_dataset_piles(language):
     with open(f"piles/{language}/pile_of_system_prompts.csv", encoding="utf8") as f:
         reader = csv.DictReader(f)
         pile_of_system_prompts = { line["persona"]: line["prompt"] for line in reader }
+
+    # service names are not translated
+    with open(f"piles/english/pile_of_hallucinated_service_names.csv", encoding="utf8") as f:
+        reader = csv.DictReader(f)
+        pile_of_hallucinated_service_names = list(reader)
 
 # TODO: add examples for ambiguous requests. asking a clarifying question
 # TODO: support rejection when asking to do a service that isn't exposed

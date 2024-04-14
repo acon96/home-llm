@@ -80,6 +80,19 @@ python3 train.py \
 """
 
 """
+accelerate launch train.py \
+    --run_name stablehome-3b-rev9 \
+    --base_model stabilityai/stablelm-zephyr-3b \
+    --bf16 \
+    --train_dataset data/home_assistant_train.jsonl \
+    --test_dataset data/home_assistant_test.jsonl \
+    --learning_rate 1e-5 --batch_size 64 --epochs 1 \
+    --micro_batch_size 8 --gradient_checkpointing \
+    --ctx_size 2048 \
+    --save_steps 50 --save_total_limit 20 --eval_steps 100 --logging_steps 2
+"""
+
+"""
 python3 train.py \
     --run_name home-7b-rev2 \
     --base_model TheBloke/Llama-2-7B-GPTQ \
