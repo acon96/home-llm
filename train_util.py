@@ -1,15 +1,16 @@
 import copy
+import time
 import torch
 import os
 import random
+import shutil
 from torch.utils.data import SequentialSampler, Subset, RandomSampler
-from transformers import TrainerCallback, AutoTokenizer, Trainer
+from transformers import TrainerCallback, AutoTokenizer, Trainer, AutoModelForCausalLM, \
+    TrainerControl, TrainerState
 from dataclasses import dataclass, field
 from typing import Dict, Optional, Sequence
+from calflops import calculate_flops
 
-import boto3
-import os
-import shutil
 
 @dataclass
 class TrainingRunArguments:
@@ -25,6 +26,7 @@ class TrainingRunArguments:
     epochs: int = field(default=1, metadata={"help": "The number of times to train the model on each example"})
     learning_rate: float = field(default=1e-5, metadata={"help": "The starting learning rate (speed at which the model trains)"})
     learning_rate_schedule: str = field(default="cosine", metadata={"help": "How fast the learning rate is reduced during training"})
+    learning_rate_warmup: float = field(default=0.0, metadata={"help": "The starting learning rate (speed at which the model trains)"})
     weight_decay: float = field(default=0.1, metadata={"help": ""})
     gradient_clip: float = field(default=1.0, metadata={"help": ""})
     resume_from_checkpoint: str = field(default="", metadata={"help": "The name of the checkpoint to resume training from"})
@@ -58,6 +60,7 @@ class TrainingRunArguments:
     gradient_checkpointing: bool = field(default=False, metadata={"help": "Enables gradient checkpointing which saves quite a lot of VRAM"})
 
     sync_to_bucket: str = field(default=None, metadata={"help": "If set, checkpoints will be synced to the s3 bucket specified by this argument"})
+    flops_baseline: str = field(default=None, metadata={"help": "The baseline flops for the GPUs used for the training run. Outputs MFU"})
 
 class DataCollatorForSupervisedFineTuning(object):
     """Collate examples for supervised fine-tuning."""
@@ -194,15 +197,36 @@ class CustomSFTTrainer(Trainer):
         Should speed up training by skipping the final fine tuning part that doesn't affect accuracy much
         """
         return super().create_scheduler(int(num_training_steps * self.learning_rate_overshoot), optimizer=optimizer)
+    
+    def floating_point_ops(self, inputs):
+        config = self.model.config
+        examples_length = len(inputs["input_ids"][0])
+        batch_size = len(inputs["input_ids"])
+
+        # mfu is approximated using thoughtput and param count
+        # the number of paramters is approximately the number of multiply-accumulates (MAC) in the network
+        # each MAC has 2 FLOPs - we multiply by 2 ie 2 * n_param
+        # there are 3 passes of a NN (fwd, bwd, delta) - we multiply by 3 ie 2 * 3 * n_param
+        # this gets us FLOPs / token
+        flops_per_token = 2 * sum(p.numel() for p in self.model.parameters())
+        flops_per_seq = flops_per_token * examples_length
+
+        # there are 2 FLOPS per mac; there is A=Q*K^T and out=A*V ops (ie mult by 2)
+        attn_flops_per_seq = config.num_hidden_layers * 2 * 2 * (config.hidden_size * (examples_length**2))
+
+        # there are 2 ops in bwd pass and 1 in fwd pass so we mult by 3
+        result = (3 * flops_per_seq + 3 * attn_flops_per_seq) * batch_size
+        return result
 
 class UploadToS3Callback(TrainerCallback):
     def __init__(self, s3_bucket, s3_prefix, save_total_limit=None):
+        import boto3
         self.s3_client = boto3.client('s3')
         self.s3_bucket = s3_bucket
         self.s3_prefix = s3_prefix
         self.save_total_limit = save_total_limit
 
-    def on_save(self, args, state, control, **kwargs):
+    def on_save(self, args, state: TrainerState, control: TrainerControl, **kwargs):
         output_dir = kwargs['output_dir']
         checkpoint = os.path.basename(output_dir)
         
@@ -242,3 +266,25 @@ class UploadToS3Callback(TrainerCallback):
         for obj in resp.get('Contents', []):
             self.s3_client.delete_object(Bucket=self.s3_bucket, Key=obj['Key'])
             print(f"Deleted s3://{self.s3_bucket}/{obj['Key']}")
+
+class MFUCallback(TrainerCallback):
+    def __init__(self, peak_flops):
+        self.total_iterations = 0
+        self.start_time = time.time()
+        self.flops_promised = peak_flops
+        self.last_total_flos = 0
+
+    def on_log(self, args, state: TrainerState, control: TrainerControl, **kwargs):
+        if state.global_step == 0:  # Avoid computation at the very beginning
+            return
+        
+        current_time = time.time()
+        elapsed_time = current_time - self.start_time
+
+        # Calculate and log MFU
+        new_flops = state.total_flos - self.last_total_flos
+        kwargs['logs']['mfu'] = round(new_flops / elapsed_time / self.flops_promised, 4)
+
+        self.start_time = current_time
+        self.last_total_flos = state.total_flos
+   

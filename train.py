@@ -5,11 +5,12 @@ import torch
 import os
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, \
     HfArgumentParser, GPTQConfig
+from transformers.integrations.integration_utils import TensorBoardCallback
 from trl import DPOTrainer
 from datasets import load_dataset
 
 from train_util import TrainingRunArguments, DataCollatorForSupervisedFineTuning, CustomSFTTrainer, \
-    UploadToS3Callback
+    UploadToS3Callback, MFUCallback
 
 """
 Phi Modules: 
@@ -86,7 +87,7 @@ accelerate launch --config_file fsdp_config.yaml train.py \
     --learning_rate 1e-5 --batch_size 64 --epochs 1 \
     --micro_batch_size 2 --gradient_checkpointing --group_by_length \
     --ctx_size 2048 \
-    --save_steps 50 --save_total_limit 5 --eval_steps 100 --logging_steps 2
+    --save_steps 50 --save_total_limit 10 --eval_steps 100 --logging_steps 2
 """
 
 """
@@ -149,10 +150,12 @@ def find_max_vram(min_buffer_mib=800):
 
     return max_memory
 
+if torch.cuda.device_count() == 1:
+    model_kwargs["device_map"] = "auto"
+
 model = AutoModelForCausalLM.from_pretrained(
     training_run_args.base_model,
     trust_remote_code=True,
-    # device_map="auto",
     max_memory=find_max_vram(),
     **model_kwargs
 )
@@ -189,6 +192,8 @@ else:
 
 # model.tie_weights()
 
+original_model = model
+peft_config = None
 if training_run_args.use_lora:
     from peft import LoraConfig, TaskType, get_peft_model, prepare_model_for_kbit_training
     print("Creating LoRA for model...")
@@ -239,13 +244,14 @@ training_args = TrainingArguments(
     output_dir=model_dir,
     num_train_epochs=training_run_args.epochs,
     save_total_limit=training_run_args.save_total_limit,
-    report_to="tensorboard",
+    report_to='none',
     learning_rate=training_run_args.learning_rate,
     lr_scheduler_type=training_run_args.learning_rate_schedule,
     warmup_ratio=training_run_args.learning_rate_warmup,
     log_level="info",
     bf16=training_run_args.bf16,
     group_by_length=training_run_args.group_by_length,
+    include_num_input_tokens_seen=True,
     **training_kwargs,
 )
 
@@ -283,6 +289,17 @@ if training_run_args.sync_to_bucket:
         s3_prefix=training_run_args.run_name,
         save_total_limit=training_run_args.save_total_limit
     ))
+
+if training_run_args.flops_baseline:
+    # A100 GPU bfloat16 peak flops is 312 TFLOPS (312e12)
+    # 4090 GPU bfloat16 peak flops is 165.2 TFLOPS (1652e11)
+    # 3090 GPU bfloat16 peak flops is 71 TFLOPS (71e12)
+
+    training_callbacks.append(MFUCallback(peak_flops=float(training_run_args.flops_baseline)))
+
+
+# log to tensorboard (but after MFU)
+training_callbacks.append(TensorBoardCallback())
 
 if not training_run_args.dpo:
     print("Tokenizing datasets...")
@@ -325,34 +342,28 @@ else:
     max_prompt_length = 0
 
     train_dataset = datasets["train"].map(lambda x: { "prompt_len": len(x["system"]) })
-    test_dataset = datasets["test"]
+
+    test_dataset = None
+    if training_run_args.test_dataset:
+        test_dataset = datasets["test"]
 
     max_prompt_length = max(train_dataset["prompt_len"])
 
     trainer = DPOTrainer(
         model,
+        ref_model=original_model,
+        peft_config=peft_config,
         args=training_args,
         beta=training_run_args.beta,
-        train_dataset=datasets["train"],
-        eval_dataset=datasets["test"],
+        train_dataset=train_dataset,
+        eval_dataset=test_dataset,
         tokenizer=tokenizer,
         max_length=training_run_args.ctx_size,
         max_prompt_length=max_prompt_length,
         generate_during_eval=True,
+        truncation_mode="keep_start",
         callbacks=training_callbacks,
     )
-
-# pre-allocate cuda buffers by running a forwards and backwards pass with the largest possible example length
-# the trainer dumps the cuda buffers before we start... need to figure out how to disable that
-# if training_run_args.pre_allocate_cuda_buffers:
-#     print("Allocating CUDA buffers...")
-#     inputs = tokenizer([""] * training_args.per_device_train_batch_size, return_tensors="pt", max_length=longest_example, padding="max_length", truncation=True)
-#     inputs = {k: v.to(model.device) for k, v in inputs.items()}
-#     inputs["labels"] = inputs["input_ids"]
-#     outputs = model(**inputs)
-#     loss = outputs.loss if isinstance(outputs, dict) else outputs[0]
-#     loss.backward()
-#     model.zero_grad()
 
 try:
     checkpoint = training_run_args.resume_from_checkpoint
@@ -361,7 +372,7 @@ try:
     else:
         trainer.train()
 
-    if training_run_args.train_dataset:
+    if training_run_args.test_dataset:
         trainer.evaluate_all()
 
     if training_run_args.use_lora and training_run_args.lora_merge:
@@ -377,7 +388,7 @@ try:
         tokenizer.save_pretrained(model_dir)
 
 except Exception as ex:
-    if len(torch.cuda.device_count()) > 1:
+    if torch.cuda.device_count() > 1:
         raise ex # this doesn't play nice with FSDP so don't even try
     
     print("Something bad happened! Try and save it?")
