@@ -101,13 +101,13 @@ python3 train.py \
 
 """
 python3 train.py \
-    --run_name tinyhome-rev1 \
+    --run_name tinyhome-rev2 \
     --base_model TinyLlama/TinyLlama-1.1B-Chat-v1.0 \
     --bf16 \
     --train_dataset data/home_assistant_train.jsonl \
     --test_dataset data/home_assistant_test.jsonl \
-    --learning_rate 5e-7 --batch_size 32 \
-    --micro_batch_size 2 --gradient_checkpointing --group_by_length \
+    --learning_rate 2e-5 --batch_size 32 \
+    --micro_batch_size 4 --gradient_checkpointing --group_by_length \
     --ctx_size 2048 --save_steps 100 --save_total_limit 10
 """
 
@@ -242,12 +242,11 @@ training_args = TrainingArguments(
     report_to="tensorboard",
     learning_rate=training_run_args.learning_rate,
     lr_scheduler_type=training_run_args.learning_rate_schedule,
+    warmup_ratio=training_run_args.learning_rate_warmup,
     log_level="info",
     bf16=training_run_args.bf16,
     group_by_length=training_run_args.group_by_length,
-    # skip_memory_metrics=True,
     **training_kwargs,
-    # include_inputs_for_metrics=True,
 )
 
 print("Loading dataset...")
@@ -307,6 +306,12 @@ if not training_run_args.dpo:
     print(f"Train dataset has {int(tokens_in_train_set / 1000000)}M tokens. Longest Example: {longest_example} tokens")
 
     data_collator = DataCollatorForSupervisedFineTuning(tokenizer=tokenizer)
+    # fix for tinyllama not detecting split properly
+    # data_collator = DataCollatorForSupervisedFineTuning(
+    #     tokenizer=tokenizer,
+    #     prefix_ids=[29966, 29989, 465, 22137, 29989, 29958, 13],
+    #     suffix_ids=[2],
+    # )
 
     trainer = CustomSFTTrainer(
         model=model,
