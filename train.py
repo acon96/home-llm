@@ -80,7 +80,7 @@ python3 train.py \
 
 """
 accelerate launch --config_file fsdp_config.yaml train.py \
-    --run_name stablehome-3b-rev9 \
+    --run_name stablehome-3b-rev10 \
     --base_model stabilityai/stablelm-zephyr-3b \
     --bf16 \
     --train_dataset data/home_assistant_train.jsonl \
@@ -150,7 +150,7 @@ def find_max_vram(min_buffer_mib=800):
 
     return max_memory
 
-if torch.cuda.device_count() == 1:
+if "LOCAL_RANK" not in os.environ:
     model_kwargs["device_map"] = "auto"
 
 model = AutoModelForCausalLM.from_pretrained(
@@ -391,7 +391,7 @@ try:
         tokenizer.save_pretrained(model_dir)
 
 except Exception as ex:
-    if trainer.is_fsdp_enabled > 1:
+    if trainer.is_fsdp_enabled:
         raise ex # this doesn't play nice with FSDP so don't even try
     
     print("Something bad happened! Try and save it?")
