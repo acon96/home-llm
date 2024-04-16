@@ -9,7 +9,6 @@ from transformers import TrainerCallback, AutoTokenizer, Trainer, AutoModelForCa
     TrainerControl, TrainerState
 from dataclasses import dataclass, field
 from typing import Dict, Optional, Sequence
-from calflops import calculate_flops
 
 
 @dataclass
