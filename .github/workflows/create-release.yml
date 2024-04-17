@@ -13,14 +13,32 @@ permissions:
 
 jobs:
   build_wheels:
-    name: Build wheels on ${{ matrix.arch }} (HA ${{ matrix.home_assistant_version }})
+    name: Build wheels on ${{ matrix.arch }}${{ matrix.suffix }} (HA ${{ matrix.home_assistant_version }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         home_assistant_version: ["2023.12.4", "2024.2.1"]
-        arch: ["aarch64", "armhf", "amd64", "i386"]
-
+        arch: [aarch64, armhf, amd64, i386]
+        suffix: [""]
+        include:
+        - home_assistant_version: "2024.2.1"
+          arch: "amd64"
+          suffix: "-noavx"
+          extra_defines: "-DLLAMA_NATIVE=OFF -DLLAMA_AVX=OFF -DLLAMA_AVX2=OFF -DLLAMA_FMA=OFF"
+        - home_assistant_version: "2024.2.1"
+          arch: "amd64"
+          suffix: "-avx512"
+          extra_defines: "-DLLAMA_NATIVE=OFF -DLLAMA_AVX=OFF -DLLAMA_AVX2=OFF -DLLAMA_AVX512=ON"
+        - home_assistant_version: "2024.2.1"
+          arch: "i386"
+          suffix: "-noavx"
+          extra_defines: "-DLLAMA_NATIVE=OFF -DLLAMA_AVX=OFF -DLLAMA_AVX2=OFF -DLLAMA_FMA=OFF"
+        - home_assistant_version: "2024.2.1"
+          arch: "i386"
+          suffix: "-avx512"
+          extra_defines: "-DLLAMA_NATIVE=OFF -DLLAMA_AVX=OFF -DLLAMA_AVX2=OFF -DLLAMA_AVX512=ON"
+        
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -56,16 +74,24 @@ jobs:
             cd /tmp
             git clone --quiet --recurse-submodules https://github.com/abetlen/llama-cpp-python --branch "v${{ env.EMBEDDED_LLAMA_CPP_PYTHON_VERSION }}"
             cd llama-cpp-python
-            
-            export CMAKE_ARGS="-DLLAVA_BUILD=OFF"
+
+            export CMAKE_ARGS="-DLLAVA_BUILD=OFF ${{ matrix.extra_defines }}"
             python3 -m build --wheel
-            cp -f ./dist/*.whl /artifacts/
+
+            ls -la ./dist/
+            for filename in ./dist/*.whl; do
+              output_file=$(basename $filename .whl)${{ matrix.suffix }}.whl
+              echo "$filename -> $output_file"
+              mv "$filename" "/artifacts/${output_file}";
+            done;
+
+            ls -la /artifacts/
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           path: ./artifacts/*.whl
-          name: artifact_${{ matrix.arch }}_${{ matrix.home_assistant_version }}
+          name: artifact_${{ matrix.arch }}${{ matrix.suffix }}_${{ matrix.home_assistant_version }}
 
   release:
     name: Create Release
