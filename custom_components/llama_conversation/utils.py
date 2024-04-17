@@ -54,7 +54,10 @@ def download_model_from_hf(model_name: str, quantization_type: str, storage_fold
     if len(wanted_file) != 1:
         raise Exception(f"The quantization '{quantization_type}' does not exist in the HF repo for {model_name}")
 
-    os.makedirs(storage_folder, exist_ok=True)
+    try:
+        os.makedirs(storage_folder, exist_ok=True)
+    except Exception as ex:
+        raise Exception(f"Failed to create the required folder for storing models! You may need to create the path '{storage_folder}' manually.") from ex
 
     return hf_hub_download(
         repo_id=model_name,
