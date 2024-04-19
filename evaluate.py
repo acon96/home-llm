@@ -191,7 +191,7 @@ def load_model(model_name, is_lora, checkpoint_name):
 def main():
     parser = argparse.ArgumentParser(description="Evaluate the function calling for a model")
     parser.add_argument("model")
-    parser.add_argument("--dataset_file", default="./data/home_assistant_test.jsonl")
+    parser.add_argument("--dataset-file", default="./data/home_assistant_test.jsonl")
     parser.add_argument("--batch-size", default=8)
     parser.add_argument("--lora", default=False, action='store_const', const=True)
     parser.add_argument("--all-checkpoints", default=False, action='store_const', const=True)
@@ -205,6 +205,7 @@ def main():
     print(f"Got {len(dataset)} examples to test")
 
     # filter out examples that are status requests
+    # TODO: instead of filtering out, validate that it doesn't produce a service call
     if "text" in dataset:
         dataset = dataset.filter(lambda example: "```homeassistant" in example["text"])
     else:
