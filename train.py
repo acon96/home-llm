@@ -83,6 +83,20 @@ python3 train.py \
 """
 
 """
+python3 train.py \
+    --run_name llamahome-8b-rev1 \
+    --base_model NousResearch/Meta-Llama-3-8B-Instruct \
+    --bf16 \
+    --train_dataset data/home_assistant_train.jsonl \
+    --test_dataset data/home_assistant_test.jsonl \
+    --learning_rate 1e-5 --learning_rate_warmup 0.03 --batch_size 64 --epochs 1 \
+    --micro_batch_size 2 --gradient_checkpointing --group_by_length \
+    --ctx_size 2048 \
+    --save_steps 25 --save_total_limit 20 --eval_steps 100 --logging_steps 2 \
+    --use_lora --lora_rank 32 --lora_alpha 64 --lora_modules up_proj,down_proj,q_proj,v_proj,o_proj
+"""
+
+"""
 accelerate launch --config_file fsdp_config.yaml train.py \
     --run_name stablehome-3b-rev10 \
     --base_model stabilityai/stablelm-zephyr-3b \
@@ -90,6 +104,19 @@ accelerate launch --config_file fsdp_config.yaml train.py \
     --train_dataset data/home_assistant_train.jsonl \
     --learning_rate 1e-5 --batch_size 64 --epochs 1 \
     --micro_batch_size 2 --gradient_checkpointing --group_by_length \
+    --ctx_size 2048 \
+    --save_steps 50 --save_total_limit 10 --eval_steps 100 --logging_steps 2
+"""
+
+"""
+python3 train.py \
+    --run_name stablehome-3b-rev9-dpo \
+    --base_model ./models/stablehome-3b-rev9/ \
+    --bf16 \
+    --train_dataset data/home_assistant_dpo.jsonl \
+    --learning_rate 2e-7 --batch_size 16 --epochs 1 \
+    --dpo --beta 0.1 --dpo_loss sigmoid \
+    --micro_batch_size 1 --gradient_checkpointing \
     --ctx_size 2048 \
     --save_steps 50 --save_total_limit 10 --eval_steps 100 --logging_steps 2
 """
@@ -114,6 +141,19 @@ python3 train.py \
     --learning_rate 2e-5 --batch_size 32 \
     --micro_batch_size 4 --gradient_checkpointing --group_by_length \
     --ctx_size 2048 --save_steps 100 --save_total_limit 10
+"""
+
+"""
+python3 train.py \
+    --run_name tinyhome-rev2-dpo \
+    --base_model ./models/tinyhome-rev2/ \
+    --bf16 \
+    --train_dataset data/home_assistant_dpo.jsonl \
+    --learning_rate 5e-7 --batch_size 16 --epochs 1 \
+    --dpo --beta 0.1 --dpo_loss sigmoid --learning_rate_warmup 0.03 \
+    --micro_batch_size 2 --gradient_checkpointing \
+    --ctx_size 2048 \
+    --save_steps 50 --save_total_limit 10 --eval_steps 100 --logging_steps 2
 """
 
 @dataclass
@@ -157,6 +197,7 @@ class TrainingRunArguments:
 
     dpo: bool = field(default=False, metadata={"help": "If set, performs Direct Preference Optimization instead of Supervised Fine Tuning"})
     beta: float = field(default=0.1, metadata={"help": "The implicit reward value used during DPO training"})
+    dpo_loss: str = field(default="sigmoid", metadata={"help": "The loss type to use during DPO training"})
 
     add_pad_token: bool = field(default=False, metadata={"help": "If set, a pad token will be added to the tokenizer's vocabulary"})
     add_chatml_tokens: bool = field(default=False, metadata={"help": "If set, tokens for the ChatML format will be added specifically"})
@@ -471,13 +512,13 @@ class DataCollatorForSupervisedFineTuning(object):
                     print("warning! example had no assistant response in it!")
                 label[start:end] = [-100] * (end - start)
 
-        input_ids = torch.LongTensor(self._pad(input_ids, self.tokenizer.pad_token_id))
+        input_ids = torch.LongTensor(self._pad(input_ids, self.tokenizer.pad_token_id or self.tokenizer.eos_token_id))
         labels = torch.LongTensor(self._pad(labels, -100))
 
         return dict(
             input_ids=input_ids,
             labels=labels,
-            attention_mask=input_ids.ne(self.tokenizer.pad_token_id),
+            attention_mask=input_ids.ne(self.tokenizer.pad_token_id or self.tokenizer.eos_token_id),
         )
 
 print("Loading dataset...")
@@ -506,6 +547,24 @@ def tokenize_sharegpt_example(batch):
         ))
 
     return {"input_ids": result}
+
+def template_dpo_example(batch):
+    # TODO: figure out how to properly batch this
+    result = []
+    for example in zip(batch["system"], batch["question"]):
+        conversation = [ 
+            { "role": "system", "content": example[0] },
+            { "role": "user", "content": example[1] },
+        ]
+        result.append(tokenizer.apply_chat_template(
+            conversation=conversation,
+            max_length=training_run_args.ctx_size,
+            truncation=True,
+            tokenize=False,
+            add_generation_prompt=True
+        ))
+
+    return {"prompt": result}
 
 training_callbacks = []
 if training_run_args.sync_to_bucket:
@@ -631,18 +690,33 @@ else:
 
     max_prompt_length = max(train_dataset["prompt_len"])
 
+    print("Templating DPO Examples...")
+    templated_test_dataset = None
+    templated_train_dataset = train_dataset.map(template_dpo_example, batched=True).remove_columns(["system", "question"])
+    if training_run_args.test_dataset:
+        templated_test_dataset = datasets["test"].map(template_dpo_example, batched=True).remove_columns(["system", "question"])
+
+    # tokenizer.model_input_names = [ "chosen_input_ids" ]
+
+    # group_by_length doesn't work here
+    # templated_train_dataset = templated_train_dataset.sort("prompt_len", reverse=True)
+
+    training_args.length_column_name = "prompt_len"
+    model.enable_input_require_grads()
+
     trainer = DPOTrainer(
         model,
-        ref_model=original_model,
+        ref_model=None,
+        # ref_model=original_model,
         peft_config=peft_config,
         args=training_args,
         beta=training_run_args.beta,
-        train_dataset=train_dataset,
-        eval_dataset=test_dataset,
+        loss_type=training_run_args.dpo_loss,
+        train_dataset=templated_train_dataset,
+        eval_dataset=templated_test_dataset,
         tokenizer=tokenizer,
         max_length=training_run_args.ctx_size,
         max_prompt_length=max_prompt_length,
-        generate_during_eval=True,
         truncation_mode="keep_start",
         callbacks=training_callbacks,
     )
