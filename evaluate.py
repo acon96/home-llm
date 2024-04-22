@@ -79,6 +79,7 @@ def evaluate(output_folder, trained_model, trained_tokenizer, dataset, batch_siz
                 found_responses = service_call_regex.findall(response.strip())
 
                 if len(expected_service_calls) == 0:
+                    total_answers = total_answers + 1
                     if len(found_responses) == 0:
                         correct_answers = correct_answers + 1
                         continue

@@ -1111,6 +1111,11 @@ def main():
 
     if not args.sample and not args.train and not args.test and not args.merge and not args.dpo:
         parser.print_usage()
+        exit(-1)
+
+    if args.size and not args.train:
+        print("Train size was provided but not generating the training set!")
+        exit(-1)
     
     if not args.format or args.format == "raw":
         format_func = format_example_raw_chatml

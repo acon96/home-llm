@@ -133,13 +133,13 @@ python3 train.py \
 
 """
 python3 train.py \
-    --run_name tinyhome-rev2 \
+    --run_name tinyhome-rev3 \
     --base_model TinyLlama/TinyLlama-1.1B-Chat-v1.0 \
     --bf16 \
     --train_dataset data/home_assistant_train.jsonl \
     --test_dataset data/home_assistant_test.jsonl \
     --learning_rate 2e-5 --batch_size 32 \
-    --micro_batch_size 4 --gradient_checkpointing --group_by_length \
+    --micro_batch_size 8 --gradient_checkpointing --group_by_length \
     --ctx_size 2048 --save_steps 100 --save_total_limit 10
 """
 
@@ -166,7 +166,6 @@ class TrainingRunArguments:
     bf16: bool = field(default=False, metadata={"help": "If set, the model will the loaded and trained in bf16 instead of fp16"})
     batch_size: int = field(default=8, metadata={"help": "The simulated 'batch size' that we will train on. will tweak gradient accumulations steps"})
     micro_batch_size: int = field(default=2, metadata={"help": "The actual batch size that will fit into VRAM on this machine"})
-    eval_batch_size: int = field(default=1, metadata={"help": "The batch size for generation used while performing evaluation"})
     epochs: int = field(default=1, metadata={"help": "The number of times to train the model on each example"})
     learning_rate: float = field(default=1e-5, metadata={"help": "The starting learning rate (speed at which the model trains)"})
     learning_rate_schedule: str = field(default="cosine", metadata={"help": "How fast the learning rate is reduced during training"})
@@ -391,7 +390,7 @@ training_kwargs = {}
 
 if training_run_args.test_dataset:
     training_kwargs.update({
-        "per_device_eval_batch_size": training_run_args.eval_batch_size,
+        "per_device_eval_batch_size": training_run_args.batch_size,
         "evaluation_strategy": ("steps" if training_run_args.eval_steps != -1 else "epoch"),
         "eval_steps": (training_run_args.eval_steps if training_run_args.eval_steps != -1 else None),
         "bf16_full_eval": training_run_args.bf16,
@@ -431,15 +430,22 @@ class DataCollatorForSupervisedFineTuning(object):
     prefix_ids: list[int]
     suffix_ids: list[int]
 
-    def __init__(self, *, tokenizer: AutoTokenizer):
+    def __init__(self, *, tokenizer: AutoTokenizer, prefix_ids = None, suffix_ids = None):
         
         self.tokenizer = tokenizer
         assistant_prompt = tokenizer.apply_chat_template(conversation=[{"role": "assistant", "content":  r"%%%%%%%%%%%%%%%%"}], tokenize=False).split( r"%%%%%%%%%%%%%%%%")
         self.response_prefix = assistant_prompt[0]
         self.response_suffix = assistant_prompt[1]
 
-        self.prefix_ids = self.tokenizer(self.response_prefix, add_special_tokens=False)["input_ids"]
-        self.suffix_ids = self.tokenizer(self.response_suffix, add_special_tokens=False)["input_ids"]
+        if prefix_ids:
+            self.prefix_ids = prefix_ids
+        else:
+            self.prefix_ids = self.tokenizer(self.response_prefix, add_special_tokens=False)["input_ids"]
+
+        if suffix_ids:
+            self.suffix_ids = suffix_ids
+        else:
+            self.suffix_ids = self.tokenizer(self.response_suffix, add_special_tokens=False)["input_ids"]
 
     def _find_mask_ranges(self, input_ids):
         """

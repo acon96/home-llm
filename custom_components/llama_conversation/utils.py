@@ -92,7 +92,7 @@ def install_llama_cpp_python(config_dir: str):
     instruction_extensions_suffix = ""
     if platform_suffix == "amd64" or platform_suffix == "i386":
         with open("/proc/cpuinfo") as f:
-            cpu_features = [ line for line in f.readlines() if line.startswith("Features")][0]
+            cpu_features = [ line for line in f.readlines() if line.startswith("Features") or line.startswith("flags")][0]
         if "avx512f" in cpu_features and "avx512bw" in cpu_features:
             instruction_extensions_suffix = "-avx512"
         elif "avx" not in cpu_features:
