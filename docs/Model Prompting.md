@@ -59,7 +59,9 @@ Currently supported prompt formats are:
 2. Vicuna
 3. Alpaca
 4. Mistral
-5. None (useful for foundation models)
+5. Zephyr
+6. Llama 3
+7. None (useful for foundation models)
 
 ## Prompting other models with In Context Learning
 It is possible to use models that are not fine-tuned with the dataset via the usage of In Context Learning (ICL) examples. These examples condition the model to output the correct JSON schema without any fine-tuning of the model.
