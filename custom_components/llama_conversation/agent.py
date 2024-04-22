@@ -1075,12 +1075,12 @@ class OllamaAPIAgent(LLaMAAgent):
 
         endpoint = "/api/generate"
         request_params["prompt"] = self._format_prompt(conversation)
-        # request_params["raw"] = True # ignore prompt template
+        request_params["raw"] = True # ignore prompt template
 
         return endpoint, request_params
     
     def _extract_response(self, response_json: dict) -> str:        
-        if response_json["done"] != "true":
+        if response_json["done"] not in ["true", True]:
             _LOGGER.warning("Model response did not end on a stop token (unfinished sentence)")
         
         # TODO: this doesn't work because ollama caches prompts and doesn't always return the full prompt length

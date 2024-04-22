@@ -159,7 +159,7 @@
                 "alpaca": "Alpaca",
                 "mistral": "Mistral",
                 "zephyr": "Zephyr",
-                "llama-3": "Llama 3",
+                "llama3": "Llama 3",
                 "no_prompt_template": "None"
             }
         },
