@@ -319,7 +319,7 @@ SUPPORTED_DEVICES = {
         }
     ),
     "todo": DeviceType(
-        name="timer",
+        name="todo",
         possible_states=[ (f"{i}", (1/32)) for i in range(32) ],
         services={
             "add_item": ["item"],
