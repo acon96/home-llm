@@ -79,7 +79,8 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_SSL,
     DEFAULT_MAX_TOKENS,
-    DEFAULT_PROMPT,
+    PERSONA_PROMPTS,
+    DEFAULT_PROMPT_BASE,
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
@@ -553,7 +554,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             if key in model_name:
                 selected_default_options.update(OPTIONS_OVERRIDES[key])
         
-        schema = vol.Schema(local_llama_config_option_schema(selected_default_options, backend_type))
+        schema = vol.Schema(local_llama_config_option_schema(selected_default_options, backend_type, self.hass.config.language))
 
         if user_input:
             self.options = user_input
@@ -630,6 +631,7 @@ class OptionsFlow(config_entries.OptionsFlow):
         schema = local_llama_config_option_schema(
             self.config_entry.options,
             self.config_entry.data[CONF_BACKEND_TYPE],
+            self.hass.config.language
         )
         return self.async_show_form(
             step_id="init",
@@ -651,16 +653,19 @@ def insert_after_key(input_dict: dict, key_name: str, other_dict: dict):
 
     return result
 
-def local_llama_config_option_schema(options: MappingProxyType[str, Any], backend_type: str) -> dict:
+def local_llama_config_option_schema(options: MappingProxyType[str, Any], backend_type: str, language: str) -> dict:
     """Return a schema for Local LLaMA completion options."""
     if not options:
         options = DEFAULT_OPTIONS
+
+    persona = PERSONA_PROMPTS.get(language, PERSONA_PROMPTS.get("en"))
+    options[CONF_PROMPT] = options[CONF_PROMPT].replace("<persona>", persona)
 
     result = {
         vol.Required(
             CONF_PROMPT,
             description={"suggested_value": options.get(CONF_PROMPT)},
-            default=DEFAULT_PROMPT,
+            default=options[CONF_PROMPT],
         ): TemplateSelector(),
         vol.Required(
             CONF_PROMPT_TEMPLATE,
