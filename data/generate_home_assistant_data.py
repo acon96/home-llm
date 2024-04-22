@@ -7,6 +7,7 @@ import random
 import re
 import copy
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from datasets import load_dataset, concatenate_datasets
 from difflib import SequenceMatcher
 from typing import Final, Any, Callable, Optional
@@ -50,6 +51,7 @@ pile_of_responses = None
 pile_of_status_requests = None
 pile_of_system_prompts = None
 pile_of_hallucinated_service_names = None
+and_word = None
 
 def closest_color(requested_color):
     min_colors = {}
@@ -60,6 +62,15 @@ def closest_color(requested_color):
         bd = (b_c - requested_color[2]) ** 2
         min_colors[(rd + gd + bd)] = name
     return min_colors[min(min_colors.keys())]
+
+def generate_random_date():
+    start_date = datetime(2022, 1, 1)
+    end_date = datetime(2030, 12, 31)
+    delta = end_date - start_date
+    random_days = random.randint(0, delta.days)
+    random_seconds = random.randint(0, 24 * 60 * 60)
+    random_date_time = start_date + timedelta(days=random_days, seconds=random_seconds)
+    return random_date_time
 
 var_pattern = re.compile("<(.*?)>")
 def get_included_vars(response: str):
@@ -516,8 +527,7 @@ def generate_templated_example(template: dict, persona: str, max_devices: int = 
             )
             answers.append(answer.replace(f"<device_name>", chosen_devices[i]["description"]))
 
-        # TODO: support different "and" words per language
-        answer = " and ".join(answers)
+        answer = f" {and_word} ".join(answers)
 
     # generate the list of service calls and answers
     service_calls = []
@@ -797,6 +807,7 @@ def format_example_raw_chatml(example, persona):
 
 def format_example_sharegpt(example, persona):
     sys_prompt = pile_of_system_prompts[persona]
+    time_block = "The current time and date is " + generate_random_date().strftime("%I:%M %p on %A %B %d, %Y")
     services_block = "Services: " + ", ".join(sorted(example["available_services"]))
     states_block = "Devices:\n" + "\n".join(example["states"])
     question = example["question"]
@@ -814,7 +825,7 @@ def format_example_sharegpt(example, persona):
     services_block = services_block.replace("blinds.", "cover.").replace("garage_door.", "cover.")
 
     conversation = [
-        { "from": "system", "value": "\n".join([ sys_prompt, services_block, states_block ])},
+        { "from": "system", "value": "\n".join([ sys_prompt, time_block, services_block, states_block ])},
         { "from": "user", "value": question },
         { "from": "assistant", "value": assistant_block },
     ]
@@ -1003,7 +1014,17 @@ def merge_languages(filename_prefix: str, languages: list):
 def load_dataset_piles(language):
     global pile_of_durations, pile_of_media_names, pile_of_todo_items, stacks_of_device_names, \
         pile_of_templated_actions, pile_of_specific_actions, pile_of_responses, pile_of_status_requests, \
-        pile_of_system_prompts, pile_of_hallucinated_service_names
+        pile_of_system_prompts, pile_of_hallucinated_service_names, and_word
+    
+    # TODO: make this properly dynamic
+    if language == "english":
+        and_word = "and"
+    elif language == "german":
+        and_word = "und"
+    elif language == "french":
+        and_word = "et"
+    elif language == "spanish":
+        and_word = "y"
     
     with open(f"piles/{language}/pile_of_durations.csv", encoding="utf8") as f:
         reader = csv.DictReader(f)
