@@ -78,6 +78,14 @@ def evaluate(output_folder, trained_model, trained_tokenizer, dataset, batch_siz
                 
                 found_responses = service_call_regex.findall(response.strip())
 
+                if len(expected_service_calls) == 0:
+                    if len(found_responses) == 0:
+                        correct_answers = correct_answers + 1
+                        continue
+                    else:
+                        failed_examples.append({ "expected": expected_response, "actual": response, "extra_response": True })
+                        continue
+                
                 if len(found_responses) == 0:
                     failed_examples.append({ "expected": expected_response, "actual": response, "no_response_found": True })
                     continue
@@ -203,13 +211,6 @@ def main():
     dataset = load_dataset("json", data_files={ "train": args.dataset_file })["train"]
 
     print(f"Got {len(dataset)} examples to test")
-
-    # filter out examples that are status requests
-    # TODO: instead of filtering out, validate that it doesn't produce a service call
-    if "text" in dataset:
-        dataset = dataset.filter(lambda example: "```homeassistant" in example["text"])
-    else:
-        dataset = dataset.filter(lambda example: "```homeassistant" in example["conversations"][2]["value"])
 
     model_folder = f"./loras/{args.model}/" if args.lora else f"./models/{args.model}/"
 
