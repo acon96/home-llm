@@ -489,6 +489,11 @@ class LLaMAAgent(AbstractConversationAgent):
         all_services = []
         all_service_names = []
         for domain in domains:
+            # scripts show up as individual services
+            if domain == "script":
+                all_services.extend(["script.reload()", "script.turn_on()", "script.turn_off()", "script.toggle()"])
+                continue
+            
             for name, service in service_dict.get(domain, {}).items():
                 args = flatten_vol_schema(service.schema)
                 args_to_expose = set(args).intersection(allowed_service_call_arguments)
