@@ -133,7 +133,7 @@ python3 train.py \
 
 """
 python3 train.py \
-    --run_name tinyhome-rev3 \
+    --run_name tinyhome-rev4 \
     --base_model TinyLlama/TinyLlama-1.1B-Chat-v1.0 \
     --bf16 \
     --train_dataset data/home_assistant_train.jsonl \
@@ -668,13 +668,13 @@ if not training_run_args.dpo:
     tokens_in_train_set, longest_example = sum(example_lengths), max(example_lengths)
     print(f"Train dataset has {int(tokens_in_train_set / 1000000)}M tokens. Longest Example: {longest_example} tokens")
 
-    data_collator = DataCollatorForSupervisedFineTuning(tokenizer=tokenizer)
+    # data_collator = DataCollatorForSupervisedFineTuning(tokenizer=tokenizer)
     # fix for tinyllama not detecting split properly
-    # data_collator = DataCollatorForSupervisedFineTuning(
-    #     tokenizer=tokenizer,
-    #     prefix_ids=[29966, 29989, 465, 22137, 29989, 29958, 13],
-    #     suffix_ids=[2],
-    # )
+    data_collator = DataCollatorForSupervisedFineTuning(
+        tokenizer=tokenizer,
+        prefix_ids=[29966, 29989, 465, 22137, 29989, 29958, 13],
+        suffix_ids=[2],
+    )
 
     trainer = CustomSFTTrainer(
         model=model,

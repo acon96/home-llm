@@ -99,7 +99,7 @@ accelerate launch --config_file fsdp_config.yaml train.py \
 
 </details>
 
-The 1B model was trained as a full fine-tuning on an RTX 3090 (24GB). Training took approximately 2.5 hours. It was trained on the `--medium` dataset variant.
+The 1B model was trained as a full fine-tuning on an RTX 3090 (24GB). Training took approximately 2 hours. It was trained on the `--medium` dataset variant.
 
 <details>
 <summary>Training Arguments</summary>
