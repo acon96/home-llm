@@ -1,4 +1,4 @@
-service_name,device_name,english_phrase
+service_name,device_name,phrase
 blinds.close_cover,kitchen,Lower the kitchen blinds
 blinds.close_cover,living_room,Close the living room blinds
 blinds.close_cover,master_bedroom,Shut the master bedroom blinds

@@ -1,0 +1,274 @@
+device_type,state,phrase,assistant_response
+light,on,Le <device_name> est-il activé,Le <device_name> est actuellement activé
+light,on,Pouvez-vous me dire l'état du <device_name>,Le <device_name> est activé
+light,off,Que fait <device_name> ?,Le <device_name> est éteint
+light,off,Le <device_name> est-il éteint,Le <device_name> est actuellement éteint
+fan,on,Le <device_name> est-il activé,Le <device_name> est actuellement activé
+fan,on,Pouvez-vous vérifier si le <device_name> fonctionne,Le <device_name> est activé
+fan,off,Le <device_name> est-il éteint,Le <device_name> est actuellement éteint
+fan,off,Quel est l'état actuel du <device_name>,Le <device_name> est éteint
+garage_door,open,Le <device_name> est-il ouvert,Le <device_name> est actuellement ouvert
+garage_door,open,Pouvez-vous me dire si le <device_name> est ouvert,Le <device_name> est ouvert
+garage_door,closed,Le <device_name> est-il fermé ?,Le <device_name> est actuellement fermé
+garage_door,closed,Quel est l'état du <device_name>,Le <device_name> est fermé
+garage_door,opening,L'ouverture de <device_name>,Le <device_name> est en cours d'ouverture
+garage_door,opening,Que fait <device_name> ?,Le <device_name> s'ouvre
+garage_door,closing,Le <device_name> est-il en train de fermer,Le <device_name> est actuellement en train de fermer
+garage_door,closing,Pouvez-vous me dire si le <device_name> se ferme,Le <device_name> se ferme
+blinds,open,Le <device_name> est-il ouvert,Les <device_name> sont actuellement ouverts
+blinds,open,Quel est l'état du <device_name>,Les <device_name> sont ouverts
+blinds,closed,Le <device_name> est-il fermé,Le <device_name> est actuellement fermé
+blinds,closed,Pouvez-vous vérifier si les <device_name> sont fermés,Les <device_name> sont fermés
+blinds,opening,L'ouverture de <device_name>,Le <device_name> est en cours d'ouverture
+blinds,opening,Que fait <device_name> ?,Le <device_name> s'ouvre
+blinds,closing,Le <device_name> se ferme-t-il,Le <device_name> est actuellement en train de fermer
+blinds,closing,Quel est l'état du <device_name>,Le <device_name> se ferme
+media_player,on,Le <device_name> est-il activé,Le <device_name> est actuellement activé
+media_player,on,Quel est l'état actuel du <device_name>,Le <device_name> est activé
+media_player,off,Le <device_name> est-il éteint,Le <device_name> est actuellement éteint
+media_player,off,Pouvez-vous me dire si le <device_name> est éteint,Le <device_name> est éteint
+media_player,idle,Que fait <device_name> ?,Le <device_name> est inactif
+media_player,idle,Le <device_name> est-il inactif,Le <device_name> est actuellement inactif
+media_player,playing,Le <device_name> est-il en train de jouer,Le <device_name> est en cours de lecture
+media_player,playing,Pouvez-vous me dire si <device_name> joue,Le <device_name> joue
+media_player,paused,Quel est l'état du <device_name>,Le <device_name> est en pause
+media_player,paused,Le <device_name> est-il en pause ?,Le <device_name> est actuellement en pause
+media_player,standby,Que fait <device_name> ?,Le <device_name> est en veille
+media_player,standby,Le <device_name> est-il en veille,Le <device_name> est actuellement en veille
+lock,unlocked,Le <device_name> est-il déverrouillé,Le <device_name> est actuellement déverrouillé
+lock,unlocked,Quel est l'état du <device_name>,Le <device_name> est déverrouillé
+lock,locked,Le <device_name> est-il verrouillé,Le <device_name> est actuellement verrouillé
+lock,locked,Pouvez-vous me dire si le <device_name> est verrouillé,Le <device_name> est verrouillé
+lock,unlocking,Que fait <device_name> ?,Le <device_name> est en cours de déverrouillage
+lock,unlocking,Le <device_name> est-il déverrouillé,Le <device_name> est actuellement en cours de déverrouillage
+lock,locking,Le <device_name> est-il verrouillé,Le <device_name> est actuellement en cours de verrouillage
+lock,locking,Quel est l'état du <device_name>,Le <device_name> est verrouillé
+lock,jammed,Que fait <device_name> ?,Le <device_name> est bloqué
+lock,jammed,Le <device_name> est-il bloqué,Le <device_name> est actuellement bloqué
+light,on,Le <device_name> est-il actif,Le <device_name> est actuellement activé
+light,on,Le <device_name> est-il alimenté,Le <device_name> est activé
+light,off,Le <device_name> est-il désactivé,Le <device_name> est actuellement éteint
+fan,on,Le <device_name> tourne-t-il,Le <device_name> est actuellement activé
+fan,on,Le <device_name> souffle-t-il de l'air,Le <device_name> est activé
+fan,off,Le <device_name> est-il inactif,Le <device_name> est actuellement éteint
+fan,off,Le <device_name> est-il toujours,Le <device_name> est éteint
+lock,unlocked,Le <device_name> est-il ouvert,Le <device_name> est actuellement déverrouillé
+lock,unlocked,Le <device_name> n'est-il pas sécurisé ?,Le <device_name> est déverrouillé
+lock,locked,Le <device_name> est-il sécurisé,Le <device_name> est actuellement verrouillé
+lock,locked,Le <device_name> est-il scellé,Le <device_name> est verrouillé
+garage_door,open,Le <device_name> est-il descellé ?,Le <device_name> est actuellement ouvert
+garage_door,closed,Le <device_name> est-il fermé,Le <device_name> est actuellement fermé
+blinds,open,Le <device_name> est-il affiché,Les <device_name> sont actuellement ouverts
+blinds,closed,Le <device_name> est-il retiré ?,Le <device_name> est actuellement fermé
+light,on,Le <device_name> est-il allumé,Le <device_name> est actuellement activé
+light,off,Le <device_name> est-il éteint,"Oui, <device_name> est éteint"
+light,on,"Euh, peux-tu vérifier si le <device_name> est allumé ou quelque chose du genre",Le <device_name> est actuellement activé
+light,off,"Hé, qu'est-ce qui se passe avec le <device_name>, est-il éteint ?",Le <device_name> est actuellement éteint
+fan,on,Le <device_name> s'envole également,Le <device_name> est bien activé
+fan,off,Une idée si le <device_name> est éteint,Le <device_name> est actuellement éteint
+lock,unlocked,"Hé, est-ce que <device_name> est déverrouillé ou quoi",Le <device_name> est actuellement déverrouillé
+lock,locked,Pouvez-vous me dire si le <device_name> est entièrement verrouillé,Le <device_name> est effectivement verrouillé
+garage_door,open,"Hé, avons-nous laissé le <device_name> ouvert","Oui, le <device_name> est actuellement ouvert"
+garage_door,closed,Le <device_name> est-il réellement fermé ?,Le <device_name> est effectivement fermé
+blinds,open,Le <device_name> est-il actif ou quoi ?,Les <device_name> sont actuellement ouverts
+blinds,closed,Nous avons également réduit le <device_name>,Les <device_name> sont effectivement fermés
+light,on,"Hé, est-ce que <device_name> brille",Le <device_name> est actuellement activé
+light,off,"Euh, le <device_name> est-il éteint",Le <device_name> est effectivement éteint
+fan,on,Pouvez-vous confirmer si <device_name> est en cours d'exécution,Le <device_name> est actuellement activé
+fan,off,Le <device_name> fait-il une pause ?,Le <device_name> est actuellement éteint
+lock,unlocked,Le <device_name> est-il également ouvert,Le <device_name> est actuellement déverrouillé
+lock,locked,Le <device_name> est-il boulonné,Le <device_name> est effectivement verrouillé
+light,on,Le <device_name> est-il éteint,"En fait, le <device_name> est actuellement activé"
+light,off,Le <device_name> est-il activé,"Non, le <device_name> est éteint pour le moment"
+fan,on,Le <device_name> est-il éteint,"En fait, le <device_name> est allumé en ce moment"
+fan,off,Le <device_name> souffle-t-il de l'air,"Désolé, le <device_name> est actuellement éteint"
+lock,locked,Le <device_name> est-il déverrouillé,"Non, le <device_name> est actuellement verrouillé"
+lock,unlocked,Le <device_name> est-il verrouillé,"Non, le <device_name> est actuellement déverrouillé"
+garage_door,open,Le <device_name> est-il fermé ?,"Non, le <device_name> est actuellement ouvert"
+garage_door,closed,Le <device_name> est-il ouvert,"Non, le <device_name> est actuellement fermé"
+blinds,open,Le <device_name> est-il fermé,"Non, le <device_name> est actuellement ouvert"
+blinds,closed,Le <device_name> est-il ouvert,"Non, le <device_name> est actuellement fermé."
+light,on,"Euh, pouvez-vous vérifier si le <device_name> est éteint","Non, le <device_name> est réellement activé"
+light,off,"Hé, est-ce que <device_name> brille","Non, le <device_name> est actuellement éteint"
+fan,on,Le <device_name> fait-il une pause ?,"Non, le <device_name> est activé en ce moment"
+fan,off,Le <device_name> est-il en train de tourbillonner,"Non, le <device_name> est éteint pour le moment"
+lock,unlocked,Le <device_name> est-il boulonné,"Non, le <device_name> est actuellement déverrouillé"
+lock,locked,Le <device_name> est-il libre et clair ?,"Non, le <device_name> est réellement verrouillé"
+garage_door,open,Le <device_name> est-il fermé,"Non, le <device_name> est actuellement ouvert"
+garage_door,closed,Avons-nous laissé le <device_name> ouvert,"Non, le <device_name> est fermé"
+blinds,open,Avons-nous réduit le <device_name>,"Non, le <device_name> est réellement ouvert"
+blinds,closed,Le <device_name> est-il affiché,"Non, le <device_name> est actuellement fermé."
+media_player,on,Le <device_name> est-il éteint,"Non, le <device_name> est actuellement activé"
+media_player,off,Le <device_name> est-il en train de jouer,"Non, le <device_name> est éteint pour le moment"
+media_player,idle,Est-ce que <device_name> joue de la musique,"Non, le <device_name> est inactif pour le moment"
+media_player,playing,Le <device_name> est-il en pause ?,"Non, <device_name> est en train de jouer"
+media_player,paused,Le <device_name> est-il en veille,"Non, le <device_name> est actuellement en pause."
+media_player,standby,Le <device_name> est-il en train de jouer,"Non, le <device_name> est en veille"
+garage_door,opening,Le <device_name> est-il en train de fermer,"Non, le <device_name> est en cours d'ouverture"
+garage_door,closing,L'ouverture de <device_name>,"Non, le <device_name> est actuellement en train de fermer"
+blinds,opening,Le <device_name> se ferme-t-il,"Non, le <device_name> s'ouvre"
+blinds,closing,L'ouverture de <device_name>,"Non, le <device_name> se ferme"
+lock,unlocking,Le <device_name> est-il verrouillé,"Non, le <device_name> est en cours de déverrouillage"
+lock,locking,Le <device_name> est-il déverrouillé,"Non, le <device_name> se verrouille"
+lock,jammed,Le <device_name> est-il déverrouillé,"Non, le <device_name> est bloqué"
+light,on,Le <device_name> est-il sombre ?,"Non, le <device_name> est actuellement activé"
+light,off,Le <device_name> brille-t-il,"Non, le <device_name> est éteint"
+fan,on,Le <device_name> est-il inactif,"Non, le <device_name> est réellement activé"
+fan,off,Le <device_name> souffle-t-il de l'air,"Non, le <device_name> est éteint pour le moment"
+lock,unlocked,Le <device_name> est-il sécurisé,"Non, le <device_name> est actuellement déverrouillé"
+lock,locked,Le <device_name> est-il ouvert,"Non, le <device_name> est verrouillé"
+lock,jammed,Le <device_name> est-il verrouillé,"Non, le <device_name> est bloqué"
+light,on,Le <device_name> est-il éteint,"Non, le <device_name> est activé"
+light,off,Le <device_name> est-il actif,"Non, le <device_name> est éteint"
+light,on,Le <device_name> est-il activé ou désactivé ?,Le <device_name> est activé
+light,off,Le <device_name> est-il activé ou désactivé ?,Le <device_name> est éteint
+fan,on,Le <device_name> est-il activé ou désactivé ?,Le <device_name> est activé
+fan,off,Le <device_name> est-il activé ou désactivé ?,Le <device_name> est éteint
+garage_door,open,Le <device_name> est-il ouvert ou fermé ?,Le <device_name> est ouvert
+garage_door,closed,Le <device_name> est-il ouvert ou fermé ?,Le <device_name> est fermé
+blinds,open,Le <device_name> est-il ouvert ou fermé ?,Les <device_name> sont ouverts
+blinds,closed,Le <device_name> est-il ouvert ou fermé ?,Les <device_name> sont fermés
+media_player,on,Le <device_name> est-il activé ou désactivé ?,Le <device_name> est activé
+media_player,off,Le <device_name> est-il activé ou désactivé ?,Le <device_name> est éteint
+lock,unlocked,Le <device_name> est-il verrouillé ou déverrouillé,Le <device_name> est déverrouillé
+lock,locked,Le <device_name> est-il verrouillé ou déverrouillé,Le <device_name> est verrouillé
+media_player,playing,Le <device_name> est-il en cours de lecture ou en pause ?,Le <device_name> joue
+media_player,paused,Le <device_name> est-il en cours de lecture ou en pause ?,Le <device_name> est en pause
+garage_door,opening,Le <device_name> est-il en train d'ouvrir ou de fermer,Le <device_name> s'ouvre
+garage_door,closing,Le <device_name> est-il en train d'ouvrir ou de fermer,Le <device_name> se ferme
+blinds,opening,Le <device_name> s'ouvre-t-il ou se ferme-t-il,Le <device_name> s'ouvre
+blinds,closing,Le <device_name> s'ouvre-t-il ou se ferme-t-il,Le <device_name> se ferme
+lock,unlocking,Le <device_name> est-il verrouillé ou déverrouillé,Le <device_name> est en cours de déverrouillage
+lock,locking,Le <device_name> est-il verrouillé ou déverrouillé,Le <device_name> est verrouillé
+lock,jammed,Le <device_name> est-il verrouillé ou bloqué ?,Le <device_name> est bloqué
+media_player,idle,Le <device_name> est-il inactif ou en veille,Le <device_name> est inactif
+media_player,standby,Le <device_name> est-il inactif ou en veille,Le <device_name> est en veille
+light,on,Le <device_name> est-il allumé ou faible,Le <device_name> est activé
+light,off,Le <device_name> est-il allumé ou faible,Le <device_name> est éteint
+fan,on,Le <device_name> tourne-t-il ou est-il toujours,Le <device_name> tourne
+fan,off,Le <device_name> tourne-t-il ou est-il toujours,Le <device_name> est toujours
+lock,unlocked,Le <device_name> est-il sécurisé ou non ?,Le <device_name> n'est pas sécurisé
+lock,locked,Le <device_name> est-il sécurisé ou non ?,Le <device_name> est sécurisé
+lock,jammed,Le <device_name> est-il sécurisé ou bloqué ?,Le <device_name> est bloqué
+light,on,Quel est l'état actuel du <device_name> ?,Le <device_name> est activé
+light,off,À quoi ressemble <device_name> en ce moment ?,Le <device_name> est éteint
+fan,on,Que se passe-t-il avec <device_name>,Le <device_name> est activé
+fan,off,Pouvez-vous me donner une mise à jour sur <device_name>,Le <device_name> est éteint
+garage_door,open,Dites-moi sur le <device_name> voulez-vous,Le <device_name> est ouvert
+garage_door,closed,Quelle est la situation avec <device_name>,Le <device_name> est fermé
+blinds,open,Quelles sont les dernières nouvelles sur <device_name>,Les <device_name> sont ouverts
+blinds,closed,Pouvez-vous me tenir au courant du <device_name>,Les <device_name> sont fermés
+media_player,on,Quel est l'état du <device_name>,Le <device_name> est activé
+media_player,off,Comment va le <device_name> ?,Le <device_name> est éteint
+lock,unlocked,Quel est le mot sur le <device_name> ?,Le <device_name> est déverrouillé
+lock,locked,Comment ça se passe avec le <device_name> ?,Le <device_name> est verrouillé
+media_player,playing,Pouvez-vous m'indiquer le <device_name>,Le <device_name> joue
+media_player,paused,Que se passe-t-il avec <device_name> ?,Le <device_name> est en pause
+garage_door,opening,Des nouvelles sur <device_name>,Le <device_name> s'ouvre
+garage_door,closing,Quel est le scoop sur <device_name>,Le <device_name> se ferme
+blinds,opening,Vous avez reçu des mises à jour sur <device_name>,Le <device_name> s'ouvre
+blinds,closing,Que se passe-t-il actuellement avec <device_name> ?,Le <device_name> se ferme
+lock,unlocking,Quelle est la dernière mise à jour sur <device_name>,Le <device_name> est en cours de déverrouillage
+lock,locking,Toute modification avec le <device_name>,Le <device_name> est verrouillé
+light,on,Quoi de neuf avec <device_name>,Le <device_name> est activé
+light,off,quel est l'état de <device_name>,Le <device_name> est éteint
+fan,on,<device_name> est-il actif,Le <device_name> est activé
+fan,off,Statut de <device_name>,Le <device_name> est éteint
+garage_door,open,Mise à jour de <device_name>,Le <device_name> est ouvert
+garage_door,closed,<device_name> état actuel,Le <device_name> est fermé
+blinds,open,Comment va le <device_name>,Les <device_name> sont ouverts
+blinds,closed,Mise à jour sur <device_name>,Les <device_name> sont fermés
+media_player,on,quel est l'état de <device_name>,Le <device_name> est activé
+media_player,off,Des nouvelles sur <device_name>,Le <device_name> est éteint
+lock,unlocked,Comment va le <device_name>,Le <device_name> est déverrouillé
+lock,locked,<device_name> ok,Le <device_name> est verrouillé
+media_player,playing,<device_name> est-il actif,Le <device_name> joue
+media_player,paused,État de <device_name>,Le <device_name> est en pause
+garage_door,opening,Que fait <device_name> ?,Le <device_name> s'ouvre
+garage_door,closing,Statut de <device_name>,Le <device_name> se ferme
+blinds,opening,Mise à jour de <device_name>,Le <device_name> s'ouvre
+blinds,closing,Comment va le <device_name>,Le <device_name> se ferme
+lock,unlocking,État de <device_name>,Le <device_name> est en cours de déverrouillage
+lock,locking,Est-ce que <device_name> va bien,Le <device_name> est verrouillé
+light,on,Que fait <device_name> ?,Le <device_name> est activé
+light,off,<device_name> est-il actif,Le <device_name> est éteint
+fan,on,Statut de <device_name> maintenant,Le <device_name> est activé
+fan,off,État actuel de <device_name>,Le <device_name> est éteint
+light,on,Est-ce que <device_name> fonctionne,Le <device_name> est activé
+light,off,Mise à jour sur <device_name>,Le <device_name> est éteint
+fan,on,Comment va le <device_name>,Le <device_name> est activé
+fan,off,Statut de <device_name>,Le <device_name> est éteint
+light,on,Condition <device_name>,Le <device_name> est activé
+light,off,Quoi de neuf avec <device_name>,Le <device_name> est éteint
+media_player,on;<volume>,Quel est le volume sur <device_name> ?,Le volume sur <device_name> se trouve à <volume>.
+media_player,off,Pouvez-vous vérifier le niveau de volume de <device_name> ?,"<device_name> est désactivé, je ne peux donc pas vérifier le niveau de volume pour le moment."
+media_player,idle,"J'ai besoin du volume actuel de <device_name>, s'il vous plaît.",Le volume actuel de <device_name> est <volume>.
+media_player,playing,Le volume est-il trop fort sur <device_name> ?,Le volume sur <device_name> est actuellement défini sur <volume>.
+media_player,paused,Sur quel volume était réglé avant la mise en pause de <device_name> ?,"Avant d'être mis en pause, <device_name> avait un niveau de volume de <volume>."
+media_player,playing,Pourriez-vous augmenter un peu le volume de <device_name> ?,J'ai augmenté le volume sur <device_name>. Il est maintenant au <volume>.
+media_player,playing,Le volume est-il coupé sur <device_name> ?,Le volume sur <device_name> n'est pas coupé. C'est au <volume>.
+media_player,on,Qu'est-ce qui se joue actuellement sur <device_name> ?,<media> est actuellement en cours de lecture sur <device_name>.
+media_player,off,Y a-t-il quelque chose en cours de lecture sur <device_name> ?,Rien n'est joué sur <device_name> car il est actuellement désactivé.
+media_player,idle,Pouvez-vous me dire ce qui a été joué pour la dernière fois sur <device_name> ?,Le dernier média lu sur <device_name> était <media>.
+media_player,playing,Qu'est-ce qui est diffusé sur <device_name> en ce moment ?,La chanson <media> est actuellement diffusée sur <device_name>.
+media_player,paused,Quel média a été mis en pause sur <device_name> ?,<media> a été mis en pause sur <device_name>.
+media_player,on,"J'entends quelque chose provenant de <device_name>, qu'est-ce que c'est ?",<device_name> ne lit rien actuellement.
+media_player,playing,"J'aime ce morceau sur <device_name>, qu'est-ce que c'est ?",Vous écoutez <media> sur <device_name>.
+media_player,paused,Pouvez-vous nommer le film diffusé sur <device_name> ?,Le film actuellement en pause sur <device_name> est <media>.
+media_player,standby,Quelle a été la dernière émission regardée sur <device_name> ?,La dernière émission regardée sur <device_name> était <media>.
+media_player,buffering,Quel épisode est actuellement diffusé sur <device_name> ?,L'épisode sur <device_name> est <media>.
+light,on;<color>;<brightness>,Quelle est la luminosité de <device_name> ?,La luminosité de <device_name> est actuellement à <brightness>.
+light,on;<color>;<brightness>,Pouvez-vous me dire la couleur de <device_name> ?,<device_name> affiche actuellement <color>.
+light,on;<color>;<brightness>,<device_name> est-il réglé sur un paramètre lumineux ou faible ?,<device_name> est réglé sur un niveau de luminosité <brightness>.
+light,on;<color>;<brightness>,Quelle teinte <device_name> affiche-t-il ?,<device_name> affiche une teinte <color>.
+light,on;<color>;<brightness>,Quelle est la luminosité de <device_name> actuellement ?,<device_name> est actuellement à <brightness> % de luminosité.
+light,on;<color>;<brightness>,J'aimerais connaître la couleur actuelle de <device_name>.,La couleur actuelle de <device_name> est <color>.
+light,on;<color>;<brightness>,<device_name> est-il plutôt du côté sombre ou du bon côté ?,<device_name> est davantage du côté de <brightness>.
+light,on;<color>;<brightness>,Sur quel paramètre de couleur <device_name> est-il activé ?,<device_name> est défini sur le paramètre de couleur <color>.
+light,on;<color>;<brightness>,Pourriez-vous vérifier le niveau de luminosité de <device_name> pour moi ?,"Bien sûr, le niveau de luminosité de <device_name> est <brightness>."
+light,on;<color>;<brightness>,"Dites-moi, quelle est la teinte actuelle de <device_name> ?",La teinte actuelle de <device_name> est <color>.
+light,off,Quelle est la luminosité de <device_name> ?,Le périphérique <device_name> est éteint.
+light,off,Pouvez-vous me dire la couleur de <device_name> ?,<device_name> est désactivé.
+light,off,<device_name> est-il réglé sur un paramètre lumineux ou faible ?,"Non, <device_name> est désactivé."
+light,off,Quelle teinte <device_name> affiche-t-il ?,<device_name> est en fait désactivé.
+light,off,Quelle est la luminosité de <device_name> actuellement ?,<device_name> est désactivé.
+media_player,playing;<media>;<volume>,Qu'est-ce qui est diffusé actuellement sur <device_name> ?,<device_name> lit <media> au niveau de volume <volume>.
+media_player,paused;<media>;<volume>,Pouvez-vous me dire ce qui est en pause sur <device_name> ?,<device_name> a <media> mis en pause au niveau de volume <volume>.
+media_player,idle;<volume>,Y a-t-il quelque chose en cours de lecture sur <device_name> ?,<device_name> est actuellement inactif avec le volume défini sur <volume>.
+media_player,playing;<media>;<volume>,Quelle chanson <device_name> joue-t-il ?,<device_name> lit la chanson <media> au volume <volume>.
+media_player,paused;<media>;<volume>,Quelle a été la dernière chose jouée sur <device_name> ?,"Le dernier média lu sur <device_name> était <media>, actuellement en pause au volume <volume>."
+media_player,idle;<volume>,<device_name> est-il actif en ce moment ?,"<device_name> est actuellement inactif, le volume est défini sur <volume>."
+media_player,playing;<media>;<volume>,Qu'y a-t-il sur <device_name> en ce moment ?,<device_name> lit actuellement <media> au volume <volume>.
+media_player,paused;<media>;<volume>,"J'ai oublié ce que j'ai mis en pause sur <device_name>, pouvez-vous me le rappeler ?",Vous avez mis <media> en pause sur <device_name> et le volume est réglé sur <volume>.
+media_player,idle;<volume>,<device_name> est-il allumé ou éteint ?,"<device_name> est allumé mais inactif, avec le volume sur <volume>."
+media_player,playing;<media>;<volume>,J'aimerais savoir ce qui se passe sur <device_name>.,"Actuellement, <media> est lu sur <device_name> au niveau de volume <volume>."
+vacuum,cleaning,L'aspirateur <device_name> est-il en cours d'exécution en ce moment ?,L'aspirateur est en marche.
+vacuum,cleaning,L'aspirateur <device_name> est-il activé ?,C'est. Votre maison est actuellement en cours de nettoyage.
+vacuum,cleaning,<device_name> est-il en train de nettoyer ?,"Oui, <device_name> passe actuellement l'aspirateur."
+vacuum,cleaning,Que fait l'aspirateur <device_name> en ce moment ?,L'aspirateur <device_name> nettoie actuellement la maison.
+vacuum,cleaning,Que fait <device_name> en ce moment ?,<device_name> est en train de nettoyer.
+vacuum,docked,Que fait l'aspirateur <device_name> en ce moment ?,L'aspirateur <device_name> est actuellement ancré.
+vacuum,docked,Que fait <device_name> en ce moment ?,<device_name> est actuellement ancré.
+vacuum,docked,Est-ce que <device_name> est sur sa base en ce moment ?,"Oui, <device_name> est à sa base."
+vacuum,docked,Où se trouve l'aspirateur <device_name> ?,Sur son quai en ce moment.
+vacuum,paused,Que fait l'aspirateur <device_name> en ce moment ?,Le vide <device_name> est mis en pause.
+vacuum,paused,Que fait <device_name> en ce moment ?,<device_name> est en pause.
+vacuum,idle,Que fait l'aspirateur <device_name> en ce moment ?,Le vide <device_name> est arrêté.
+vacuum,idle,Que fait <device_name> en ce moment ?,<device_name> est arrêté.
+vacuum,error,Que fait l'aspirateur <device_name> en ce moment ?,Le vide <device_name> est bloqué ou présente des problèmes qui doivent être corrigés.
+vacuum,error,Que fait <device_name> en ce moment ?,<device_name> est bloqué ou rencontre des problèmes.
+todo,1,Combien d'éléments sont actuellement présents sur mon <device_name> ?,Il y a actuellement 1 élément sur votre <device_name>.
+todo,2,Combien d’éléments se trouvent actuellement sur <device_name> ?,Il y a actuellement 2 éléments sur le <device_name>.
+todo,3,Quel est le nombre actuel d’éléments sur votre <device_name> ?,"Oui, il y a actuellement 3 éléments sur votre <device_name>."
+todo,4,Combien d’objets y a-t-il actuellement sur <device_name> ?,"Oui, il y a actuellement 4 objets sur le <device_name>."
+todo,5,Pourriez-vous me dire combien de pièces se trouvent actuellement sur le <device_name> ?,Je peux vous dire qu'il y a actuellement 5 pièces sur le <device_name>.
+todo,6,Quel est le nombre d'éléments sur <device_name> actuellement ?,Le nombre d’éléments sur <device_name> est désormais de 6.
+todo,7,Combien d’unités puis-je trouver sur mon <device_name> à l’heure actuelle ?,Vous trouverez actuellement 7 unités sur mon <device_name>.
+todo,8,Pourriez-vous m'indiquer combien d'articles se trouvent actuellement sur <device_name> ?,Je serais heureux de vous informer qu'il existe actuellement 8 articles sur <device_name>.
+todo,9,Est-il possible pour vous de divulguer le nombre de composants actuellement présents sur le <device_name> ?,Il m'est possible de révéler qu'il y a actuellement 9 composants sur le <device_name>.
+todo,10,Puis-je demander la quantité d'articles actuellement présents sur <device_name> ?,La quantité d'éléments sur <device_name> est actuellement de 10.
+todo,11,Pourriez-vous me dire combien d'éléments se trouvent actuellement sur <device_name> ?,"Oui, je peux vous dire qu'il y a maintenant 11 éléments sur le <device_name>."
+todo,12,Pouvez-vous m'éclairer sur le nombre d'éléments sur le <device_name> ?,Je serais heureux de vous informer qu'il y a 12 éléments sur le <device_name>.
+timer,active;<duration>;<remaining>,Combien de temps reste-t-il sur <device_name> ?,Le <device_name> est défini pour <duration>. Il reste actuellement <remaining>.
+timer,active;<duration>;<remaining>,Combien de temps avant que <device_name> ne s'éteigne ?,Le <device_name> sonnera dans <remaining>.
+timer,active;<duration>;<remaining>,Quand le <device_name> est-il configuré pour s'éteindre ?,Le <device_name> est défini pour <duration> et s'éteindra dans <remaining>.

@@ -30,8 +30,11 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
     TextSelector,
     TextSelectorConfig,
+    BooleanSelector,
+    BooleanSelectorConfig,
 )
 from homeassistant.util.package import is_installed
+from importlib.metadata import version
 
 from .utils import download_model_from_hf, install_llama_cpp_python
 from .const import (
@@ -45,6 +48,8 @@ from .const import (
     CONF_TYPICAL_P,
     CONF_REQUEST_TIMEOUT,
     CONF_BACKEND_TYPE,
+    CONF_SELECTED_LANGUAGE,
+    CONF_SELECTED_LANGUAGE_OPTIONS,
     CONF_DOWNLOADED_MODEL_FILE,
     CONF_DOWNLOADED_MODEL_QUANTIZATION,
     CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS,
@@ -77,7 +82,8 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_SSL,
     DEFAULT_MAX_TOKENS,
-    DEFAULT_PROMPT,
+    PERSONA_PROMPTS,
+    DEFAULT_PROMPT_BASE,
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
@@ -122,6 +128,7 @@ from .const import (
     DEFAULT_OPTIONS,
     OPTIONS_OVERRIDES,
     RECOMMENDED_CHAT_MODELS,
+    EMBEDDED_LLAMA_CPP_PYTHON_VERSION
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -150,14 +157,20 @@ def STEP_INIT_DATA_SCHEMA(backend_type=None):
         }
     )
 
-def STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA(model_file=None):
+def STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA(model_file=None, selected_language=None):
     return vol.Schema(
         {
             vol.Required(CONF_DOWNLOADED_MODEL_FILE, default=model_file if model_file else ""): str,
+            vol.Required(CONF_SELECTED_LANGUAGE, default=selected_language if selected_language else "en"): SelectSelector(SelectSelectorConfig(
+                options=CONF_SELECTED_LANGUAGE_OPTIONS,
+                translation_key=CONF_SELECTED_LANGUAGE,
+                multiple=False,
+                mode=SelectSelectorMode.DROPDOWN,
+            )),
         }
     )
 
-def STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(*, chat_model=None, downloaded_model_quantization=None):
+def STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(*, chat_model=None, downloaded_model_quantization=None, selected_language=None):
     return vol.Schema(
         {
             vol.Required(CONF_CHAT_MODEL, default=chat_model if chat_model else DEFAULT_CHAT_MODEL): SelectSelector(SelectSelectorConfig(
@@ -167,10 +180,16 @@ def STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(*, chat_model=None, downloaded_model_q
                 mode=SelectSelectorMode.DROPDOWN,
             )),
             vol.Required(CONF_DOWNLOADED_MODEL_QUANTIZATION, default=downloaded_model_quantization if downloaded_model_quantization else DEFAULT_DOWNLOADED_MODEL_QUANTIZATION): vol.In(CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS),
+            vol.Required(CONF_SELECTED_LANGUAGE, default=selected_language if selected_language else "en"): SelectSelector(SelectSelectorConfig(
+                options=CONF_SELECTED_LANGUAGE_OPTIONS,
+                translation_key=CONF_SELECTED_LANGUAGE,
+                multiple=False,
+                mode=SelectSelectorMode.DROPDOWN,
+            )),
         }
     )
 
-def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, ssl=None, chat_model=None, available_chat_models=[]):
+def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, ssl=None, chat_model=None, available_chat_models=[], selected_language=None):
 
     extra1, extra2 = ({}, {})
     default_port = DEFAULT_PORT
@@ -191,6 +210,12 @@ def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, ss
             vol.Required(CONF_CHAT_MODEL, default=chat_model if chat_model else DEFAULT_CHAT_MODEL): SelectSelector(SelectSelectorConfig(
                 options=available_chat_models,
                 custom_value=True,
+                multiple=False,
+                mode=SelectSelectorMode.DROPDOWN,
+            )),
+            vol.Required(CONF_SELECTED_LANGUAGE, default=selected_language if selected_language else "en"): SelectSelector(SelectSelectorConfig(
+                options=CONF_SELECTED_LANGUAGE_OPTIONS,
+                translation_key=CONF_SELECTED_LANGUAGE,
                 multiple=False,
                 mode=SelectSelectorMode.DROPDOWN,
             )),
@@ -261,6 +286,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
     download_error = None
     model_config: dict[str, Any]
     options: dict[str, Any]
+    selected_language: str
 
     @property
     def flow_manager(self) -> config_entries.ConfigEntriesFlowManager:
@@ -291,7 +317,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             local_backend = is_local_backend(user_input[CONF_BACKEND_TYPE])
             self.model_config.update(user_input)
             if local_backend:
-                if is_installed("llama-cpp-python"):
+                if is_installed("llama-cpp-python") and version("llama-cpp-python") == EMBEDDED_LLAMA_CPP_PYTHON_VERSION:
                     return await self.async_step_local_model()
                 else:
                     return await self.async_step_install_local_wheels()
@@ -364,10 +390,13 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             description_placeholders["exception"] = str(self.download_error)
             schema = STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(
                 chat_model=self.model_config[CONF_CHAT_MODEL],
-                downloaded_model_quantization=self.model_config[CONF_DOWNLOADED_MODEL_QUANTIZATION]
+                downloaded_model_quantization=self.model_config[CONF_DOWNLOADED_MODEL_QUANTIZATION],
+                selected_language=self.selected_language
             )
 
         if user_input and "result" not in user_input:
+            self.selected_language = user_input.pop(CONF_SELECTED_LANGUAGE, self.hass.config.language)
+
             self.model_config.update(user_input)
 
             if backend_type == BACKEND_TYPE_LLAMA_HF:
@@ -379,7 +408,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                     return await self.async_step_model_parameters()
                 else:
                     errors["base"] = "missing_model_file"
-                    schema = STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA(model_file)
+                    schema = STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA(model_file, self.selected_language)
 
         return self.async_show_form(
             step_id="local_model", data_schema=schema, errors=errors, description_placeholders=description_placeholders, last_step=False
@@ -478,10 +507,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
 
             for model in models:
                 model_name = self.model_config[CONF_CHAT_MODEL]
-                if ":" in model_name:
-                    if model["name"] == model_name:
-                        return (None, None, [])
-                elif model["name"].split(":")[0] == model_name:
+                if model["name"] == model_name:
                     return (None, None, [])
                 
             return "missing_model_api", None, [x["name"] for x in models]
@@ -500,6 +526,8 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
 
         if user_input:
             try:
+                self.selected_language = user_input.pop(CONF_SELECTED_LANGUAGE, self.hass.config.language)
+
                 self.model_config.update(user_input)
                 error_message = None
 
@@ -526,6 +554,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                         ssl=user_input[CONF_SSL],
                         chat_model=user_input[CONF_CHAT_MODEL],
                         available_chat_models=possible_models,
+                        selected_language=self.selected_language,
                     )
                 else:
                     return await self.async_step_model_parameters()
@@ -550,6 +579,9 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         for key in OPTIONS_OVERRIDES.keys():
             if key in model_name:
                 selected_default_options.update(OPTIONS_OVERRIDES[key])
+
+        persona = PERSONA_PROMPTS.get(self.selected_language, PERSONA_PROMPTS.get("en"))
+        selected_default_options[CONF_PROMPT] = selected_default_options[CONF_PROMPT].replace("<persona>", persona)
         
         schema = vol.Schema(local_llama_config_option_schema(selected_default_options, backend_type))
 
@@ -658,7 +690,7 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
         vol.Required(
             CONF_PROMPT,
             description={"suggested_value": options.get(CONF_PROMPT)},
-            default=DEFAULT_PROMPT,
+            default=options[CONF_PROMPT],
         ): TemplateSelector(),
         vol.Required(
             CONF_PROMPT_TEMPLATE,
@@ -674,7 +706,7 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
             CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
             description={"suggested_value": options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES)},
             default=DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
-        ): bool,
+        ): BooleanSelector(BooleanSelectorConfig()),
         vol.Required(
             CONF_IN_CONTEXT_EXAMPLES_FILE,
             description={"suggested_value": options.get(CONF_IN_CONTEXT_EXAMPLES_FILE)},
@@ -709,12 +741,12 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
             CONF_REFRESH_SYSTEM_PROMPT,
             description={"suggested_value": options.get(CONF_REFRESH_SYSTEM_PROMPT)},
             default=DEFAULT_REFRESH_SYSTEM_PROMPT,
-        ): bool,
+        ): BooleanSelector(BooleanSelectorConfig()),
         vol.Required(
             CONF_REMEMBER_CONVERSATION,
             description={"suggested_value": options.get(CONF_REMEMBER_CONVERSATION)},
             default=DEFAULT_REMEMBER_CONVERSATION,
-        ): bool,
+        ): BooleanSelector(BooleanSelectorConfig()),
         vol.Optional(
             CONF_REMEMBER_NUM_INTERACTIONS,
             description={"suggested_value": options.get(CONF_REMEMBER_NUM_INTERACTIONS)},
@@ -753,7 +785,7 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_PROMPT_CACHING_ENABLED,
                 description={"suggested_value": options.get(CONF_PROMPT_CACHING_ENABLED)},
                 default=DEFAULT_PROMPT_CACHING_ENABLED,
-            ): bool,
+            ): BooleanSelector(BooleanSelectorConfig()),
             vol.Required(
                 CONF_PROMPT_CACHING_INTERVAL,
                 description={"suggested_value": options.get(CONF_PROMPT_CACHING_INTERVAL)},
@@ -784,7 +816,7 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_USE_GBNF_GRAMMAR,
                 description={"suggested_value": options.get(CONF_USE_GBNF_GRAMMAR)},
                 default=DEFAULT_USE_GBNF_GRAMMAR,
-            ): bool,
+            ): BooleanSelector(BooleanSelectorConfig()),
             vol.Required(
                 CONF_GBNF_GRAMMAR_FILE,
                 description={"suggested_value": options.get(CONF_GBNF_GRAMMAR_FILE)},
@@ -832,7 +864,7 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_REMOTE_USE_CHAT_ENDPOINT,
                 description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
                 default=DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
-            ): bool,
+            ): BooleanSelector(BooleanSelectorConfig()),
             vol.Optional(
                 CONF_TEXT_GEN_WEBUI_PRESET,
                 description={"suggested_value": options.get(CONF_TEXT_GEN_WEBUI_PRESET)},
@@ -869,7 +901,7 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_REMOTE_USE_CHAT_ENDPOINT,
                 description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
                 default=DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
-            ): bool,
+            ): BooleanSelector(BooleanSelectorConfig()),
         })
     elif backend_type == BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER:
         result = insert_after_key(result, CONF_MAX_TOKENS, {
@@ -892,7 +924,7 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_USE_GBNF_GRAMMAR,
                 description={"suggested_value": options.get(CONF_USE_GBNF_GRAMMAR)},
                 default=DEFAULT_USE_GBNF_GRAMMAR,
-            ): bool,
+            ): BooleanSelector(BooleanSelectorConfig()),
             vol.Required(
                 CONF_GBNF_GRAMMAR_FILE,
                 description={"suggested_value": options.get(CONF_GBNF_GRAMMAR_FILE)},
@@ -907,7 +939,7 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_REMOTE_USE_CHAT_ENDPOINT,
                 description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
                 default=DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
-            ): bool,
+            ): BooleanSelector(BooleanSelectorConfig()),
         })
     elif backend_type == BACKEND_TYPE_OLLAMA:
         result = insert_after_key(result, CONF_MAX_TOKENS, {
@@ -940,7 +972,7 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_OLLAMA_JSON_MODE,
                 description={"suggested_value": options.get(CONF_OLLAMA_JSON_MODE)},
                 default=DEFAULT_OLLAMA_JSON_MODE,
-            ): bool,
+            ): BooleanSelector(BooleanSelectorConfig()),
             vol.Required(
                 CONF_REQUEST_TIMEOUT,
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
@@ -955,7 +987,7 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 CONF_REMOTE_USE_CHAT_ENDPOINT,
                 description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
                 default=DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
-            ): bool,
+            ): BooleanSelector(BooleanSelectorConfig()),
         })
 
     return result

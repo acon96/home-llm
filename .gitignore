@@ -10,3 +10,4 @@ main.log
 .venv
 *.xlsx
 notes.txt
+runpod_bootstrap.sh

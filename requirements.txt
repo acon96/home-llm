@@ -3,10 +3,12 @@ tensorboard
 datasets
 peft
 bitsandbytes
+trl
 webcolors
 pandas
 # flash-attn
 sentencepiece
+deep-translator
 
 homeassistant
 hassil

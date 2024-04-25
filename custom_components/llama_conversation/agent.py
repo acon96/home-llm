@@ -489,6 +489,11 @@ class LLaMAAgent(AbstractConversationAgent):
         all_services = []
         all_service_names = []
         for domain in domains:
+            # scripts show up as individual services
+            if domain == "script":
+                all_services.extend(["script.reload()", "script.turn_on()", "script.turn_off()", "script.toggle()"])
+                continue
+            
             for name, service in service_dict.get(domain, {}).items():
                 args = flatten_vol_schema(service.schema)
                 args_to_expose = set(args).intersection(allowed_service_call_arguments)
@@ -856,7 +861,7 @@ class GenericOpenAIAPIAgent(LLaMAAgent):
         if choices[0]["finish_reason"] != "stop":
             _LOGGER.warning("Model response did not end on a stop token (unfinished sentence)")
 
-        if response_json["object"] == "chat.completion":
+        if response_json["object"] in ["chat.completion", "chat.completion.chunk"]:
             return choices[0]["message"]["content"]
         else:
             return choices[0]["text"]
@@ -1075,12 +1080,12 @@ class OllamaAPIAgent(LLaMAAgent):
 
         endpoint = "/api/generate"
         request_params["prompt"] = self._format_prompt(conversation)
-        # request_params["raw"] = True # ignore prompt template
+        request_params["raw"] = True # ignore prompt template
 
         return endpoint, request_params
     
     def _extract_response(self, response_json: dict) -> str:        
-        if response_json["done"] != "true":
+        if response_json["done"] not in ["true", True]:
             _LOGGER.warning("Model response did not end on a stop token (unfinished sentence)")
         
         # TODO: this doesn't work because ollama caches prompts and doesn't always return the full prompt length

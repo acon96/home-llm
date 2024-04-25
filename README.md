@@ -7,22 +7,20 @@ This project provides the required "glue" components to control your Home Assist
 Please see the [Setup Guide](./docs/Setup.md) for more information on installation.
 
 ## LLama Conversation Integration
-In order to integrate with Home Assistant, we provide a `custom_component` that exposes the locally running LLM as a "conversation agent".
+In order to integrate with Home Assistant, we provide a custom component that exposes the locally running LLM as a "conversation agent".
 
 This component can be interacted with in a few ways:  
 - using a chat interface so you can chat with it.
 - integrating with Speech-to-Text and Text-to-Speech addons so you can just speak to it.
 
-The component can either run the model directly as part of the Home Assistant software using llama-cpp-python, or you can run the [oobabooga/text-generation-webui](https://github.com/oobabooga/text-generation-webui) project to provide access to the LLM via an API interface.
-
-When doing this, you can host the model yourself and point the add-on at machine where the model is hosted, or you can run the model using text-generation-webui using the provided [custom Home Assistant add-on](./addon).
+The component can either run the model directly as part of the Home Assistant software using llama-cpp-python, or you can run [Ollama](https://ollama.com/) (simple) or the [oobabooga/text-generation-webui](https://github.com/oobabooga/text-generation-webui) project (advanced) to provide access to the LLM via an API interface.
 
 ## Home LLM Model
-The "Home" models are a fine tuning of the Phi model series from Microsoft and the StableLM model series from StabilityAI.  The model is able to control devices in the user's house as well as perform basic question and answering.  The fine tuning dataset is a [custom synthetic dataset](./data) designed to teach the model function calling based on the device information in the context.
+The "Home" models are a fine tuning of various Large Languages Models that are under 5B parameters.  The models are able to control devices in the user's house as well as perform basic question and answering.  The fine tuning dataset is a [custom synthetic dataset](./data) designed to teach the model function calling based on the device information in the context.
 
 The latest models can be found on HuggingFace:  
 3B v3 (Based on StableLM-Zephyr-3B): https://huggingface.co/acon96/Home-3B-v3-GGUF  (Zephyr prompt format)  
-1B v2 (Based on Phi-1.5): https://huggingface.co/acon96/Home-1B-v2-GGUF  (ChatML prompt format)  
+1B v3 (Based on TinyLlama-1.1B): https://huggingface.co/acon96/Home-1B-v3-GGUF  (Zephyr prompt format)  
 
 <details>
 
@@ -30,6 +28,7 @@ The latest models can be found on HuggingFace:
 
 3B v2 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v2-GGUF  (ChatML prompt format)  
 3B v1 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v1-GGUF  (ChatML prompt format)  
+1B v2 (Based on Phi-1.5): https://huggingface.co/acon96/Home-1B-v2-GGUF  (ChatML prompt format)  
 1B v1 (Based on Phi-1.5): https://huggingface.co/acon96/Home-1B-v1-GGUF  (ChatML prompt format)  
 
 </details>
@@ -41,6 +40,7 @@ The model can be used as an "instruct" type model using the [ChatML](https://git
 Example "system" prompt: 
 ```
 You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed with the information provided only.
+The current time and date is 08:12 AM on Thursday March 14, 2024
 Services: light.turn_off(), light.turn_on(brightness,rgb_color), fan.turn_on(), fan.turn_off()
 Devices:
 light.office 'Office Light' = on;80%
@@ -80,30 +80,26 @@ The dataset is available on HuggingFace: https://huggingface.co/datasets/acon96/
 The source for the dataset is in the [data](/data) of this repository.
 
 ### Training
-The 3B model was trained as a LoRA on an RTX 3090 (24GB) using the following settings for the custom training script. The embedding weights were "saved" and trained normally along with the rank matricies in order to train the newly added tokens to the embeddings. The full model is merged together at the end. Training took approximately 10 hours.
+The 3B model was trained as a full fine-tuning on 2x RTX 4090 (48GB). Training time took approximately 28 hours. It was trained on the `--large` dataset variant.
 
 <details>
 <summary>Training Arguments</summary>
 
 ```console
-python3 train.py \
+accelerate launch --config_file fsdp_config.yaml train.py \
     --run_name home-3b \
-    --base_model microsoft/phi-2 \
-    --add_pad_token \
-    --add_chatml_tokens \
+    --base_model stabilityai/stablelm-zephyr-3b \
     --bf16 \
-    --train_dataset data/home_assistant_alpaca_merged_train.json \
-    --learning_rate 1e-5 \
-    --save_steps 1000 \
-    --micro_batch_size 2 --gradient_checkpointing \
+    --train_dataset data/home_assistant_train.jsonl \
+    --learning_rate 1e-5 --batch_size 64 --epochs 1 \
+    --micro_batch_size 2 --gradient_checkpointing --group_by_length \
     --ctx_size 2048 \
-    --group_by_length \
-    --use_lora --lora_rank 32 --lora_alpha 64 --lora_modules fc1,fc2,q_proj,v_proj,dense --lora_modules_to_save embed_tokens,lm_head --lora_merge
+    --save_steps 50 --save_total_limit 10 --eval_steps 100 --logging_steps 2
 ```
 
 </details>
 
-The 1B model was trained as a full fine-tuning on on an RTX 3090 (24GB). Training took approximately 2.5 hours.
+The 1B model was trained as a full fine-tuning on an RTX 3090 (24GB). Training took approximately 2 hours. It was trained on the `--medium` dataset variant.
 
 <details>
 <summary>Training Arguments</summary>
@@ -111,14 +107,13 @@ The 1B model was trained as a full fine-tuning on on an RTX 3090 (24GB). Trainin
 ```console
 python3 train.py \
     --run_name home-1b \
-    --base_model microsoft/phi-1_5 \
-    --add_pad_token \
-    --add_chatml_tokens \
+    --base_model TinyLlama/TinyLlama-1.1B-Chat-v1.0 \
     --bf16 \
-    --train_dataset data/home_assistant_train.json \
-    --learning_rate 1e-5 \
-    --micro_batch_size 4 --gradient_checkpointing \
-    --ctx_size 2048
+    --train_dataset data/home_assistant_train.jsonl \
+    --test_dataset data/home_assistant_test.jsonl \
+    --learning_rate 2e-5 --batch_size 32 \
+    --micro_batch_size 8 --gradient_checkpointing --group_by_length \
+    --ctx_size 2048 --save_steps 100 --save_total_limit 10
 ```
 
 </details>
@@ -129,19 +124,20 @@ In order to facilitate running the project entirely on the system where Home Ass
 
 
 ## Version History
-| Version | Description                                                                                                                                                                                         |
-| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| v0.2.12 | Fix cover ICL examples, allow setting number of ICL examples, add min P and typical P sampler options, recommend models during setup, add JSON mode for Ollama backend, fix missing default options |
-| v0.2.11 | Add prompt caching, expose llama.cpp runtime settings, build llama-cpp-python wheels using GitHub actions, and install wheels directly from GitHub                                                  |
-| v0.2.10 | Allow configuring the model parameters during initial setup, attempt to auto-detect defaults for recommended models, Fix to allow lights to be set to max brightness                                |
-| v0.2.9  | Fix HuggingFace Download, Fix llama.cpp wheel installation, Fix light color changing, Add in-context-learning support                                                                               | 
-| v0.2.8  | Fix ollama model names with colons                                                                                                                                                                  |
-| v0.2.7  | Publish model v3, Multiple Ollama backend improvements, Updates for HA 2024.02, support for voice assistant aliases                                                                                 |
-| v0.2.6  | Bug fixes, add options for limiting chat history, HTTPS endpoint support, added zephyr prompt format.                                                                                               |
-| v0.2.5  | Fix Ollama max tokens parameter, fix GGUF download from Hugging Face, update included llama-cpp-python to 0.2.32, and add parameters to function calling for dataset + component, & model update    |
-| v0.2.4  | Fix API key auth on model load for text-generation-webui, and add support for Ollama API backend                                                                                                    |
-| v0.2.3  | Fix API key auth, Support chat completion endpoint, and refactor to make it easier to add more remote backends                                                                                      |
-| v0.2.2  | Fix options window after upgrade, fix training script for new Phi model format, and release new models                                                                                              |
-| v0.2.1  | Properly expose generation parameters for each backend, handle config entry updates without reloading, support remote backends with an API key                                                      |
-| v0.2    | Bug fixes, support more backends, support for climate + switch devices, JSON style function calling with parameters, GBNF grammars                                                                  |
-| v0.1    | Initial Release                                                                                                                                                                                     |
+| Version | Description                                                                                                                                                                                                          |
+|---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| v0.2.13 | Add support for Llama 3, build llama.cpp wheels that are compatible with non-AVX systems, fix an error with exposing script entities, fix multiple small Ollama backend issues, and add basic multi-language support |
+| v0.2.12 | Fix cover ICL examples, allow setting number of ICL examples, add min P and typical P sampler options, recommend models during setup, add JSON mode for Ollama backend, fix missing default options                  |
+| v0.2.11 | Add prompt caching, expose llama.cpp runtime settings, build llama-cpp-python wheels using GitHub actions, and install wheels directly from GitHub                                                                   |
+| v0.2.10 | Allow configuring the model parameters during initial setup, attempt to auto-detect defaults for recommended models, Fix to allow lights to be set to max brightness                                                 |
+| v0.2.9  | Fix HuggingFace Download, Fix llama.cpp wheel installation, Fix light color changing, Add in-context-learning support                                                                                                |
+| v0.2.8  | Fix ollama model names with colons                                                                                                                                                                                   |
+| v0.2.7  | Publish model v3, Multiple Ollama backend improvements, Updates for HA 2024.02, support for voice assistant aliases                                                                                                  |
+| v0.2.6  | Bug fixes, add options for limiting chat history, HTTPS endpoint support, added zephyr prompt format.                                                                                                                |
+| v0.2.5  | Fix Ollama max tokens parameter, fix GGUF download from Hugging Face, update included llama-cpp-python to 0.2.32, and add parameters to function calling for dataset + component, & model update                     |
+| v0.2.4  | Fix API key auth on model load for text-generation-webui, and add support for Ollama API backend                                                                                                                     |
+| v0.2.3  | Fix API key auth, Support chat completion endpoint, and refactor to make it easier to add more remote backends                                                                                                       |
+| v0.2.2  | Fix options window after upgrade, fix training script for new Phi model format, and release new models                                                                                                               |
+| v0.2.1  | Properly expose generation parameters for each backend, handle config entry updates without reloading, support remote backends with an API key                                                                       |
+| v0.2    | Bug fixes, support more backends, support for climate + switch devices, JSON style function calling with parameters, GBNF grammars                                                                                   |
+| v0.1    | Initial Release                                                                                                                                                                                                      |

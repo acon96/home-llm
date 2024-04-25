@@ -1,0 +1,265 @@
+device_type,service,phrase,multiplier
+blinds,close_cover,Fermez le <device_name>,1
+blinds,close_cover,Abaissez le <device_name>,1
+blinds,close_cover,Fermez le <device_name>,1
+blinds,open_cover,Soulevez les stores <device_name>,1
+blinds,open_cover,Ouvrez le <device_name>,1
+blinds,open_cover,Augmentez le <device_name>,1
+blinds,stop_cover,Geler le <device_name>,1
+blinds,stop_cover,Arrêtez le <device_name>,1
+blinds,stop_cover,Arrêtez le <device_name>,1
+blinds,toggle,Inverser l'état <device_name>,1
+blinds,toggle,Changer l'état <device_name>,1
+blinds,toggle,Basculez le <device_name>,1
+blinds|fan,close_cover|turn_off,Fermez <device_name1> et désactivez <device_name2>,1
+blinds|fan,open_cover|increase_speed,Augmentez le <device_name1> et accélérez le <device_name2>,1
+blinds|light,open_cover|turn_on,Augmentez <device_name1> et activez <device_name2>,1
+fan,decrease_speed,Diminuez la vitesse de <device_name>,1
+fan,decrease_speed,Réduisez la vitesse de <device_name>,1
+fan,decrease_speed,Ralentissez le <device_name>,1
+fan,increase_speed,Augmentez la vitesse de <device_name>,1
+fan,increase_speed,Augmentez la vitesse de <device_name>,1
+fan,increase_speed,Accélérez le <device_name>,1
+fan,toggle,Activer ou désactiver le <device_name>,1
+fan,toggle,Changer l'état <device_name>,1
+fan,toggle,Basculez le <device_name>,1
+fan,turn_off,Désactivez le <device_name>,1
+fan,turn_off,Arrêtez le <device_name> s'il vous plaît,1
+fan,turn_off,Éteignez le <device_name>,1
+fan,turn_on,Activez le <device_name>,1
+fan,turn_on,Veuillez démarrer le <device_name>,1
+fan,turn_on,Allumez le <device_name>,1
+fan|blinds,turn_off|open_cover,Éteignez <device_name1> et ouvrez <device_name2>,1
+fan|blinds|garage_door,increase_speed|open_cover|open_cover,Accélérez <device_name1> ouvrez <device_name2> et <device_name3>,1
+fan|blinds|light,decrease_speed|open_cover|turn_off,Ralentissez <device_name1> ouvrez <device_name2> et éteignez <device_name3>,1
+fan|blinds|light,turn_off|close_cover|turn_on,"Éteignez <device_name1>, fermez <device_name2> et allumez <device_name3>",1
+fan|fan,increase_speed|decrease_speed,Accélérez <device_name1> et ralentissez <device_name2>,1
+fan|fan,turn_on|turn_off,Allumez <device_name1> et désactivez <device_name2>,1
+fan|garage_door,increase_speed|close_cover,Augmentez la vitesse de <device_name1> et fermez <device_name2>,1
+fan|garage_door|blinds,increase_speed|close_cover|open_cover,Accélérez <device_name1> fermez <device_name2> et ouvrez <device_name3>,1
+fan|garage_door|blinds,turn_on|close_cover|close_cover,Allumez <device_name1> fermez <device_name2> et <device_name3>,1
+fan|garage_door|light,turn_off|close_cover|turn_off,Éteignez <device_name1> et <device_name3> et fermez <device_name2>,1
+fan|garage_door|lock,turn_off|close_cover|lock,"Éteignez <device_name1>, fermez <device_name2> et verrouillez <device_name3>",1
+fan|garage_door|lock,turn_on|open_cover|unlock,"Allumez <device_name1>, ouvrez <device_name2> et déverrouillez <device_name3>",1
+fan|light,turn_on|turn_off,Activez <device_name1> et désactivez <device_name2>,1
+fan|light|lock,decrease_speed|toggle|lock,"Ralentissez <device_name1>, basculez <device_name2> et verrouillez <device_name3>",1
+fan|lock,decrease_speed|unlock,Ralentissez le <device_name1> et déverrouillez le <device_name2>,1
+garage_door,close_cover,Fermez le <device_name>,1
+garage_door,close_cover,Abaissez le <device_name>,1
+garage_door,close_cover,Fermez le <device_name>,1
+garage_door,open_cover,Soulevez le <device_name>,1
+garage_door,open_cover,Ouvrez le <device_name>,1
+garage_door,open_cover,Augmentez le <device_name>,1
+garage_door,stop_cover,Geler le <device_name>,1
+garage_door,stop_cover,Arrêtez le <device_name>,1
+garage_door,stop_cover,Arrêtez le <device_name>,1
+garage_door,toggle,Inverser l'état <device_name>,1
+garage_door,toggle,Changer l'état <device_name>,1
+garage_door,toggle,Basculez le <device_name>,1
+garage_door|blinds,open_cover|open_cover,Ouvrez le <device_name1> et soulevez le <device_name2>,1
+garage_door|fan,close_cover|turn_off,Fermez <device_name1> et désactivez <device_name2>,1
+garage_door|light,open_cover|turn_on,Ouvrez <device_name1> et activez <device_name2>,1
+garage_door|lock,open_cover|unlock,Ouvrez <device_name1> et déverrouillez <device_name2>,1
+light,toggle,Activer ou désactiver le <device_name>,1
+light,toggle,Changer l'état <device_name>,1
+light,toggle,Basculer l'état <device_name>,1
+light,turn_off,Désactivez le <device_name>,1
+light,turn_off,Veuillez éteindre le <device_name>,1
+light,turn_off,Éteignez le <device_name>,1
+light,turn_on,Activez le <device_name>,1
+light,turn_on,Pouvez-vous allumer le <device_name> ?,1
+light,turn_on,Veuillez allumer le <device_name>,1
+light|blinds,turn_off|close_cover,Éteignez <device_name1> et fermez <device_name2>,1
+light|blinds|fan,turn_on|close_cover|decrease_speed,Allumez <device_name1> fermez <device_name2> et ralentissez <device_name3>,1
+light|blinds|garage_door,turn_on|open_cover|close_cover,Allumez <device_name1> ouvrez <device_name2> et fermez <device_name3>,1
+light|blinds|lock,turn_off|close_cover|lock,"Éteignez le <device_name1>, fermez le <device_name2> et verrouillez le <device_name3>",1
+light|blinds|lock,turn_off|close_cover|unlock,"Éteignez <device_name1>, fermez <device_name2> et déverrouillez <device_name3>",1
+light|fan,toggle|decrease_speed,Activez <device_name1> et ralentissez <device_name2>,1
+light|fan,toggle|increase_speed,Basculez <device_name1> et accélérez <device_name2>,1
+light|fan,turn_off|turn_on,Éteignez <device_name1> et allumez <device_name2>,1
+light|fan,turn_on|toggle,Allumez <device_name1> et activez <device_name2>,1
+light|fan,turn_on|turn_off,Allumez le <device_name1> et éteignez le <device_name2>,1
+light|fan,turn_on|turn_on,Allumez à la fois <device_name1> et <device_name2>,1
+light|fan,turn_on|turn_on,Allumez le <device_name1> et le <device_name2>,1
+light|fan|blinds,toggle|increase_speed|open_cover,Activez <device_name1> pour accélérer <device_name2> et ouvrez <device_name3>,1
+light|fan|blinds,turn_off|decrease_speed|close_cover,Éteignez <device_name1> ralentissez <device_name2> et fermez <device_name3>,1
+light|fan|blinds,turn_off|turn_off|close_cover,Éteignez <device_name1> et <device_name2> et fermez <device_name3>,1
+light|fan|garage_door,toggle|decrease_speed|open_cover,Activez <device_name1> pour ralentir <device_name2> et ouvrez <device_name3>,1
+light|fan|garage_door,turn_off|turn_on|close_cover,"Éteignez <device_name1>, activez <device_name2> et fermez <device_name3>",1
+light|fan|garage_door,turn_on|toggle|open_cover,"Allumez le <device_name1>, retournez le <device_name2> et soulevez le <device_name3>",1
+light|fan|garage_door,turn_on|turn_on|open_cover,Allumez <device_name1> et <device_name2> et ouvrez <device_name3>,1
+light|fan|lock,toggle|toggle|lock,Basculez à la fois <device_name1> et <device_name2> et verrouillez <device_name3>,1
+light|fan|lock,turn_off|turn_off|unlock,Éteignez <device_name1> et <device_name2> et déverrouillez <device_name3>,1
+light|fan|lock,turn_on|increase_speed|lock,"Allumez <device_name1>, accélérez <device_name2> et verrouillez <device_name3>",1
+light|fan|lock,turn_on|turn_on|unlock,Allumez <device_name1> et <device_name2> et déverrouillez <device_name3>,1
+light|garage_door,toggle|stop_cover,Basculez le <device_name1> et arrêtez le <device_name2>,1
+light|garage_door,turn_on|open_cover,Allumez <device_name1> et ouvrez <device_name2>,1
+light|garage_door,turn_on|open_cover,Allumez le <device_name1> et ouvrez le <device_name2>,1
+light|garage_door|lock,turn_on|open_cover|lock,"Allumez <device_name1>, ouvrez <device_name2> et verrouillez <device_name3>",1
+light|light,toggle|toggle,Basculez à la fois <device_name1> et <device_name2>,1
+light|light,turn_on|turn_off,Allumez <device_name1> et désactivez <device_name2>,1
+light|light|fan,toggle|toggle|decrease_speed,Basculez <device_name1> et <device_name2> et ralentissez <device_name3>,1
+light|light|fan,toggle|turn_on|increase_speed,Activez <device_name1> pour allumer <device_name2> et accélérez <device_name3>,1
+light|light|fan,turn_on|turn_off|toggle,"Allumez <device_name1>, désactivez <device_name2> et activez <device_name3>",1
+light|lock,turn_on|lock,Allumez <device_name1> et verrouillez <device_name2>,1
+lock,lock,Activez le verrou <device_name>,1
+lock,lock,Verrouillez le <device_name>,1
+lock,lock,Sécurisez le <device_name>,1
+lock,unlock,Désactivez le verrou <device_name>,1
+lock,unlock,Déverrouillez le <device_name>,1
+lock,unlock,Non sécurisé le <device_name>,1
+lock|blinds,lock|close_cover,Verrouillez le <device_name1> et abaissez le <device_name2>,1
+lock|garage_door,lock|close_cover,Sécurisez le <device_name1> et fermez le <device_name2>,1
+light,turn_on,Assurez-vous que <device_name> est allumé,1
+fan,turn_on,Assurez-vous que <device_name> est allumé,1
+lock|lock|garage_door,lock|lock|close_cover,Assurez-vous que <device_name1> et <device_name2> sont verrouillés et que <device_name3> est fermé.,1
+light,turn_off,Assurez-vous que <device_name> est éteint,1
+fan,turn_off,Assurez-vous que <device_name> est éteint,1
+garage_door,close_cover,Assurez-vous que le <device_name> est fermé,1
+blinds,open_cover,Assurez-vous que les <device_name> sont ouverts,1
+lock,lock,Assurez-vous que <device_name> est sécurisé,1
+light,toggle,Pouvez-vous retourner le <device_name>,1
+fan,increase_speed,Augmentez la vitesse du <device_name>,1
+garage_door,open_cover,Assurez-vous que <device_name> est ouvert,1
+blinds,close_cover,Assurez-vous que les <device_name> sont fermés,1
+lock,unlock,Assurez-vous que <device_name> est déverrouillé,1
+fan,decrease_speed,Ralentissez le <device_name>,1
+light,turn_on,Confirmez que <device_name> est activé,1
+garage_door,stop_cover,Arrêtez le <device_name> maintenant,1
+light,turn_off,Confirmez que <device_name> est éteint,1
+garage_door,toggle,Basculez la position <device_name>,1
+blinds,toggle,Changer l'état du <device_name>,1
+lock,lock,Verrouillez le <device_name>,1
+fan,turn_on,Assurez-vous que <device_name> est en cours d'exécution,1
+switch,turn_on,Pouvez-vous activer <device_name> ?,1
+switch,turn_off,Veuillez éteindre <device_name>.,1
+switch,toggle,Pourriez-vous activer <device_name> ?,1
+switch,turn_on,J'ai besoin de <device_name> sur,1
+switch,turn_off,Éteignez <device_name>,1
+switch,toggle,<device_name> peut-il être activé ?,1
+switch,turn_on,Activez <device_name>.,1
+switch,turn_off,Désactivez <device_name>.,1
+switch,toggle,Est-il possible de basculer le <device_name> ?,1
+switch,turn_on,Allumons <device_name>.,1
+switch,turn_off,Nous n'avons plus besoin de <device_name>.,1
+switch,toggle,Activez <device_name> pour moi.,1
+switch,turn_on,Allumez <device_name>,1
+switch,turn_off,J'aimerais que <device_name> soit désactivé maintenant.,1
+switch,toggle,Pouvez-vous modifier l'état de <device_name> ?,1
+switch,turn_on,Veuillez activer <device_name>.,1
+switch,turn_off,Éteignez <device_name>,1
+switch,toggle,Une bascule rapide de <device_name>,1
+switch,turn_on,<device_name> doit être activé.,1
+switch,turn_off,Il est temps d'éteindre <device_name>.,1
+media_player,volume_up,Augmentez le volume sur <device_name>.,1
+media_player,volume_up,Augmentez un peu <device_name>.,1
+media_player,volume_up,Plus fort sur <device_name>,1
+media_player,volume_down,Pouvez-vous baisser le volume de <device_name> ?,1
+media_player,volume_down,Diminuez le volume sur <device_name>.,1
+media_player,volume_down,Désactivez <device_name>,1
+media_player,volume_mute,Muet <device_name>,1
+media_player,volume_mute,Faites taire <device_name> pendant un moment.,1
+media_player,volume_mute,Pouvez-vous désactiver <device_name> ?,1
+media_player,media_play,Commencez à jouer sur <device_name>.,1
+media_player,media_play,Pouvez-vous jouer à <device_name> ?,1
+media_player,media_play,Lire le contenu multimédia sur <device_name>,1
+media_player,media_pause,Mettez en pause <device_name>.,1
+media_player,media_pause,Pouvez-vous suspendre <device_name> ?,1
+media_player,media_pause,Suspendez la lecture sur <device_name>,1
+media_player,media_stop,Arrêtez complètement <device_name>.,1
+media_player,media_stop,Pouvez-vous arrêter la lecture sur <device_name> ?,1
+media_player,media_stop,Terminer la session sur <device_name>,1
+media_player,media_next_track,Piste suivante sur <device_name>,1
+media_player,media_next_track,Avancez <device_name> jusqu’à la chanson suivante.,1
+media_player,media_next_track,Ignorez cette piste sur <device_name>.,1
+media_player,media_previous_track,Piste précédente sur <device_name>,1
+media_player,media_previous_track,Revenez à la chanson précédente sur <device_name>.,1
+media_player,media_previous_track,Pouvons-nous revenir en arrière sur <device_name> ?,1
+climate,set_temperature,Réglez la température sur <temp_f> degrés.,8
+climate,set_temperature,Pouvez-vous changer la température en <temp_c> Celsius ?,8
+climate,set_temperature,Je voudrais que la pièce soit à <temp_f> degrés Fahrenheit,8
+climate,set_temperature,Veuillez régler la température à <temp_f> degrés.,8
+climate,set_temperature,Pouvez-vous baisser la température à <temp_c> ?,8
+climate,set_temperature,Augmenter la température à <temp_f> degrés,8
+climate,set_humidity,Augmentez l’humidité à <humidity>.,8
+climate,set_humidity,Réglez le niveau d’humidité sur <humidity> pour cent.,8
+climate,set_humidity,Pouvez-vous régler l’humidité à <humidity> pour cent ?,8
+climate,set_fan_mode,Réglez le ventilateur climatique sur la vitesse <fan_mode>.,8
+climate,set_fan_mode,Veuillez mettre le ventilateur climatique sur <fan_mode>.,8
+climate,set_fan_mode,Changez le ventilateur de climatisation en <fan_mode>.,8
+climate,set_hvac_mode,Basculez le système en mode <hvac_mode>.,8
+climate,set_hvac_mode,Pouvons-nous régler le CVC sur <hvac_mode> ?,8
+climate,set_hvac_mode,Changez le CVC en <hvac_mode>.,8
+light,turn_on,Réglez la luminosité de <device_name> sur <brightness>%.,8
+light,turn_on,Réduisez <device_name> à <brightness> pourcentage de luminosité.,8
+light,turn_on,Éclaircissez <device_name> sur <brightness>.,8
+light,turn_on,Ajustez la luminosité de <device_name> sur <brightness>.,8
+light,turn_on,Augmentez la luminosité de <device_name> à <brightness>.,8
+light,turn_on,Réduisez la luminosité de <device_name> à <brightness>.,8
+light,turn_on,Pouvez-vous définir le niveau de luminosité de <device_name> sur <brightness> % ?,8
+light,turn_on,Je voudrais <device_name> à <brightness> pourcentage de luminosité,8
+light,turn_on,Pouvez-vous créer <device_name> <color> ?,8
+light,turn_on,Changez la couleur de <device_name> en <color>.,8
+light,turn_on,Remplacez <device_name> par une teinte <color>.,8
+light,turn_on,Définissez <device_name> sur <color>.,8
+light,turn_on,Je veux que <device_name> soit <color>,8
+light,turn_on,Pouvez-vous faire briller <device_name> en <color> ?,8
+light,turn_on,Transformez <device_name> en une teinte <color>.,8
+light,turn_on,Tournez <device_name> <color>.,8
+light,turn_on,Je veux <device_name> avec un paramètre <color>.,8
+light,turn_on,Définissez <device_name> sur une couleur <color>.,8
+light,turn_on,Veuillez définir <device_name> sur une couleur <color>.,8
+light,turn_on,Faites briller <device_name> <color>.,8
+light,turn_on,Pourriez-vous transformer <device_name> en <color> ?,8
+light,turn_on,Veuillez remplacer <device_name> par <color>.,8
+light,turn_on,Ajustez <device_name> à la couleur <color>.,8
+light,turn_on,Remplacez la couleur <device_name> par <color>.,8
+light,turn_on,<device_name> peut-il être <color> maintenant ?,8
+light,turn_on,Mettons <device_name> dans <color>.,8
+light,turn_on,J'aimerais que <device_name> devienne <color>.,8
+light,turn_on,<device_name> peut-il afficher une lumière <color> ?,8
+light,turn_on,Définissez la couleur <device_name> sur <color>,8
+vacuum,start,Commencez le nettoyage avec <device_name>.,2
+vacuum,start,Commencez à passer l'aspirateur avec <device_name>.,2
+vacuum,start,Activez <device_name> pour nettoyer.,2
+vacuum,start,Pourriez-vous s'il vous plaît démarrer <device_name> ?,2
+vacuum,start,"Hé, lancez <device_name>, voulez-vous ?",2
+vacuum,stop,Arrêtez le fonctionnement de <device_name>.,2
+vacuum,stop,Veuillez interrompre la tâche en cours de <device_name>,2
+vacuum,stop,Veuillez arrêter <device_name>,2
+vacuum,stop,Pouvez-vous arrêter <device_name> ?,2
+vacuum,stop,Arrêtez <device_name> de nettoyer.,2
+vacuum,pause,Geler la tâche actuelle de <device_name>.,2
+vacuum,pause,Pourriez-vous interrompre <device_name> un instant ?,2
+vacuum,pause,"Hé, pouvons-nous mettre <device_name> en pause, s'il vous plaît ?",2
+vacuum,pause,Suspendez le nettoyage de <device_name>.,2
+vacuum,pause,Mettre en pause <device_name>,2
+vacuum,return_to_base,Renvoyez <device_name> à sa base.,2
+vacuum,return_to_base,"Veuillez renvoyer <device_name> à sa base, si vous le souhaitez.",2
+vacuum,return_to_base,"Il est temps de rentrer à la maison, <device_name>. Pouvez-vous le rappeler ?",2
+vacuum,return_to_base,Dirigez <device_name> vers le dock.,2
+vacuum,return_to_base,Remettez <device_name> à sa station de recharge.,2
+todo,add_item,Veuillez ajouter <todo> à mon <device_name>.,8
+todo,add_item,Pouvez-vous ajouter <todo> au <device_name> ?,8
+todo,add_item,J'ai besoin que <todo> soit ajouté à mon <device_name>.,8
+todo,add_item,Allez-y et ajoutez <todo> au <device_name>.,8
+todo,add_item,Pourriez-vous s'il vous plaît saisir <todo> dans mon <device_name> ?,8
+todo,add_item,Veuillez insérer <todo> sur le <device_name>.,8
+todo,add_item,Puis-je demander que <todo> soit inclus dans <device_name> ?,8
+todo,add_item,Il serait très apprécié que <todo> puisse être placé sur <device_name>.,8
+todo,add_item,Devons-nous ajouter <todo> à mon <device_name> ?,8
+todo,add_item,"Ajoutons <todo> au <device_name>""",8
+todo,add_item,Pourriez-vous placer <todo> sur mon <device_name> ?,8
+todo,add_item,Aurez-vous la gentillesse d'incorporer <todo> dans le <device_name> ?,8
+todo,add_item,Est-il possible d'inclure <todo> dans <device_name> ?,8
+todo,add_item,Pouvons-nous ajouter <todo> à mon <device_name> ?,8
+timer,start,Veuillez définir mon <device_name> sur <duration>.,8
+timer,start,Activez la minuterie <device_name> pendant <duration>.,8
+timer,start,Définissez le <device_name> pour <duration>.,8
+timer,start,Démarrez le minuteur <device_name> pour <duration>.,8
+timer,start,Définissez une <duration> <device_name>.,8
+timer,cancel,Annulez le minuteur <device_name>.,8
+timer,cancel,Veuillez arrêter mon <device_name>.,8
+timer,cancel,Éteignez le <device_name>.,8
+timer,cancel,Veuillez désactiver le minuteur <device_name>.,8
+timer,cancel,Le <device_name> n’est plus nécessaire.,8

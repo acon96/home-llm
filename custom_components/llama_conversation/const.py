@@ -3,29 +3,29 @@ import types, os
 
 DOMAIN = "llama_conversation"
 CONF_PROMPT = "prompt"
-DEFAULT_PROMPT = """You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task ask instructed with the information provided only.
+PERSONA_PROMPTS = {
+    "en": "You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed with the information provided only.",
+    "de": "Du bist \u201eAl\u201c, ein hilfreicher KI-Assistent, der die Ger\u00e4te in einem Haus steuert. F\u00fchren Sie die folgende Aufgabe gem\u00e4\u00df den Anweisungen durch oder beantworten Sie die folgende Frage nur mit den bereitgestellten Informationen.",
+    "fr": "Vous \u00eates \u00ab\u00a0Al\u00a0\u00bb, un assistant IA utile qui contr\u00f4le les appareils d'une maison. Effectuez la t\u00e2che suivante comme indiqu\u00e9 ou r\u00e9pondez \u00e0 la question suivante avec les informations fournies uniquement.",
+    "es": "Eres 'Al', un \u00fatil asistente de IA que controla los dispositivos de una casa. Complete la siguiente tarea seg\u00fan las instrucciones o responda la siguiente pregunta \u00fanicamente con la informaci\u00f3n proporcionada.",
+}
+DEFAULT_PROMPT_BASE = """<persona>
+The current time and date is {{ (as_timestamp(now()) | timestamp_custom("%I:%M %p on %A %B %d, %Y", "")) }}
 Services: {{ services }}
 Devices:
-{{ devices }}
-
+{{ devices }}"""
+ICL_EXTRAS = """
 Respond to the following user instruction by responding in the same format as the following examples:
 {{ response_examples }}"""
-ICL_NO_SYSTEM_PROMPT = """You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task ask instructed with the information provided only.
-Services: {{ services }}
-Devices:
-{{ devices }}
-
+ICL_NO_SYSTEM_PROMPT_EXTRAS = """
 Respond to the following user instruction by responding in the same format as the following examples:
 {{ response_examples }}
 
 User instruction:"""
-NO_ICL_PROMPT = """You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task ask instructed with the information provided only.
-Services: {{ services }}
-Devices:
-{{ devices }}"""
+DEFAULT_PROMPT = DEFAULT_PROMPT_BASE + ICL_EXTRAS
 CONF_CHAT_MODEL = "huggingface_model"
 DEFAULT_CHAT_MODEL = "acon96/Home-3B-v3-GGUF"
-RECOMMENDED_CHAT_MODELS = [ "acon96/Home-3B-v3-GGUF", "acon96/Home-1B-v2-GGUF", "TheBloke/Mistral-7B-Instruct-v0.2-GGUF" ]
+RECOMMENDED_CHAT_MODELS = [ "acon96/Home-3B-v3-GGUF", "acon96/Home-1B-v3-GGUF", "TheBloke/Mistral-7B-Instruct-v0.2-GGUF" ]
 CONF_MAX_TOKENS = "max_new_tokens"
 DEFAULT_MAX_TOKENS = 128
 CONF_TOP_K = "top_k"
@@ -48,6 +48,8 @@ BACKEND_TYPE_GENERIC_OPENAI = "generic_openai"
 BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER = "llama_cpp_python_server"
 BACKEND_TYPE_OLLAMA = "ollama"
 DEFAULT_BACKEND_TYPE = BACKEND_TYPE_LLAMA_HF
+CONF_SELECTED_LANGUAGE = "selected_language"
+CONF_SELECTED_LANGUAGE_OPTIONS = [ "en", "de", "fr", "es" ]
 CONF_DOWNLOADED_MODEL_QUANTIZATION = "downloaded_model_quantization"
 CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS = ["F16", "Q8_0", "Q5_K_M", "Q4_K_M", "Q3_K_M"]
 DEFAULT_DOWNLOADED_MODEL_QUANTIZATION = "Q4_K_M"
@@ -56,7 +58,7 @@ DEFAULT_DOWNLOADED_MODEL_FILE = ""
 DEFAULT_PORT = "5000"
 DEFAULT_SSL = False
 CONF_EXTRA_ATTRIBUTES_TO_EXPOSE = "extra_attributes_to_expose"
-DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "media_title", "volume_level", "item"]
+DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "media_title", "volume_level", "item", "wind_speed"]
 CONF_ALLOWED_SERVICE_CALL_ARGUMENTS = "allowed_service_call_arguments"
 DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "hvac_mode", "preset_mode", "item", "duration"]
 CONF_PROMPT_TEMPLATE = "prompt_template"
@@ -64,9 +66,10 @@ PROMPT_TEMPLATE_CHATML = "chatml"
 PROMPT_TEMPLATE_ALPACA = "alpaca"
 PROMPT_TEMPLATE_VICUNA = "vicuna"
 PROMPT_TEMPLATE_MISTRAL = "mistral"
-PROMPT_TEMPLATE_LLAMA2 = "llama2"
+PROMPT_TEMPLATE_LLAMA3 = "llama3"
 PROMPT_TEMPLATE_NONE = "no_prompt_template"
 PROMPT_TEMPLATE_ZEPHYR = "zephyr"
+PROMPT_TEMPLATE_ZEPHYR2 = "zephyr2"
 DEFAULT_PROMPT_TEMPLATE = PROMPT_TEMPLATE_CHATML
 PROMPT_TEMPLATE_DESCRIPTIONS = {
     PROMPT_TEMPLATE_CHATML: {
@@ -103,6 +106,18 @@ PROMPT_TEMPLATE_DESCRIPTIONS = {
         "user": { "prefix": "<|user|>\n", "suffix": "<|endoftext|>" },
         "assistant": { "prefix": "<|assistant|>\n", "suffix": "<|endoftext|>" },
         "generation_prompt": "<|assistant|>\n"
+    },
+    PROMPT_TEMPLATE_ZEPHYR2: {
+        "system": { "prefix": "<|system|>\n", "suffix": "</s>" },
+        "user": { "prefix": "<|user|>\n", "suffix": "</s>" },
+        "assistant": { "prefix": "<|assistant|>\n", "suffix": "</s>" },
+        "generation_prompt": "<|assistant|>\n"
+    },
+    PROMPT_TEMPLATE_LLAMA3: {
+        "system": { "prefix": "<|start_header_id|>system<|end_header_id|>\n\n", "suffix": "<|eot_id|>"},
+        "user": { "prefix": "<|start_header_id|>user<|end_header_id|>\n\n", "suffix": "<|eot_id|>"},
+        "assistant": { "prefix": "<|start_header_id|>assistant<|end_header_id|>\n\n", "suffix": "<|eot_id|>"},
+        "generation_prompt": "<|start_header_id|>assistant<|end_header_id|>\n\n"
     }
 }
 CONF_USE_GBNF_GRAMMAR = "gbnf_grammar"
@@ -187,49 +202,74 @@ DEFAULT_OPTIONS = types.MappingProxyType(
 )
 
 OPTIONS_OVERRIDES = {
+    "home-3b-v4": {
+        CONF_PROMPT: DEFAULT_PROMPT_BASE,
+        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR,
+        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
+        CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
+        CONF_USE_GBNF_GRAMMAR: True,
+    },
     "home-3b-v3": {
-        CONF_PROMPT: NO_ICL_PROMPT,
+        CONF_PROMPT: DEFAULT_PROMPT_BASE,
         CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR,
         CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
         CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
         CONF_USE_GBNF_GRAMMAR: True,
     },
     "home-3b-v2": {
-        CONF_PROMPT: NO_ICL_PROMPT,
+        CONF_PROMPT: DEFAULT_PROMPT_BASE,
         CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
         CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
         CONF_USE_GBNF_GRAMMAR: True,
     },
     "home-3b-v1": {
-        CONF_PROMPT: NO_ICL_PROMPT,
+        CONF_PROMPT: DEFAULT_PROMPT_BASE,
+        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR,
         CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
         CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
     },
+    "home-1b-v3": {
+        CONF_PROMPT: DEFAULT_PROMPT_BASE,
+        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR2,
+        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
+        CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
+        CONF_USE_GBNF_GRAMMAR: True,
+    },
     "home-1b-v2": {
-        CONF_PROMPT: NO_ICL_PROMPT,
+        CONF_PROMPT: DEFAULT_PROMPT_BASE,
         CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
         CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
     },
     "home-1b-v1": {
-        CONF_PROMPT: NO_ICL_PROMPT,
+        CONF_PROMPT: DEFAULT_PROMPT_BASE,
         CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
         CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
     },
     "mistral": {
-        CONF_PROMPT: ICL_NO_SYSTEM_PROMPT,
+        CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_NO_SYSTEM_PROMPT_EXTRAS,
         CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_MISTRAL,
+        CONF_MIN_P: 0.1,
+        CONF_TYPICAL_P: 0.9,
     },
     "mixtral": {
-        CONF_PROMPT: ICL_NO_SYSTEM_PROMPT,
+        CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_NO_SYSTEM_PROMPT_EXTRAS,
         CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_MISTRAL,
+        CONF_MIN_P: 0.1,
+        CONF_TYPICAL_P: 0.9,
     },
-    "llama-2": {
-        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_LLAMA2,
+    "llama-3": {
+        CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_EXTRAS,
+        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_LLAMA3,
+    },
+    "llama3": {
+        CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_EXTRAS,
+        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_LLAMA3,
     },
     "zephyr": {
+        CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_EXTRAS,
         CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR,
     }
 }
 
-INTEGRATION_VERSION = "0.2.12"
-EMBEDDED_LLAMA_CPP_PYTHON_VERSION = "0.2.60"
+INTEGRATION_VERSION = "0.2.13"
+EMBEDDED_LLAMA_CPP_PYTHON_VERSION = "0.2.64"

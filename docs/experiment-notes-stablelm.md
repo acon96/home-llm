@@ -139,6 +139,20 @@
   - 600: 0.9473684210526315
   - 650: 0.9387651821862348
   - Final: 0.9463562753036437
+  - german: 0.5758754863813229
+  - french: 0.6490034030140982
+  - spanish: 0.6481391976800387
+
+# rev9
+- full fine-tune
+- epochs: 1
+- batch size: 64
+- dataset size: medium /w 4 languages
++ eval results:
+  - english: 0.9961183891314895
+  - german: 0.9571984435797666
+  - french: 0.9484686436558094
+  - spanish: 0.9685838569357177
 
 
 ## stablelm-2-1_6b-zephyr

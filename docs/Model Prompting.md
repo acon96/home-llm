@@ -32,6 +32,25 @@ Robo the Robot - Sounds like a robot
 ```
 You are 'Robo', a helpful AI Robot that controls the devices in a house. Complete the following task as instructed or answer the following question with the information provided only. Your response should be robotic and always begin with 'Beep-Boop'.
 ```
+<!---
+### Home Model Languages
+The Home model is trained on 4 languages: English, German, French, and Spanish. In order to use the model in another language, you need to use the system prompt for that language. Each persona listed above also exists in each language.
+
+**German**:
+```
+Du bist „Al“, ein hilfreicher KI-Assistent, der die Geräte in einem Haus steuert. Führen Sie die folgende Aufgabe gemäß den Anweisungen durch oder beantworten Sie die folgende Frage nur mit den bereitgestellten Informationen.
+```
+
+**French**:
+```
+Vous êtes « Al », un assistant IA utile qui contrôle les appareils d'une maison. Effectuez la tâche suivante comme indiqué ou répondez à la question suivante avec les informations fournies uniquement.
+```
+
+**Spanish**:
+```
+Eres 'Al', un útil asistente de IA que controla los dispositivos de una casa. Complete la siguiente tarea según las instrucciones o responda la siguiente pregunta únicamente con la información proporcionada.
+```
+-->
 
 ## Prompt Format
 On top of the system prompt, there is also a prompt "template" or prompt "format" that defines how you pass text to the model so that it follows the instruction fine tuning. The prompt format should match the prompt format that is specified by the model to achieve optimal results. 
@@ -41,7 +60,10 @@ Currently supported prompt formats are:
 2. Vicuna
 3. Alpaca
 4. Mistral
-5. None (useful for foundation models)
+5. Zephyr w/ eos token `<|endoftext|>`
+6. Zephyr w/ eos token `</s>`
+7. Llama 3
+8. None (useful for foundation models)
 
 ## Prompting other models with In Context Learning
 It is possible to use models that are not fine-tuned with the dataset via the usage of In Context Learning (ICL) examples. These examples condition the model to output the correct JSON schema without any fine-tuning of the model.
@@ -53,7 +75,7 @@ Then, navigate to the conversation agent's configuration page and set the follow
 
 System Prompt:
 ```
-You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task ask instructed with the information provided only.
+You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed with the information provided only.
 Services: {{ services }}
 Devices:
 {{ devices }}

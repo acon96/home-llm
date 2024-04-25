@@ -44,7 +44,7 @@ from custom_components.llama_conversation.const import (
     CONF_BATCH_THREAD_COUNT,
     DEFAULT_CHAT_MODEL,
     DEFAULT_MAX_TOKENS,
-    NO_ICL_PROMPT,
+    DEFAULT_PROMPT_BASE,
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
@@ -122,7 +122,7 @@ def config_entry():
         },
         options={
             **DEFAULT_OPTIONS,
-            CONF_PROMPT: NO_ICL_PROMPT,
+            CONF_PROMPT: DEFAULT_PROMPT_BASE,
         }
     )
 
@@ -355,7 +355,8 @@ async def test_ollama_agent(ollama_agent_fixture):
                 "temperature": ollama_agent.entry.options[CONF_TEMPERATURE],
                 "num_predict": ollama_agent.entry.options[CONF_MAX_TOKENS],
             },
-            "prompt": ANY
+            "prompt": ANY,
+            "raw": True
         },
         timeout=ollama_agent.entry.options[CONF_REQUEST_TIMEOUT]
     )

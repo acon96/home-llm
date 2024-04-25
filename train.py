@@ -5,10 +5,13 @@ import copy
 import torch
 import os
 import random
+import time
+import shutil
 from torch.utils.data import SequentialSampler, Subset, RandomSampler
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer, \
-    PreTrainedTokenizerFast, HfArgumentParser, GPTQConfig, AutoConfig
+    PreTrainedTokenizerFast, HfArgumentParser, GPTQConfig, AutoConfig, TrainerCallback
 from transformers.trainer_utils import EvalPrediction
+from transformers.integrations.integration_utils import TensorBoardCallback
 from datasets import load_dataset, Dataset
 from dataclasses import dataclass, field
 from typing import Dict, Optional, Sequence, Sized, Iterator
@@ -81,6 +84,45 @@ python3 train.py \
 
 """
 python3 train.py \
+    --run_name llamahome-8b-rev1 \
+    --base_model NousResearch/Meta-Llama-3-8B-Instruct \
+    --bf16 \
+    --train_dataset data/home_assistant_train.jsonl \
+    --test_dataset data/home_assistant_test.jsonl \
+    --learning_rate 1e-5 --learning_rate_warmup 0.03 --batch_size 64 --epochs 1 \
+    --micro_batch_size 2 --gradient_checkpointing --group_by_length \
+    --ctx_size 2048 \
+    --save_steps 25 --save_total_limit 20 --eval_steps 100 --logging_steps 2 \
+    --use_lora --lora_rank 32 --lora_alpha 64 --lora_modules up_proj,down_proj,q_proj,v_proj,o_proj
+"""
+
+"""
+accelerate launch --config_file fsdp_config.yaml train.py \
+    --run_name stablehome-3b-rev10 \
+    --base_model stabilityai/stablelm-zephyr-3b \
+    --bf16 \
+    --train_dataset data/home_assistant_train.jsonl \
+    --learning_rate 1e-5 --batch_size 64 --epochs 1 \
+    --micro_batch_size 2 --gradient_checkpointing --group_by_length \
+    --ctx_size 2048 \
+    --save_steps 50 --save_total_limit 10 --eval_steps 100 --logging_steps 2
+"""
+
+"""
+python3 train.py \
+    --run_name stablehome-3b-rev9-dpo \
+    --base_model ./models/stablehome-3b-rev9/ \
+    --bf16 \
+    --train_dataset data/home_assistant_dpo.jsonl \
+    --learning_rate 2e-7 --batch_size 16 --epochs 1 \
+    --dpo --beta 0.1 --dpo_loss sigmoid \
+    --micro_batch_size 1 --gradient_checkpointing \
+    --ctx_size 2048 \
+    --save_steps 50 --save_total_limit 10 --eval_steps 100 --logging_steps 2
+"""
+
+"""
+python3 train.py \
     --run_name home-7b-rev2 \
     --base_model TheBloke/Llama-2-7B-GPTQ \
     --train_dataset data/home_assistant_train.jsonl \
@@ -91,14 +133,27 @@ python3 train.py \
 
 """
 python3 train.py \
-    --run_name tinyhome-rev1 \
+    --run_name tinyhome-rev4 \
     --base_model TinyLlama/TinyLlama-1.1B-Chat-v1.0 \
     --bf16 \
     --train_dataset data/home_assistant_train.jsonl \
     --test_dataset data/home_assistant_test.jsonl \
-    --learning_rate 5e-7 --batch_size 32 \
-    --micro_batch_size 2 --gradient_checkpointing --group_by_length \
+    --learning_rate 2e-5 --batch_size 32 \
+    --micro_batch_size 8 --gradient_checkpointing --group_by_length \
     --ctx_size 2048 --save_steps 100 --save_total_limit 10
+"""
+
+"""
+python3 train.py \
+    --run_name tinyhome-rev2-dpo \
+    --base_model ./models/tinyhome-rev2/ \
+    --bf16 \
+    --train_dataset data/home_assistant_dpo.jsonl \
+    --learning_rate 5e-7 --batch_size 16 --epochs 1 \
+    --dpo --beta 0.1 --dpo_loss sigmoid --learning_rate_warmup 0.03 \
+    --micro_batch_size 2 --gradient_checkpointing \
+    --ctx_size 2048 \
+    --save_steps 50 --save_total_limit 10 --eval_steps 100 --logging_steps 2
 """
 
 @dataclass
@@ -111,10 +166,10 @@ class TrainingRunArguments:
     bf16: bool = field(default=False, metadata={"help": "If set, the model will the loaded and trained in bf16 instead of fp16"})
     batch_size: int = field(default=8, metadata={"help": "The simulated 'batch size' that we will train on. will tweak gradient accumulations steps"})
     micro_batch_size: int = field(default=2, metadata={"help": "The actual batch size that will fit into VRAM on this machine"})
-    eval_batch_size: int = field(default=1, metadata={"help": "The batch size for generation used while performing evaluation"})
     epochs: int = field(default=1, metadata={"help": "The number of times to train the model on each example"})
     learning_rate: float = field(default=1e-5, metadata={"help": "The starting learning rate (speed at which the model trains)"})
     learning_rate_schedule: str = field(default="cosine", metadata={"help": "How fast the learning rate is reduced during training"})
+    learning_rate_warmup: float = field(default=0.0, metadata={"help": "The starting learning rate (speed at which the model trains)"})
     weight_decay: float = field(default=0.1, metadata={"help": ""})
     gradient_clip: float = field(default=1.0, metadata={"help": ""})
     resume_from_checkpoint: str = field(default="", metadata={"help": "The name of the checkpoint to resume training from"})
@@ -139,12 +194,88 @@ class TrainingRunArguments:
     lora_modules_to_save: str = field(default=None, metadata={"help": "Additional modules to save"})
     lora_merge: bool = field(default=False, metadata={"help": "If set, the Lora will be merged back into the base model an saved"})
 
+    dpo: bool = field(default=False, metadata={"help": "If set, performs Direct Preference Optimization instead of Supervised Fine Tuning"})
+    beta: float = field(default=0.1, metadata={"help": "The implicit reward value used during DPO training"})
+    dpo_loss: str = field(default="sigmoid", metadata={"help": "The loss type to use during DPO training"})
+
     add_pad_token: bool = field(default=False, metadata={"help": "If set, a pad token will be added to the tokenizer's vocabulary"})
     add_chatml_tokens: bool = field(default=False, metadata={"help": "If set, tokens for the ChatML format will be added specifically"})
     add_chatml_prompt_template: bool = field(default=False, metadata={"help": "If set, the ChatML prompt template will be set as the model's Jinja2 template"})
     gradient_checkpointing: bool = field(default=False, metadata={"help": "Enables gradient checkpointing which saves quite a lot of VRAM"})
 
-    run_tensorboard: bool = field(default=False, metadata={"help": "If set, will tensorboard in the background to monitor training progress"})
+    sync_to_bucket: str = field(default=None, metadata={"help": "If set, checkpoints will be synced to the s3 bucket specified by this argument"})
+    flops_baseline: str = field(default=None, metadata={"help": "The baseline flops for the GPUs used for the training run. Outputs MFU"})
+
+class UploadToS3Callback(TrainerCallback):
+    def __init__(self, s3_bucket, s3_prefix, save_total_limit=None):
+        import boto3
+        self.s3_client = boto3.client('s3')
+        self.s3_bucket = s3_bucket
+        self.s3_prefix = s3_prefix
+        self.save_total_limit = save_total_limit
+
+    def on_save(self, args, state, control, **kwargs):
+        output_dir = kwargs['output_dir']
+        checkpoint = os.path.basename(output_dir)
+        
+        # Upload current checkpoint
+        for root, dirs, files in os.walk(output_dir):
+            for file in files:
+                local_path = os.path.join(root, file)
+                s3_path = os.path.join(self.s3_prefix, checkpoint, os.path.relpath(local_path, start=output_dir))
+                self.s3_client.upload_file(local_path, self.s3_bucket, s3_path)
+                print(f"Uploaded {local_path} to s3://{self.s3_bucket}/{s3_path}")
+
+        # Manage checkpoints in S3
+        if self.save_total_limit:
+            s3_checkpoints = self.list_s3_checkpoints()
+            if len(s3_checkpoints) > self.save_total_limit:
+                sorted_checkpoints = sorted(s3_checkpoints)
+                to_delete = sorted_checkpoints[:-self.save_total_limit]
+                for checkpoint in to_delete:
+                    self.delete_checkpoint_from_s3(checkpoint)
+
+        # Clean local checkpoints, keeping only the most recent
+        all_checkpoints = [os.path.join(args.output_dir, d) for d in os.listdir(args.output_dir) if os.path.isdir(os.path.join(args.output_dir, d))]
+        if all_checkpoints:
+            latest_checkpoint = max(all_checkpoints, key=os.path.getmtime)
+            for checkpoint_dir in all_checkpoints:
+                if checkpoint_dir != latest_checkpoint:
+                    shutil.rmtree(checkpoint_dir)
+                    print(f"Deleted local checkpoint {checkpoint_dir}")
+
+    def list_s3_checkpoints(self):
+        paginator = self.s3_client.get_paginator('list_objects_v2')
+        page_iterator = paginator.paginate(Bucket=self.s3_bucket, Prefix=self.s3_prefix, Delimiter='/')
+        return [prefix.get('Prefix').rstrip('/').split('/')[-1] for page in page_iterator for prefix in page.get('CommonPrefixes', [])]
+
+    def delete_checkpoint_from_s3(self, checkpoint_name):
+        resp = self.s3_client.list_objects_v2(Bucket=self.s3_bucket, Prefix=os.path.join(self.s3_prefix, checkpoint_name))
+        for obj in resp.get('Contents', []):
+            self.s3_client.delete_object(Bucket=self.s3_bucket, Key=obj['Key'])
+            print(f"Deleted s3://{self.s3_bucket}/{obj['Key']}")
+
+class MFUCallback(TrainerCallback):
+    def __init__(self, peak_flops):
+        self.total_iterations = 0
+        self.start_time = time.time()
+        self.flops_promised = peak_flops
+        self.last_total_flos = 0
+
+    def on_log(self, args, state, control, **kwargs):
+        if state.global_step == 0:  # Avoid computation at the very beginning
+            return
+        
+        current_time = time.time()
+        elapsed_time = current_time - self.start_time
+
+        # Calculate and log MFU
+        new_flops = state.total_flos - self.last_total_flos
+        kwargs['logs']['mfu'] = round(new_flops / elapsed_time / self.flops_promised, 4)
+
+        self.start_time = current_time
+        self.last_total_flos = state.total_flos
+   
 
 parser = HfArgumentParser([TrainingRunArguments])
 training_run_args, _ = parser.parse_args_into_dataclasses(return_remaining_strings=True)
@@ -173,19 +304,23 @@ else:
 model_kwargs["use_cache"] = False
 
 def find_max_vram(min_buffer_mib=800):
-    total_mem = (torch.cuda.get_device_properties(0).total_memory / (1024 * 1024))
-    suggestion = round((total_mem - 1000) / 1000) * 1000
-    suggestion = min(suggestion, total_mem - min_buffer_mib)
+    max_memory = {}
+    for i in range(torch.cuda.device_count()):
+        total_mem = (torch.cuda.get_device_properties(i).total_memory / (1024 * 1024))
+        suggestion = round((total_mem - 1000) / 1000) * 1000
+        suggestion = min(suggestion, total_mem - min_buffer_mib)
 
-    print(f"Model will target using {suggestion}MiB of VRAM")
-    max_memory = {0: f'{suggestion}MiB'}
+        print(f"Model will target using {suggestion}MiB of VRAM on GPU {i}")
+        max_memory[i] = f'{suggestion}MiB'
 
-    return max_memory if len(max_memory) > 0 else None
+    return max_memory
+
+if "LOCAL_RANK" not in os.environ:
+    model_kwargs["device_map"] = "auto"
 
 model = AutoModelForCausalLM.from_pretrained(
     training_run_args.base_model,
     trust_remote_code=True,
-    device_map="auto",
     max_memory=find_max_vram(),
     **model_kwargs
 )
@@ -222,6 +357,8 @@ else:
 
 # model.tie_weights()
 
+original_model = model
+peft_config = None
 if training_run_args.use_lora:
     from peft import LoraConfig, TaskType, get_peft_model, prepare_model_for_kbit_training
     print("Creating LoRA for model...")
@@ -253,7 +390,7 @@ training_kwargs = {}
 
 if training_run_args.test_dataset:
     training_kwargs.update({
-        "per_device_eval_batch_size": training_run_args.eval_batch_size,
+        "per_device_eval_batch_size": training_run_args.batch_size,
         "evaluation_strategy": ("steps" if training_run_args.eval_steps != -1 else "epoch"),
         "eval_steps": (training_run_args.eval_steps if training_run_args.eval_steps != -1 else None),
         "bf16_full_eval": training_run_args.bf16,
@@ -272,15 +409,15 @@ training_args = TrainingArguments(
     output_dir=model_dir,
     num_train_epochs=training_run_args.epochs,
     save_total_limit=training_run_args.save_total_limit,
-    report_to="tensorboard",
+    report_to='none',
     learning_rate=training_run_args.learning_rate,
     lr_scheduler_type=training_run_args.learning_rate_schedule,
+    warmup_ratio=training_run_args.learning_rate_warmup,
     log_level="info",
     bf16=training_run_args.bf16,
     group_by_length=training_run_args.group_by_length,
-    # skip_memory_metrics=True,
+    # include_num_input_tokens_seen=True,
     **training_kwargs,
-    # include_inputs_for_metrics=True,
 )
 
 class DataCollatorForSupervisedFineTuning(object):
@@ -293,15 +430,22 @@ class DataCollatorForSupervisedFineTuning(object):
     prefix_ids: list[int]
     suffix_ids: list[int]
 
-    def __init__(self, *, tokenizer: AutoTokenizer):
+    def __init__(self, *, tokenizer: AutoTokenizer, prefix_ids = None, suffix_ids = None):
         
         self.tokenizer = tokenizer
         assistant_prompt = tokenizer.apply_chat_template(conversation=[{"role": "assistant", "content":  r"%%%%%%%%%%%%%%%%"}], tokenize=False).split( r"%%%%%%%%%%%%%%%%")
         self.response_prefix = assistant_prompt[0]
         self.response_suffix = assistant_prompt[1]
 
-        self.prefix_ids = self.tokenizer(self.response_prefix, add_special_tokens=False)["input_ids"]
-        self.suffix_ids = self.tokenizer(self.response_suffix, add_special_tokens=False)["input_ids"]
+        if prefix_ids:
+            self.prefix_ids = prefix_ids
+        else:
+            self.prefix_ids = self.tokenizer(self.response_prefix, add_special_tokens=False)["input_ids"]
+
+        if suffix_ids:
+            self.suffix_ids = suffix_ids
+        else:
+            self.suffix_ids = self.tokenizer(self.response_suffix, add_special_tokens=False)["input_ids"]
 
     def _find_mask_ranges(self, input_ids):
         """
@@ -374,13 +518,13 @@ class DataCollatorForSupervisedFineTuning(object):
                     print("warning! example had no assistant response in it!")
                 label[start:end] = [-100] * (end - start)
 
-        input_ids = torch.LongTensor(self._pad(input_ids, self.tokenizer.pad_token_id))
+        input_ids = torch.LongTensor(self._pad(input_ids, self.tokenizer.pad_token_id or self.tokenizer.eos_token_id))
         labels = torch.LongTensor(self._pad(labels, -100))
 
         return dict(
             input_ids=input_ids,
             labels=labels,
-            attention_mask=input_ids.ne(self.tokenizer.pad_token_id),
+            attention_mask=input_ids.ne(self.tokenizer.pad_token_id or self.tokenizer.eos_token_id),
         )
 
 print("Loading dataset...")
@@ -410,29 +554,44 @@ def tokenize_sharegpt_example(batch):
 
     return {"input_ids": result}
 
-print("Tokenizing datasets...")
+def template_dpo_example(batch):
+    # TODO: figure out how to properly batch this
+    result = []
+    for example in zip(batch["system"], batch["question"]):
+        conversation = [ 
+            { "role": "system", "content": example[0] },
+            { "role": "user", "content": example[1] },
+        ]
+        result.append(tokenizer.apply_chat_template(
+            conversation=conversation,
+            max_length=training_run_args.ctx_size,
+            truncation=True,
+            tokenize=False,
+            add_generation_prompt=True
+        ))
 
-if "text" in datasets["train"].column_names:
-    tokenize_function = tokenize_raw_example
-    columns_to_remove = ["text"]
-elif "conversations" in datasets["train"].column_names:
-    tokenize_function = tokenize_sharegpt_example
-    columns_to_remove = ["conversations"]
-else:
-    raise Exception("Unknown dataset input format (not raw corpus or sharegpt)")
+    return {"prompt": result}
 
-tokenized_test_dataset = None
-tokenized_train_dataset = datasets["train"].map(tokenize_function, batched=True).remove_columns(columns_to_remove)
-if training_run_args.test_dataset:
-    tokenized_test_dataset = datasets["test"].map(tokenize_function, batched=True).remove_columns(columns_to_remove)
+training_callbacks = []
+if training_run_args.sync_to_bucket:
+    training_callbacks.append(UploadToS3Callback(
+        s3_bucket=training_run_args.sync_to_bucket,
+        s3_prefix=training_run_args.run_name,
+        save_total_limit=training_run_args.save_total_limit
+    ))
 
-example_lengths = [ len(example) for example in tokenized_train_dataset["input_ids"] ]
-tokens_in_train_set, longest_example = sum(example_lengths), max(example_lengths)
-print(f"Train dataset has {int(tokens_in_train_set / 1000000)}M tokens. Longest Example: {longest_example} tokens")
+if training_run_args.flops_baseline:
+    # A100 GPU bfloat16 peak flops is 312 TFLOPS (312e12)
+    # 4090 GPU bfloat16 peak flops is 165.2 TFLOPS (1652e11)
+    # 3090 GPU bfloat16 peak flops is 71 TFLOPS (71e12)
 
-data_collator = DataCollatorForSupervisedFineTuning(tokenizer=tokenizer)
+    training_callbacks.append(MFUCallback(peak_flops=float(training_run_args.flops_baseline)))
 
-class CustomTrainer(Trainer):
+
+# log to tensorboard (but after MFU)
+training_callbacks.append(TensorBoardCallback())
+
+class CustomSFTTrainer(Trainer):
     """Implement different training tweaks"""
     def __init__(self, random_eval_sample_pct=0.1, learning_rate_overshoot=1.15, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -467,35 +626,106 @@ class CustomTrainer(Trainer):
         Should speed up training by skipping the final fine tuning part that doesn't affect accuracy much
         """
         return super().create_scheduler(int(num_training_steps * self.learning_rate_overshoot), optimizer=optimizer)
+    
+    def floating_point_ops(self, inputs):
+        config = self.model.config
+        examples_length = len(inputs["input_ids"][0])
+        batch_size = len(inputs["input_ids"])
 
-trainer = CustomTrainer(
-    model=model,
-    args=training_args,
-    train_dataset=tokenized_train_dataset,
-    eval_dataset=tokenized_test_dataset,
-    data_collator=data_collator,
-)
+        # mfu is approximated using thoughtput and param count
+        # the number of paramters is approximately the number of multiply-accumulates (MAC) in the network
+        # each MAC has 2 FLOPs - we multiply by 2 ie 2 * n_param
+        # there are 3 passes of a NN (fwd, bwd, delta) - we multiply by 3 ie 2 * 3 * n_param
+        # this gets us FLOPs / token
+        flops_per_token = 2 * sum(p.numel() for p in self.model.parameters())
+        flops_per_seq = flops_per_token * examples_length
 
-tensorboard_process = None
-def kill_tensorboard():
-    tensorboard_process.kill()
+        # there are 2 FLOPS per mac; there is A=Q*K^T and out=A*V ops (ie mult by 2)
+        attn_flops_per_seq = config.num_hidden_layers * 2 * 2 * (config.hidden_size * (examples_length**2))
 
-if training_run_args.run_tensorboard:
-    import subprocess, atexit
-    tensorboard_process = subprocess.Popen(["tensorboard", "--logdir", model_dir])
-    atexit.register(kill_tensorboard)
+        # there are 2 ops in bwd pass and 1 in fwd pass so we mult by 3
+        result = (3 * flops_per_seq + 3 * attn_flops_per_seq) * batch_size
+        return result
 
-# pre-allocate cuda buffers by running a forwards and backwards pass with the largest possible example length
-# the trainer dumps the cuda buffers before we start... need to figure out how to disable that
-# if training_run_args.pre_allocate_cuda_buffers:
-#     print("Allocating CUDA buffers...")
-#     inputs = tokenizer([""] * training_args.per_device_train_batch_size, return_tensors="pt", max_length=longest_example, padding="max_length", truncation=True)
-#     inputs = {k: v.to(model.device) for k, v in inputs.items()}
-#     inputs["labels"] = inputs["input_ids"]
-#     outputs = model(**inputs)
-#     loss = outputs.loss if isinstance(outputs, dict) else outputs[0]
-#     loss.backward()
-#     model.zero_grad()
+if not training_run_args.dpo:
+    print("Tokenizing datasets...")
+
+    if "text" in datasets["train"].column_names:
+        tokenize_function = tokenize_raw_example
+        columns_to_remove = ["text"]
+    elif "conversations" in datasets["train"].column_names:
+        tokenize_function = tokenize_sharegpt_example
+        columns_to_remove = ["conversations"]
+    else:
+        raise Exception("Unknown dataset input format (not raw corpus or sharegpt)")
+
+    tokenized_test_dataset = None
+    tokenized_train_dataset = datasets["train"].map(tokenize_function, batched=True, num_proc=os.cpu_count()).remove_columns(columns_to_remove)
+    if training_run_args.test_dataset:
+        tokenized_test_dataset = datasets["test"].map(tokenize_function, batched=True, num_proc=os.cpu_count()).remove_columns(columns_to_remove)
+
+    example_lengths = [ len(example) for example in tokenized_train_dataset["input_ids"] ]
+    tokens_in_train_set, longest_example = sum(example_lengths), max(example_lengths)
+    print(f"Train dataset has {int(tokens_in_train_set / 1000000)}M tokens. Longest Example: {longest_example} tokens")
+
+    # data_collator = DataCollatorForSupervisedFineTuning(tokenizer=tokenizer)
+    # fix for tinyllama not detecting split properly
+    data_collator = DataCollatorForSupervisedFineTuning(
+        tokenizer=tokenizer,
+        prefix_ids=[29966, 29989, 465, 22137, 29989, 29958, 13],
+        suffix_ids=[2],
+    )
+
+    trainer = CustomSFTTrainer(
+        model=model,
+        args=training_args,
+        train_dataset=tokenized_train_dataset,
+        eval_dataset=tokenized_test_dataset,
+        data_collator=data_collator,
+        callbacks=training_callbacks,
+    )
+else:
+    from trl import DPOTrainer
+    max_prompt_length = 0
+
+    train_dataset = datasets["train"].map(lambda x: { "prompt_len": len(x["system"]) })
+
+    test_dataset = None
+    if training_run_args.test_dataset:
+        test_dataset = datasets["test"]
+
+    max_prompt_length = max(train_dataset["prompt_len"])
+
+    print("Templating DPO Examples...")
+    templated_test_dataset = None
+    templated_train_dataset = train_dataset.map(template_dpo_example, batched=True).remove_columns(["system", "question"])
+    if training_run_args.test_dataset:
+        templated_test_dataset = datasets["test"].map(template_dpo_example, batched=True).remove_columns(["system", "question"])
+
+    # tokenizer.model_input_names = [ "chosen_input_ids" ]
+
+    # group_by_length doesn't work here
+    # templated_train_dataset = templated_train_dataset.sort("prompt_len", reverse=True)
+
+    training_args.length_column_name = "prompt_len"
+    model.enable_input_require_grads()
+
+    trainer = DPOTrainer(
+        model,
+        ref_model=None,
+        # ref_model=original_model,
+        peft_config=peft_config,
+        args=training_args,
+        beta=training_run_args.beta,
+        loss_type=training_run_args.dpo_loss,
+        train_dataset=templated_train_dataset,
+        eval_dataset=templated_test_dataset,
+        tokenizer=tokenizer,
+        max_length=training_run_args.ctx_size,
+        max_prompt_length=max_prompt_length,
+        truncation_mode="keep_start",
+        callbacks=training_callbacks,
+    )
 
 try:
     checkpoint = training_run_args.resume_from_checkpoint
@@ -504,8 +734,11 @@ try:
     else:
         trainer.train()
 
-    if training_run_args.train_dataset:
+    if training_run_args.test_dataset:
         trainer.evaluate_all()
+
+    if trainer.is_fsdp_enabled:
+        trainer.accelerator.state.fsdp_plugin.set_state_dict_type("FULL_STATE_DICT")
 
     if training_run_args.use_lora and training_run_args.lora_merge:
         trainer.save_model() # save lora
@@ -519,10 +752,10 @@ try:
         trainer.save_model()
         tokenizer.save_pretrained(model_dir)
 
-    if tensorboard_process:
-        input("Training is finished. Press enter to quit tensorboard after the viewing results.")
-        tensorboard_process.kill()
-except Exception as e:
+except Exception as ex:
+    if trainer.is_fsdp_enabled:
+        raise ex # this doesn't play nice with FSDP so don't even try
+    
     print("Something bad happened! Try and save it?")
     import code, traceback
     traceback.print_exc()
