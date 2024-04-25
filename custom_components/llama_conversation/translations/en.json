@@ -18,7 +18,8 @@
                 "data": {
                     "downloaded_model_file": "Local file name",
                     "downloaded_model_quantization": "Downloaded model quantization",
-                    "huggingface_model": "HuggingFace Model"
+                    "huggingface_model": "HuggingFace Model",
+                    "selected_language": "Model Language"
                 },
                 "description": "Please select a model to use.\n\n**Models supported out of the box:**\n1. [Home LLM](https://huggingface.co/collections/acon96/home-llm-6618762669211da33bb22c5a): Home 3B & Home 1B\n2. Mistral: [Mistral 7B](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2) or [Mixtral 8x7B](https://huggingface.co/mistralai/Mixtral-8x7B-Instruct-v0.1)\n3. Llama 3: [8B](https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct) and [70B](https://huggingface.co/meta-llama/Meta-Llama-3-70B-Instruct)",
                 "title": "Select Model"
@@ -33,7 +34,8 @@
                     "text_generation_webui_admin_key": "Admin Key",
                     "text_generation_webui_preset": "Generation Preset/Character Name",
                     "remote_use_chat_endpoint": "Use chat completions endpoint",
-                    "text_generation_webui_chat_mode": "Chat Mode"
+                    "text_generation_webui_chat_mode": "Chat Mode",
+                    "selected_language": "Model Language"
                 },
                 "description": "Provide the connection details to connect to the API that is hosting the model.\n\n**Models supported out of the box:**\n1. [Home LLM](https://huggingface.co/collections/acon96/home-llm-6618762669211da33bb22c5a): Home 3B & Home 1B\n2. Mistral: [Mistral 7B](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2) or [Mixtral 8x7B](https://huggingface.co/mistralai/Mixtral-8x7B-Instruct-v0.1)",
                 "title": "Configure connection to remote API"
@@ -158,7 +160,8 @@
                 "vicuna": "Vicuna",
                 "alpaca": "Alpaca",
                 "mistral": "Mistral",
-                "zephyr": "Zephyr",
+                "zephyr": "Zephyr (<|endoftext|>)",
+                "zephyr2": "Zephyr ('</s>')",
                 "llama3": "Llama 3",
                 "no_prompt_template": "None"
             }
@@ -179,6 +182,14 @@
                 "chat": "Chat",
                 "instruct": "Instruct",
                 "chat-instruct": "Chat-Instruct"
+            }
+        },
+        "selected_language": {
+            "options": {
+                "en": "English",
+                "de": "German",
+                "fr": "French",
+                "es": "Spanish"
             }
         }
     }

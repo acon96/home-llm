@@ -25,7 +25,7 @@ User instruction:"""
 DEFAULT_PROMPT = DEFAULT_PROMPT_BASE + ICL_EXTRAS
 CONF_CHAT_MODEL = "huggingface_model"
 DEFAULT_CHAT_MODEL = "acon96/Home-3B-v3-GGUF"
-RECOMMENDED_CHAT_MODELS = [ "acon96/Home-3B-v3-GGUF", "acon96/Home-1B-v2-GGUF", "TheBloke/Mistral-7B-Instruct-v0.2-GGUF" ]
+RECOMMENDED_CHAT_MODELS = [ "acon96/Home-3B-v3-GGUF", "acon96/Home-1B-v3-GGUF", "TheBloke/Mistral-7B-Instruct-v0.2-GGUF" ]
 CONF_MAX_TOKENS = "max_new_tokens"
 DEFAULT_MAX_TOKENS = 128
 CONF_TOP_K = "top_k"
@@ -48,6 +48,8 @@ BACKEND_TYPE_GENERIC_OPENAI = "generic_openai"
 BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER = "llama_cpp_python_server"
 BACKEND_TYPE_OLLAMA = "ollama"
 DEFAULT_BACKEND_TYPE = BACKEND_TYPE_LLAMA_HF
+CONF_SELECTED_LANGUAGE = "selected_language"
+CONF_SELECTED_LANGUAGE_OPTIONS = [ "en", "de", "fr", "es" ]
 CONF_DOWNLOADED_MODEL_QUANTIZATION = "downloaded_model_quantization"
 CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS = ["F16", "Q8_0", "Q5_K_M", "Q4_K_M", "Q3_K_M"]
 DEFAULT_DOWNLOADED_MODEL_QUANTIZATION = "Q4_K_M"
@@ -67,6 +69,7 @@ PROMPT_TEMPLATE_MISTRAL = "mistral"
 PROMPT_TEMPLATE_LLAMA3 = "llama3"
 PROMPT_TEMPLATE_NONE = "no_prompt_template"
 PROMPT_TEMPLATE_ZEPHYR = "zephyr"
+PROMPT_TEMPLATE_ZEPHYR2 = "zephyr2"
 DEFAULT_PROMPT_TEMPLATE = PROMPT_TEMPLATE_CHATML
 PROMPT_TEMPLATE_DESCRIPTIONS = {
     PROMPT_TEMPLATE_CHATML: {
@@ -102,6 +105,12 @@ PROMPT_TEMPLATE_DESCRIPTIONS = {
         "system": { "prefix": "<|system|>\n", "suffix": "<|endoftext|>" },
         "user": { "prefix": "<|user|>\n", "suffix": "<|endoftext|>" },
         "assistant": { "prefix": "<|assistant|>\n", "suffix": "<|endoftext|>" },
+        "generation_prompt": "<|assistant|>\n"
+    },
+    PROMPT_TEMPLATE_ZEPHYR2: {
+        "system": { "prefix": "<|system|>\n", "suffix": "</s>" },
+        "user": { "prefix": "<|user|>\n", "suffix": "</s>" },
+        "assistant": { "prefix": "<|assistant|>\n", "suffix": "</s>" },
         "generation_prompt": "<|assistant|>\n"
     },
     PROMPT_TEMPLATE_LLAMA3: {
@@ -221,8 +230,10 @@ OPTIONS_OVERRIDES = {
     },
     "home-1b-v3": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE,
+        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR2,
         CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
         CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
+        CONF_USE_GBNF_GRAMMAR: True,
     },
     "home-1b-v2": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE,
@@ -261,4 +272,4 @@ OPTIONS_OVERRIDES = {
 }
 
 INTEGRATION_VERSION = "0.2.12"
-EMBEDDED_LLAMA_CPP_PYTHON_VERSION = "0.2.60"
+EMBEDDED_LLAMA_CPP_PYTHON_VERSION = "0.2.64"
