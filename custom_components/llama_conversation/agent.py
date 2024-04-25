@@ -426,7 +426,7 @@ class LLaMAAgent(AbstractConversationAgent):
 
             # if we filtered everything then just sample randomly
             if len(selected_in_context_examples) == 0:
-                selected_in_context_examples = self.in_context_examples
+                selected_in_context_examples = self.in_context_examples[:]
 
             random.shuffle(selected_in_context_examples)
             random.shuffle(entity_names)

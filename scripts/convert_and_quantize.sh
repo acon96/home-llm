@@ -10,8 +10,13 @@ if [[ ! -d "./models/$MODEL_NAME" ]]; then
 fi
 
 echo "Converting to GGUF..."
-$LLAMA_CPP/convert.py --outfile ./models/$MODEL_NAME/$MODEL_NAME.f16.gguf --outtype f16 ./models/$MODEL_NAME/
-# $LLAMA_CPP/convert-hf-to-gguf.py --outfile ./models/$MODEL_NAME/$MODEL_NAME.f16.gguf --outtype f16 ./models/$MODEL_NAME/
+if [ ! -f "./models/$MODEL_NAME/$MODEL_NAME.f16.gguf" ]; then
+    $LLAMA_CPP/convert.py --outfile ./models/$MODEL_NAME/$MODEL_NAME.f16.gguf --outtype f16 ./models/$MODEL_NAME/
+    # $LLAMA_CPP/convert-hf-to-gguf.py --outfile ./models/$MODEL_NAME/$MODEL_NAME.f16.gguf --outtype f16 ./models/$MODEL_NAME/
+else
+    echo "Converted model for already exists. Skipping..."
+fi
+
 
 DESIRED_QUANTS=("Q8_0" "Q5_K_M" "Q4_K_M" "Q3_K_M" "Q2_K")
 for QUANT in "${DESIRED_QUANTS[@]}"
