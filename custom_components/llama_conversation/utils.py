@@ -84,16 +84,18 @@ def install_llama_cpp_python(config_dir: str):
     runtime_version = f"cp{sys.version_info.major}{sys.version_info.minor}"
 
     instruction_extensions_suffix = ""
-    try:
-        if platform_suffix == "amd64" or platform_suffix == "i386":
+    if platform_suffix == "amd64" or platform_suffix == "i386":
+        try:
             with open("/proc/cpuinfo") as f:
                 cpu_features = [ line for line in f.readlines() if line.startswith("Features") or line.startswith("flags")][0]
             if "avx512f" in cpu_features and "avx512bw" in cpu_features:
                 instruction_extensions_suffix = "-avx512"
             elif "avx" not in cpu_features:
                 instruction_extensions_suffix = "-noavx"
-    except Exception as ex:
-        _LOGGER.debug(f"Couldn't detect CPU features: {ex}")
+        except Exception as ex:
+            _LOGGER.debug(f"Couldn't detect CPU features: {ex}")
+            # default to the noavx build to avoid crashing home assistant
+            instruction_extensions_suffix = "-noavx"
     
     folder = os.path.dirname(__file__)
     potential_wheels = sorted([ path for path in os.listdir(folder) if path.endswith(f"{platform_suffix}{instruction_extensions_suffix}.whl") ], reverse=True)
