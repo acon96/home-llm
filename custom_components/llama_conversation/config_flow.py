@@ -54,6 +54,7 @@ from .const import (
     CONF_DOWNLOADED_MODEL_QUANTIZATION,
     CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS,
     CONF_PROMPT_TEMPLATE,
+    CONF_ENABLE_FLASH_ATTENTION,
     CONF_USE_GBNF_GRAMMAR,
     CONF_GBNF_GRAMMAR_FILE,
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
@@ -93,6 +94,7 @@ from .const import (
     DEFAULT_BACKEND_TYPE,
     DEFAULT_DOWNLOADED_MODEL_QUANTIZATION,
     DEFAULT_PROMPT_TEMPLATE,
+    DEFAULT_ENABLE_FLASH_ATTENTION,
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_GBNF_GRAMMAR_FILE,
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
@@ -811,6 +813,11 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
                 description={"suggested_value": options.get(CONF_BATCH_THREAD_COUNT)},
                 default=DEFAULT_BATCH_THREAD_COUNT,
             ): NumberSelector(NumberSelectorConfig(min=1, max=(os.cpu_count() * 2), step=1)),
+            vol.Required(
+                CONF_ENABLE_FLASH_ATTENTION,
+                description={"suggested_value": options.get(CONF_ENABLE_FLASH_ATTENTION)},
+                default=DEFAULT_ENABLE_FLASH_ATTENTION,
+            ): BooleanSelector(BooleanSelectorConfig()),
             vol.Required(
                 CONF_USE_GBNF_GRAMMAR,
                 description={"suggested_value": options.get(CONF_USE_GBNF_GRAMMAR)},

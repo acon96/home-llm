@@ -41,6 +41,7 @@ from .const import (
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
     CONF_ALLOWED_SERVICE_CALL_ARGUMENTS,
     CONF_PROMPT_TEMPLATE,
+    CONF_ENABLE_FLASH_ATTENTION,
     CONF_USE_GBNF_GRAMMAR,
     CONF_GBNF_GRAMMAR_FILE,
     CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
@@ -75,6 +76,7 @@ from .const import (
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
     DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS,
     DEFAULT_PROMPT_TEMPLATE,
+    DEFAULT_ENABLE_FLASH_ATTENTION,
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_GBNF_GRAMMAR_FILE,
     DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
@@ -559,13 +561,15 @@ class LocalLLaMAAgent(LLaMAAgent):
         self.loaded_model_settings[CONF_BATCH_SIZE] = entry.options.get(CONF_BATCH_SIZE, DEFAULT_BATCH_SIZE)
         self.loaded_model_settings[CONF_THREAD_COUNT] = entry.options.get(CONF_THREAD_COUNT, DEFAULT_THREAD_COUNT)
         self.loaded_model_settings[CONF_BATCH_THREAD_COUNT] = entry.options.get(CONF_BATCH_THREAD_COUNT, DEFAULT_BATCH_THREAD_COUNT)
+        self.loaded_model_settings[CONF_ENABLE_FLASH_ATTENTION] = entry.options.get(CONF_ENABLE_FLASH_ATTENTION, DEFAULT_ENABLE_FLASH_ATTENTION)
 
         self.llm = Llama(
             model_path=self.model_path,
             n_ctx=int(self.loaded_model_settings[CONF_CONTEXT_LENGTH]),
             n_batch=int(self.loaded_model_settings[CONF_BATCH_SIZE]),
             n_threads=int(self.loaded_model_settings[CONF_THREAD_COUNT]),
-            n_threads_batch=int(self.loaded_model_settings[CONF_BATCH_THREAD_COUNT])
+            n_threads_batch=int(self.loaded_model_settings[CONF_BATCH_THREAD_COUNT]),
+            flash_attn=self.loaded_model_settings[CONF_ENABLE_FLASH_ATTENTION],
         )
         _LOGGER.debug("Model loaded")
 
@@ -614,13 +618,15 @@ class LocalLLaMAAgent(LLaMAAgent):
         if self.loaded_model_settings[CONF_CONTEXT_LENGTH] != self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH) or \
             self.loaded_model_settings[CONF_BATCH_SIZE] != self.entry.options.get(CONF_BATCH_SIZE, DEFAULT_BATCH_SIZE) or \
             self.loaded_model_settings[CONF_THREAD_COUNT] != self.entry.options.get(CONF_THREAD_COUNT, DEFAULT_THREAD_COUNT) or \
-            self.loaded_model_settings[CONF_BATCH_THREAD_COUNT] != self.entry.options.get(CONF_BATCH_THREAD_COUNT, DEFAULT_BATCH_THREAD_COUNT):
+            self.loaded_model_settings[CONF_BATCH_THREAD_COUNT] != self.entry.options.get(CONF_BATCH_THREAD_COUNT, DEFAULT_BATCH_THREAD_COUNT) or \
+            self.loaded_model_settings[CONF_ENABLE_FLASH_ATTENTION] != self.entry.options.get(CONF_ENABLE_FLASH_ATTENTION, DEFAULT_ENABLE_FLASH_ATTENTION):
 
             _LOGGER.debug(f"Reloading model '{self.model_path}'...")
             self.loaded_model_settings[CONF_CONTEXT_LENGTH] = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
             self.loaded_model_settings[CONF_BATCH_SIZE] = self.entry.options.get(CONF_BATCH_SIZE, DEFAULT_BATCH_SIZE)
             self.loaded_model_settings[CONF_THREAD_COUNT] = self.entry.options.get(CONF_THREAD_COUNT, DEFAULT_THREAD_COUNT)
             self.loaded_model_settings[CONF_BATCH_THREAD_COUNT] = self.entry.options.get(CONF_BATCH_THREAD_COUNT, DEFAULT_BATCH_THREAD_COUNT)
+            self.loaded_model_settings[CONF_ENABLE_FLASH_ATTENTION] = self.entry.options.get(CONF_ENABLE_FLASH_ATTENTION, DEFAULT_ENABLE_FLASH_ATTENTION)
 
             Llama = getattr(self.llama_cpp_module, "Llama")
             self.llm = Llama(
@@ -628,7 +634,8 @@ class LocalLLaMAAgent(LLaMAAgent):
                 n_ctx=int(self.loaded_model_settings[CONF_CONTEXT_LENGTH]),
                 n_batch=int(self.loaded_model_settings[CONF_BATCH_SIZE]),
                 n_threads=int(self.loaded_model_settings[CONF_THREAD_COUNT]),
-                n_threads_batch=int(self.loaded_model_settings[CONF_BATCH_THREAD_COUNT])
+                n_threads_batch=int(self.loaded_model_settings[CONF_BATCH_THREAD_COUNT]),
+                flash_attn=self.loaded_model_settings[CONF_ENABLE_FLASH_ATTENTION],
             )
             _LOGGER.debug("Model loaded")
             model_reloaded = True
