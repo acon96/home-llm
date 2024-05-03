@@ -67,6 +67,24 @@ def download_model_from_hf(model_name: str, quantization_type: str, storage_fold
         cache_dir=storage_folder,
     )
 
+def _load_extension():
+    """This needs to be at the root file level because we are using the 'spawn' start method"""
+    import importlib
+    importlib.import_module("llama_cpp")
+    
+def validate_llama_cpp_python_installation():
+    """
+    Spawns another process and tries to import llama.cpp to avoid crashing the main process
+    """
+    import multiprocessing
+    multiprocessing.set_start_method('spawn') # required because of aio
+    process = multiprocessing.Process(target=_load_extension)
+    process.start()
+    process.join()
+
+    if process.exitcode != 0:
+        raise Exception(f"Failed to properly initialize llama-cpp-python. (Exit code {process.exitcode}.)")
+
 def install_llama_cpp_python(config_dir: str):
 
     installed_wrong_version = False
@@ -90,7 +108,7 @@ def install_llama_cpp_python(config_dir: str):
                 cpu_features = [ line for line in f.readlines() if line.startswith("Features") or line.startswith("flags")][0]
             if "avx512f" in cpu_features and "avx512bw" in cpu_features:
                 instruction_extensions_suffix = "-avx512"
-            elif "avx2" not in cpu_features:
+            elif "avx2" not in cpu_features or "avx" not in cpu_features or "f16c" not in cpu_features or "fma" not in cpu_features or not ("sse3" in cpu_features or "ssse3" in cpu_features):
                 instruction_extensions_suffix = "-noavx"
         except Exception as ex:
             _LOGGER.debug(f"Couldn't detect CPU features: {ex}")
@@ -129,4 +147,5 @@ def install_llama_cpp_python(config_dir: str):
             f"You already have a version of llama-cpp-python ({version('llama-cpp-python')}) installed, however it may not be compatible!"
         )
         time.sleep(0.5) # I still don't know why this is required
+
         return True
