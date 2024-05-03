@@ -3,6 +3,7 @@ import os
 import sys
 import platform
 import logging
+import multiprocessing
 import voluptuous as vol
 import webcolors
 from importlib.metadata import version
@@ -83,9 +84,8 @@ def validate_llama_cpp_python_installation():
     """
     Spawns another process and tries to import llama.cpp to avoid crashing the main process
     """
-    import multiprocessing
-    multiprocessing.set_start_method('spawn') # required because of aio
-    process = multiprocessing.Process(target=_load_extension)
+    mp_ctx = multiprocessing.get_context('spawn') # required because of aio
+    process = mp_ctx.Process(target=_load_extension)
     process.start()
     process.join()
 
