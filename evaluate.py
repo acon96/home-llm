@@ -52,13 +52,15 @@ def icl_example_generator(num_examples, entity_names, service_names):
         print(f"Attempted to generate {num_examples} ICL examples for conversation, but only {len(selected_in_context_examples)} are available!")
     
     results = []
-    for x in range(num_examples_to_generate):
+    while len(results) < num_examples_to_generate:
+        if len(selected_in_context_examples) == 0:
+            break
+        
         chosen_example = selected_in_context_examples.pop()
         chosen_service = chosen_example["service"]
         potential_devices = [ x for x in entity_names if x.split(".")[0] == chosen_service.split(".")[0] ]
 
         if len(potential_devices) == 0:
-            selected_in_context_examples.append(chosen_example)
             continue
         else:
             example = {
@@ -66,7 +68,7 @@ def icl_example_generator(num_examples, entity_names, service_names):
                 "service": chosen_service,
                 "target_device": potential_devices[0],
             }
-            results.append(json.dumps(example))
+            results.insert(0, json.dumps(example))
     
     return "\n".join(results)
 
@@ -112,7 +114,7 @@ def evaluate(output_folder, trained_model, trained_tokenizer, dataset, batch_siz
                         for turn in conversation:
                             if turn["role"] == "system":
                                 entity_names = entity_ids_regex.findall(turn["content"])
-                                service_names = service_names_regex.findall(turn["content"])
+                                service_names = [ x.split("(")[0] for x in service_names_regex.findall(turn["content"]) ]
                                 icl_examples = icl_example_generator(5, entity_names, service_names)
                                 turn["content"] = turn["content"] + "Respond to the following user instruction by responding in the same format as the following examples:\n" + icl_examples
                             new_conversation.append(turn)
