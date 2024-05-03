@@ -894,15 +894,17 @@ class GenericOpenAIAPIAgent(LLaMAAgent):
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
 
-        result = requests.post(
-            f"{self.api_host}{endpoint}", 
-            json=request_params,
-            timeout=timeout,
-            headers=headers,
-        )
-
         try:
+            result = requests.post(
+                f"{self.api_host}{endpoint}", 
+                json=request_params,
+                timeout=timeout,
+                headers=headers,
+            )
+            
             result.raise_for_status()
+        except requests.exceptions.Timeout:
+            return f"The generation request timed out! Please increase the timeout in settings or decrease the number of exposed entities."
         except requests.RequestException as err:
             _LOGGER.debug(f"Err was: {err}")
             _LOGGER.debug(f"Request was: {request_params}")
@@ -1141,15 +1143,17 @@ class OllamaAPIAgent(LLaMAAgent):
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
 
-        result = requests.post(
-            f"{self.api_host}{endpoint}", 
-            json=request_params,
-            timeout=timeout,
-            headers=headers,
-        )
-
         try:
+            result = requests.post(
+                f"{self.api_host}{endpoint}", 
+                json=request_params,
+                timeout=timeout,
+                headers=headers,
+            )
+            
             result.raise_for_status()
+        except requests.exceptions.Timeout:
+            return f"The generation request timed out! Please increase the timeout in settings or decrease the number of exposed entities."
         except requests.RequestException as err:
             _LOGGER.debug(f"Err was: {err}")
             _LOGGER.debug(f"Request was: {request_params}")
