@@ -66,17 +66,19 @@ def download_model_from_hf(model_name: str, quantization_type: str, storage_fold
         resume_download=True,
         cache_dir=storage_folder,
     )
+
+def _load_extension():
+    """This needs to be at the root file level because we are using the 'spawn' start method"""
+    import importlib
+    importlib.import_module("llama_cpp")
     
 def validate_llama_cpp_python_installation():
     """
     Spawns another process and tries to import llama.cpp to avoid crashing the main process
     """
     import multiprocessing
-    def load_extension():
-        import llama_cpp
-        print("successfully loaded")
-
-    process = multiprocessing.Process(target=load_extension, args=("llama_cpp",))
+    multiprocessing.set_start_method('spawn') # required because of aio
+    process = multiprocessing.Process(target=_load_extension)
     process.start()
     process.join()
 
@@ -91,7 +93,6 @@ def install_llama_cpp_python(config_dir: str):
             installed_wrong_version = True
         else:
             time.sleep(0.5) # I still don't know why this is required
-            validate_llama_cpp_python_installation()
             return True
     
     platform_suffix = platform.machine()
@@ -123,17 +124,10 @@ def install_llama_cpp_python(config_dir: str):
 
         _LOGGER.info("Installing llama-cpp-python from local wheel")
         _LOGGER.debug(f"Wheel location: {latest_wheel}")
-        success = install_package(os.path.join(folder, latest_wheel), pip_kwargs(config_dir))
-        if success:
-            validate_llama_cpp_python_installation()
-            return True
-        else:
-            return False
+        return install_package(os.path.join(folder, latest_wheel), pip_kwargs(config_dir))
         
     github_release_url = f"https://github.com/acon96/home-llm/releases/download/v{INTEGRATION_VERSION}/llama_cpp_python-{EMBEDDED_LLAMA_CPP_PYTHON_VERSION}-{runtime_version}-{runtime_version}-musllinux_1_2_{platform_suffix}{instruction_extensions_suffix}.whl"
     if install_package(github_release_url, pip_kwargs(config_dir)):
-        validate_llama_cpp_python_installation()
-
         _LOGGER.info("llama-cpp-python successfully installed from GitHub release")
         return True
     
@@ -147,8 +141,6 @@ def install_llama_cpp_python(config_dir: str):
         )
         return False
     else:
-        validate_llama_cpp_python_installation()
-        
         _LOGGER.info(
             "Error installing llama-cpp-python. Could not install the binary wheels from GitHub for " + \
             f"platform: {platform_suffix}{instruction_extensions_suffix}, python version: {sys.version_info.major}.{sys.version_info.minor}. " + \

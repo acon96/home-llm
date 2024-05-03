@@ -25,7 +25,7 @@ from homeassistant.helpers import config_validation as cv, intent, template, ent
 from homeassistant.helpers.event import async_track_state_change, async_call_later
 from homeassistant.util import ulid
 
-from .utils import closest_color, flatten_vol_schema, install_llama_cpp_python
+from .utils import closest_color, flatten_vol_schema, install_llama_cpp_python, validate_llama_cpp_python_installation
 from .const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -536,6 +536,8 @@ class LocalLLaMAAgent(LLaMAAgent):
 
         if not self.model_path:
             raise Exception(f"Model was not found at '{self.model_path}'!")
+        
+        validate_llama_cpp_python_installation()
 
         # don't import it until now because the wheel is installed by config_flow.py
         try:
