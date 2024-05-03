@@ -68,9 +68,16 @@ def download_model_from_hf(model_name: str, quantization_type: str, storage_fold
     )
 
 def _load_extension():
-    """This needs to be at the root file level because we are using the 'spawn' start method"""
+    """
+    Makes sure it is possible to load llama-cpp-python without crashing Home Assistant.
+    This needs to be at the root file level because we are using the 'spawn' start method.
+    Also ignore ModuleNotFoundError because that just means it's not installed. Not that it will crash HA
+    """
     import importlib
-    importlib.import_module("llama_cpp")
+    try:
+        importlib.import_module("llama_cpp")
+    except ModuleNotFoundError:
+        pass
     
 def validate_llama_cpp_python_installation():
     """

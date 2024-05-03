@@ -548,6 +548,7 @@ class LocalLLaMAAgent(LLaMAAgent):
             if not install_result == True:
                 raise ConfigEntryError("llama-cpp-python was not installed on startup and re-installing it led to an error!")
             
+            validate_llama_cpp_python_installation()
             self.llama_cpp_module = importlib.import_module("llama_cpp")
             
         Llama = getattr(self.llama_cpp_module, "Llama")
