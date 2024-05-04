@@ -20,6 +20,7 @@ from custom_components.llama_conversation.const import (
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
     CONF_ALLOWED_SERVICE_CALL_ARGUMENTS,
     CONF_PROMPT_TEMPLATE,
+    CONF_ENABLE_FLASH_ATTENTION,
     CONF_USE_GBNF_GRAMMAR,
     CONF_GBNF_GRAMMAR_FILE,
     CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
@@ -55,6 +56,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
     DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS,
     DEFAULT_PROMPT_TEMPLATE,
+    DEFAULT_ENABLE_FLASH_ATTENTION,
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_GBNF_GRAMMAR_FILE,
     DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
@@ -208,6 +210,7 @@ async def test_local_llama_agent(local_llama_agent_fixture):
         n_batch=local_llama_agent.entry.options.get(CONF_BATCH_SIZE),
         n_threads=local_llama_agent.entry.options.get(CONF_THREAD_COUNT),
         n_threads_batch=local_llama_agent.entry.options.get(CONF_BATCH_THREAD_COUNT),
+        flash_attn=local_llama_agent.entry.options.get(CONF_ENABLE_FLASH_ATTENTION)
     )
 
     all_mocks["tokenize"].assert_called_once()
@@ -231,6 +234,7 @@ async def test_local_llama_agent(local_llama_agent_fixture):
     local_llama_agent.entry.options[CONF_THREAD_COUNT] = 24
     local_llama_agent.entry.options[CONF_BATCH_THREAD_COUNT] = 24
     local_llama_agent.entry.options[CONF_TEMPERATURE] = 2.0
+    local_llama_agent.entry.options[CONF_ENABLE_FLASH_ATTENTION] = True
     local_llama_agent.entry.options[CONF_TOP_K] = 20
     local_llama_agent.entry.options[CONF_TOP_P] = 0.9
     local_llama_agent.entry.options[CONF_MIN_P] = 0.2
@@ -244,6 +248,7 @@ async def test_local_llama_agent(local_llama_agent_fixture):
         n_batch=local_llama_agent.entry.options.get(CONF_BATCH_SIZE),
         n_threads=local_llama_agent.entry.options.get(CONF_THREAD_COUNT),
         n_threads_batch=local_llama_agent.entry.options.get(CONF_BATCH_THREAD_COUNT),
+        flash_attn=local_llama_agent.entry.options.get(CONF_ENABLE_FLASH_ATTENTION)
     )
 
     # do another turn of the same conversation
