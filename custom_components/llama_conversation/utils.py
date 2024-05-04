@@ -7,7 +7,6 @@ import multiprocessing
 import voluptuous as vol
 import webcolors
 from importlib.metadata import version
-from huggingface_hub import hf_hub_download, HfFileSystem
 
 from homeassistant.requirements import pip_kwargs
 from homeassistant.util.package import install_package, is_installed
@@ -48,6 +47,11 @@ def flatten_vol_schema(schema):
     return flattened
 
 def download_model_from_hf(model_name: str, quantization_type: str, storage_folder: str):
+    try:
+        from huggingface_hub import hf_hub_download, HfFileSystem
+    except Exception as ex:
+        raise Exception(f"Failed to import huggingface-hub library. Please re-install the integration.") from ex
+    
     fs = HfFileSystem()
     potential_files = [ f for f in fs.glob(f"{model_name}/*.gguf") ]
     wanted_file = [f for f in potential_files if (f".{quantization_type.lower()}." in f or f".{quantization_type.upper()}." in f)]

@@ -126,6 +126,7 @@ In order to facilitate running the project entirely on the system where Home Ass
 ## Version History
 | Version | Description                                                                                                                                                                                                          |
 |---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| v0.2.16 | Fix for missing huggingface_hub package preventing startup                                                                                                                                                                   |
 | v0.2.15 | Fix startup error when using llama.cpp backend and add flash attention to llama.cpp backend                                                                                                                          |
 | v0.2.14 | Fix llama.cpp wheels + AVX detection                                                                                                                                                                                 |
 | v0.2.13 | Add support for Llama 3, build llama.cpp wheels that are compatible with non-AVX systems, fix an error with exposing script entities, fix multiple small Ollama backend issues, and add basic multi-language support |
