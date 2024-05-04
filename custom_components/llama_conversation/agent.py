@@ -1161,7 +1161,7 @@ class OllamaAPIAgent(LLaMAAgent):
             
             result.raise_for_status()
         except requests.exceptions.Timeout:
-            return f"The generation request timed out! Please increase the timeout in settings or decrease the number of exposed entities."
+            return f"The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities."
         except requests.RequestException as err:
             _LOGGER.debug(f"Err was: {err}")
             _LOGGER.debug(f"Request was: {request_params}")
