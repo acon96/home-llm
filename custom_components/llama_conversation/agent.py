@@ -270,7 +270,7 @@ class LLaMAAgent(AbstractConversationAgent):
             intent_response = intent.IntentResponse(language=user_input.language)
             intent_response.async_set_error(
                 intent.IntentResponseErrorCode.UNKNOWN,
-                f"Sorry, there was a problem talking to the backend: {err}",
+                f"Sorry, there was a problem talking to the backend: {repr(err)}",
             )
             return ConversationResult(
                 response=intent_response, conversation_id=conversation_id

@@ -70,6 +70,7 @@ PROMPT_TEMPLATE_LLAMA3 = "llama3"
 PROMPT_TEMPLATE_NONE = "no_prompt_template"
 PROMPT_TEMPLATE_ZEPHYR = "zephyr"
 PROMPT_TEMPLATE_ZEPHYR2 = "zephyr2"
+PROMPT_TEMPLATE_ZEPHYR3 = "zephyr3"
 DEFAULT_PROMPT_TEMPLATE = PROMPT_TEMPLATE_CHATML
 PROMPT_TEMPLATE_DESCRIPTIONS = {
     PROMPT_TEMPLATE_CHATML: {
@@ -111,6 +112,12 @@ PROMPT_TEMPLATE_DESCRIPTIONS = {
         "system": { "prefix": "<|system|>\n", "suffix": "</s>" },
         "user": { "prefix": "<|user|>\n", "suffix": "</s>" },
         "assistant": { "prefix": "<|assistant|>\n", "suffix": "</s>" },
+        "generation_prompt": "<|assistant|>\n"
+    },
+    PROMPT_TEMPLATE_ZEPHYR3: {
+        "system": { "prefix": "<|system|>\n", "suffix": "<|end|>" },
+        "user": { "prefix": "<|user|>\n", "suffix": "<|end|>" },
+        "assistant": { "prefix": "<|assistant|>\n", "suffix": "<|end|>" },
         "generation_prompt": "<|assistant|>\n"
     },
     PROMPT_TEMPLATE_LLAMA3: {
@@ -271,6 +278,9 @@ OPTIONS_OVERRIDES = {
     "zephyr": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_EXTRAS,
         CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR,
+    },
+    "phi-3": {
+        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR3
     }
 }
 

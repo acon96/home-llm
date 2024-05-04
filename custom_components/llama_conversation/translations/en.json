@@ -164,6 +164,7 @@
                 "mistral": "Mistral",
                 "zephyr": "Zephyr (<|endoftext|>)",
                 "zephyr2": "Zephyr ('</s>')",
+                "zephyr3": "Zephyr (<|end|>)",
                 "llama3": "Llama 3",
                 "no_prompt_template": "None"
             }
