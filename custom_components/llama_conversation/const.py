@@ -63,11 +63,13 @@ CONF_ALLOWED_SERVICE_CALL_ARGUMENTS = "allowed_service_call_arguments"
 DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "hvac_mode", "preset_mode", "item", "duration"]
 CONF_PROMPT_TEMPLATE = "prompt_template"
 PROMPT_TEMPLATE_CHATML = "chatml"
+PROMPT_TEMPLATE_COMMAND_R = "command-r"
 PROMPT_TEMPLATE_ALPACA = "alpaca"
 PROMPT_TEMPLATE_VICUNA = "vicuna"
 PROMPT_TEMPLATE_MISTRAL = "mistral"
 PROMPT_TEMPLATE_LLAMA3 = "llama3"
 PROMPT_TEMPLATE_NONE = "no_prompt_template"
+PROMPT_TEMPLATE_PHI = "phi"
 PROMPT_TEMPLATE_ZEPHYR = "zephyr"
 PROMPT_TEMPLATE_ZEPHYR2 = "zephyr2"
 PROMPT_TEMPLATE_ZEPHYR3 = "zephyr3"
@@ -78,6 +80,12 @@ PROMPT_TEMPLATE_DESCRIPTIONS = {
         "user": { "prefix": "<|im_start|>user\n", "suffix": "<|im_end|>" },
         "assistant": { "prefix": "<|im_start|>assistant\n", "suffix": "<|im_end|>" },
         "generation_prompt": "<|im_start|>assistant"
+    },
+    PROMPT_TEMPLATE_COMMAND_R: {
+        "system": { "prefix": "<|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|>", "suffix": "<|END_OF_TURN_TOKEN|>" },
+        "user": { "prefix": "<|START_OF_TURN_TOKEN|><|USER_TOKEN|>", "suffix": "<|END_OF_TURN_TOKEN|>" },
+        "assistant": { "prefix": "<|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>", "suffix": "<|END_OF_TURN_TOKEN|>" },
+        "generation_prompt": "<|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>"
     },
     PROMPT_TEMPLATE_ALPACA: {
         "system": { "prefix": "", "suffix": "\n" },
@@ -101,6 +109,12 @@ PROMPT_TEMPLATE_DESCRIPTIONS = {
         "user": { "prefix": "<s>[INST] ", "suffix": " [/INST] " },
         "assistant": { "prefix": "", "suffix": "</s>" },
         "generation_prompt": ""
+    },
+    PROMPT_TEMPLATE_PHI: {
+        "system": { "prefix": "<|system|>\n", "suffix": "<|end|>\n" },
+        "user": { "prefix": "<|user|>\n", "suffix": "<|end|>\n" },
+        "assistant": { "prefix": "<|assistant|>\n", "suffix": "<|end|>\n" },
+        "generation_prompt": "<|assistant|>\n"
     },
     PROMPT_TEMPLATE_ZEPHYR: {
         "system": { "prefix": "<|system|>\n", "suffix": "<|endoftext|>" },
