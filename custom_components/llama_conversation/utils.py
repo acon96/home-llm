@@ -114,13 +114,21 @@ def install_llama_cpp_python(config_dir: str):
 
     instruction_extensions_suffix = ""
     if platform_suffix == "amd64" or platform_suffix == "i386":
+        instruction_extensions_suffix = "-noavx"
+
         try:
             with open("/proc/cpuinfo") as f:
                 cpu_features = [ line for line in f.readlines() if line.startswith("Features") or line.startswith("flags")][0]
-            if "avx512f" in cpu_features and "avx512bw" in cpu_features:
+
+            _LOGGER.debug(cpu_features)
+            if " avx512f " in cpu_features and " avx512bw " in cpu_features:
                 instruction_extensions_suffix = "-avx512"
-            elif "avx2" not in cpu_features or "avx" not in cpu_features or "f16c" not in cpu_features or "fma" not in cpu_features or not ("sse3" in cpu_features or "ssse3" in cpu_features):
-                instruction_extensions_suffix = "-noavx"
+            elif " avx2 " in cpu_features and \
+                 " avx " in cpu_features and \
+                 " f16c " in cpu_features and \
+                 " fma " in cpu_features and \
+                 (" sse3 " in cpu_features or " ssse3 " in cpu_features):
+                instruction_extensions_suffix = ""
         except Exception as ex:
             _LOGGER.debug(f"Couldn't detect CPU features: {ex}")
             # default to the noavx build to avoid crashing home assistant
