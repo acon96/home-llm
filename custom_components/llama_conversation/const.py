@@ -63,6 +63,7 @@ CONF_ALLOWED_SERVICE_CALL_ARGUMENTS = "allowed_service_call_arguments"
 DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "hvac_mode", "preset_mode", "item", "duration"]
 CONF_PROMPT_TEMPLATE = "prompt_template"
 PROMPT_TEMPLATE_CHATML = "chatml"
+PROMPT_TEMPLATE_COMMAND_R = "command-r"
 PROMPT_TEMPLATE_ALPACA = "alpaca"
 PROMPT_TEMPLATE_VICUNA = "vicuna"
 PROMPT_TEMPLATE_MISTRAL = "mistral"
@@ -78,6 +79,12 @@ PROMPT_TEMPLATE_DESCRIPTIONS = {
         "user": { "prefix": "<|im_start|>user\n", "suffix": "<|im_end|>" },
         "assistant": { "prefix": "<|im_start|>assistant\n", "suffix": "<|im_end|>" },
         "generation_prompt": "<|im_start|>assistant"
+    },
+    PROMPT_TEMPLATE_COMMAND_R: {
+        "system": { "prefix": "<|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|>", "suffix": "<|END_OF_TURN_TOKEN|>" },
+        "user": { "prefix": "<|START_OF_TURN_TOKEN|><|USER_TOKEN|>", "suffix": "<|END_OF_TURN_TOKEN|>" },
+        "assistant": { "prefix": "<|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>", "suffix": "<|END_OF_TURN_TOKEN|>" },
+        "generation_prompt": "<|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>"
     },
     PROMPT_TEMPLATE_ALPACA: {
         "system": { "prefix": "", "suffix": "\n" },
