@@ -69,7 +69,6 @@ PROMPT_TEMPLATE_VICUNA = "vicuna"
 PROMPT_TEMPLATE_MISTRAL = "mistral"
 PROMPT_TEMPLATE_LLAMA3 = "llama3"
 PROMPT_TEMPLATE_NONE = "no_prompt_template"
-PROMPT_TEMPLATE_PHI = "phi"
 PROMPT_TEMPLATE_ZEPHYR = "zephyr"
 PROMPT_TEMPLATE_ZEPHYR2 = "zephyr2"
 PROMPT_TEMPLATE_ZEPHYR3 = "zephyr3"
@@ -109,12 +108,6 @@ PROMPT_TEMPLATE_DESCRIPTIONS = {
         "user": { "prefix": "<s>[INST] ", "suffix": " [/INST] " },
         "assistant": { "prefix": "", "suffix": "</s>" },
         "generation_prompt": ""
-    },
-    PROMPT_TEMPLATE_PHI: {
-        "system": { "prefix": "<|system|>\n", "suffix": "<|end|>\n" },
-        "user": { "prefix": "<|user|>\n", "suffix": "<|end|>\n" },
-        "assistant": { "prefix": "<|assistant|>\n", "suffix": "<|end|>\n" },
-        "generation_prompt": "<|assistant|>\n"
     },
     PROMPT_TEMPLATE_ZEPHYR: {
         "system": { "prefix": "<|system|>\n", "suffix": "<|endoftext|>" },
