@@ -9,6 +9,7 @@ pandas
 # flash-attn
 sentencepiece
 deep-translator
+langcodes
 
 homeassistant
 hassil
