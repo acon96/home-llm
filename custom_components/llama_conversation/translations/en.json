@@ -166,6 +166,7 @@
                 "zephyr2": "Zephyr ('</s>')",
                 "zephyr3": "Zephyr (<|end|>)",
                 "llama3": "Llama 3",
+                "command-r": "Command R",
                 "no_prompt_template": "None"
             }
         },
