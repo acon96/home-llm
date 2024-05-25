@@ -35,7 +35,7 @@ The following link will open your Home Assistant installation and download the i
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?category=Integration&repository=home-llm&owner=acon96)
 
-After installation, A "LLaMA Conversation" device should show up in the `Settings > Devices and Services > [Devices]` tab now.
+After installation, A "Local LLM Conversation" device should show up in the `Settings > Devices and Services > [Devices]` tab now.
 
 ## Path 1: Using the Home Model with the Llama.cpp Backend
 ### Overview
@@ -44,7 +44,7 @@ This setup path involves downloading a fine-tuned model from HuggingFace and int
 ### Step 1: Wheel Installation for llama-cpp-python
 1. In Home Assistant: navigate to `Settings > Devices and Services`
 2. Select the `+ Add Integration` button in the bottom right corner
-3. Search for, and select `LLaMA Conversation`
+3. Search for, and select `Local LLM Conversation`
 4. With the `Llama.cpp (HuggingFace)` backend selected, click `Submit`
 
 This should download and install `llama-cpp-python` from GitHub. If the installation fails for any reason, follow the manual installation instructions [here](./Backend%20Configuration.md#wheels).
@@ -82,7 +82,7 @@ In order to access the model from another machine, we need to run the Ollama API
 
 1. In Home Assistant: navigate to `Settings > Devices and Services`
 2. Select the `+ Add Integration` button in the bottom right corner
-3. Search for, and select `LLaMA Conversation`
+3. Search for, and select `Local LLM Conversation`
 4. Select `Ollama API` from the dropdown and click `Submit`
 5. Set up the connection to the API:
     - **IP Address**: Fill out IP Address for the machine hosting Ollama

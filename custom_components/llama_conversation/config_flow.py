@@ -1,4 +1,4 @@
-"""Config flow for Local LLaMA Conversation integration."""
+"""Config flow for Local LLM Conversation integration."""
 from __future__ import annotations
 
 import os
@@ -13,18 +13,20 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, UnitOfTime
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_LLM_HASS_API, UnitOfTime
 from homeassistant.data_entry_flow import (
     AbortFlow,
     FlowHandler,
     FlowManager,
     FlowResult,
 )
+from homeassistant.helpers import llm
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
     TemplateSelector,
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -279,7 +281,7 @@ class BaseLlamaConversationConfigFlow(FlowHandler, ABC):
         """ Finish configuration """
 
 class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Local LLaMA Conversation."""
+    """Handle a config flow for Local LLM Conversation."""
 
     VERSION = 1
     install_wheel_task = None
@@ -584,7 +586,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         persona = PERSONA_PROMPTS.get(self.selected_language, PERSONA_PROMPTS.get("en"))
         selected_default_options[CONF_PROMPT] = selected_default_options[CONF_PROMPT].replace("<persona>", persona)
         
-        schema = vol.Schema(local_llama_config_option_schema(selected_default_options, backend_type))
+        schema = vol.Schema(local_llama_config_option_schema(self.hass, selected_default_options, backend_type))
 
         if user_input:
             self.options = user_input
@@ -626,7 +628,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
 
 
 class OptionsFlow(config_entries.OptionsFlow):
-    """Local LLaMA config flow options handler."""
+    """Local LLM config flow options handler."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
@@ -656,9 +658,10 @@ class OptionsFlow(config_entries.OptionsFlow):
                     description_placeholders["filename"] = filename
 
             if len(errors) == 0:
-                return self.async_create_entry(title="LLaMA Conversation", data=user_input)
+                return self.async_create_entry(title="Local LLM Conversation", data=user_input)
             
         schema = local_llama_config_option_schema(
+            self.hass,
             self.config_entry.options,
             self.config_entry.data[CONF_BACKEND_TYPE],
         )
@@ -682,12 +685,31 @@ def insert_after_key(input_dict: dict, key_name: str, other_dict: dict):
 
     return result
 
-def local_llama_config_option_schema(options: MappingProxyType[str, Any], backend_type: str) -> dict:
-    """Return a schema for Local LLaMA completion options."""
+def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyType[str, Any], backend_type: str) -> dict:
+    """Return a schema for Local LLM completion options."""
     if not options:
         options = DEFAULT_OPTIONS
 
+    apis: list[SelectOptionDict] = [
+        SelectOptionDict(
+            label="No control",
+            value="none",
+        )
+    ]
+    apis.extend(
+        SelectOptionDict(
+            label=api.name,
+            value=api.id,
+        )
+        for api in llm.async_get_apis(hass)
+    )
+
     result = {
+        vol.Optional(
+            CONF_LLM_HASS_API,
+            description={"suggested_value": options.get(CONF_LLM_HASS_API)},
+            default="none",
+        ): SelectSelector(SelectSelectorConfig(options=apis)),
         vol.Required(
             CONF_PROMPT,
             description={"suggested_value": options.get(CONF_PROMPT)},

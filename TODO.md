@@ -1,6 +1,13 @@
 # TODO
-- [x] detection/mitigation of too many entities being exposed & blowing out the context length
+- [ ] support new LLM APIs  
+    - rewrite how services are called  
+    - handle no API selected  
+    - rewrite prompts + service block formats  
+    - update dataset so new models will work with the API  
+- [ ] make ICL examples into conversation turns  
+- [ ] translate ICL examples + make better ones  
 - [ ] areas/room support  
+- [x] detection/mitigation of too many entities being exposed & blowing out the context length
 - [ ] figure out DPO to improve response quality
 - [ ] train the model to respond to house events  
     - present the model with an event + a "prompt" from the user of what you want it to do (i.e. turn on the lights when I get home = the model turns on lights when your entity presence triggers as being home)  

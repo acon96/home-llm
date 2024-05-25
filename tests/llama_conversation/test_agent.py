@@ -4,7 +4,7 @@ import pytest
 import jinja2
 from unittest.mock import patch, MagicMock, PropertyMock, AsyncMock, ANY
 
-from custom_components.llama_conversation.agent import LocalLLaMAAgent, OllamaAPIAgent, TextGenerationWebuiAgent, GenericOpenAIAPIAgent
+from custom_components.llama_conversation.agent import LlamaCppAgent, OllamaAPIAgent, TextGenerationWebuiAgent, GenericOpenAIAPIAgent
 from custom_components.llama_conversation.const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -140,10 +140,10 @@ def home_assistant_mock():
 
 @pytest.fixture
 def local_llama_agent_fixture(config_entry, home_assistant_mock):
-    with patch.object(LocalLLaMAAgent, '_load_icl_examples') as load_icl_examples_mock, \
-         patch.object(LocalLLaMAAgent, '_load_grammar') as load_grammar_mock, \
-         patch.object(LocalLLaMAAgent, 'entry', new_callable=PropertyMock) as entry_mock, \
-         patch.object(LocalLLaMAAgent, '_async_get_exposed_entities') as get_exposed_entities_mock, \
+    with patch.object(LlamaCppAgent, '_load_icl_examples') as load_icl_examples_mock, \
+         patch.object(LlamaCppAgent, '_load_grammar') as load_grammar_mock, \
+         patch.object(LlamaCppAgent, 'entry', new_callable=PropertyMock) as entry_mock, \
+         patch.object(LlamaCppAgent, '_async_get_exposed_entities') as get_exposed_entities_mock, \
          patch('homeassistant.helpers.template.Template') as template_mock, \
          patch('custom_components.llama_conversation.agent.importlib.import_module') as import_module_mock, \
          patch('custom_components.llama_conversation.agent.install_llama_cpp_python') as install_llama_cpp_python_mock:
@@ -174,7 +174,7 @@ def local_llama_agent_fixture(config_entry, home_assistant_mock):
             "target_device": "light.kitchen_light",
         }).encode()
 
-        agent_obj = LocalLLaMAAgent(
+        agent_obj = LlamaCppAgent(
             home_assistant_mock,
             config_entry
         )
@@ -191,7 +191,7 @@ def local_llama_agent_fixture(config_entry, home_assistant_mock):
 
 async def test_local_llama_agent(local_llama_agent_fixture):
 
-    local_llama_agent: LocalLLaMAAgent
+    local_llama_agent: LlamaCppAgent
     all_mocks: dict[str, MagicMock]
     local_llama_agent, all_mocks = local_llama_agent_fixture
     

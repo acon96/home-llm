@@ -1,4 +1,4 @@
-"""The Local LLaMA Conversation integration."""
+"""The Local LLM Conversation integration."""
 from __future__ import annotations
 
 import logging
@@ -9,8 +9,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
 from .agent import (
-    LLaMAAgent,
-    LocalLLaMAAgent,
+    LocalLLMAgent,
+    LlamaCppAgent,
     GenericOpenAIAPIAgent,
     TextGenerationWebuiAgent,
     LlamaCppPythonAPIAgent,
@@ -38,19 +38,19 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][entry.entry_id] = entry
     
     # call update handler
-    agent: LLaMAAgent = await ha_conversation._get_agent_manager(hass).async_get_agent(entry.entry_id)
+    agent: LocalLLMAgent = await ha_conversation.get_agent_manager(hass).async_get_agent(entry.entry_id)
     agent._update_options()
 
     return True
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Local LLaMA Conversation from a config entry."""
+    """Set up Local LLM Conversation from a config entry."""
 
     def create_agent(backend_type):
         agent_cls = None
 
         if backend_type in [ BACKEND_TYPE_LLAMA_HF, BACKEND_TYPE_LLAMA_EXISTING ]:
-            agent_cls = LocalLLaMAAgent
+            agent_cls = LlamaCppAgent
         elif backend_type == BACKEND_TYPE_GENERIC_OPENAI:
             agent_cls = GenericOpenAIAPIAgent
         elif backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
@@ -78,7 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload Local LLaMA."""
+    """Unload Local LLM."""
     hass.data[DOMAIN].pop(entry.entry_id)
     ha_conversation.async_unset_agent(hass, entry)
     return True

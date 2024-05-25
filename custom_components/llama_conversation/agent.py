@@ -18,10 +18,10 @@ from homeassistant.components.conversation import ConversationInput, Conversatio
 from homeassistant.components.conversation.const import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_SSL, MATCH_ALL
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_SSL, MATCH_ALL, CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryError, TemplateError
-from homeassistant.helpers import config_validation as cv, intent, template, entity_registry as er
+from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryError, TemplateError, HomeAssistantError
+from homeassistant.helpers import config_validation as cv, intent, template, entity_registry as er, llm
 from homeassistant.helpers.event import async_track_state_change, async_call_later
 from homeassistant.util import ulid
 
@@ -114,8 +114,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-class LLaMAAgent(AbstractConversationAgent):
-    """Base LLaMA conversation agent."""
+class LocalLLMAgent(AbstractConversationAgent):
+    """Base Local LLM conversation agent."""
 
     hass: HomeAssistant
     entry_id: str
@@ -225,6 +225,22 @@ class LLaMAAgent(AbstractConversationAgent):
             return ConversationResult(
                 response=intent_response, conversation_id=conversation_id
             )
+        
+        llm_api: llm.API | None = None
+        if self.entry.options.get(CONF_LLM_HASS_API):
+            try:
+                llm_api = llm.async_get_api(
+                    self.hass, self.entry.options[CONF_LLM_HASS_API]
+                )
+            except HomeAssistantError as err:
+                _LOGGER.error("Error getting LLM API: %s", err)
+                intent_response.async_set_error(
+                    intent.IntentResponseErrorCode.UNKNOWN,
+                    f"Error preparing LLM API: {err}",
+                )
+                return conversation.ConversationResult(
+                    response=intent_response, conversation_id=user_input.conversation_id
+                )
 
         if user_input.conversation_id in self.history:
             conversation_id = user_input.conversation_id
@@ -235,7 +251,7 @@ class LLaMAAgent(AbstractConversationAgent):
         
         if len(conversation) == 0 or refresh_system_prompt:
             try:
-                message = self._generate_system_prompt(raw_prompt)
+                message = self._generate_system_prompt(raw_prompt, llm_api)
             except TemplateError as err:
                 _LOGGER.error("Error rendering prompt: %s", err)
                 intent_response = intent.IntentResponse(language=user_input.language)
@@ -407,7 +423,7 @@ class LLaMAAgent(AbstractConversationAgent):
         _LOGGER.debug(formatted_prompt)
         return formatted_prompt
 
-    def _generate_system_prompt(self, prompt_template: str) -> str:
+    def _generate_system_prompt(self, prompt_template: str, llm_api: llm.API) -> str:
         """Generate the system prompt with current entity states"""
         entities_to_expose, domains = self._async_get_exposed_entities()
 
@@ -487,21 +503,14 @@ class LLaMAAgent(AbstractConversationAgent):
 
         formatted_states = "\n".join(device_states) + "\n"
 
-        service_dict = self.hass.services.async_services()
-        all_services = []
-        all_service_names = []
-        for domain in domains:
-            # scripts show up as individual services
-            if domain == "script":
-                all_services.extend(["script.reload()", "script.turn_on()", "script.turn_off()", "script.toggle()"])
-                continue
-            
-            for name, service in service_dict.get(domain, {}).items():
-                args = flatten_vol_schema(service.schema)
-                args_to_expose = set(args).intersection(allowed_service_call_arguments)
-                all_services.append(f"{domain}.{name}({','.join(args_to_expose)})")
-                all_service_names.append(f"{domain}.{name}")
-        formatted_services = ", ".join(all_services)
+        if llm_api:
+            tools = [
+                f"{tool.name}({flatten_vol_schema(tool.parameters)}) - {tool.description}"
+                for tool in llm_api.async_get_tools()
+            ]
+            formatted_services = llm_api.prompt_template + "\n" + "\n".join(tools)
+        else:
+            formatted_services = "No tools exposed."
 
         render_variables = {
             "devices": formatted_states,
@@ -509,15 +518,16 @@ class LLaMAAgent(AbstractConversationAgent):
         }
 
         if self.in_context_examples:
-            num_examples = int(self.entry.options.get(CONF_NUM_IN_CONTEXT_EXAMPLES, DEFAULT_NUM_IN_CONTEXT_EXAMPLES))
-            render_variables["response_examples"] = "\n".join(icl_example_generator(num_examples, list(entities_to_expose.keys()), all_service_names))
+            # num_examples = int(self.entry.options.get(CONF_NUM_IN_CONTEXT_EXAMPLES, DEFAULT_NUM_IN_CONTEXT_EXAMPLES))
+            # render_variables["response_examples"] = "\n".join(icl_example_generator(num_examples, list(entities_to_expose.keys()), all_service_names))
+            render_variables["response_examples"] = ""
         
         return template.Template(prompt_template, self.hass).async_render(
             render_variables,
             parse_result=False,
         )
 
-class LocalLLaMAAgent(LLaMAAgent):
+class LlamaCppAgent(LocalLLMAgent):
     model_path: str
     llm: LlamaType
     grammar: Any
@@ -612,7 +622,7 @@ class LocalLLaMAAgent(LLaMAAgent):
             self.grammar = None
 
     def _update_options(self):
-        LLaMAAgent._update_options(self)
+        LocalLLMAgent._update_options(self)
 
         model_reloaded = False
         if self.loaded_model_settings[CONF_CONTEXT_LENGTH] != self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH) or \
@@ -662,7 +672,7 @@ class LocalLLaMAAgent(LLaMAAgent):
 
     def _async_get_exposed_entities(self) -> tuple[dict[str, str], list[str]]:
         """Takes the super class function results and sorts the entities with the recently updated at the end"""
-        entities, domains = LLaMAAgent._async_get_exposed_entities(self)
+        entities, domains = LocalLLMAgent._async_get_exposed_entities(self)
 
         # ignore sorting if prompt caching is disabled
         if not self.entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED):
@@ -739,10 +749,20 @@ class LocalLLaMAAgent(LLaMAAgent):
             self.cache_refresh_after_cooldown = True
             return
         
+        llm_api: llm.API | None = None
+        if self.entry.options.get(CONF_LLM_HASS_API):
+            try:
+                llm_api = llm.async_get_api(
+                    self.hass, self.entry.options[CONF_LLM_HASS_API]
+                )
+            except HomeAssistantError:
+                _LOGGER.exception("Failed to get LLM API when caching prompt!")
+                return
+        
         try:
             raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
             prompt = self._format_prompt([
-                { "role": "system", "message": self._generate_system_prompt(raw_prompt)},
+                { "role": "system", "message": self._generate_system_prompt(raw_prompt, llm_api)},
                 { "role": "user", "message": "" }
             ], include_generation_prompt=False)
         
@@ -839,7 +859,7 @@ class LocalLLaMAAgent(LLaMAAgent):
 
         return result
     
-class GenericOpenAIAPIAgent(LLaMAAgent):
+class GenericOpenAIAPIAgent(LocalLLMAgent):
     api_host: str
     api_key: str
     model_name: str
@@ -1046,7 +1066,7 @@ class LlamaCppPythonAPIAgent(GenericOpenAIAPIAgent):
 
         return endpoint, request_params
 
-class OllamaAPIAgent(LLaMAAgent):
+class OllamaAPIAgent(LocalLLMAgent):
     api_host: str
     api_key: str
     model_name: str

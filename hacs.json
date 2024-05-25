@@ -1,6 +1,6 @@
 {
-    "name": "LLaMA Conversation",    
-    "homeassistant": "2023.10.0",
+    "name": "Local LLM Conversation",    
+    "homeassistant": "2024.5.5",
     "content_in_root": false,
     "render_readme": true
 } 
