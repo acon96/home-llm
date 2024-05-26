@@ -60,7 +60,6 @@ from .const import (
     CONF_USE_GBNF_GRAMMAR,
     CONF_GBNF_GRAMMAR_FILE,
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
-    CONF_ALLOWED_SERVICE_CALL_ARGUMENTS,
     CONF_TEXT_GEN_WEBUI_PRESET,
     CONF_REFRESH_SYSTEM_PROMPT,
     CONF_REMEMBER_CONVERSATION,
@@ -100,7 +99,6 @@ from .const import (
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_GBNF_GRAMMAR_FILE,
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
-    DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS,
     DEFAULT_REFRESH_SYSTEM_PROMPT,
     DEFAULT_REMEMBER_CONVERSATION,
     DEFAULT_REMEMBER_NUM_INTERACTIONS,
@@ -589,10 +587,14 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         schema = vol.Schema(local_llama_config_option_schema(self.hass, selected_default_options, backend_type))
 
         if user_input:
-            self.options = user_input
+            if user_input[CONF_LLM_HASS_API] == "none":
+                user_input.pop(CONF_LLM_HASS_API)
+            
             try:
                 # validate input
                 schema(user_input)
+
+                self.options = user_input
                 return await self.async_step_finish()
             except Exception as ex:
                 _LOGGER.exception("An unknown error has occurred!")
@@ -656,6 +658,9 @@ class OptionsFlow(config_entries.OptionsFlow):
                 if not os.path.isfile(os.path.join(os.path.dirname(__file__), filename)):
                     errors["base"] = "missing_icl_file"
                     description_placeholders["filename"] = filename
+
+            if user_input[CONF_LLM_HASS_API] == "none":
+                user_input.pop(CONF_LLM_HASS_API)
 
             if len(errors) == 0:
                 return self.async_create_entry(title="Local LLM Conversation", data=user_input)
@@ -749,11 +754,6 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
             CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
             description={"suggested_value": options.get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE)},
             default=DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
-        ): TextSelector(TextSelectorConfig(multiple=True)),
-        vol.Required(
-            CONF_ALLOWED_SERVICE_CALL_ARGUMENTS,
-            description={"suggested_value": options.get(CONF_ALLOWED_SERVICE_CALL_ARGUMENTS)},
-            default=DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS,
         ): TextSelector(TextSelectorConfig(multiple=True)),
         vol.Required(
             CONF_SERVICE_CALL_REGEX,

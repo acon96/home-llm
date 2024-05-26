@@ -5,6 +5,7 @@ import logging
 import threading
 import importlib
 from typing import Literal, Any, Callable
+import voluptuous as vol
 
 import requests
 import re
@@ -15,6 +16,7 @@ import random
 import time
 
 from homeassistant.components.conversation import ConversationInput, ConversationResult, AbstractConversationAgent
+import homeassistant.components.conversation as ha_conversation
 from homeassistant.components.conversation.const import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.config_entries import ConfigEntry
@@ -39,7 +41,6 @@ from .const import (
     CONF_BACKEND_TYPE,
     CONF_DOWNLOADED_MODEL_FILE,
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
-    CONF_ALLOWED_SERVICE_CALL_ARGUMENTS,
     CONF_PROMPT_TEMPLATE,
     CONF_ENABLE_FLASH_ATTENTION,
     CONF_USE_GBNF_GRAMMAR,
@@ -74,7 +75,6 @@ from .const import (
     DEFAULT_BACKEND_TYPE,
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
-    DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS,
     DEFAULT_PROMPT_TEMPLATE,
     DEFAULT_ENABLE_FLASH_ATTENTION,
     DEFAULT_USE_GBNF_GRAMMAR,
@@ -209,8 +209,6 @@ class LocalLLMAgent(AbstractConversationAgent):
         remember_conversation = self.entry.options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION)
         remember_num_interactions = self.entry.options.get(CONF_REMEMBER_NUM_INTERACTIONS, DEFAULT_REMEMBER_NUM_INTERACTIONS)
         service_call_regex = self.entry.options.get(CONF_SERVICE_CALL_REGEX, DEFAULT_SERVICE_CALL_REGEX)
-        allowed_service_call_arguments = self.entry.options \
-            .get(CONF_ALLOWED_SERVICE_CALL_ARGUMENTS, DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS)
 
         try:
             service_call_pattern = re.compile(service_call_regex)
@@ -302,72 +300,49 @@ class LocalLLMAgent(AbstractConversationAgent):
         # parse response
         exposed_entities = list(self._async_get_exposed_entities()[0].keys())
         
-        to_say = service_call_pattern.sub("", response).strip()
+        to_say = ""
         for block in service_call_pattern.findall(response.strip()):
-            services = block.split("\n")
-            _LOGGER.info(f"running services: {' '.join(services)}")
+            _LOGGER.info(f"calling tool: {block}")
 
-            for line in services:
-                if len(line) == 0:
-                    break
+            parsed_tool_call = json.loads(block)
 
-                # parse old format or JSON format
-                try:
-                    json_output = json.loads(line)
-                    service = json_output["service"]
-                    entity = json_output["target_device"]
-                    domain, service = tuple(service.split("."))
-                    if "to_say" in json_output:
-                        to_say = to_say + json_output.pop("to_say")
+            to_say = to_say + parsed_tool_call.get("to_say", "")
 
-                    extra_arguments = { k: v for k, v in json_output.items() if k not in [ "service", "target_device" ] }
-                except Exception:
-                    try:
-                        service = line.split("(")[0]
-                        entity = line.split("(")[1][:-1]
-                        domain, service = tuple(service.split("."))
-                        extra_arguments = {}
-                    except Exception:
-                        to_say += f" Failed to parse call from '{line}'!"
-                        continue
+            # try to fix certain arguments
+            # make sure brightness is 0-255 and not a percentage
+            if "brightness" in parsed_tool_call["arguments"] and 0.0 < parsed_tool_call["arguments"]["brightness"] <= 1.0:
+                parsed_tool_call["arguments"]["brightness"] = int(parsed_tool_call["arguments"]["brightness"] * 255)
 
-                # fix certain arguments
-                # make sure brightness is 0-255 and not a percentage
-                if "brightness" in extra_arguments and 0.0 < extra_arguments["brightness"] <= 1.0:
-                    extra_arguments["brightness"] = int(extra_arguments["brightness"] * 255)
+            # convert string "tuple" to a list for RGB colors
+            if "rgb_color" in parsed_tool_call["arguments"] and isinstance(parsed_tool_call["arguments"]["rgb_color"], str):
+                parsed_tool_call["arguments"]["rgb_color"] = [ int(x) for x in parsed_tool_call["arguments"]["rgb_color"][1:-1].split(",") ]
+            
+            tool_input = llm.ToolInput(
+                tool_name=parsed_tool_call["tool"],
+                tool_args=parsed_tool_call["arguments"],
+                platform=DOMAIN,
+                context=user_input.context,
+                user_prompt=user_input.text,
+                language=user_input.language,
+                assistant=ha_conversation.DOMAIN,
+            )
 
-                # convert string "tuple" to a list for RGB colors
-                if "rgb_color" in extra_arguments and isinstance(extra_arguments["rgb_color"], str):
-                    extra_arguments["rgb_color"] = [ int(x) for x in extra_arguments["rgb_color"][1:-1].split(",") ]
+            # TODO: multi-turn with the model where it acts on the response from the tool?
+            try:
+                tool_response = await llm_api.async_call_tool(
+                    self.hass, tool_input
+                )
+            except (HomeAssistantError, vol.Invalid) as e:
+                tool_response = {"error": type(e).__name__}
+                if str(e):
+                    tool_response["error_text"] = str(e)
 
-                # only acknowledge requests to exposed entities
-                if entity not in exposed_entities:
-                    to_say += f" Can't find device '{entity}'!"
-                else:
-                    # copy arguments to service call
-                    service_data = {ATTR_ENTITY_ID: entity}
-                    for attr in allowed_service_call_arguments:
-                        if attr in extra_arguments.keys():
-                            service_data[attr] = extra_arguments[attr]
-                    
-                    try:
-                        _LOGGER.debug(f"service data: {service_data}")
-                        await self.hass.services.async_call(
-                            domain,
-                            service,
-                            service_data=service_data,
-                            blocking=True,
-                        )
-                    except Exception as err:
-                        to_say += f"\nFailed to run: {line}"
-                        _LOGGER.exception(f"Failed to run: {line}")
-
-        if template_desc["assistant"]["suffix"]:
-            to_say = to_say.replace(template_desc["assistant"]["suffix"], "") # remove the eos token if it is returned (some backends + the old model does this)
+            _LOGGER.debug("Tool response: %s", tool_response)
         
         # generate intent response to Home Assistant
         intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(to_say)
+        intent_response.set
         return ConversationResult(
             response=intent_response, conversation_id=conversation_id
         )
@@ -429,8 +404,6 @@ class LocalLLMAgent(AbstractConversationAgent):
 
         extra_attributes_to_expose = self.entry.options \
             .get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE)
-        allowed_service_call_arguments = self.entry.options \
-            .get(CONF_ALLOWED_SERVICE_CALL_ARGUMENTS, DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS)
         
         def icl_example_generator(num_examples, entity_names, service_names):
             entity_domains = set([x.split(".")[0] for x in entity_names])
@@ -459,8 +432,8 @@ class LocalLLMAgent(AbstractConversationAgent):
                 device = [ x for x in entity_names if x.split(".")[0] == chosen_service.split(".")[0] ][0]
                 example = {
                     "to_say": chosen_example["response"],
-                    "service": chosen_service,
-                    "target_device": device,
+                    "tool": chosen_service,
+                    "arguments": { "name": device },
                 }
                 yield json.dumps(example) + "\n"
 
@@ -505,7 +478,7 @@ class LocalLLMAgent(AbstractConversationAgent):
 
         if llm_api:
             tools = [
-                f"{tool.name}({flatten_vol_schema(tool.parameters)}) - {tool.description}"
+                f"{tool.name}({', '.join(flatten_vol_schema(tool.parameters))}) - {tool.description}"
                 for tool in llm_api.async_get_tools()
             ]
             formatted_services = llm_api.prompt_template + "\n" + "\n".join(tools)

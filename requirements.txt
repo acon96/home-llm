@@ -1,3 +1,4 @@
+# training + dataset requirements
 transformers
 tensorboard
 datasets
@@ -11,9 +12,17 @@ sentencepiece
 deep-translator
 langcodes
 
+# integration requirements
+requests==2.31.0
+huggingface-hub==0.23.0
+webcolors==1.13
+
+# types from Home Assistant
 homeassistant
 hassil
 home-assistant-intents
+
+# testing requirements
 pytest
 pytest-asyncio
 pytest-homeassistant-custom-component

@@ -51,6 +51,7 @@
             "model_parameters": {
                 "data": {
                     "max_new_tokens": "Maximum tokens to return in response",
+                    "llm_hass_api": "Selected LLM API",
                     "prompt": "System Prompt",
                     "prompt_template": "Prompt Format",
                     "temperature": "Temperature",
@@ -62,7 +63,6 @@
                     "ollama_keep_alive": "Keep Alive/Inactivity Timeout (minutes)",
                     "ollama_json_mode": "JSON Output Mode",
                     "extra_attributes_to_expose": "Additional attribute to expose in the context",
-                    "allowed_service_call_arguments": "Arguments allowed to be pass to service calls",
                     "enable_flash_attention": "Enable Flash Attention",
                     "gbnf_grammar": "Enable GBNF Grammar",
                     "gbnf_grammar_file": "GBNF Grammar Filename",
@@ -86,11 +86,11 @@
                     "n_batch_threads": "Batch Thread Count"
                 },
                 "data_description": {
+                    "llm_hass_api": "Select 'Assist' if you want the model to be able to control devices.",
                     "prompt": "See [here](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) for more information on model prompting.",
                     "in_context_examples": "If you are using a model that is not specifically fine-tuned for use with this integration: enable this",
                     "remote_use_chat_endpoint": "If this is enabled, then the integration will use the chat completion HTTP endpoint instead of the text completion one.",
                     "extra_attributes_to_expose": "This is the list of Home Assistant 'attributes' that are exposed to the model. This limits how much information the model is able to see and answer questions on.",
-                    "allowed_service_call_arguments": "This is the list of parameters that are allowed to be passed to Home Assistant service calls.",
                     "gbnf_grammar": "Forces the model to output properly formatted responses. Ensure the file specified below exists in the integration directory.",
                     "prompt_caching": "Prompt caching attempts to pre-process the prompt (house state) and cache the processing that needs to be done to understand the prompt. Enabling this will cause the model to re-process the prompt any time an entity state changes in the house, restricted by the interval below."
                 },
@@ -103,6 +103,7 @@
         "step": {
             "init": {
                 "data": {
+                    "llm_hass_api": "Selected LLM API",
                     "max_new_tokens": "Maximum tokens to return in response",
                     "prompt": "System Prompt",
                     "prompt_template": "Prompt Format",
@@ -115,7 +116,6 @@
                     "ollama_keep_alive": "Keep Alive/Inactivity Timeout (minutes)",
                     "ollama_json_mode": "JSON Output Mode",
                     "extra_attributes_to_expose": "Additional attribute to expose in the context",
-                    "allowed_service_call_arguments": "Arguments allowed to be pass to service calls",
                     "enable_flash_attention": "Enable Flash Attention",
                     "gbnf_grammar": "Enable GBNF Grammar",
                     "gbnf_grammar_file": "GBNF Grammar Filename",
@@ -139,11 +139,11 @@
                     "n_batch_threads": "Batch Thread Count"
                 },
                 "data_description": {
+                    "llm_hass_api": "Select 'Assist' if you want the model to be able to control devices.",
                     "prompt": "See [here](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) for more information on model prompting.",
                     "in_context_examples": "If you are using a model that is not specifically fine-tuned for use with this integration: enable this",
                     "remote_use_chat_endpoint": "If this is enabled, then the integration will use the chat completion HTTP endpoint instead of the text completion one.",
                     "extra_attributes_to_expose": "This is the list of Home Assistant 'attributes' that are exposed to the model. This limits how much information the model is able to see and answer questions on.",
-                    "allowed_service_call_arguments": "This is the list of parameters that are allowed to be passed to Home Assistant service calls.",
                     "gbnf_grammar": "Forces the model to output properly formatted responses. Ensure the file specified below exists in the integration directory.",
                     "prompt_caching": "Prompt caching attempts to pre-process the prompt (house state) and cache the processing that needs to be done to understand the prompt. Enabling this will cause the model to re-process the prompt any time an entity state changes in the house, restricted by the interval below."
                 }
