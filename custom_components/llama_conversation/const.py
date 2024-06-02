@@ -1,4 +1,4 @@
-"""Constants for the LLaMa Conversation integration."""
+"""Constants for the Local LLM Conversation integration."""
 import types, os
 
 DOMAIN = "llama_conversation"
@@ -229,7 +229,7 @@ DEFAULT_OPTIONS = types.MappingProxyType(
         CONF_TEXT_GEN_WEBUI_PRESET: ""
     }
 )
-
+# TODO: warn the user if they picked an old, incompatible home-llm model?
 OPTIONS_OVERRIDES = {
     "home-3b-v4": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE,
@@ -238,41 +238,12 @@ OPTIONS_OVERRIDES = {
         CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
         CONF_USE_GBNF_GRAMMAR: True,
     },
-    "home-3b-v3": {
+    "home-1b-v4": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE,
         CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR,
         CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
         CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
         CONF_USE_GBNF_GRAMMAR: True,
-    },
-    "home-3b-v2": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE,
-        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
-        CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
-        CONF_USE_GBNF_GRAMMAR: True,
-    },
-    "home-3b-v1": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE,
-        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR,
-        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
-        CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
-    },
-    "home-1b-v3": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE,
-        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR2,
-        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
-        CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
-        CONF_USE_GBNF_GRAMMAR: True,
-    },
-    "home-1b-v2": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE,
-        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
-        CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
-    },
-    "home-1b-v1": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE,
-        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
-        CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
     },
     "mistral": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_NO_SYSTEM_PROMPT_EXTRAS,

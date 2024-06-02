@@ -18,11 +18,11 @@ media_player,TODO,HassSetVolume,Setting the volume as requested.
 media_player,TODO,HassMediaUnpause,Starting media playback.
 media_player,TODO,HassMediaPause,Pausing the media playback.
 media_player,TODO,HassMediaNext,Skipping to the next track.
-switch,TODO,HassTurnOn,Turning on the switch for you.
-switch,TODO,HassTurnOff,Turning off the switch as requested.
-switch,TODO,HassToggle,Toggling the switch for you.
-vacuum,TODO,HassVacuumStart,Starting the vacuum now.
-vacuum,TODO,HassVacuumReturnToBase,Sending the vacuum back to its base.
+switch,Turn on the <name>,HassTurnOn,Turning on the switch for you.
+switch,Turn off the switches in <area>,HassTurnOff,Turning off the devices as requested.
+switch,Toggle the switch <name>,HassToggle,Toggling the switch for you.
+vacuum,Start the vacuum called <name>,HassVacuumStart,Starting the vacuum now.
+vacuum,Stop the <name> vacuum,HassVacuumReturnToBase,Sending the vacuum back to its base.
 todo,TODO,HassListAddItem,the todo has been added to your todo list.
 timer,TODO,HassStartTimer,Starting timer now.
 timer,TODO,HassCancelTimer,Timer has been canceled.

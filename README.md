@@ -1,19 +1,23 @@
 # Home LLM
-![Banner Logo](/docs/banner.svg)  
-
-This project provides the required "glue" components to control your Home Assistant installation with a completely local Large Language Model acting as a personal assistant. The goal is to provide a drop in solution to be used as a "conversation agent" component by Home Assistant.  The 2 main pieces of this solution are Home LLM and Llama Conversation.
+This project provides the required "glue" components to control your Home Assistant installation with a **completely local** Large Language Model acting as a personal assistant. The goal is to provide a drop in solution to be used as a "conversation agent" component by Home Assistant.  The 2 main pieces of this solution are the Home LLM model and Local LLM Conversation integration.
 
 ## Quick Start
 Please see the [Setup Guide](./docs/Setup.md) for more information on installation.
 
-## LLama Conversation Integration
+## Local LLM Conversation Integration
 In order to integrate with Home Assistant, we provide a custom component that exposes the locally running LLM as a "conversation agent".
 
 This component can be interacted with in a few ways:  
 - using a chat interface so you can chat with it.
 - integrating with Speech-to-Text and Text-to-Speech addons so you can just speak to it.
 
-The component can either run the model directly as part of the Home Assistant software using llama-cpp-python, or you can run [Ollama](https://ollama.com/) (simple) or the [oobabooga/text-generation-webui](https://github.com/oobabooga/text-generation-webui) project (advanced) to provide access to the LLM via an API interface.
+The integration can either run the model in 2 different ways:
+1. Directly as part of the Home Assistant software using llama-cpp-python
+2. On a separate machine using one of the following backends:
+    - [Ollama](https://ollama.com/) (easier)
+    - [LocalAI](https://localai.io/) via the Generic OpenAI backend (easier)
+    - [oobabooga/text-generation-webui](https://github.com/oobabooga/text-generation-webui) project (advanced)
+    - [llama.cpp example server](https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md) (advanced)
 
 ## Home LLM Model
 The "Home" models are a fine tuning of various Large Languages Models that are under 5B parameters.  The models are able to control devices in the user's house as well as perform basic question and answering.  The fine tuning dataset is a [custom synthetic dataset](./data) designed to teach the model function calling based on the device information in the context.
@@ -25,6 +29,7 @@ The latest models can be found on HuggingFace:
 <details>
 
 <summary>Old Models</summary>  
+NOTE: These models are only compatible with version 0.2.17 and older!
 
 3B v2 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v2-GGUF  (ChatML prompt format)  
 3B v1 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v1-GGUF  (ChatML prompt format)  

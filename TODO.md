@@ -7,6 +7,7 @@
 - [ ] make ICL examples into conversation turns  
 - [ ] translate ICL examples + make better ones  
 - [ ] areas/room support  
+- [ ] convert requests to aiohttp
 - [x] detection/mitigation of too many entities being exposed & blowing out the context length
 - [ ] figure out DPO to improve response quality
 - [ ] train the model to respond to house events  
