@@ -11,16 +11,21 @@ PERSONA_PROMPTS = {
 }
 DEFAULT_PROMPT_BASE = """<persona>
 The current time and date is {{ (as_timestamp(now()) | timestamp_custom("%I:%M %p on %A %B %d, %Y", "")) }}
-Services: {{ services }}
+Tools: {{ tools }}
 Devices:
 {{ devices }}"""
 ICL_EXTRAS = """
-Respond to the following user instruction by responding in the same format as the following examples:
-{{ response_examples }}"""
+{% for item in response_examples %}
+{{ item.request }}
+{{ item.response }}
+<functioncall> {{ item.tool | to_json }}
+{% endfor %}"""
 ICL_NO_SYSTEM_PROMPT_EXTRAS = """
-Respond to the following user instruction by responding in the same format as the following examples:
-{{ response_examples }}
-
+{% for item in response_examples %}
+{{ item.request }}
+{{ item.response }}
+<functioncall> {{ item.tool | to_json }}
+{% endfor %}
 User instruction:"""
 DEFAULT_PROMPT = DEFAULT_PROMPT_BASE + ICL_EXTRAS
 CONF_CHAT_MODEL = "huggingface_model"

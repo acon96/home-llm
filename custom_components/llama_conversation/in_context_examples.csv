@@ -1,37 +1,28 @@
-service,response
-fan.turn_on,Turning on the fan for you.
-fan.turn_off,Switching off the fan as requested.
-fan.toggle,I'll toggle the fan's state for you.
-fan.increase_speed,Increasing the fan speed for you.
-fan.decrease_speed,Reducing the fan speed as you requested.
-cover.open_cover,Opening the garage door for you.
-cover.close_cover,Closing the garage door as requested.
-cover.stop_cover,Stopping the garage door now.
-cover.toggle,Toggling the garage door state for you.
-light.turn_on,Turning on the light for you.
-light.turn_off,Turning off the light as requested.
-light.toggle,Toggling the light for you.
-lock.lock,Locking the door for you.
-lock.unlock,Unlocking the door as you requested.
-media_player.turn_on,Turning on the media player for you.
-media_player.turn_off,Turning off the media player as requested.
-media_player.toggle,Toggling the media player for you.
-media_player.volume_up,Increasing the volume for you.
-media_player.volume_down,Reducing the volume as you requested.
-media_player.volume_mute,Muting the volume for you.
-media_player.media_play_pause,Toggling play/pause on the media player.
-media_player.media_play,Starting media playback.
-media_player.media_pause,Pausing the media playback.
-media_player.media_stop,Stopping the media playback.
-media_player.media_next_track,Skipping to the next track.
-media_player.media_previous_track,Going back to the previous track.
-switch.turn_on,Turning on the switch for you.
-switch.turn_off,Turning off the switch as requested.
-switch.toggle,Toggling the switch for you.
-vacuum.start,Starting the vacuum now.
-vacuum.stop,Stopping the vacuum.
-vacuum.pause,Pausing the vacuum for now.
-vacuum.return_to_base,Sending the vacuum back to its base.
-todo.add_item,the todo has been added to your todo list.
-timer.start,Starting timer now.
-timer.cancel,Timer has been canceled.
+type,request,tool,response
+fan,Turn on the <name>,HassTurnOn,Turning on the fan for you.
+fan,Turn on the fans in the <area>,HassTurnOn,Turning on the fans in <area>
+fan,Turn off the <name>,HassTurnOff,Switching off the fan as requested.
+fan,Toggle the fan <name> for me,HassToggle,I'll toggle the fan's state for you.
+cover,Can you open the <name>?,HassOpenCover,Opening the garage door for you.
+cover,Close the <name> now,HassCloseCover,Closing the garage door as requested.
+light,Turn the <name> light on,HassTurnOn,Turning on the light for you.
+light,Lights off in <area>,HassTurnOff,Turning off the light as requested.
+light,Hit toggle for the lights in <area>,HassToggle,Toggling the lights in the <area> for you.
+light,Set the brightness for <name> to <brightness>,HassLightSet,Setting the brightness now.
+light,Make the lights in <area> <color>,HassLightSet,The color should be changed now.
+media_player,TODO,HassTurnOn,Turning on the media player for you.
+media_player,TODO,HassTurnOff,Turning off the media player as requested.
+media_player,TODO,HassToggle,Toggling the media player for you.
+media_player,TODO,HassSetVolume,Muting the volume for you.
+media_player,TODO,HassSetVolume,Setting the volume as requested.
+media_player,TODO,HassMediaUnpause,Starting media playback.
+media_player,TODO,HassMediaPause,Pausing the media playback.
+media_player,TODO,HassMediaNext,Skipping to the next track.
+switch,TODO,HassTurnOn,Turning on the switch for you.
+switch,TODO,HassTurnOff,Turning off the switch as requested.
+switch,TODO,HassToggle,Toggling the switch for you.
+vacuum,TODO,HassVacuumStart,Starting the vacuum now.
+vacuum,TODO,HassVacuumReturnToBase,Sending the vacuum back to its base.
+todo,TODO,HassListAddItem,the todo has been added to your todo list.
+timer,TODO,HassStartTimer,Starting timer now.
+timer,TODO,HassCancelTimer,Timer has been canceled.

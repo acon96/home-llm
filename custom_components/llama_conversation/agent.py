@@ -25,7 +25,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryError, TemplateError, HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent, template, entity_registry as er, llm
 from homeassistant.helpers.event import async_track_state_change, async_call_later
-from homeassistant.util import ulid
+from homeassistant.util import ulid, color
+
+import voluptuous_serialize
 
 from .utils import closest_color, flatten_vol_schema, install_llama_cpp_python, validate_llama_cpp_python_installation
 from .const import (
@@ -146,7 +148,7 @@ class LocalLLMAgent(AbstractConversationAgent):
             with open(icl_filename, encoding="utf-8-sig") as f:
                 self.in_context_examples = list(csv.DictReader(f))
 
-                if set(self.in_context_examples[0].keys()) != set(["service", "response" ]):
+                if set(self.in_context_examples[0].keys()) != set(["type", "request", "tool", "response" ]):
                     raise Exception("ICL csv file did not have 2 columns: service & response")
                 
             if len(self.in_context_examples) == 0:
@@ -210,6 +212,17 @@ class LocalLLMAgent(AbstractConversationAgent):
         remember_num_interactions = self.entry.options.get(CONF_REMEMBER_NUM_INTERACTIONS, DEFAULT_REMEMBER_NUM_INTERACTIONS)
         service_call_regex = self.entry.options.get(CONF_SERVICE_CALL_REGEX, DEFAULT_SERVICE_CALL_REGEX)
 
+        llm_context = llm.LLMContext(
+            platform=DOMAIN,
+            context=user_input.context,
+            user_prompt=user_input.text,
+            language=user_input.language,
+            assistant=ha_conversation.DOMAIN,
+            device_id=user_input.device_id,
+        )
+
+        _LOGGER.info(llm_context)
+
         try:
             service_call_pattern = re.compile(service_call_regex)
         except Exception as err:
@@ -224,11 +237,11 @@ class LocalLLMAgent(AbstractConversationAgent):
                 response=intent_response, conversation_id=conversation_id
             )
         
-        llm_api: llm.API | None = None
+        llm_api: llm.APIInstance | None = None
         if self.entry.options.get(CONF_LLM_HASS_API):
             try:
-                llm_api = llm.async_get_api(
-                    self.hass, self.entry.options[CONF_LLM_HASS_API]
+                llm_api = await llm.async_get_api(
+                    self.hass, self.entry.options[CONF_LLM_HASS_API], llm_context
                 )
             except HomeAssistantError as err:
                 _LOGGER.error("Error getting LLM API: %s", err)
@@ -283,7 +296,7 @@ class LocalLLMAgent(AbstractConversationAgent):
             
             intent_response = intent.IntentResponse(language=user_input.language)
             intent_response.async_set_error(
-                intent.IntentResponseErrorCode.UNKNOWN,
+                intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
                 f"Sorry, there was a problem talking to the backend: {repr(err)}",
             )
             return ConversationResult(
@@ -298,15 +311,27 @@ class LocalLLMAgent(AbstractConversationAgent):
             self.history[conversation_id] = conversation
 
         # parse response
-        exposed_entities = list(self._async_get_exposed_entities()[0].keys())
-        
-        to_say = ""
+        to_say = service_call_pattern.sub("", response.strip())
         for block in service_call_pattern.findall(response.strip()):
-            _LOGGER.info(f"calling tool: {block}")
-
             parsed_tool_call = json.loads(block)
+            try:
+                vol.Schema({
+                    vol.Required("name"): str,
+                    vol.Required("arguments"): dict,
+                })(parsed_tool_call)
+            except vol.Error as ex:
+                _LOGGER.info(f"LLM produced an improperly formatted response: {repr(ex)}")
 
-            to_say = to_say + parsed_tool_call.get("to_say", "")
+                intent_response = intent.IntentResponse(language=user_input.language)
+                intent_response.async_set_error(
+                    intent.IntentResponseErrorCode.NO_INTENT_MATCH,
+                    f"I'm sorry, I didn't produce a correctly formatted tool call! Please see the logs for more info.",
+                )
+                return ConversationResult(
+                    response=intent_response, conversation_id=conversation_id
+                )
+
+            _LOGGER.info(f"calling tool: {block}")
 
             # try to fix certain arguments
             # make sure brightness is 0-255 and not a percentage
@@ -318,31 +343,35 @@ class LocalLLMAgent(AbstractConversationAgent):
                 parsed_tool_call["arguments"]["rgb_color"] = [ int(x) for x in parsed_tool_call["arguments"]["rgb_color"][1:-1].split(",") ]
             
             tool_input = llm.ToolInput(
-                tool_name=parsed_tool_call["tool"],
+                tool_name=parsed_tool_call["name"],
                 tool_args=parsed_tool_call["arguments"],
-                platform=DOMAIN,
-                context=user_input.context,
-                user_prompt=user_input.text,
-                language=user_input.language,
-                assistant=ha_conversation.DOMAIN,
             )
 
-            # TODO: multi-turn with the model where it acts on the response from the tool?
             try:
-                tool_response = await llm_api.async_call_tool(
-                    self.hass, tool_input
-                )
+                tool_response = await llm_api.async_call_tool(tool_input)
             except (HomeAssistantError, vol.Invalid) as e:
                 tool_response = {"error": type(e).__name__}
                 if str(e):
                     tool_response["error_text"] = str(e)
 
+                intent_response = intent.IntentResponse(language=user_input.language)
+                intent_response.async_set_error(
+                    intent.IntentResponseErrorCode.NO_INTENT_MATCH,
+                    f"There was an error calling the tool! ({tool_response})",
+                )
+                return ConversationResult(
+                    response=intent_response, conversation_id=conversation_id
+                )
+
             _LOGGER.debug("Tool response: %s", tool_response)
+
+        # TODO: optionally handle multi-turn with the model where it acts on the response from the tool
+        # if self.entry.options.get("", ""):
+        #     pass
         
         # generate intent response to Home Assistant
         intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(to_say)
-        intent_response.set
         return ConversationResult(
             response=intent_response, conversation_id=conversation_id
         )
@@ -398,44 +427,68 @@ class LocalLLMAgent(AbstractConversationAgent):
         _LOGGER.debug(formatted_prompt)
         return formatted_prompt
 
-    def _generate_system_prompt(self, prompt_template: str, llm_api: llm.API) -> str:
+    def _generate_system_prompt(self, prompt_template: str, llm_api: llm.APIInstance) -> str:
         """Generate the system prompt with current entity states"""
         entities_to_expose, domains = self._async_get_exposed_entities()
 
         extra_attributes_to_expose = self.entry.options \
             .get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE)
         
-        def icl_example_generator(num_examples, entity_names, service_names):
-            entity_domains = set([x.split(".")[0] for x in entity_names])
+        def icl_example_generator(num_examples, entity_names):
             entity_names = entity_names[:]
-            
-            # filter out examples for disabled services
-            selected_in_context_examples = []
-            for x in self.in_context_examples:
-                if x["service"] in service_names and x["service"].split(".")[0] in entity_domains:
-                    selected_in_context_examples.append(x)
-
-            # if we filtered everything then just sample randomly
-            if len(selected_in_context_examples) == 0:
-                selected_in_context_examples = self.in_context_examples[:]
-
-            random.shuffle(selected_in_context_examples)
+            in_context_examples = self.in_context_examples[:]
+           
+            random.shuffle(in_context_examples)
             random.shuffle(entity_names)
 
-            num_examples_to_generate = min(num_examples, len(selected_in_context_examples))
+            num_examples_to_generate = min(num_examples, len(in_context_examples))
             if num_examples_to_generate < num_examples:
-                _LOGGER.warning(f"Attempted to generate {num_examples} ICL examples for conversation, but only {len(selected_in_context_examples)} are available!")
+                _LOGGER.warning(f"Attempted to generate {num_examples} ICL examples for conversation, but only {len(in_context_examples)} are available!")
             
+            examples = []
             for x in range(num_examples_to_generate):
-                chosen_example = selected_in_context_examples.pop()
-                chosen_service = chosen_example["service"]
-                device = [ x for x in entity_names if x.split(".")[0] == chosen_service.split(".")[0] ][0]
-                example = {
-                    "to_say": chosen_example["response"],
-                    "tool": chosen_service,
-                    "arguments": { "name": device },
-                }
-                yield json.dumps(example) + "\n"
+                chosen_example = in_context_examples.pop()
+                request = chosen_example["request"]
+                response = chosen_example["response"]
+
+                random_device = [ x for x in entity_names if x.split(".")[0] == chosen_example["type"] ][0]
+                random_area = "bedroom" # todo, pick a random area
+                random_brightness = round(random.random(), 2)
+                random_color = random.choice(list(color.COLORS.keys()))
+
+                tool_arguments = {}
+
+                if "<area>" in request:
+                    request.replace("<area>", random_area)
+                    response.replace("<area>", random_area)
+                    tool_arguments["area"] = random_area
+
+                if "<name>" in request:
+                    request.replace("<name>", random_device)
+                    response.replace("<name>", random_device)
+                    tool_arguments["name"] = random_device
+
+                if "<brightness>" in request:
+                    request.replace("<brightness>", str(random_brightness))
+                    response.replace("<brightness>", str(random_brightness))
+                    tool_arguments["brightness"] = random_brightness
+
+                if "<color>" in request:
+                    request.replace("<color>", random_color)
+                    response.replace("<color>", random_color)
+                    tool_arguments["color"] = random_color
+
+                
+                examples.append({
+                    "request": request,
+                    "response": response,
+                    "tool": {
+                        "name": chosen_example["tool"],
+                        "arguments": tool_arguments
+                    }
+                })
+                
+            return examples
 
         def expose_attributes(attributes):
             result = attributes["state"]
@@ -477,23 +530,107 @@ class LocalLLMAgent(AbstractConversationAgent):
         formatted_states = "\n".join(device_states) + "\n"
 
         if llm_api:
+            def format_tool(tool: llm.Tool, reduced: bool):
+                def serialize(value):
+                    """This is horrible. Why is vol so hard to convert back into a readable schema?"""
+
+                    if value is cv.ensure_list:
+                        return { "type": "list" }
+                    
+                    if value is color.color_name_to_rgb:
+                        return { "type": "string" }
+                    
+                    if value is intent.non_empty_string:
+                        return { "type": "string" }
+                    
+                    # media player registers an intent using a lambda...
+                    # there's literally no way to detect that properly
+                    try:
+                        if value(100) == 1:
+                            _LOGGER.debug("bad")
+                            return { "type": "integer" }
+                    except Exception:
+                        pass
+                    
+                    if isinstance(value, list):
+                        result = {}
+                        for x in value:
+                            result.update(serialize(x))
+                        return result
+                    
+                    return cv.custom_serializer(value)
+                
+                raw_parameters: list = voluptuous_serialize.convert(
+                    tool.parameters, custom_serializer=serialize)
+                
+                # handle vol.Any in the key side of things
+                processed_parameters = []
+                for param in raw_parameters:
+                    _LOGGER.info(param["name"])
+                    if isinstance(param["name"], vol.Any):
+                        for possible_name in param["name"].validators:
+                            actual_param = param.copy()
+                            actual_param["name"] = possible_name
+                            actual_param["required"] = False
+                            processed_parameters.append(actual_param)
+                    else:
+                        processed_parameters.append(param)
+
+                if reduced:
+                    return {
+                        "name": tool.name,
+                        "description": tool.description,
+                        "parameters": {
+                            "properties": {
+                                x["name"]: x.get("type", "string") for x in processed_parameters
+                            },
+                            "required": [
+                                x["name"] for x in processed_parameters if x.get("required")
+                            ]
+                        }
+                    }
+                else:
+                    return {
+                        "type": "function",
+                        "function": {
+                            "name": tool.name,
+                            "description": tool.description,
+                            "parameters": {
+                                "type": "object",
+                                "properties": {
+                                    x["name"]: {
+                                        "type": x.get("type", "string"),
+                                        "description": x.get("description", ""),
+                                    } for x in processed_parameters
+                                },
+                                "required": [
+                                    x["name"] for x in processed_parameters if x.get("required")
+                                ]
+                            }
+                        }
+                    }
+            
+            # def format_tool_reduced(tool: llm.Tool):
+            #     return f"{tool.name}({', '.join(flatten_vol_schema(tool.parameters))}) - {tool.description}"
+            
             tools = [
-                f"{tool.name}({', '.join(flatten_vol_schema(tool.parameters))}) - {tool.description}"
-                for tool in llm_api.async_get_tools()
+                format_tool(tool, True)
+                for tool in llm_api.tools
             ]
-            formatted_services = llm_api.prompt_template + "\n" + "\n".join(tools)
+            formatted_tools = json.dumps(tools)
         else:
-            formatted_services = "No tools exposed."
+            formatted_tools = ""
 
         render_variables = {
             "devices": formatted_states,
-            "services": formatted_services,
+            "tools": formatted_tools,
         }
 
         if self.in_context_examples:
-            # num_examples = int(self.entry.options.get(CONF_NUM_IN_CONTEXT_EXAMPLES, DEFAULT_NUM_IN_CONTEXT_EXAMPLES))
-            # render_variables["response_examples"] = "\n".join(icl_example_generator(num_examples, list(entities_to_expose.keys()), all_service_names))
-            render_variables["response_examples"] = ""
+            num_examples = int(self.entry.options.get(CONF_NUM_IN_CONTEXT_EXAMPLES, DEFAULT_NUM_IN_CONTEXT_EXAMPLES))
+            render_variables["response_examples"] = icl_example_generator(num_examples, list(entities_to_expose.keys()))
+
+        _LOGGER.info(render_variables)
         
         return template.Template(prompt_template, self.hass).async_render(
             render_variables,
@@ -704,86 +841,86 @@ class LlamaCppAgent(LocalLLMAgent):
         refresh_end = time.time()
         _LOGGER.debug(f"cache refresh took {(refresh_end - refresh_start):.2f} sec")
 
-    def _cache_prompt(self) -> None:
-        # if a refresh is already scheduled then exit
-        if self.cache_refresh_after_cooldown:
-            return
+    # def _cache_prompt(self) -> None:
+    #     # if a refresh is already scheduled then exit
+    #     if self.cache_refresh_after_cooldown:
+    #         return
         
-        # if we are inside the cooldown period, request a refresh and exit
-        current_time = time.time()
-        fastest_prime_interval = self.entry.options.get(CONF_PROMPT_CACHING_INTERVAL, DEFAULT_PROMPT_CACHING_INTERVAL)
-        if self.last_cache_prime and current_time - self.last_cache_prime < fastest_prime_interval:
-            self.cache_refresh_after_cooldown = True
-            return
+    #     # if we are inside the cooldown period, request a refresh and exit
+    #     current_time = time.time()
+    #     fastest_prime_interval = self.entry.options.get(CONF_PROMPT_CACHING_INTERVAL, DEFAULT_PROMPT_CACHING_INTERVAL)
+    #     if self.last_cache_prime and current_time - self.last_cache_prime < fastest_prime_interval:
+    #         self.cache_refresh_after_cooldown = True
+    #         return
         
-        # try to acquire the lock, if we are still running for some reason, request a refresh and exit
-        lock_acquired = self.model_lock.acquire(False)
-        if not lock_acquired:
-            self.cache_refresh_after_cooldown = True
-            return
+    #     # try to acquire the lock, if we are still running for some reason, request a refresh and exit
+    #     lock_acquired = self.model_lock.acquire(False)
+    #     if not lock_acquired:
+    #         self.cache_refresh_after_cooldown = True
+    #         return
         
-        llm_api: llm.API | None = None
-        if self.entry.options.get(CONF_LLM_HASS_API):
-            try:
-                llm_api = llm.async_get_api(
-                    self.hass, self.entry.options[CONF_LLM_HASS_API]
-                )
-            except HomeAssistantError:
-                _LOGGER.exception("Failed to get LLM API when caching prompt!")
-                return
+    #     llm_api: llm.APIInstance | None = None
+    #     if self.entry.options.get(CONF_LLM_HASS_API):
+    #         try:
+    #             llm_api = await llm.async_get_api(
+    #                 self.hass, self.entry.options[CONF_LLM_HASS_API]
+    #             )
+    #         except HomeAssistantError:
+    #             _LOGGER.exception("Failed to get LLM API when caching prompt!")
+    #             return
         
-        try:
-            raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
-            prompt = self._format_prompt([
-                { "role": "system", "message": self._generate_system_prompt(raw_prompt, llm_api)},
-                { "role": "user", "message": "" }
-            ], include_generation_prompt=False)
+    #     try:
+    #         raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
+    #         prompt = self._format_prompt([
+    #             { "role": "system", "message": self._generate_system_prompt(raw_prompt, llm_api)},
+    #             { "role": "user", "message": "" }
+    #         ], include_generation_prompt=False)
         
         
-            input_tokens = self.llm.tokenize(
-                prompt.encode(), add_bos=False
-            )
+    #         input_tokens = self.llm.tokenize(
+    #             prompt.encode(), add_bos=False
+    #         )
 
-            temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
-            top_k = int(self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K))
-            top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
-            grammar = self.grammar if self.entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR) else None
+    #         temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
+    #         top_k = int(self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K))
+    #         top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
+    #         grammar = self.grammar if self.entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR) else None
 
-            _LOGGER.debug(f"Options: {self.entry.options}")
+    #         _LOGGER.debug(f"Options: {self.entry.options}")
 
-            _LOGGER.debug(f"Processing {len(input_tokens)} input tokens...")
+    #         _LOGGER.debug(f"Processing {len(input_tokens)} input tokens...")
 
-            # grab just one token. should prime the kv cache with the system prompt
-            next(self.llm.generate(
-                input_tokens,
-                temp=temperature,
-                top_k=top_k,
-                top_p=top_p,
-                grammar=grammar
-            ))
+    #         # grab just one token. should prime the kv cache with the system prompt
+    #         next(self.llm.generate(
+    #             input_tokens,
+    #             temp=temperature,
+    #             top_k=top_k,
+    #             top_p=top_p,
+    #             grammar=grammar
+    #         ))
 
-            self.last_cache_prime = time.time()
-        finally:
-            self.model_lock.release()
+    #         self.last_cache_prime = time.time()
+    #     finally:
+    #         self.model_lock.release()
 
         
-        # schedule a refresh using async_call_later
-        # if the flag is set after the delay then we do another refresh
+    #     # schedule a refresh using async_call_later
+    #     # if the flag is set after the delay then we do another refresh
         
-        @callback
-        async def refresh_if_requested(_now):
-            if self.cache_refresh_after_cooldown:
-                self.cache_refresh_after_cooldown = False
+    #     @callback
+    #     async def refresh_if_requested(_now):
+    #         if self.cache_refresh_after_cooldown:
+    #             self.cache_refresh_after_cooldown = False
 
-                refresh_start = time.time()
-                _LOGGER.debug(f"refreshing cached prompt after cooldown...")
-                await self.hass.async_add_executor_job(self._cache_prompt)
+    #             refresh_start = time.time()
+    #             _LOGGER.debug(f"refreshing cached prompt after cooldown...")
+    #             await self.hass.async_add_executor_job(self._cache_prompt)
 
-                refresh_end = time.time()
-                _LOGGER.debug(f"cache refresh took {(refresh_end - refresh_start):.2f} sec")
+    #             refresh_end = time.time()
+    #             _LOGGER.debug(f"cache refresh took {(refresh_end - refresh_start):.2f} sec")
 
-        refresh_delay = self.entry.options.get(CONF_PROMPT_CACHING_INTERVAL, DEFAULT_PROMPT_CACHING_INTERVAL)
-        async_call_later(self.hass, float(refresh_delay), refresh_if_requested)
+    #     refresh_delay = self.entry.options.get(CONF_PROMPT_CACHING_INTERVAL, DEFAULT_PROMPT_CACHING_INTERVAL)
+    #     async_call_later(self.hass, float(refresh_delay), refresh_if_requested)
         
     
     def _generate(self, conversation: dict) -> str:
