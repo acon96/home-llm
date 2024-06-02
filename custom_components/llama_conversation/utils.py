@@ -8,7 +8,10 @@ import voluptuous as vol
 import webcolors
 from importlib.metadata import version
 
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import intent
 from homeassistant.requirements import pip_kwargs
+from homeassistant.util import color
 from homeassistant.util.package import install_package, is_installed
 
 from .const import (
@@ -17,6 +20,11 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+class MissingQuantizationException(Exception):
+    def __init__(self, missing_quant: str, available_quants: list[str]):
+        self.missing_quant = missing_quant
+        self.available_quants = available_quants
 
 def closest_color(requested_color):
     min_colors = {}
@@ -51,6 +59,35 @@ def flatten_vol_schema(schema):
     _flatten(schema)
     return flattened
 
+def custom_custom_serializer(value):
+    """Why is vol so hard to convert back into a readable schema?"""
+
+    if value is cv.ensure_list:
+        return { "type": "list" }
+    
+    if value is color.color_name_to_rgb:
+        return { "type": "string" }
+    
+    if value is intent.non_empty_string:
+        return { "type": "string" }
+    
+    # media player registers an intent using a lambda...
+    # there's literally no way to detect that properly
+    try:
+        if value(100) == 1:
+            _LOGGER.debug("bad")
+            return { "type": "integer" }
+    except Exception:
+        pass
+    
+    if isinstance(value, list):
+        result = {}
+        for x in value:
+            result.update(custom_custom_serializer(x))
+        return result
+    
+    return cv.custom_serializer(value)
+
 def download_model_from_hf(model_name: str, quantization_type: str, storage_folder: str):
     try:
         from huggingface_hub import hf_hub_download, HfFileSystem
@@ -62,8 +99,8 @@ def download_model_from_hf(model_name: str, quantization_type: str, storage_fold
     wanted_file = [f for f in potential_files if (f".{quantization_type.lower()}." in f or f".{quantization_type.upper()}." in f)]
 
     if len(wanted_file) != 1:
-        raise Exception(f"The quantization '{quantization_type}' does not exist in the HF repo for {model_name}")
-
+        available_quants = [file.split(".")[-2].upper() for file in potential_files]
+        raise MissingQuantizationException(quantization_type, available_quants)
     try:
         os.makedirs(storage_folder, exist_ok=True)
     except Exception as ex:

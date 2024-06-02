@@ -29,7 +29,8 @@ from homeassistant.util import ulid, color
 
 import voluptuous_serialize
 
-from .utils import closest_color, flatten_vol_schema, install_llama_cpp_python, validate_llama_cpp_python_installation
+from .utils import closest_color, flatten_vol_schema, custom_custom_serializer, install_llama_cpp_python, \
+    validate_llama_cpp_python_installation
 from .const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -44,6 +45,7 @@ from .const import (
     CONF_DOWNLOADED_MODEL_FILE,
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
     CONF_PROMPT_TEMPLATE,
+    CONF_TOOL_FORMAT,
     CONF_ENABLE_FLASH_ATTENTION,
     CONF_USE_GBNF_GRAMMAR,
     CONF_GBNF_GRAMMAR_FILE,
@@ -78,6 +80,7 @@ from .const import (
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
     DEFAULT_PROMPT_TEMPLATE,
+    DEFAULT_TOOL_FORMAT,
     DEFAULT_ENABLE_FLASH_ATTENTION,
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_GBNF_GRAMMAR_FILE,
@@ -103,6 +106,9 @@ from .const import (
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT,
     DOMAIN,
     PROMPT_TEMPLATE_DESCRIPTIONS,
+    TOOL_FORMAT_FULL,
+    TOOL_FORMAT_REDUCED,
+    TOOL_FORMAT_MINIMAL,
 )
 
 # make type checking work for llama-cpp-python without importing it directly at runtime
@@ -310,6 +316,14 @@ class LocalLLMAgent(AbstractConversationAgent):
                     conversation.pop(1)
             self.history[conversation_id] = conversation
 
+        if not llm_api:
+            # return the output without messing with it if there is no API exposed to the model
+            intent_response = intent.IntentResponse(language=user_input.language)
+            intent_response.async_set_speech(response.strip())
+            return ConversationResult(
+                response=intent_response, conversation_id=conversation_id
+            )
+
         # parse response
         to_say = service_call_pattern.sub("", response.strip())
         for block in service_call_pattern.findall(response.strip()):
@@ -426,6 +440,124 @@ class LocalLLMAgent(AbstractConversationAgent):
 
         _LOGGER.debug(formatted_prompt)
         return formatted_prompt
+    
+    def _format_tool(self, tool: llm.Tool):
+        style = self.entry.options.get(CONF_TOOL_FORMAT, DEFAULT_TOOL_FORMAT)
+
+        if style == TOOL_FORMAT_MINIMAL:
+            return f"{tool.name}({', '.join(flatten_vol_schema(tool.parameters))}) - {tool.description}"
+        
+        raw_parameters: list = voluptuous_serialize.convert(
+            tool.parameters, custom_serializer=custom_custom_serializer)
+        
+        # handle vol.Any in the key side of things
+        processed_parameters = []
+        for param in raw_parameters:
+            _LOGGER.info(param["name"])
+            if isinstance(param["name"], vol.Any):
+                for possible_name in param["name"].validators:
+                    actual_param = param.copy()
+                    actual_param["name"] = possible_name
+                    actual_param["required"] = False
+                    processed_parameters.append(actual_param)
+            else:
+                processed_parameters.append(param)
+
+        if style == TOOL_FORMAT_REDUCED:
+            return {
+                "name": tool.name,
+                "description": tool.description,
+                "parameters": {
+                    "properties": {
+                        x["name"]: x.get("type", "string") for x in processed_parameters
+                    },
+                    "required": [
+                        x["name"] for x in processed_parameters if x.get("required")
+                    ]
+                }
+            }
+        elif style == TOOL_FORMAT_FULL:
+            return {
+                "type": "function",
+                "function": {
+                    "name": tool.name,
+                    "description": tool.description,
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            x["name"]: {
+                                "type": x.get("type", "string"),
+                                "description": x.get("description", ""),
+                            } for x in processed_parameters
+                        },
+                        "required": [
+                            x["name"] for x in processed_parameters if x.get("required")
+                        ]
+                    }
+                }
+            }
+        
+        raise Exception(f"Unknown tool format {style}")
+    
+    def _generate_icl_examples(self, num_examples, entity_names):
+        entity_names = entity_names[:]
+        entity_domains = set([x.split(".")[0] for x in entity_names])
+
+        in_context_examples = [
+            x for x in self.in_context_examples
+            if x["type"] in entity_domains
+        ]
+        
+        random.shuffle(in_context_examples)
+        random.shuffle(entity_names)
+
+        num_examples_to_generate = min(num_examples, len(in_context_examples))
+        if num_examples_to_generate < num_examples:
+            _LOGGER.warning(f"Attempted to generate {num_examples} ICL examples for conversation, but only {len(in_context_examples)} are available!")
+        
+        examples = []
+        for _ in range(num_examples_to_generate):
+            chosen_example = in_context_examples.pop()
+            request = chosen_example["request"]
+            response = chosen_example["response"]
+
+            random_device = [ x for x in entity_names if x.split(".")[0] == chosen_example["type"] ][0]
+            random_area = "bedroom" # todo, pick a random area
+            random_brightness = round(random.random(), 2)
+            random_color = random.choice(list(color.COLORS.keys()))
+
+            tool_arguments = {}
+
+            if "<area>" in request:
+                request = request.replace("<area>", random_area)
+                response = response.replace("<area>", random_area)
+                tool_arguments["area"] = random_area
+
+            if "<name>" in request:
+                request = request.replace("<name>", random_device)
+                response = response.replace("<name>", random_device)
+                tool_arguments["name"] = random_device
+
+            if "<brightness>" in request:
+                request = request.replace("<brightness>", str(random_brightness))
+                response = response.replace("<brightness>", str(random_brightness))
+                tool_arguments["brightness"] = random_brightness
+
+            if "<color>" in request:
+                request = request.replace("<color>", random_color)
+                response = response.replace("<color>", random_color)
+                tool_arguments["color"] = random_color
+
+            examples.append({
+                "request": request,
+                "response": response,
+                "tool": {
+                    "name": chosen_example["tool"],
+                    "arguments": tool_arguments
+                }
+            })
+            
+        return examples
 
     def _generate_system_prompt(self, prompt_template: str, llm_api: llm.APIInstance) -> str:
         """Generate the system prompt with current entity states"""
@@ -433,62 +565,6 @@ class LocalLLMAgent(AbstractConversationAgent):
 
         extra_attributes_to_expose = self.entry.options \
             .get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE)
-        
-        def icl_example_generator(num_examples, entity_names):
-            entity_names = entity_names[:]
-            in_context_examples = self.in_context_examples[:]
-           
-            random.shuffle(in_context_examples)
-            random.shuffle(entity_names)
-
-            num_examples_to_generate = min(num_examples, len(in_context_examples))
-            if num_examples_to_generate < num_examples:
-                _LOGGER.warning(f"Attempted to generate {num_examples} ICL examples for conversation, but only {len(in_context_examples)} are available!")
-            
-            examples = []
-            for x in range(num_examples_to_generate):
-                chosen_example = in_context_examples.pop()
-                request = chosen_example["request"]
-                response = chosen_example["response"]
-
-                random_device = [ x for x in entity_names if x.split(".")[0] == chosen_example["type"] ][0]
-                random_area = "bedroom" # todo, pick a random area
-                random_brightness = round(random.random(), 2)
-                random_color = random.choice(list(color.COLORS.keys()))
-
-                tool_arguments = {}
-
-                if "<area>" in request:
-                    request.replace("<area>", random_area)
-                    response.replace("<area>", random_area)
-                    tool_arguments["area"] = random_area
-
-                if "<name>" in request:
-                    request.replace("<name>", random_device)
-                    response.replace("<name>", random_device)
-                    tool_arguments["name"] = random_device
-
-                if "<brightness>" in request:
-                    request.replace("<brightness>", str(random_brightness))
-                    response.replace("<brightness>", str(random_brightness))
-                    tool_arguments["brightness"] = random_brightness
-
-                if "<color>" in request:
-                    request.replace("<color>", random_color)
-                    response.replace("<color>", random_color)
-                    tool_arguments["color"] = random_color
-
-                
-                examples.append({
-                    "request": request,
-                    "response": response,
-                    "tool": {
-                        "name": chosen_example["tool"],
-                        "arguments": tool_arguments
-                    }
-                })
-                
-            return examples
 
         def expose_attributes(attributes):
             result = attributes["state"]
@@ -529,108 +605,24 @@ class LocalLLMAgent(AbstractConversationAgent):
 
         formatted_states = "\n".join(device_states) + "\n"
 
-        if llm_api:
-            def format_tool(tool: llm.Tool, reduced: bool):
-                def serialize(value):
-                    """This is horrible. Why is vol so hard to convert back into a readable schema?"""
-
-                    if value is cv.ensure_list:
-                        return { "type": "list" }
-                    
-                    if value is color.color_name_to_rgb:
-                        return { "type": "string" }
-                    
-                    if value is intent.non_empty_string:
-                        return { "type": "string" }
-                    
-                    # media player registers an intent using a lambda...
-                    # there's literally no way to detect that properly
-                    try:
-                        if value(100) == 1:
-                            _LOGGER.debug("bad")
-                            return { "type": "integer" }
-                    except Exception:
-                        pass
-                    
-                    if isinstance(value, list):
-                        result = {}
-                        for x in value:
-                            result.update(serialize(x))
-                        return result
-                    
-                    return cv.custom_serializer(value)
-                
-                raw_parameters: list = voluptuous_serialize.convert(
-                    tool.parameters, custom_serializer=serialize)
-                
-                # handle vol.Any in the key side of things
-                processed_parameters = []
-                for param in raw_parameters:
-                    _LOGGER.info(param["name"])
-                    if isinstance(param["name"], vol.Any):
-                        for possible_name in param["name"].validators:
-                            actual_param = param.copy()
-                            actual_param["name"] = possible_name
-                            actual_param["required"] = False
-                            processed_parameters.append(actual_param)
-                    else:
-                        processed_parameters.append(param)
-
-                if reduced:
-                    return {
-                        "name": tool.name,
-                        "description": tool.description,
-                        "parameters": {
-                            "properties": {
-                                x["name"]: x.get("type", "string") for x in processed_parameters
-                            },
-                            "required": [
-                                x["name"] for x in processed_parameters if x.get("required")
-                            ]
-                        }
-                    }
-                else:
-                    return {
-                        "type": "function",
-                        "function": {
-                            "name": tool.name,
-                            "description": tool.description,
-                            "parameters": {
-                                "type": "object",
-                                "properties": {
-                                    x["name"]: {
-                                        "type": x.get("type", "string"),
-                                        "description": x.get("description", ""),
-                                    } for x in processed_parameters
-                                },
-                                "required": [
-                                    x["name"] for x in processed_parameters if x.get("required")
-                                ]
-                            }
-                        }
-                    }
-            
-            # def format_tool_reduced(tool: llm.Tool):
-            #     return f"{tool.name}({', '.join(flatten_vol_schema(tool.parameters))}) - {tool.description}"
-            
-            tools = [
-                format_tool(tool, True)
+        if llm_api:            
+            formatted_tools = json.dumps([
+                self._format_tool(tool)
                 for tool in llm_api.tools
-            ]
-            formatted_tools = json.dumps(tools)
+            ])
         else:
-            formatted_tools = ""
+            formatted_tools = "No tools were provided. If the user requests you interact with a device, tell them you are unable to do so."
 
         render_variables = {
             "devices": formatted_states,
             "tools": formatted_tools,
+            "response_examples": []
         }
 
-        if self.in_context_examples:
+        # only pass examples if there are loaded examples + an API was exposed
+        if self.in_context_examples and llm_api:
             num_examples = int(self.entry.options.get(CONF_NUM_IN_CONTEXT_EXAMPLES, DEFAULT_NUM_IN_CONTEXT_EXAMPLES))
-            render_variables["response_examples"] = icl_example_generator(num_examples, list(entities_to_expose.keys()))
-
-        _LOGGER.info(render_variables)
+            render_variables["response_examples"] = self._generate_icl_examples(num_examples, list(entities_to_expose.keys()))
         
         return template.Template(prompt_template, self.hass).async_render(
             render_variables,

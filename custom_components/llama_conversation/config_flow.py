@@ -38,7 +38,7 @@ from homeassistant.helpers.selector import (
 from homeassistant.util.package import is_installed
 from importlib.metadata import version
 
-from .utils import download_model_from_hf, install_llama_cpp_python
+from .utils import download_model_from_hf, install_llama_cpp_python, MissingQuantizationException
 from .const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -56,6 +56,7 @@ from .const import (
     CONF_DOWNLOADED_MODEL_QUANTIZATION,
     CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS,
     CONF_PROMPT_TEMPLATE,
+    CONF_TOOL_FORMAT,
     CONF_ENABLE_FLASH_ATTENTION,
     CONF_USE_GBNF_GRAMMAR,
     CONF_GBNF_GRAMMAR_FILE,
@@ -95,6 +96,7 @@ from .const import (
     DEFAULT_BACKEND_TYPE,
     DEFAULT_DOWNLOADED_MODEL_QUANTIZATION,
     DEFAULT_PROMPT_TEMPLATE,
+    DEFAULT_TOOL_FORMAT,
     DEFAULT_ENABLE_FLASH_ATTENTION,
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_GBNF_GRAMMAR_FILE,
@@ -123,6 +125,9 @@ from .const import (
     BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER,
     BACKEND_TYPE_OLLAMA,
     PROMPT_TEMPLATE_DESCRIPTIONS,
+    TOOL_FORMAT_FULL,
+    TOOL_FORMAT_REDUCED,
+    TOOL_FORMAT_MINIMAL,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT,
     TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT,
@@ -172,7 +177,7 @@ def STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA(model_file=None, selected_language=Non
         }
     )
 
-def STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(*, chat_model=None, downloaded_model_quantization=None, selected_language=None):
+def STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(*, chat_model=None, downloaded_model_quantization=None, selected_language=None, available_quantizations=None):
     return vol.Schema(
         {
             vol.Required(CONF_CHAT_MODEL, default=chat_model if chat_model else DEFAULT_CHAT_MODEL): SelectSelector(SelectSelectorConfig(
@@ -181,7 +186,7 @@ def STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(*, chat_model=None, downloaded_model_q
                 multiple=False,
                 mode=SelectSelectorMode.DROPDOWN,
             )),
-            vol.Required(CONF_DOWNLOADED_MODEL_QUANTIZATION, default=downloaded_model_quantization if downloaded_model_quantization else DEFAULT_DOWNLOADED_MODEL_QUANTIZATION): vol.In(CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS),
+            vol.Required(CONF_DOWNLOADED_MODEL_QUANTIZATION, default=downloaded_model_quantization if downloaded_model_quantization else DEFAULT_DOWNLOADED_MODEL_QUANTIZATION): vol.In(available_quantizations if available_quantizations else CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS),
             vol.Required(CONF_SELECTED_LANGUAGE, default=selected_language if selected_language else "en"): SelectSelector(SelectSelectorConfig(
                 options=CONF_SELECTED_LANGUAGE_OPTIONS,
                 translation_key=CONF_SELECTED_LANGUAGE,
@@ -387,13 +392,35 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             raise ValueError()
 
         if self.download_error:
-            errors["base"] = "download_failed"
-            description_placeholders["exception"] = str(self.download_error)
-            schema = STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(
-                chat_model=self.model_config[CONF_CHAT_MODEL],
-                downloaded_model_quantization=self.model_config[CONF_DOWNLOADED_MODEL_QUANTIZATION],
-                selected_language=self.selected_language
-            )
+            if isinstance(self.download_error, MissingQuantizationException):
+                available_quants = list(set(self.download_error.available_quants).intersection(set(CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS)))
+
+                if len(available_quants) == 0:
+                    errors["base"] = "no_supported_ggufs"
+                    schema = STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(
+                        chat_model=self.model_config[CONF_CHAT_MODEL],
+                        downloaded_model_quantization=self.model_config[CONF_DOWNLOADED_MODEL_QUANTIZATION],
+                        selected_language=self.selected_language
+                    )
+                else:
+                    errors["base"] = "missing_quantization"
+                    description_placeholders["missing"] = self.download_error.missing_quant
+                    description_placeholders["available"] = ", ".join(self.download_error.available_quants)
+
+                    schema = STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(
+                        chat_model=self.model_config[CONF_CHAT_MODEL],
+                        downloaded_model_quantization=self.download_error.available_quants[0],
+                        selected_language=self.selected_language,
+                        available_quantizations=available_quants,
+                    )
+            else:
+                errors["base"] = "download_failed"
+                description_placeholders["exception"] = str(self.download_error)
+                schema = STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(
+                    chat_model=self.model_config[CONF_CHAT_MODEL],
+                    downloaded_model_quantization=self.model_config[CONF_DOWNLOADED_MODEL_QUANTIZATION],
+                    selected_language=self.selected_language
+                )
 
         if user_input and "result" not in user_input:
             self.selected_language = user_input.pop(CONF_SELECTED_LANGUAGE, self.hass.config.language)
@@ -727,6 +754,16 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
         ): SelectSelector(SelectSelectorConfig(
             options=list(PROMPT_TEMPLATE_DESCRIPTIONS.keys()),
             translation_key=CONF_PROMPT_TEMPLATE,
+            multiple=False,
+            mode=SelectSelectorMode.DROPDOWN,
+        )),
+        vol.Required(
+            CONF_TOOL_FORMAT,
+            description={"suggested_value": options.get(CONF_TOOL_FORMAT)},
+            default=DEFAULT_TOOL_FORMAT,
+        ): SelectSelector(SelectSelectorConfig(
+            options=[TOOL_FORMAT_FULL, TOOL_FORMAT_REDUCED, TOOL_FORMAT_MINIMAL],
+            translation_key=CONF_TOOL_FORMAT,
             multiple=False,
             mode=SelectSelectorMode.DROPDOWN,
         )),

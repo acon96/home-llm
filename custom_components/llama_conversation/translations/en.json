@@ -2,6 +2,8 @@
     "config": {
         "error": {
             "download_failed": "The download failed to complete: {exception}",
+            "missing_quantization": "The GGUF quantization level {missing} does not exist in the provided HuggingFace repo. The following quantization levels were found: {available}",
+            "no_supported_ggufs": "The provided HuggingFace repo does not contain any compatible GGUF files!",
             "failed_to_connect": "Failed to connect to the remote API: {exception}",
             "missing_model_api": "The selected model is not provided by this API.",
             "missing_model_file": "The provided file does not exist.",
@@ -54,6 +56,7 @@
                     "llm_hass_api": "Selected LLM API",
                     "prompt": "System Prompt",
                     "prompt_template": "Prompt Format",
+                    "tool_format": "Tool Format",
                     "temperature": "Temperature",
                     "top_k": "Top K",
                     "top_p": "Top P",
@@ -107,6 +110,7 @@
                     "max_new_tokens": "Maximum tokens to return in response",
                     "prompt": "System Prompt",
                     "prompt_template": "Prompt Format",
+                    "tool_format": "Tool Format",
                     "temperature": "Temperature",
                     "top_k": "Top K",
                     "top_p": "Top P",
@@ -168,6 +172,13 @@
                 "llama3": "Llama 3",
                 "command-r": "Command R",
                 "no_prompt_template": "None"
+            }
+        },
+        "tool_format": {
+            "options": {
+                "full_tool_format": "Full JSON Tool Format",
+                "reduced_tool_format": "Reduced JSON Tool Format",
+                "min_tool_format": "Minimal Function Style Tool Format"
             }
         },
         "model_backend": {

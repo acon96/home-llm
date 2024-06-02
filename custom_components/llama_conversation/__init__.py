@@ -38,8 +38,8 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][entry.entry_id] = entry
     
     # call update handler
-    agent: LocalLLMAgent = await ha_conversation.get_agent_manager(hass).async_get_agent(entry.entry_id)
-    agent._update_options()
+    agent: LocalLLMAgent = ha_conversation.get_agent_manager(hass).async_get_agent(entry.entry_id)
+    await hass.async_add_executor_job(agent._update_options)
 
     return True
 
