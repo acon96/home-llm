@@ -57,6 +57,7 @@ from .const import (
     CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS,
     CONF_PROMPT_TEMPLATE,
     CONF_TOOL_FORMAT,
+    CONF_TOOL_MULTI_TURN_CHAT,
     CONF_ENABLE_FLASH_ATTENTION,
     CONF_USE_GBNF_GRAMMAR,
     CONF_GBNF_GRAMMAR_FILE,
@@ -97,6 +98,7 @@ from .const import (
     DEFAULT_DOWNLOADED_MODEL_QUANTIZATION,
     DEFAULT_PROMPT_TEMPLATE,
     DEFAULT_TOOL_FORMAT,
+    DEFAULT_TOOL_MULTI_TURN_CHAT,
     DEFAULT_ENABLE_FLASH_ATTENTION,
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_GBNF_GRAMMAR_FILE,
@@ -767,6 +769,11 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
             multiple=False,
             mode=SelectSelectorMode.DROPDOWN,
         )),
+        vol.Required(
+            CONF_TOOL_MULTI_TURN_CHAT,
+            description={"suggested_value": options.get(CONF_TOOL_MULTI_TURN_CHAT)},
+            default=DEFAULT_TOOL_MULTI_TURN_CHAT,
+        ): BooleanSelector(BooleanSelectorConfig()),
         vol.Required(
             CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
             description={"suggested_value": options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES)},

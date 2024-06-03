@@ -46,6 +46,7 @@ from .const import (
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
     CONF_PROMPT_TEMPLATE,
     CONF_TOOL_FORMAT,
+    CONF_TOOL_MULTI_TURN_CHAT,
     CONF_ENABLE_FLASH_ATTENTION,
     CONF_USE_GBNF_GRAMMAR,
     CONF_GBNF_GRAMMAR_FILE,
@@ -81,6 +82,7 @@ from .const import (
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
     DEFAULT_PROMPT_TEMPLATE,
     DEFAULT_TOOL_FORMAT,
+    DEFAULT_TOOL_MULTI_TURN_CHAT,
     DEFAULT_ENABLE_FLASH_ATTENTION,
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_GBNF_GRAMMAR_FILE,
@@ -227,7 +229,7 @@ class LocalLLMAgent(AbstractConversationAgent):
             device_id=user_input.device_id,
         )
 
-        _LOGGER.info(llm_context)
+        _LOGGER.info(llm_context.context)
 
         try:
             service_call_pattern = re.compile(service_call_regex)
@@ -316,7 +318,7 @@ class LocalLLMAgent(AbstractConversationAgent):
                     conversation.pop(1)
             self.history[conversation_id] = conversation
 
-        if not llm_api:
+        if llm_api is None:
             # return the output without messing with it if there is no API exposed to the model
             intent_response = intent.IntentResponse(language=user_input.language)
             intent_response.async_set_speech(response.strip())
@@ -379,9 +381,29 @@ class LocalLLMAgent(AbstractConversationAgent):
 
             _LOGGER.debug("Tool response: %s", tool_response)
 
-        # TODO: optionally handle multi-turn with the model where it acts on the response from the tool
-        # if self.entry.options.get("", ""):
-        #     pass
+        # handle models that generate a function call and wait for the result before providing a response
+        if self.entry.options.get(CONF_TOOL_MULTI_TURN_CHAT, DEFAULT_TOOL_MULTI_TURN_CHAT):
+            conversation.append({"role": "tool", "message": json.dumps(tool_response)})
+
+            # generate a response based on the tool result
+            try:
+                _LOGGER.debug(conversation)
+                to_say = await self._async_generate(conversation)
+                _LOGGER.debug(to_say)
+
+            except Exception as err:
+                _LOGGER.exception("There was a problem talking to the backend")
+                
+                intent_response = intent.IntentResponse(language=user_input.language)
+                intent_response.async_set_error(
+                    intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
+                    f"Sorry, there was a problem talking to the backend: {repr(err)}",
+                )
+                return ConversationResult(
+                    response=intent_response, conversation_id=conversation_id
+                )
+
+            conversation.append({"role": "assistant", "message": response})
         
         # generate intent response to Home Assistant
         intent_response = intent.IntentResponse(language=user_input.language)
@@ -430,7 +452,8 @@ class LocalLLMAgent(AbstractConversationAgent):
         for message in prompt:
             role = message["role"]
             message = message["message"]
-            role_desc = template_desc[role]
+            # fall back to the "user" role for unknown roles
+            role_desc = template_desc.get(role, template_desc["user"])
             formatted_prompt = (
                 formatted_prompt + f"{role_desc['prefix']}{message}{role_desc['suffix']}\n"
             )
@@ -453,7 +476,6 @@ class LocalLLMAgent(AbstractConversationAgent):
         # handle vol.Any in the key side of things
         processed_parameters = []
         for param in raw_parameters:
-            _LOGGER.info(param["name"])
             if isinstance(param["name"], vol.Any):
                 for possible_name in param["name"].validators:
                     actual_param = param.copy()
@@ -828,7 +850,7 @@ class LlamaCppAgent(LocalLLMAgent):
             self.last_updated_entities[entity] = refresh_start
 
         _LOGGER.debug(f"refreshing cached prompt because {entity} changed...")
-        await self.hass.async_add_executor_job(self._cache_prompt)
+        # await self.hass.async_add_executor_job(self._cache_prompt)
 
         refresh_end = time.time()
         _LOGGER.debug(f"cache refresh took {(refresh_end - refresh_start):.2f} sec")

@@ -86,6 +86,7 @@ PROMPT_TEMPLATE_DESCRIPTIONS = {
         "system": { "prefix": "<|im_start|>system\n", "suffix": "<|im_end|>" },
         "user": { "prefix": "<|im_start|>user\n", "suffix": "<|im_end|>" },
         "assistant": { "prefix": "<|im_start|>assistant\n", "suffix": "<|im_end|>" },
+        "tool": { "prefix": "<|im_start|>tool", "suffix": "<|im_end|>" },
         "generation_prompt": "<|im_start|>assistant"
     },
     PROMPT_TEMPLATE_COMMAND_R: {
@@ -147,6 +148,8 @@ TOOL_FORMAT_FULL = "full_tool_format"
 TOOL_FORMAT_REDUCED = "reduced_tool_format"
 TOOL_FORMAT_MINIMAL = "min_tool_format"
 DEFAULT_TOOL_FORMAT = TOOL_FORMAT_FULL
+CONF_TOOL_MULTI_TURN_CHAT = "tool_multi_turn_chat"
+DEFAULT_TOOL_MULTI_TURN_CHAT = False
 CONF_ENABLE_FLASH_ATTENTION = "enable_flash_attention"
 DEFAULT_ENABLE_FLASH_ATTENTION = False
 CONF_USE_GBNF_GRAMMAR = "gbnf_grammar"
