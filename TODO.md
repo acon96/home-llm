@@ -3,16 +3,14 @@
     - rewrite how services are called  
     - handle no API selected  
     - rewrite prompts + service block formats  
+    - implement new LLM API that has `HassCallService` so old models can still work  
     - update dataset so new models will work with the API  
 - [ ] make ICL examples into conversation turns  
 - [ ] translate ICL examples + make better ones  
 - [ ] areas/room support  
-- [ ] convert requests to aiohttp
-- [x] detection/mitigation of too many entities being exposed & blowing out the context length
-- [ ] figure out DPO to improve response quality
-- [ ] train the model to respond to house events  
-    - present the model with an event + a "prompt" from the user of what you want it to do (i.e. turn on the lights when I get home = the model turns on lights when your entity presence triggers as being home)  
-    - basically lets you write automations in plain english  
+- [ ] convert requests to aiohttp  
+- [x] detection/mitigation of too many entities being exposed & blowing out the context length  
+- [ ] figure out DPO to improve response quality  
 - [x] setup github actions to build wheels that  are optimized for RPIs
 - [x] mixtral + prompting (no fine tuning)  
     - add in context learning variables to sys prompt template
@@ -53,3 +51,6 @@
     - set up vectordb  
     - ingest home assistant docs  
     - "context request" from above to initiate a RAG search  
+- [ ] train the model to respond to house events  
+    - present the model with an event + a "prompt" from the user of what you want it to do (i.e. turn on the lights when I get home = the model turns on lights when your entity presence triggers as being home)  
+    - basically lets you write automations in plain english  

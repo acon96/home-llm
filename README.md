@@ -1,6 +1,8 @@
 # Home LLM
 This project provides the required "glue" components to control your Home Assistant installation with a **completely local** Large Language Model acting as a personal assistant. The goal is to provide a drop in solution to be used as a "conversation agent" component by Home Assistant.  The 2 main pieces of this solution are the Home LLM model and Local LLM Conversation integration.
 
+NOTE: This integration has **NOT** been updated yet to support the new LLM API changes in Home Assistant `2024.6.0`.
+
 ## Quick Start
 Please see the [Setup Guide](./docs/Setup.md) for more information on installation.
 
