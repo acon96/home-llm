@@ -2,6 +2,8 @@
 import types, os
 
 DOMAIN = "llama_conversation"
+HOME_LLM_API_ID = "home-llm-service-api"
+SERVICE_TOOL_NAME = "HassCallService"
 CONF_PROMPT = "prompt"
 PERSONA_PROMPTS = {
     "en": "You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed with the information provided only.",
@@ -11,7 +13,7 @@ PERSONA_PROMPTS = {
 }
 DEFAULT_PROMPT_BASE = """<persona>
 The current time and date is {{ (as_timestamp(now()) | timestamp_custom("%I:%M %p on %A %B %d, %Y", "")) }}
-Tools: {{ tools }}
+Tools: {{ tools | to_json }}
 Devices:
 {{ devices }}"""
 ICL_EXTRAS = """
@@ -69,6 +71,7 @@ DEFAULT_PORT = "5000"
 DEFAULT_SSL = False
 CONF_EXTRA_ATTRIBUTES_TO_EXPOSE = "extra_attributes_to_expose"
 DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "media_title", "volume_level", "item", "wind_speed"]
+ALLOWED_LEGACY_SERVICE_CALL_ARGUMENTS = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "hvac_mode", "preset_mode", "item", "duration"]
 CONF_PROMPT_TEMPLATE = "prompt_template"
 PROMPT_TEMPLATE_CHATML = "chatml"
 PROMPT_TEMPLATE_COMMAND_R = "command-r"
@@ -232,7 +235,7 @@ DEFAULT_OPTIONS = types.MappingProxyType(
         CONF_TEXT_GEN_WEBUI_PRESET: ""
     }
 )
-# TODO: warn the user if they picked an old, incompatible home-llm model?
+# TODO: re-add old models but select the legacy API
 OPTIONS_OVERRIDES = {
     "home-3b-v4": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE,

@@ -106,7 +106,10 @@ from .const import (
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT,
     TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT,
+    ALLOWED_LEGACY_SERVICE_CALL_ARGUMENTS,
     DOMAIN,
+    HOME_LLM_API_ID,
+    SERVICE_TOOL_NAME,
     PROMPT_TEMPLATE_DESCRIPTIONS,
     TOOL_FORMAT_FULL,
     TOOL_FORMAT_REDUCED,
@@ -329,12 +332,30 @@ class LocalLLMAgent(AbstractConversationAgent):
         # parse response
         to_say = service_call_pattern.sub("", response.strip())
         for block in service_call_pattern.findall(response.strip()):
-            parsed_tool_call = json.loads(block)
-            try:
-                vol.Schema({
+            parsed_tool_call: dict = json.loads(block)
+
+            if llm_api.api.id == HOME_LLM_API_ID:
+                schema_to_validate = vol.Schema({
+                    vol.Required('service'): str,
+                    vol.Required('target_device'): str,
+                    vol.Optional('rgb_color'): str,
+                    vol.Optional('brightness'): float,
+                    vol.Optional('temperature'): float,
+                    vol.Optional('humidity'): float,
+                    vol.Optional('fan_mode'): str,
+                    vol.Optional('hvac_mode'): str,
+                    vol.Optional('preset_mode'): str,
+                    vol.Optional('duration'): str,
+                    vol.Optional('item'): str,
+                })
+            else:
+                schema_to_validate = vol.Schema({
                     vol.Required("name"): str,
                     vol.Required("arguments"): dict,
-                })(parsed_tool_call)
+                })
+                
+            try:
+                schema_to_validate(parsed_tool_call)
             except vol.Error as ex:
                 _LOGGER.info(f"LLM produced an improperly formatted response: {repr(ex)}")
 
@@ -350,18 +371,27 @@ class LocalLLMAgent(AbstractConversationAgent):
             _LOGGER.info(f"calling tool: {block}")
 
             # try to fix certain arguments
+            args_dict = parsed_tool_call if llm_api.api.id == HOME_LLM_API_ID else parsed_tool_call["arguments"]
+
             # make sure brightness is 0-255 and not a percentage
-            if "brightness" in parsed_tool_call["arguments"] and 0.0 < parsed_tool_call["arguments"]["brightness"] <= 1.0:
-                parsed_tool_call["arguments"]["brightness"] = int(parsed_tool_call["arguments"]["brightness"] * 255)
+            if "brightness" in args_dict and 0.0 < args_dict["brightness"] <= 1.0:
+                args_dict["brightness"] = int(args_dict["brightness"] * 255)
 
             # convert string "tuple" to a list for RGB colors
-            if "rgb_color" in parsed_tool_call["arguments"] and isinstance(parsed_tool_call["arguments"]["rgb_color"], str):
-                parsed_tool_call["arguments"]["rgb_color"] = [ int(x) for x in parsed_tool_call["arguments"]["rgb_color"][1:-1].split(",") ]
+            if "rgb_color" in args_dict and isinstance(args_dict["rgb_color"], str):
+                args_dict["rgb_color"] = [ int(x) for x in args_dict["rgb_color"][1:-1].split(",") ]
             
-            tool_input = llm.ToolInput(
-                tool_name=parsed_tool_call["name"],
-                tool_args=parsed_tool_call["arguments"],
-            )
+            if llm_api.api.id == HOME_LLM_API_ID:
+                to_say = to_say + parsed_tool_call.pop("to_say", "")
+                tool_input = llm.ToolInput(
+                    tool_name=SERVICE_TOOL_NAME,
+                    tool_args=parsed_tool_call,
+                )
+            else:
+                tool_input = llm.ToolInput(
+                    tool_name=parsed_tool_call["name"],
+                    tool_args=parsed_tool_call["arguments"],
+                )
 
             try:
                 tool_response = await llm_api.async_call_tool(tool_input)
@@ -464,14 +494,17 @@ class LocalLLMAgent(AbstractConversationAgent):
         _LOGGER.debug(formatted_prompt)
         return formatted_prompt
     
-    def _format_tool(self, tool: llm.Tool):
+    def _format_tool(self, name: str, parameters: vol.Schema, description: str):
         style = self.entry.options.get(CONF_TOOL_FORMAT, DEFAULT_TOOL_FORMAT)
 
         if style == TOOL_FORMAT_MINIMAL:
-            return f"{tool.name}({', '.join(flatten_vol_schema(tool.parameters))}) - {tool.description}"
+            result = f"{name}({','.join(flatten_vol_schema(parameters))})"
+            if description:
+                result = result + f" - {description}"
+            return result
         
         raw_parameters: list = voluptuous_serialize.convert(
-            tool.parameters, custom_serializer=custom_custom_serializer)
+            parameters, custom_serializer=custom_custom_serializer)
         
         # handle vol.Any in the key side of things
         processed_parameters = []
@@ -487,8 +520,8 @@ class LocalLLMAgent(AbstractConversationAgent):
 
         if style == TOOL_FORMAT_REDUCED:
             return {
-                "name": tool.name,
-                "description": tool.description,
+                "name": name,
+                "description": description,
                 "parameters": {
                     "properties": {
                         x["name"]: x.get("type", "string") for x in processed_parameters
@@ -502,8 +535,8 @@ class LocalLLMAgent(AbstractConversationAgent):
             return {
                 "type": "function",
                 "function": {
-                    "name": tool.name,
-                    "description": tool.description,
+                    "name": name,
+                    "description": description,
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -627,17 +660,40 @@ class LocalLLMAgent(AbstractConversationAgent):
 
         formatted_states = "\n".join(device_states) + "\n"
 
-        if llm_api:            
-            formatted_tools = json.dumps([
-                self._format_tool(tool)
-                for tool in llm_api.tools
-            ])
+        if llm_api:
+            if llm_api.api.id == HOME_LLM_API_ID:
+                service_dict = self.hass.services.async_services()
+                all_services = []
+                for domain in domains:
+                    # scripts show up as individual services
+                    if domain == "script":
+                        all_services.extend(["script.reload()", "script.turn_on()", "script.turn_off()", "script.toggle()"])
+                        continue
+                    
+                    for name, service in service_dict.get(domain, {}).items():
+                        args = flatten_vol_schema(service.schema)
+                        args_to_expose = set(args).intersection(ALLOWED_LEGACY_SERVICE_CALL_ARGUMENTS)
+                        service_schema = vol.Schema({
+                            vol.Optional(arg): str for arg in args_to_expose
+                        })
+
+                        all_services.append((f"{domain}.{name}", service_schema, ""))
+
+                tools = [
+                    self._format_tool(*tool)
+                    for tool in all_services
+                ]
+            else:
+                tools = [
+                    self._format_tool(tool.name, tool.parameters, tool.description)
+                    for tool in llm_api.tools
+                ]
         else:
-            formatted_tools = "No tools were provided. If the user requests you interact with a device, tell them you are unable to do so."
+            tools = "No tools were provided. If the user requests you interact with a device, tell them you are unable to do so."
 
         render_variables = {
             "devices": formatted_states,
-            "tools": formatted_tools,
+            "tools": tools,
             "response_examples": []
         }
 

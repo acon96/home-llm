@@ -5,8 +5,13 @@ import logging
 
 import homeassistant.components.conversation as ha_conversation
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, llm
+from homeassistant.util.json import JsonObjectType
+
+import voluptuous as vol
 
 from .agent import (
     LocalLLMAgent,
@@ -27,6 +32,8 @@ from .const import (
     BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER,
     BACKEND_TYPE_OLLAMA,
     DOMAIN,
+    HOME_LLM_API_ID,
+    SERVICE_TOOL_NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,6 +52,10 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Local LLM Conversation from a config entry."""
+
+    # make sure the API is registered
+    if not any([x.id == HOME_LLM_API_ID for x in llm.async_get_apis(hass)]):
+        llm.async_register_api(hass, HomeLLMAPI(hass))
 
     def create_agent(backend_type):
         agent_cls = None
@@ -102,3 +113,73 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
     _LOGGER.debug("Migration to version %s successful", config_entry.version)
 
     return True
+
+class HassServiceTool(llm.Tool):
+    """Tool to get the current time."""
+
+    name = SERVICE_TOOL_NAME
+    description = "Executes a Home Assistant service"
+
+    # Optional. A voluptuous schema of the input parameters.
+    parameters = vol.Schema({
+        vol.Required('service'): str,
+        vol.Required('target_device'): str,
+        vol.Optional('rgb_color'): str,
+        vol.Optional('brightness'): float,
+        vol.Optional('temperature'): float,
+        vol.Optional('humidity'): float,
+        vol.Optional('fan_mode'): str,
+        vol.Optional('hvac_mode'): str,
+        vol.Optional('preset_mode'): str,
+        vol.Optional('duration'): str,
+        vol.Optional('item'): str,
+    })
+
+    optional_allowed_args = []
+
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: llm.ToolInput, llm_context: llm.LLMContext
+    ) -> JsonObjectType:
+        """Call the tool."""
+        domain, service = tuple(tool_input.tool_args["service"].split("."))
+        target_device = tool_input.tool_args["target_device"]
+
+        service_data = {ATTR_ENTITY_ID: target_device}
+        for attr in self.optional_allowed_args:
+            if attr in tool_input.tool_args.keys():
+                service_data[attr] = tool_input.tool_args[attr]
+        try:
+            await hass.services.async_call(
+                domain,
+                service,
+                service_data=service_data,
+                blocking=True,
+            )
+        except Exception:
+            _LOGGER.exception("Failed to execute service for model")
+            return { "result": "failed" }
+        
+        return { "result": "success" }
+
+class HomeLLMAPI(llm.API):
+    """
+    An API that allows calling Home Assistant services to maintain compatibility 
+    with the older (v3 and older) Home LLM models
+    """
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Init the class."""
+        super().__init__(
+            hass=hass,
+            id=HOME_LLM_API_ID,
+            name="Home-LLM (v1-v3)",
+        )
+
+    async def async_get_api_instance(self, llm_context: llm.LLMContext) -> llm.APIInstance:
+        """Return the instance of the API."""
+        return llm.APIInstance(
+            api=self,
+            api_prompt="Call services in Home Assistant by passing the service name and the device to control.",
+            llm_context=llm_context,
+            tools=[HassServiceTool()],
+        )
