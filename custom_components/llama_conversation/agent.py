@@ -5,6 +5,7 @@ import logging
 import threading
 import importlib
 from typing import Literal, Any, Callable
+import voluptuous as vol
 
 import requests
 import re
@@ -15,17 +16,21 @@ import random
 import time
 
 from homeassistant.components.conversation import ConversationInput, ConversationResult, AbstractConversationAgent
+import homeassistant.components.conversation as ha_conversation
 from homeassistant.components.conversation.const import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_SSL, MATCH_ALL
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_SSL, MATCH_ALL, CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryError, TemplateError
-from homeassistant.helpers import config_validation as cv, intent, template, entity_registry as er
+from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryError, TemplateError, HomeAssistantError
+from homeassistant.helpers import config_validation as cv, intent, template, entity_registry as er, llm
 from homeassistant.helpers.event import async_track_state_change, async_call_later
-from homeassistant.util import ulid
+from homeassistant.util import ulid, color
 
-from .utils import closest_color, flatten_vol_schema, install_llama_cpp_python, validate_llama_cpp_python_installation
+import voluptuous_serialize
+
+from .utils import closest_color, flatten_vol_schema, custom_custom_serializer, install_llama_cpp_python, \
+    validate_llama_cpp_python_installation
 from .const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -39,8 +44,9 @@ from .const import (
     CONF_BACKEND_TYPE,
     CONF_DOWNLOADED_MODEL_FILE,
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
-    CONF_ALLOWED_SERVICE_CALL_ARGUMENTS,
     CONF_PROMPT_TEMPLATE,
+    CONF_TOOL_FORMAT,
+    CONF_TOOL_MULTI_TURN_CHAT,
     CONF_ENABLE_FLASH_ATTENTION,
     CONF_USE_GBNF_GRAMMAR,
     CONF_GBNF_GRAMMAR_FILE,
@@ -74,8 +80,9 @@ from .const import (
     DEFAULT_BACKEND_TYPE,
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
-    DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS,
     DEFAULT_PROMPT_TEMPLATE,
+    DEFAULT_TOOL_FORMAT,
+    DEFAULT_TOOL_MULTI_TURN_CHAT,
     DEFAULT_ENABLE_FLASH_ATTENTION,
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_GBNF_GRAMMAR_FILE,
@@ -99,8 +106,14 @@ from .const import (
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT,
     TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT,
+    ALLOWED_LEGACY_SERVICE_CALL_ARGUMENTS,
     DOMAIN,
+    HOME_LLM_API_ID,
+    SERVICE_TOOL_NAME,
     PROMPT_TEMPLATE_DESCRIPTIONS,
+    TOOL_FORMAT_FULL,
+    TOOL_FORMAT_REDUCED,
+    TOOL_FORMAT_MINIMAL,
 )
 
 # make type checking work for llama-cpp-python without importing it directly at runtime
@@ -114,8 +127,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-class LLaMAAgent(AbstractConversationAgent):
-    """Base LLaMA conversation agent."""
+class LocalLLMAgent(AbstractConversationAgent):
+    """Base Local LLM conversation agent."""
 
     hass: HomeAssistant
     entry_id: str
@@ -146,7 +159,7 @@ class LLaMAAgent(AbstractConversationAgent):
             with open(icl_filename, encoding="utf-8-sig") as f:
                 self.in_context_examples = list(csv.DictReader(f))
 
-                if set(self.in_context_examples[0].keys()) != set(["service", "response" ]):
+                if set(self.in_context_examples[0].keys()) != set(["type", "request", "tool", "response" ]):
                     raise Exception("ICL csv file did not have 2 columns: service & response")
                 
             if len(self.in_context_examples) == 0:
@@ -209,8 +222,6 @@ class LLaMAAgent(AbstractConversationAgent):
         remember_conversation = self.entry.options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION)
         remember_num_interactions = self.entry.options.get(CONF_REMEMBER_NUM_INTERACTIONS, DEFAULT_REMEMBER_NUM_INTERACTIONS)
         service_call_regex = self.entry.options.get(CONF_SERVICE_CALL_REGEX, DEFAULT_SERVICE_CALL_REGEX)
-        allowed_service_call_arguments = self.entry.options \
-            .get(CONF_ALLOWED_SERVICE_CALL_ARGUMENTS, DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS)
 
         try:
             service_call_pattern = re.compile(service_call_regex)
@@ -225,6 +236,31 @@ class LLaMAAgent(AbstractConversationAgent):
             return ConversationResult(
                 response=intent_response, conversation_id=conversation_id
             )
+        
+        llm_api: llm.APIInstance | None = None
+        if self.entry.options.get(CONF_LLM_HASS_API):
+            try:
+                llm_api = await llm.async_get_api(
+                    self.hass,
+                    self.entry.options[CONF_LLM_HASS_API],
+                    llm_context=llm.LLMContext(
+                        platform=DOMAIN,
+                        context=user_input.context,
+                        user_prompt=user_input.text,
+                        language=user_input.language,
+                        assistant=ha_conversation.DOMAIN,
+                        device_id=user_input.device_id,
+                    )
+                )
+            except HomeAssistantError as err:
+                _LOGGER.error("Error getting LLM API: %s", err)
+                intent_response.async_set_error(
+                    intent.IntentResponseErrorCode.UNKNOWN,
+                    f"Error preparing LLM API: {err}",
+                )
+                return conversation.ConversationResult(
+                    response=intent_response, conversation_id=user_input.conversation_id
+                )
 
         if user_input.conversation_id in self.history:
             conversation_id = user_input.conversation_id
@@ -235,7 +271,7 @@ class LLaMAAgent(AbstractConversationAgent):
         
         if len(conversation) == 0 or refresh_system_prompt:
             try:
-                message = self._generate_system_prompt(raw_prompt)
+                message = self._generate_system_prompt(raw_prompt, llm_api)
             except TemplateError as err:
                 _LOGGER.error("Error rendering prompt: %s", err)
                 intent_response = intent.IntentResponse(language=user_input.language)
@@ -269,7 +305,7 @@ class LLaMAAgent(AbstractConversationAgent):
             
             intent_response = intent.IntentResponse(language=user_input.language)
             intent_response.async_set_error(
-                intent.IntentResponseErrorCode.UNKNOWN,
+                intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
                 f"Sorry, there was a problem talking to the backend: {repr(err)}",
             )
             return ConversationResult(
@@ -283,71 +319,119 @@ class LLaMAAgent(AbstractConversationAgent):
                     conversation.pop(1)
             self.history[conversation_id] = conversation
 
+        if llm_api is None:
+            # return the output without messing with it if there is no API exposed to the model
+            intent_response = intent.IntentResponse(language=user_input.language)
+            intent_response.async_set_speech(response.strip())
+            return ConversationResult(
+                response=intent_response, conversation_id=conversation_id
+            )
+
         # parse response
-        exposed_entities = list(self._async_get_exposed_entities()[0].keys())
-        
-        to_say = service_call_pattern.sub("", response).strip()
+        to_say = service_call_pattern.sub("", response.strip())
         for block in service_call_pattern.findall(response.strip()):
-            services = block.split("\n")
-            _LOGGER.info(f"running services: {' '.join(services)}")
+            parsed_tool_call: dict = json.loads(block)
 
-            for line in services:
-                if len(line) == 0:
-                    break
+            if llm_api.api.id == HOME_LLM_API_ID:
+                schema_to_validate = vol.Schema({
+                    vol.Required('service'): str,
+                    vol.Required('target_device'): str,
+                    vol.Optional('rgb_color'): str,
+                    vol.Optional('brightness'): float,
+                    vol.Optional('temperature'): float,
+                    vol.Optional('humidity'): float,
+                    vol.Optional('fan_mode'): str,
+                    vol.Optional('hvac_mode'): str,
+                    vol.Optional('preset_mode'): str,
+                    vol.Optional('duration'): str,
+                    vol.Optional('item'): str,
+                })
+            else:
+                schema_to_validate = vol.Schema({
+                    vol.Required("name"): str,
+                    vol.Required("arguments"): dict,
+                })
+                
+            try:
+                schema_to_validate(parsed_tool_call)
+            except vol.Error as ex:
+                _LOGGER.info(f"LLM produced an improperly formatted response: {repr(ex)}")
 
-                # parse old format or JSON format
-                try:
-                    json_output = json.loads(line)
-                    service = json_output["service"]
-                    entity = json_output["target_device"]
-                    domain, service = tuple(service.split("."))
-                    if "to_say" in json_output:
-                        to_say = to_say + json_output.pop("to_say")
+                intent_response = intent.IntentResponse(language=user_input.language)
+                intent_response.async_set_error(
+                    intent.IntentResponseErrorCode.NO_INTENT_MATCH,
+                    f"I'm sorry, I didn't produce a correctly formatted tool call! Please see the logs for more info.",
+                )
+                return ConversationResult(
+                    response=intent_response, conversation_id=conversation_id
+                )
 
-                    extra_arguments = { k: v for k, v in json_output.items() if k not in [ "service", "target_device" ] }
-                except Exception:
-                    try:
-                        service = line.split("(")[0]
-                        entity = line.split("(")[1][:-1]
-                        domain, service = tuple(service.split("."))
-                        extra_arguments = {}
-                    except Exception:
-                        to_say += f" Failed to parse call from '{line}'!"
-                        continue
+            _LOGGER.info(f"calling tool: {block}")
 
-                # fix certain arguments
-                # make sure brightness is 0-255 and not a percentage
-                if "brightness" in extra_arguments and 0.0 < extra_arguments["brightness"] <= 1.0:
-                    extra_arguments["brightness"] = int(extra_arguments["brightness"] * 255)
+            # try to fix certain arguments
+            args_dict = parsed_tool_call if llm_api.api.id == HOME_LLM_API_ID else parsed_tool_call["arguments"]
 
-                # convert string "tuple" to a list for RGB colors
-                if "rgb_color" in extra_arguments and isinstance(extra_arguments["rgb_color"], str):
-                    extra_arguments["rgb_color"] = [ int(x) for x in extra_arguments["rgb_color"][1:-1].split(",") ]
+            # make sure brightness is 0-255 and not a percentage
+            if "brightness" in args_dict and 0.0 < args_dict["brightness"] <= 1.0:
+                args_dict["brightness"] = int(args_dict["brightness"] * 255)
 
-                # only acknowledge requests to exposed entities
-                if entity not in exposed_entities:
-                    to_say += f" Can't find device '{entity}'!"
-                else:
-                    # copy arguments to service call
-                    service_data = {ATTR_ENTITY_ID: entity}
-                    for attr in allowed_service_call_arguments:
-                        if attr in extra_arguments.keys():
-                            service_data[attr] = extra_arguments[attr]
-                    
-                    try:
-                        _LOGGER.debug(f"service data: {service_data}")
-                        await self.hass.services.async_call(
-                            domain,
-                            service,
-                            service_data=service_data,
-                            blocking=True,
-                        )
-                    except Exception as err:
-                        to_say += f"\nFailed to run: {line}"
-                        _LOGGER.exception(f"Failed to run: {line}")
+            # convert string "tuple" to a list for RGB colors
+            if "rgb_color" in args_dict and isinstance(args_dict["rgb_color"], str):
+                args_dict["rgb_color"] = [ int(x) for x in args_dict["rgb_color"][1:-1].split(",") ]
+            
+            if llm_api.api.id == HOME_LLM_API_ID:
+                to_say = to_say + parsed_tool_call.pop("to_say", "")
+                tool_input = llm.ToolInput(
+                    tool_name=SERVICE_TOOL_NAME,
+                    tool_args=parsed_tool_call,
+                )
+            else:
+                tool_input = llm.ToolInput(
+                    tool_name=parsed_tool_call["name"],
+                    tool_args=parsed_tool_call["arguments"],
+                )
 
-        if template_desc["assistant"]["suffix"]:
-            to_say = to_say.replace(template_desc["assistant"]["suffix"], "") # remove the eos token if it is returned (some backends + the old model does this)
+            try:
+                tool_response = await llm_api.async_call_tool(tool_input)
+            except (HomeAssistantError, vol.Invalid) as e:
+                tool_response = {"error": type(e).__name__}
+                if str(e):
+                    tool_response["error_text"] = str(e)
+
+                intent_response = intent.IntentResponse(language=user_input.language)
+                intent_response.async_set_error(
+                    intent.IntentResponseErrorCode.NO_INTENT_MATCH,
+                    f"I'm sorry! I encountered an error calling the tool. See the logs for more info.",
+                )
+                return ConversationResult(
+                    response=intent_response, conversation_id=conversation_id
+                )
+
+            _LOGGER.debug("Tool response: %s", tool_response)
+
+        # handle models that generate a function call and wait for the result before providing a response
+        if self.entry.options.get(CONF_TOOL_MULTI_TURN_CHAT, DEFAULT_TOOL_MULTI_TURN_CHAT):
+            conversation.append({"role": "tool", "message": json.dumps(tool_response)})
+
+            # generate a response based on the tool result
+            try:
+                _LOGGER.debug(conversation)
+                to_say = await self._async_generate(conversation)
+                _LOGGER.debug(to_say)
+
+            except Exception as err:
+                _LOGGER.exception("There was a problem talking to the backend")
+                
+                intent_response = intent.IntentResponse(language=user_input.language)
+                intent_response.async_set_error(
+                    intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
+                    f"Sorry, there was a problem talking to the backend: {repr(err)}",
+                )
+                return ConversationResult(
+                    response=intent_response, conversation_id=conversation_id
+                )
+
+            conversation.append({"role": "assistant", "message": response})
         
         # generate intent response to Home Assistant
         intent_response = intent.IntentResponse(language=user_input.language)
@@ -396,7 +480,8 @@ class LLaMAAgent(AbstractConversationAgent):
         for message in prompt:
             role = message["role"]
             message = message["message"]
-            role_desc = template_desc[role]
+            # fall back to the "user" role for unknown roles
+            role_desc = template_desc.get(role, template_desc["user"])
             formatted_prompt = (
                 formatted_prompt + f"{role_desc['prefix']}{message}{role_desc['suffix']}\n"
             )
@@ -406,47 +491,133 @@ class LLaMAAgent(AbstractConversationAgent):
 
         _LOGGER.debug(formatted_prompt)
         return formatted_prompt
+    
+    def _format_tool(self, name: str, parameters: vol.Schema, description: str):
+        style = self.entry.options.get(CONF_TOOL_FORMAT, DEFAULT_TOOL_FORMAT)
 
-    def _generate_system_prompt(self, prompt_template: str) -> str:
+        if style == TOOL_FORMAT_MINIMAL:
+            result = f"{name}({','.join(flatten_vol_schema(parameters))})"
+            if description:
+                result = result + f" - {description}"
+            return result
+        
+        raw_parameters: list = voluptuous_serialize.convert(
+            parameters, custom_serializer=custom_custom_serializer)
+        
+        # handle vol.Any in the key side of things
+        processed_parameters = []
+        for param in raw_parameters:
+            if isinstance(param["name"], vol.Any):
+                for possible_name in param["name"].validators:
+                    actual_param = param.copy()
+                    actual_param["name"] = possible_name
+                    actual_param["required"] = False
+                    processed_parameters.append(actual_param)
+            else:
+                processed_parameters.append(param)
+
+        if style == TOOL_FORMAT_REDUCED:
+            return {
+                "name": name,
+                "description": description,
+                "parameters": {
+                    "properties": {
+                        x["name"]: x.get("type", "string") for x in processed_parameters
+                    },
+                    "required": [
+                        x["name"] for x in processed_parameters if x.get("required")
+                    ]
+                }
+            }
+        elif style == TOOL_FORMAT_FULL:
+            return {
+                "type": "function",
+                "function": {
+                    "name": name,
+                    "description": description,
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            x["name"]: {
+                                "type": x.get("type", "string"),
+                                "description": x.get("description", ""),
+                            } for x in processed_parameters
+                        },
+                        "required": [
+                            x["name"] for x in processed_parameters if x.get("required")
+                        ]
+                    }
+                }
+            }
+        
+        raise Exception(f"Unknown tool format {style}")
+    
+    def _generate_icl_examples(self, num_examples, entity_names):
+        entity_names = entity_names[:]
+        entity_domains = set([x.split(".")[0] for x in entity_names])
+
+        in_context_examples = [
+            x for x in self.in_context_examples
+            if x["type"] in entity_domains
+        ]
+        
+        random.shuffle(in_context_examples)
+        random.shuffle(entity_names)
+
+        num_examples_to_generate = min(num_examples, len(in_context_examples))
+        if num_examples_to_generate < num_examples:
+            _LOGGER.warning(f"Attempted to generate {num_examples} ICL examples for conversation, but only {len(in_context_examples)} are available!")
+        
+        examples = []
+        for _ in range(num_examples_to_generate):
+            chosen_example = in_context_examples.pop()
+            request = chosen_example["request"]
+            response = chosen_example["response"]
+
+            random_device = [ x for x in entity_names if x.split(".")[0] == chosen_example["type"] ][0]
+            random_area = "bedroom" # todo, pick a random area
+            random_brightness = round(random.random(), 2)
+            random_color = random.choice(list(color.COLORS.keys()))
+
+            tool_arguments = {}
+
+            if "<area>" in request:
+                request = request.replace("<area>", random_area)
+                response = response.replace("<area>", random_area)
+                tool_arguments["area"] = random_area
+
+            if "<name>" in request:
+                request = request.replace("<name>", random_device)
+                response = response.replace("<name>", random_device)
+                tool_arguments["name"] = random_device
+
+            if "<brightness>" in request:
+                request = request.replace("<brightness>", str(random_brightness))
+                response = response.replace("<brightness>", str(random_brightness))
+                tool_arguments["brightness"] = random_brightness
+
+            if "<color>" in request:
+                request = request.replace("<color>", random_color)
+                response = response.replace("<color>", random_color)
+                tool_arguments["color"] = random_color
+
+            examples.append({
+                "request": request,
+                "response": response,
+                "tool": {
+                    "name": chosen_example["tool"],
+                    "arguments": tool_arguments
+                }
+            })
+            
+        return examples
+
+    def _generate_system_prompt(self, prompt_template: str, llm_api: llm.APIInstance) -> str:
         """Generate the system prompt with current entity states"""
         entities_to_expose, domains = self._async_get_exposed_entities()
 
         extra_attributes_to_expose = self.entry.options \
             .get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE)
-        allowed_service_call_arguments = self.entry.options \
-            .get(CONF_ALLOWED_SERVICE_CALL_ARGUMENTS, DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS)
-        
-        def icl_example_generator(num_examples, entity_names, service_names):
-            entity_domains = set([x.split(".")[0] for x in entity_names])
-            entity_names = entity_names[:]
-            
-            # filter out examples for disabled services
-            selected_in_context_examples = []
-            for x in self.in_context_examples:
-                if x["service"] in service_names and x["service"].split(".")[0] in entity_domains:
-                    selected_in_context_examples.append(x)
-
-            # if we filtered everything then just sample randomly
-            if len(selected_in_context_examples) == 0:
-                selected_in_context_examples = self.in_context_examples[:]
-
-            random.shuffle(selected_in_context_examples)
-            random.shuffle(entity_names)
-
-            num_examples_to_generate = min(num_examples, len(selected_in_context_examples))
-            if num_examples_to_generate < num_examples:
-                _LOGGER.warning(f"Attempted to generate {num_examples} ICL examples for conversation, but only {len(selected_in_context_examples)} are available!")
-            
-            for x in range(num_examples_to_generate):
-                chosen_example = selected_in_context_examples.pop()
-                chosen_service = chosen_example["service"]
-                device = [ x for x in entity_names if x.split(".")[0] == chosen_service.split(".")[0] ][0]
-                example = {
-                    "to_say": chosen_example["response"],
-                    "service": chosen_service,
-                    "target_device": device,
-                }
-                yield json.dumps(example) + "\n"
 
         def expose_attributes(attributes):
             result = attributes["state"]
@@ -487,37 +658,54 @@ class LLaMAAgent(AbstractConversationAgent):
 
         formatted_states = "\n".join(device_states) + "\n"
 
-        service_dict = self.hass.services.async_services()
-        all_services = []
-        all_service_names = []
-        for domain in domains:
-            # scripts show up as individual services
-            if domain == "script":
-                all_services.extend(["script.reload()", "script.turn_on()", "script.turn_off()", "script.toggle()"])
-                continue
-            
-            for name, service in service_dict.get(domain, {}).items():
-                args = flatten_vol_schema(service.schema)
-                args_to_expose = set(args).intersection(allowed_service_call_arguments)
-                all_services.append(f"{domain}.{name}({','.join(args_to_expose)})")
-                all_service_names.append(f"{domain}.{name}")
-        formatted_services = ", ".join(all_services)
+        if llm_api:
+            if llm_api.api.id == HOME_LLM_API_ID:
+                service_dict = self.hass.services.async_services()
+                all_services = []
+                for domain in domains:
+                    # scripts show up as individual services
+                    if domain == "script":
+                        all_services.extend(["script.reload()", "script.turn_on()", "script.turn_off()", "script.toggle()"])
+                        continue
+                    
+                    for name, service in service_dict.get(domain, {}).items():
+                        args = flatten_vol_schema(service.schema)
+                        args_to_expose = set(args).intersection(ALLOWED_LEGACY_SERVICE_CALL_ARGUMENTS)
+                        service_schema = vol.Schema({
+                            vol.Optional(arg): str for arg in args_to_expose
+                        })
+
+                        all_services.append((f"{domain}.{name}", service_schema, ""))
+
+                tools = [
+                    self._format_tool(*tool)
+                    for tool in all_services
+                ]
+            else:
+                tools = [
+                    self._format_tool(tool.name, tool.parameters, tool.description)
+                    for tool in llm_api.tools
+                ]
+        else:
+            tools = "No tools were provided. If the user requests you interact with a device, tell them you are unable to do so."
 
         render_variables = {
             "devices": formatted_states,
-            "services": formatted_services,
+            "tools": tools,
+            "response_examples": []
         }
 
-        if self.in_context_examples:
+        # only pass examples if there are loaded examples + an API was exposed
+        if self.in_context_examples and llm_api:
             num_examples = int(self.entry.options.get(CONF_NUM_IN_CONTEXT_EXAMPLES, DEFAULT_NUM_IN_CONTEXT_EXAMPLES))
-            render_variables["response_examples"] = "\n".join(icl_example_generator(num_examples, list(entities_to_expose.keys()), all_service_names))
+            render_variables["response_examples"] = self._generate_icl_examples(num_examples, list(entities_to_expose.keys()))
         
         return template.Template(prompt_template, self.hass).async_render(
             render_variables,
             parse_result=False,
         )
 
-class LocalLLaMAAgent(LLaMAAgent):
+class LlamaCppAgent(LocalLLMAgent):
     model_path: str
     llm: LlamaType
     grammar: Any
@@ -612,7 +800,7 @@ class LocalLLaMAAgent(LLaMAAgent):
             self.grammar = None
 
     def _update_options(self):
-        LLaMAAgent._update_options(self)
+        LocalLLMAgent._update_options(self)
 
         model_reloaded = False
         if self.loaded_model_settings[CONF_CONTEXT_LENGTH] != self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH) or \
@@ -662,7 +850,7 @@ class LocalLLaMAAgent(LLaMAAgent):
 
     def _async_get_exposed_entities(self) -> tuple[dict[str, str], list[str]]:
         """Takes the super class function results and sorts the entities with the recently updated at the end"""
-        entities, domains = LLaMAAgent._async_get_exposed_entities(self)
+        entities, domains = LocalLLMAgent._async_get_exposed_entities(self)
 
         # ignore sorting if prompt caching is disabled
         if not self.entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED):
@@ -715,13 +903,23 @@ class LocalLLaMAAgent(LLaMAAgent):
         if entity:
             self.last_updated_entities[entity] = refresh_start
 
+        llm_api: llm.APIInstance | None = None
+        if self.entry.options.get(CONF_LLM_HASS_API):
+            try:
+                llm_api = await llm.async_get_api(
+                    self.hass, self.entry.options[CONF_LLM_HASS_API]
+                )
+            except HomeAssistantError:
+                _LOGGER.exception("Failed to get LLM API when caching prompt!")
+                return
+
         _LOGGER.debug(f"refreshing cached prompt because {entity} changed...")
-        await self.hass.async_add_executor_job(self._cache_prompt)
+        await self.hass.async_add_executor_job(self._cache_prompt, llm_api)
 
         refresh_end = time.time()
         _LOGGER.debug(f"cache refresh took {(refresh_end - refresh_start):.2f} sec")
 
-    def _cache_prompt(self) -> None:
+    def _cache_prompt(self, llm_api: llm.API) -> None:
         # if a refresh is already scheduled then exit
         if self.cache_refresh_after_cooldown:
             return
@@ -742,10 +940,9 @@ class LocalLLaMAAgent(LLaMAAgent):
         try:
             raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
             prompt = self._format_prompt([
-                { "role": "system", "message": self._generate_system_prompt(raw_prompt)},
+                { "role": "system", "message": self._generate_system_prompt(raw_prompt, llm_api)},
                 { "role": "user", "message": "" }
             ], include_generation_prompt=False)
-        
         
             input_tokens = self.llm.tokenize(
                 prompt.encode(), add_bos=False
@@ -839,7 +1036,7 @@ class LocalLLaMAAgent(LLaMAAgent):
 
         return result
     
-class GenericOpenAIAPIAgent(LLaMAAgent):
+class GenericOpenAIAPIAgent(LocalLLMAgent):
     api_host: str
     api_key: str
     model_name: str
@@ -1046,7 +1243,7 @@ class LlamaCppPythonAPIAgent(GenericOpenAIAPIAgent):
 
         return endpoint, request_params
 
-class OllamaAPIAgent(LLaMAAgent):
+class OllamaAPIAgent(LocalLLMAgent):
     api_host: str
     api_key: str
     model_name: str

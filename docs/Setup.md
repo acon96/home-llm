@@ -35,7 +35,7 @@ The following link will open your Home Assistant installation and download the i
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?category=Integration&repository=home-llm&owner=acon96)
 
-After installation, A "LLaMA Conversation" device should show up in the `Settings > Devices and Services > [Devices]` tab now.
+After installation, A "Local LLM Conversation" device should show up in the `Settings > Devices and Services > [Devices]` tab now.
 
 ## Path 1: Using the Home Model with the Llama.cpp Backend
 ### Overview
@@ -44,7 +44,7 @@ This setup path involves downloading a fine-tuned model from HuggingFace and int
 ### Step 1: Wheel Installation for llama-cpp-python
 1. In Home Assistant: navigate to `Settings > Devices and Services`
 2. Select the `+ Add Integration` button in the bottom right corner
-3. Search for, and select `LLaMA Conversation`
+3. Search for, and select `Local LLM Conversation`
 4. With the `Llama.cpp (HuggingFace)` backend selected, click `Submit`
 
 This should download and install `llama-cpp-python` from GitHub. If the installation fails for any reason, follow the manual installation instructions [here](./Backend%20Configuration.md#wheels).
@@ -52,9 +52,9 @@ This should download and install `llama-cpp-python` from GitHub. If the installa
 Once `llama-cpp-python` is installed, continue to the model selection.
 
 ### Step 2: Model Selection
-The next step is to specify which model will be used by the integration. You may select any repository on HuggingFace that has a model in GGUF format in it.  We will use `acon96/Home-3B-v3-GGUF` for this example.  If you have less than 4GB of RAM then use `acon96/Home-1B-v2-GGUF`.
+The next step is to specify which model will be used by the integration. You may select any repository on HuggingFace that has a model in GGUF format in it.  We will use `acon96/Home-3B-v3-GGUF` for this example.  If you have less than 4GB of RAM then use `acon96/Home-1B-v3-GGUF`.
 
-**Model Name**: Use either `acon96/Home-3B-v3-GGUF` or `acon96/Home-1B-v2-GGUF`  
+**Model Name**: Use either `acon96/Home-3B-v3-GGUF` or `acon96/Home-1B-v3-GGUF`  
 **Quantization Level**: The model will be downloaded in the selected quantization level from the HuggingFace repository. If unsure which level to choose, select `Q4_K_M`.  
 
 Pressing `Submit` will download the model from HuggingFace.
@@ -64,7 +64,9 @@ Pressing `Submit` will download the model from HuggingFace.
 ### Step 3: Model Configuration
 This step allows you to configure how the model is "prompted". See [here](./Model%20Prompting.md) for more information on how that works.
 
-For now, defaults for the model should have been populated and you can just scroll to the bottom and click `Submit`.
+For now, defaults for the model should have been populated. If you would like the model to be able to control devices then you must select the `Home-LLM (v1-v3)` API. This API is included to ensure compatability with the Home-LLM models that were trained before the introduction of the built in Home Assistant LLM API.
+
+Once the desired API has been selected, scroll to the bottom and click `Submit`.
 
 The model will be loaded into memory and should now be available to select as a conversation agent!
 
@@ -82,7 +84,7 @@ In order to access the model from another machine, we need to run the Ollama API
 
 1. In Home Assistant: navigate to `Settings > Devices and Services`
 2. Select the `+ Add Integration` button in the bottom right corner
-3. Search for, and select `LLaMA Conversation`
+3. Search for, and select `Local LLM Conversation`
 4. Select `Ollama API` from the dropdown and click `Submit`
 5. Set up the connection to the API:
     - **IP Address**: Fill out IP Address for the machine hosting Ollama
@@ -95,7 +97,9 @@ In order to access the model from another machine, we need to run the Ollama API
 ### Step 3: Model Configuration
 This step allows you to configure how the model is "prompted". See [here](./Model%20Prompting.md) for more information on how that works.
 
-For now, defaults for the model should have been populated and you can just scroll to the bottom and click `Submit`.
+For now, defaults for the model should have been populated. If you would like the model to be able to control devices then you must select the `Assist` API.
+
+Once the desired API has been selected, scroll to the bottom and click `Submit`.
 
 > NOTE: The key settings in this case are that our prompt references the `{{ response_examples }}` variable and the `Enable in context learning (ICL) examples` option is turned on.
 

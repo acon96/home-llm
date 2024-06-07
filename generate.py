@@ -31,7 +31,7 @@ def generate(model, tokenizer, prompt):
 
 def format_example(example):
     sys_prompt = SYSTEM_PROMPT
-    services_block = "Services: " + ", ".join(sorted(example["available_services"]))
+    services_block = "Services: " + ", ".join(sorted(example["available_tools"]))
     states_block = "Devices:\n" + "\n".join(example["states"])
     question = "Request:\n" + example["question"]
     response_start = "Response:\n"
@@ -52,7 +52,7 @@ def main():
             "fan.family_room = off",
             "lock.front_door = locked"
         ],
-        "available_services": ["turn_on", "turn_off", "toggle", "lock", "unlock" ],
+        "available_tools": ["turn_on", "turn_off", "toggle", "lock", "unlock" ],
         "question": request,
     }
 

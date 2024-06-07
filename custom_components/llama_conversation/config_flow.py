@@ -1,4 +1,4 @@
-"""Config flow for Local LLaMA Conversation integration."""
+"""Config flow for Local LLM Conversation integration."""
 from __future__ import annotations
 
 import os
@@ -13,18 +13,20 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, UnitOfTime
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_LLM_HASS_API, UnitOfTime
 from homeassistant.data_entry_flow import (
     AbortFlow,
     FlowHandler,
     FlowManager,
     FlowResult,
 )
+from homeassistant.helpers import llm
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
     TemplateSelector,
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -36,7 +38,7 @@ from homeassistant.helpers.selector import (
 from homeassistant.util.package import is_installed
 from importlib.metadata import version
 
-from .utils import download_model_from_hf, install_llama_cpp_python
+from .utils import download_model_from_hf, install_llama_cpp_python, MissingQuantizationException
 from .const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -54,11 +56,12 @@ from .const import (
     CONF_DOWNLOADED_MODEL_QUANTIZATION,
     CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS,
     CONF_PROMPT_TEMPLATE,
+    CONF_TOOL_FORMAT,
+    CONF_TOOL_MULTI_TURN_CHAT,
     CONF_ENABLE_FLASH_ATTENTION,
     CONF_USE_GBNF_GRAMMAR,
     CONF_GBNF_GRAMMAR_FILE,
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
-    CONF_ALLOWED_SERVICE_CALL_ARGUMENTS,
     CONF_TEXT_GEN_WEBUI_PRESET,
     CONF_REFRESH_SYSTEM_PROMPT,
     CONF_REMEMBER_CONVERSATION,
@@ -94,11 +97,12 @@ from .const import (
     DEFAULT_BACKEND_TYPE,
     DEFAULT_DOWNLOADED_MODEL_QUANTIZATION,
     DEFAULT_PROMPT_TEMPLATE,
+    DEFAULT_TOOL_FORMAT,
+    DEFAULT_TOOL_MULTI_TURN_CHAT,
     DEFAULT_ENABLE_FLASH_ATTENTION,
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_GBNF_GRAMMAR_FILE,
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
-    DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS,
     DEFAULT_REFRESH_SYSTEM_PROMPT,
     DEFAULT_REMEMBER_CONVERSATION,
     DEFAULT_REMEMBER_NUM_INTERACTIONS,
@@ -123,15 +127,21 @@ from .const import (
     BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER,
     BACKEND_TYPE_OLLAMA,
     PROMPT_TEMPLATE_DESCRIPTIONS,
+    TOOL_FORMAT_FULL,
+    TOOL_FORMAT_REDUCED,
+    TOOL_FORMAT_MINIMAL,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT,
     TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT,
     DOMAIN,
+    HOME_LLM_API_ID,
     DEFAULT_OPTIONS,
     OPTIONS_OVERRIDES,
     RECOMMENDED_CHAT_MODELS,
     EMBEDDED_LLAMA_CPP_PYTHON_VERSION
 )
+
+from . import HomeLLMAPI
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -172,7 +182,7 @@ def STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA(model_file=None, selected_language=Non
         }
     )
 
-def STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(*, chat_model=None, downloaded_model_quantization=None, selected_language=None):
+def STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(*, chat_model=None, downloaded_model_quantization=None, selected_language=None, available_quantizations=None):
     return vol.Schema(
         {
             vol.Required(CONF_CHAT_MODEL, default=chat_model if chat_model else DEFAULT_CHAT_MODEL): SelectSelector(SelectSelectorConfig(
@@ -181,7 +191,7 @@ def STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(*, chat_model=None, downloaded_model_q
                 multiple=False,
                 mode=SelectSelectorMode.DROPDOWN,
             )),
-            vol.Required(CONF_DOWNLOADED_MODEL_QUANTIZATION, default=downloaded_model_quantization if downloaded_model_quantization else DEFAULT_DOWNLOADED_MODEL_QUANTIZATION): vol.In(CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS),
+            vol.Required(CONF_DOWNLOADED_MODEL_QUANTIZATION, default=downloaded_model_quantization if downloaded_model_quantization else DEFAULT_DOWNLOADED_MODEL_QUANTIZATION): vol.In(available_quantizations if available_quantizations else CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS),
             vol.Required(CONF_SELECTED_LANGUAGE, default=selected_language if selected_language else "en"): SelectSelector(SelectSelectorConfig(
                 options=CONF_SELECTED_LANGUAGE_OPTIONS,
                 translation_key=CONF_SELECTED_LANGUAGE,
@@ -279,9 +289,9 @@ class BaseLlamaConversationConfigFlow(FlowHandler, ABC):
         """ Finish configuration """
 
 class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Local LLaMA Conversation."""
+    """Handle a config flow for Local LLM Conversation."""
 
-    VERSION = 1
+    VERSION = 2
     install_wheel_task = None
     install_wheel_error = None
     download_task = None
@@ -305,6 +315,11 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         """Handle the initial step."""
         self.model_config = {}
         self.options = {}
+        
+        # make sure the API is registered
+        if not any([x.id == HOME_LLM_API_ID for x in llm.async_get_apis(self.hass)]):
+            llm.async_register_api(self.hass, HomeLLMAPI(self.hass))
+
         return await self.async_step_pick_backend()
 
     async def async_step_pick_backend(
@@ -387,13 +402,35 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             raise ValueError()
 
         if self.download_error:
-            errors["base"] = "download_failed"
-            description_placeholders["exception"] = str(self.download_error)
-            schema = STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(
-                chat_model=self.model_config[CONF_CHAT_MODEL],
-                downloaded_model_quantization=self.model_config[CONF_DOWNLOADED_MODEL_QUANTIZATION],
-                selected_language=self.selected_language
-            )
+            if isinstance(self.download_error, MissingQuantizationException):
+                available_quants = list(set(self.download_error.available_quants).intersection(set(CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS)))
+
+                if len(available_quants) == 0:
+                    errors["base"] = "no_supported_ggufs"
+                    schema = STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(
+                        chat_model=self.model_config[CONF_CHAT_MODEL],
+                        downloaded_model_quantization=self.model_config[CONF_DOWNLOADED_MODEL_QUANTIZATION],
+                        selected_language=self.selected_language
+                    )
+                else:
+                    errors["base"] = "missing_quantization"
+                    description_placeholders["missing"] = self.download_error.missing_quant
+                    description_placeholders["available"] = ", ".join(self.download_error.available_quants)
+
+                    schema = STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(
+                        chat_model=self.model_config[CONF_CHAT_MODEL],
+                        downloaded_model_quantization=self.download_error.available_quants[0],
+                        selected_language=self.selected_language,
+                        available_quantizations=available_quants,
+                    )
+            else:
+                errors["base"] = "download_failed"
+                description_placeholders["exception"] = str(self.download_error)
+                schema = STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(
+                    chat_model=self.model_config[CONF_CHAT_MODEL],
+                    downloaded_model_quantization=self.model_config[CONF_DOWNLOADED_MODEL_QUANTIZATION],
+                    selected_language=self.selected_language
+                )
 
         if user_input and "result" not in user_input:
             self.selected_language = user_input.pop(CONF_SELECTED_LANGUAGE, self.hass.config.language)
@@ -584,13 +621,17 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         persona = PERSONA_PROMPTS.get(self.selected_language, PERSONA_PROMPTS.get("en"))
         selected_default_options[CONF_PROMPT] = selected_default_options[CONF_PROMPT].replace("<persona>", persona)
         
-        schema = vol.Schema(local_llama_config_option_schema(selected_default_options, backend_type))
+        schema = vol.Schema(local_llama_config_option_schema(self.hass, selected_default_options, backend_type))
 
         if user_input:
-            self.options = user_input
+            if user_input[CONF_LLM_HASS_API] == "none":
+                user_input.pop(CONF_LLM_HASS_API)
+            
             try:
                 # validate input
                 schema(user_input)
+
+                self.options = user_input
                 return await self.async_step_finish()
             except Exception as ex:
                 _LOGGER.exception("An unknown error has occurred!")
@@ -626,7 +667,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
 
 
 class OptionsFlow(config_entries.OptionsFlow):
-    """Local LLaMA config flow options handler."""
+    """Local LLM config flow options handler."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
@@ -655,10 +696,14 @@ class OptionsFlow(config_entries.OptionsFlow):
                     errors["base"] = "missing_icl_file"
                     description_placeholders["filename"] = filename
 
+            if user_input[CONF_LLM_HASS_API] == "none":
+                user_input.pop(CONF_LLM_HASS_API)
+
             if len(errors) == 0:
-                return self.async_create_entry(title="LLaMA Conversation", data=user_input)
+                return self.async_create_entry(title="Local LLM Conversation", data=user_input)
             
         schema = local_llama_config_option_schema(
+            self.hass,
             self.config_entry.options,
             self.config_entry.data[CONF_BACKEND_TYPE],
         )
@@ -682,12 +727,31 @@ def insert_after_key(input_dict: dict, key_name: str, other_dict: dict):
 
     return result
 
-def local_llama_config_option_schema(options: MappingProxyType[str, Any], backend_type: str) -> dict:
-    """Return a schema for Local LLaMA completion options."""
+def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyType[str, Any], backend_type: str) -> dict:
+    """Return a schema for Local LLM completion options."""
     if not options:
         options = DEFAULT_OPTIONS
 
+    apis: list[SelectOptionDict] = [
+        SelectOptionDict(
+            label="No control",
+            value="none",
+        )
+    ]
+    apis.extend(
+        SelectOptionDict(
+            label=api.name,
+            value=api.id,
+        )
+        for api in llm.async_get_apis(hass)
+    )
+
     result = {
+        vol.Optional(
+            CONF_LLM_HASS_API,
+            description={"suggested_value": options.get(CONF_LLM_HASS_API)},
+            default="none",
+        ): SelectSelector(SelectSelectorConfig(options=apis)),
         vol.Required(
             CONF_PROMPT,
             description={"suggested_value": options.get(CONF_PROMPT)},
@@ -703,6 +767,21 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
             multiple=False,
             mode=SelectSelectorMode.DROPDOWN,
         )),
+        vol.Required(
+            CONF_TOOL_FORMAT,
+            description={"suggested_value": options.get(CONF_TOOL_FORMAT)},
+            default=DEFAULT_TOOL_FORMAT,
+        ): SelectSelector(SelectSelectorConfig(
+            options=[TOOL_FORMAT_FULL, TOOL_FORMAT_REDUCED, TOOL_FORMAT_MINIMAL],
+            translation_key=CONF_TOOL_FORMAT,
+            multiple=False,
+            mode=SelectSelectorMode.DROPDOWN,
+        )),
+        vol.Required(
+            CONF_TOOL_MULTI_TURN_CHAT,
+            description={"suggested_value": options.get(CONF_TOOL_MULTI_TURN_CHAT)},
+            default=DEFAULT_TOOL_MULTI_TURN_CHAT,
+        ): BooleanSelector(BooleanSelectorConfig()),
         vol.Required(
             CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
             description={"suggested_value": options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES)},
@@ -727,11 +806,6 @@ def local_llama_config_option_schema(options: MappingProxyType[str, Any], backen
             CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
             description={"suggested_value": options.get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE)},
             default=DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
-        ): TextSelector(TextSelectorConfig(multiple=True)),
-        vol.Required(
-            CONF_ALLOWED_SERVICE_CALL_ARGUMENTS,
-            description={"suggested_value": options.get(CONF_ALLOWED_SERVICE_CALL_ARGUMENTS)},
-            default=DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS,
         ): TextSelector(TextSelectorConfig(multiple=True)),
         vol.Required(
             CONF_SERVICE_CALL_REGEX,

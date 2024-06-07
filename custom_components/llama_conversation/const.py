@@ -1,7 +1,9 @@
-"""Constants for the LLaMa Conversation integration."""
+"""Constants for the Local LLM Conversation integration."""
 import types, os
 
 DOMAIN = "llama_conversation"
+HOME_LLM_API_ID = "home-llm-service-api"
+SERVICE_TOOL_NAME = "HassCallService"
 CONF_PROMPT = "prompt"
 PERSONA_PROMPTS = {
     "en": "You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed with the information provided only.",
@@ -11,16 +13,26 @@ PERSONA_PROMPTS = {
 }
 DEFAULT_PROMPT_BASE = """<persona>
 The current time and date is {{ (as_timestamp(now()) | timestamp_custom("%I:%M %p on %A %B %d, %Y", "")) }}
-Services: {{ services }}
+Tools: {{ tools | to_json }}
+Devices:
+{{ devices }}"""
+DEFAULT_PROMPT_BASE_LEGACY = """<persona>
+The current time and date is {{ (as_timestamp(now()) | timestamp_custom("%I:%M %p on %A %B %d, %Y", "")) }}
+Services: {{ tools | join(", ") }}
 Devices:
 {{ devices }}"""
 ICL_EXTRAS = """
-Respond to the following user instruction by responding in the same format as the following examples:
-{{ response_examples }}"""
+{% for item in response_examples %}
+{{ item.request }}
+{{ item.response }}
+<functioncall> {{ item.tool | to_json }}
+{% endfor %}"""
 ICL_NO_SYSTEM_PROMPT_EXTRAS = """
-Respond to the following user instruction by responding in the same format as the following examples:
-{{ response_examples }}
-
+{% for item in response_examples %}
+{{ item.request }}
+{{ item.response }}
+<functioncall> {{ item.tool | to_json }}
+{% endfor %}
 User instruction:"""
 DEFAULT_PROMPT = DEFAULT_PROMPT_BASE + ICL_EXTRAS
 CONF_CHAT_MODEL = "huggingface_model"
@@ -51,7 +63,12 @@ DEFAULT_BACKEND_TYPE = BACKEND_TYPE_LLAMA_HF
 CONF_SELECTED_LANGUAGE = "selected_language"
 CONF_SELECTED_LANGUAGE_OPTIONS = [ "en", "de", "fr", "es" ]
 CONF_DOWNLOADED_MODEL_QUANTIZATION = "downloaded_model_quantization"
-CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS = ["F16", "Q8_0", "Q5_K_M", "Q4_K_M", "Q3_K_M"]
+CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS = [
+    "Q4_0", "Q4_1", "Q5_0", "Q5_1", "IQ2_XXS", "IQ2_XS", "IQ2_S", "IQ2_M", "IQ1_S", "IQ1_M",
+    "Q2_K", "Q2_K_S", "IQ3_XXS", "IQ3_S", "IQ3_M", "Q3_K", "IQ3_XS", "Q3_K_S", "Q3_K_M", "Q3_K_L", 
+    "IQ4_NL", "IQ4_XS", "Q4_K", "Q4_K_S", "Q4_K_M", "Q5_K", "Q5_K_S", "Q5_K_M", "Q6_K", "Q8_0", 
+    "F16", "BF16", "F32"
+]
 DEFAULT_DOWNLOADED_MODEL_QUANTIZATION = "Q4_K_M"
 CONF_DOWNLOADED_MODEL_FILE = "downloaded_model_file"
 DEFAULT_DOWNLOADED_MODEL_FILE = ""
@@ -59,8 +76,7 @@ DEFAULT_PORT = "5000"
 DEFAULT_SSL = False
 CONF_EXTRA_ATTRIBUTES_TO_EXPOSE = "extra_attributes_to_expose"
 DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "media_title", "volume_level", "item", "wind_speed"]
-CONF_ALLOWED_SERVICE_CALL_ARGUMENTS = "allowed_service_call_arguments"
-DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "hvac_mode", "preset_mode", "item", "duration"]
+ALLOWED_LEGACY_SERVICE_CALL_ARGUMENTS = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "hvac_mode", "preset_mode", "item", "duration"]
 CONF_PROMPT_TEMPLATE = "prompt_template"
 PROMPT_TEMPLATE_CHATML = "chatml"
 PROMPT_TEMPLATE_COMMAND_R = "command-r"
@@ -78,6 +94,7 @@ PROMPT_TEMPLATE_DESCRIPTIONS = {
         "system": { "prefix": "<|im_start|>system\n", "suffix": "<|im_end|>" },
         "user": { "prefix": "<|im_start|>user\n", "suffix": "<|im_end|>" },
         "assistant": { "prefix": "<|im_start|>assistant\n", "suffix": "<|im_end|>" },
+        "tool": { "prefix": "<|im_start|>tool", "suffix": "<|im_end|>" },
         "generation_prompt": "<|im_start|>assistant"
     },
     PROMPT_TEMPLATE_COMMAND_R: {
@@ -134,6 +151,13 @@ PROMPT_TEMPLATE_DESCRIPTIONS = {
         "generation_prompt": "<|start_header_id|>assistant<|end_header_id|>\n\n"
     }
 }
+CONF_TOOL_FORMAT = "tool_format"
+TOOL_FORMAT_FULL = "full_tool_format"
+TOOL_FORMAT_REDUCED = "reduced_tool_format"
+TOOL_FORMAT_MINIMAL = "min_tool_format"
+DEFAULT_TOOL_FORMAT = TOOL_FORMAT_FULL
+CONF_TOOL_MULTI_TURN_CHAT = "tool_multi_turn_chat"
+DEFAULT_TOOL_MULTI_TURN_CHAT = False
 CONF_ENABLE_FLASH_ATTENTION = "enable_flash_attention"
 DEFAULT_ENABLE_FLASH_ATTENTION = False
 CONF_USE_GBNF_GRAMMAR = "gbnf_grammar"
@@ -149,7 +173,7 @@ DEFAULT_NUM_IN_CONTEXT_EXAMPLES = 4
 CONF_TEXT_GEN_WEBUI_PRESET = "text_generation_webui_preset"
 CONF_OPENAI_API_KEY = "openai_api_key"
 CONF_TEXT_GEN_WEBUI_ADMIN_KEY = "text_generation_webui_admin_key"
-CONF_REFRESH_SYSTEM_PROMPT = "refresh_prompt_per_tern"
+CONF_REFRESH_SYSTEM_PROMPT = "refresh_prompt_per_turn"
 DEFAULT_REFRESH_SYSTEM_PROMPT = True
 CONF_REMEMBER_CONVERSATION = "remember_conversation"
 DEFAULT_REMEMBER_CONVERSATION = True
@@ -160,7 +184,7 @@ DEFAULT_PROMPT_CACHING_ENABLED = False
 CONF_PROMPT_CACHING_INTERVAL = "prompt_caching_interval"
 DEFAULT_PROMPT_CACHING_INTERVAL = 30
 CONF_SERVICE_CALL_REGEX = "service_call_regex"
-DEFAULT_SERVICE_CALL_REGEX = r"({[\S \t]*?})"
+DEFAULT_SERVICE_CALL_REGEX = r"<functioncall> ({[\S \t]*})"
 FINE_TUNED_SERVICE_CALL_REGEX = r"```homeassistant\n([\S \t\n]*?)```"
 CONF_REMOTE_USE_CHAT_ENDPOINT = "remote_use_chat_endpoint"
 DEFAULT_REMOTE_USE_CHAT_ENDPOINT = False
@@ -197,7 +221,6 @@ DEFAULT_OPTIONS = types.MappingProxyType(
         CONF_ENABLE_FLASH_ATTENTION: DEFAULT_ENABLE_FLASH_ATTENTION,
         CONF_USE_GBNF_GRAMMAR: DEFAULT_USE_GBNF_GRAMMAR,
         CONF_EXTRA_ATTRIBUTES_TO_EXPOSE: DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
-        CONF_ALLOWED_SERVICE_CALL_ARGUMENTS: DEFAULT_ALLOWED_SERVICE_CALL_ARGUMENTS,
         CONF_REFRESH_SYSTEM_PROMPT: DEFAULT_REFRESH_SYSTEM_PROMPT,
         CONF_REMEMBER_CONVERSATION: DEFAULT_REMEMBER_CONVERSATION,
         CONF_REMEMBER_NUM_INTERACTIONS: DEFAULT_REMEMBER_NUM_INTERACTIONS,
@@ -219,48 +242,44 @@ DEFAULT_OPTIONS = types.MappingProxyType(
 )
 
 OPTIONS_OVERRIDES = {
-    "home-3b-v4": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE,
-        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR,
-        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
-        CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
-        CONF_USE_GBNF_GRAMMAR: True,
-    },
     "home-3b-v3": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE,
+        CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
         CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR,
         CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
         CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
-        CONF_USE_GBNF_GRAMMAR: True,
+        CONF_TOOL_FORMAT: TOOL_FORMAT_MINIMAL,
     },
     "home-3b-v2": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE,
+        CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
         CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
         CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
-        CONF_USE_GBNF_GRAMMAR: True,
+        CONF_TOOL_FORMAT: TOOL_FORMAT_MINIMAL,
     },
     "home-3b-v1": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE,
+        CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
         CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR,
         CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
         CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
+        CONF_TOOL_FORMAT: TOOL_FORMAT_MINIMAL,
     },
     "home-1b-v3": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE,
+        CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
         CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR2,
         CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
         CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
-        CONF_USE_GBNF_GRAMMAR: True,
+        CONF_TOOL_FORMAT: TOOL_FORMAT_MINIMAL,
     },
     "home-1b-v2": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE,
+        CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
         CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
         CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
+        CONF_TOOL_FORMAT: TOOL_FORMAT_MINIMAL,
     },
     "home-1b-v1": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE,
+        CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
         CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
         CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
+        CONF_TOOL_FORMAT: TOOL_FORMAT_MINIMAL,
     },
     "mistral": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_NO_SYSTEM_PROMPT_EXTRAS,
@@ -296,5 +315,5 @@ OPTIONS_OVERRIDES = {
     }
 }
 
-INTEGRATION_VERSION = "0.2.17"
-EMBEDDED_LLAMA_CPP_PYTHON_VERSION = "0.2.70"
+INTEGRATION_VERSION = "0.3"
+EMBEDDED_LLAMA_CPP_PYTHON_VERSION = "0.2.77"
