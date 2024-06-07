@@ -32,7 +32,7 @@ from .const import (
     BACKEND_TYPE_GENERIC_OPENAI,
     BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER,
     BACKEND_TYPE_OLLAMA,
-    ALLOWED_LEGACY_SERVICE_CALL_ARGUMENTS,
+    ALLOWED_SERVICE_CALL_ARGUMENTS,
     DOMAIN,
     HOME_LLM_API_ID,
     SERVICE_TOOL_NAME,
@@ -133,9 +133,6 @@ class HassServiceTool(llm.Tool):
     ALLOWED_DOMAINS: Final[list[str]] = [
         "light", "switch", "button", "fan", "cover", "lock", "media_player", "climate", "vacuum", "todo", "timer", "script",
     ]
-    ALLOWED_SERVICE_CALL_ARGUMENTS: Final[list[str]] = [
-        "rgb_color", "brightness", "temperature", "humidity", "fan_mode", "hvac_mode", "preset_mode", "item", "duration",
-    ]
 
     async def async_call(
         self, hass: HomeAssistant, tool_input: llm.ToolInput, llm_context: llm.LLMContext
@@ -151,7 +148,7 @@ class HassServiceTool(llm.Tool):
             return { "result": "unknown service" }
 
         service_data = {ATTR_ENTITY_ID: target_device}
-        for attr in self.ALLOWED_SERVICE_CALL_ARGUMENTS:
+        for attr in ALLOWED_SERVICE_CALL_ARGUMENTS:
             if attr in tool_input.tool_args.keys():
                 service_data[attr] = tool_input.tool_args[attr]
         try:

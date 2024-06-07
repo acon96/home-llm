@@ -15,12 +15,25 @@ DEFAULT_PROMPT_BASE = """<persona>
 The current time and date is {{ (as_timestamp(now()) | timestamp_custom("%I:%M %p on %A %B %d, %Y", "")) }}
 Tools: {{ tools | to_json }}
 Devices:
-{{ devices }}"""
+{% for device in devices | selectattr('area_id', 'none'): %}
+{{ device.entity_id }} '{{ device.name }}' = {{ device.state }}{{ ([""] + device.attributes) | join(";") }}
+{% endfor %}
+{% for area in devices | rejectattr('area_id', 'none') | groupby('area_name') %}
+## Area: {{ area.grouper }}
+{% for device in area.list %}
+{{ device.entity_id }} '{{ device.name }}' = {{ device.state }};{{ device.attributes | join(";") }}
+{% endfor %}
+{% endfor %}
+{% for item in response_examples %}
+{{ item.request }}
+{{ item.response }}
+<functioncall> {{ item.tool | to_json }}
+{% endfor %}"""
 DEFAULT_PROMPT_BASE_LEGACY = """<persona>
 The current time and date is {{ (as_timestamp(now()) | timestamp_custom("%I:%M %p on %A %B %d, %Y", "")) }}
-Services: {{ tools | join(", ") }}
+Services: {{ formatted_tools }}
 Devices:
-{{ devices }}"""
+{{ formatted_devices }}"""
 ICL_EXTRAS = """
 {% for item in response_examples %}
 {{ item.request }}
@@ -76,6 +89,7 @@ DEFAULT_PORT = "5000"
 DEFAULT_SSL = False
 CONF_EXTRA_ATTRIBUTES_TO_EXPOSE = "extra_attributes_to_expose"
 DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "media_title", "volume_level", "item", "wind_speed"]
+ALLOWED_SERVICE_CALL_ARGUMENTS = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "hvac_mode", "preset_mode", "item", "duration" ]
 CONF_PROMPT_TEMPLATE = "prompt_template"
 PROMPT_TEMPLATE_CHATML = "chatml"
 PROMPT_TEMPLATE_COMMAND_R = "command-r"
