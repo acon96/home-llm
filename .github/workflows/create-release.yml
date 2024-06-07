@@ -20,12 +20,8 @@ jobs:
       matrix:
         include:
         # ARM variants
-        - home_assistant_version: "2023.12.4"
-          arch: "aarch64"
         - home_assistant_version: "2024.2.1"
           arch: "aarch64"
-        - home_assistant_version: "2023.12.4"
-          arch: "armhf"
         - home_assistant_version: "2024.2.1"
           arch: "armhf"
 
@@ -34,15 +30,7 @@ jobs:
           suffix: "-noavx"
           arch: "amd64"
           extra_defines: "-DLLAMA_AVX=OFF -DLLAMA_AVX2=OFF -DLLAMA_FMA=OFF -DLLAMA_F16C=OFF"
-        - home_assistant_version: "2023.12.4"
-          arch: "amd64"
-          suffix: "-noavx"
-          extra_defines: "-DLLAMA_AVX=OFF -DLLAMA_AVX2=OFF -DLLAMA_FMA=OFF -DLLAMA_F16C=OFF"
         - home_assistant_version: "2024.2.1"
-          arch: "i386"
-          suffix: "-noavx"
-          extra_defines: "-DLLAMA_AVX=OFF -DLLAMA_AVX2=OFF -DLLAMA_FMA=OFF -DLLAMA_F16C=OFF"
-        - home_assistant_version: "2023.12.4"
           arch: "i386"
           suffix: "-noavx"
           extra_defines: "-DLLAMA_AVX=OFF -DLLAMA_AVX2=OFF -DLLAMA_FMA=OFF -DLLAMA_F16C=OFF"
