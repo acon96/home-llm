@@ -16,6 +16,11 @@ The current time and date is {{ (as_timestamp(now()) | timestamp_custom("%I:%M %
 Tools: {{ tools | to_json }}
 Devices:
 {{ devices }}"""
+DEFAULT_PROMPT_BASE_LEGACY = """<persona>
+The current time and date is {{ (as_timestamp(now()) | timestamp_custom("%I:%M %p on %A %B %d, %Y", "")) }}
+Services: {{ tools | join(", ") }}
+Devices:
+{{ devices }}"""
 ICL_EXTRAS = """
 {% for item in response_examples %}
 {{ item.request }}
@@ -235,21 +240,46 @@ DEFAULT_OPTIONS = types.MappingProxyType(
         CONF_TEXT_GEN_WEBUI_PRESET: ""
     }
 )
-# TODO: re-add old models but select the legacy API
+
 OPTIONS_OVERRIDES = {
-    "home-3b-v4": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE,
+    "home-3b-v3": {
+        CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
         CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR,
         CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
         CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
-        CONF_USE_GBNF_GRAMMAR: True,
+        CONF_TOOL_FORMAT: TOOL_FORMAT_MINIMAL,
     },
-    "home-1b-v4": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE,
+    "home-3b-v2": {
+        CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
+        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
+        CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
+        CONF_TOOL_FORMAT: TOOL_FORMAT_MINIMAL,
+    },
+    "home-3b-v1": {
+        CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
         CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR,
         CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
         CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
-        CONF_USE_GBNF_GRAMMAR: True,
+        CONF_TOOL_FORMAT: TOOL_FORMAT_MINIMAL,
+    },
+    "home-1b-v3": {
+        CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
+        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR2,
+        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
+        CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
+        CONF_TOOL_FORMAT: TOOL_FORMAT_MINIMAL,
+    },
+    "home-1b-v2": {
+        CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
+        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
+        CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
+        CONF_TOOL_FORMAT: TOOL_FORMAT_MINIMAL,
+    },
+    "home-1b-v1": {
+        CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
+        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
+        CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
+        CONF_TOOL_FORMAT: TOOL_FORMAT_MINIMAL,
     },
     "mistral": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_NO_SYSTEM_PROMPT_EXTRAS,

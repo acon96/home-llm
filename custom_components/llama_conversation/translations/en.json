@@ -90,7 +90,7 @@
                     "n_batch_threads": "Batch Thread Count"
                 },
                 "data_description": {
-                    "llm_hass_api": "Select 'Assist' if you want the model to be able to control devices.",
+                    "llm_hass_api": "Select 'Assist' if you want the model to be able to control devices. If you are using the Home-LLM v1, v2, or v3 model then select 'Home-LLM (v1-3)'",
                     "prompt": "See [here](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) for more information on model prompting.",
                     "in_context_examples": "If you are using a model that is not specifically fine-tuned for use with this integration: enable this",
                     "remote_use_chat_endpoint": "If this is enabled, then the integration will use the chat completion HTTP endpoint instead of the text completion one.",
@@ -145,7 +145,7 @@
                     "n_batch_threads": "Batch Thread Count"
                 },
                 "data_description": {
-                    "llm_hass_api": "Select 'Assist' if you want the model to be able to control devices.",
+                    "llm_hass_api": "Select 'Assist' if you want the model to be able to control devices. If you are using the Home-LLM v1, v2, or v3 model then select 'Home-LLM (v1-3)'",
                     "prompt": "See [here](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) for more information on model prompting.",
                     "in_context_examples": "If you are using a model that is not specifically fine-tuned for use with this integration: enable this",
                     "remote_use_chat_endpoint": "If this is enabled, then the integration will use the chat completion HTTP endpoint instead of the text completion one.",

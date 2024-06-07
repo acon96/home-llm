@@ -403,7 +403,7 @@ class LocalLLMAgent(AbstractConversationAgent):
                 intent_response = intent.IntentResponse(language=user_input.language)
                 intent_response.async_set_error(
                     intent.IntentResponseErrorCode.NO_INTENT_MATCH,
-                    f"There was an error calling the tool! ({tool_response})",
+                    f"I'm sorry! I encountered an error calling the tool. See the logs for more info.",
                 )
                 return ConversationResult(
                     response=intent_response, conversation_id=conversation_id

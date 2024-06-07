@@ -134,11 +134,14 @@ from .const import (
     TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT,
     DOMAIN,
+    HOME_LLM_API_ID,
     DEFAULT_OPTIONS,
     OPTIONS_OVERRIDES,
     RECOMMENDED_CHAT_MODELS,
     EMBEDDED_LLAMA_CPP_PYTHON_VERSION
 )
+
+from . import HomeLLMAPI
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -312,6 +315,11 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         """Handle the initial step."""
         self.model_config = {}
         self.options = {}
+        
+        # make sure the API is registered
+        if not any([x.id == HOME_LLM_API_ID for x in llm.async_get_apis(self.hass)]):
+            llm.async_register_api(self.hass, HomeLLMAPI(self.hass))
+
         return await self.async_step_pick_backend()
 
     async def async_step_pick_backend(

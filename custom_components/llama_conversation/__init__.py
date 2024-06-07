@@ -53,10 +53,6 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Local LLM Conversation from a config entry."""
 
-    # make sure the API is registered
-    if not any([x.id == HOME_LLM_API_ID for x in llm.async_get_apis(hass)]):
-        llm.async_register_api(hass, HomeLLMAPI(hass))
-
     def create_agent(backend_type):
         agent_cls = None
 

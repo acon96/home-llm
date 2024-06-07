@@ -31,12 +31,13 @@ The latest models can be found on HuggingFace:
 <details>
 
 <summary>Old Models</summary>  
-NOTE: These models are only compatible with version 0.2.17 and older!
 
 3B v2 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v2-GGUF  (ChatML prompt format)  
-3B v1 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v1-GGUF  (ChatML prompt format)  
 1B v2 (Based on Phi-1.5): https://huggingface.co/acon96/Home-1B-v2-GGUF  (ChatML prompt format)  
 1B v1 (Based on Phi-1.5): https://huggingface.co/acon96/Home-1B-v1-GGUF  (ChatML prompt format)  
+
+NOTE: The models below are only compatible with version 0.2.17 and older!
+3B v1 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v1-GGUF  (ChatML prompt format)  
 
 </details>
 

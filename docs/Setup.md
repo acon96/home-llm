@@ -64,7 +64,9 @@ Pressing `Submit` will download the model from HuggingFace.
 ### Step 3: Model Configuration
 This step allows you to configure how the model is "prompted". See [here](./Model%20Prompting.md) for more information on how that works.
 
-For now, defaults for the model should have been populated and you can just scroll to the bottom and click `Submit`.
+For now, defaults for the model should have been populated. If you would like the model to be able to control devices then you must select the `Home-LLM (v1-v3)` API. This API is included to ensure compatability with the Home-LLM models that were trained before the introduction of the built in Home Assistant LLM API.
+
+Once the desired API has been selected, scroll to the bottom and click `Submit`.
 
 The model will be loaded into memory and should now be available to select as a conversation agent!
 
@@ -95,7 +97,9 @@ In order to access the model from another machine, we need to run the Ollama API
 ### Step 3: Model Configuration
 This step allows you to configure how the model is "prompted". See [here](./Model%20Prompting.md) for more information on how that works.
 
-For now, defaults for the model should have been populated and you can just scroll to the bottom and click `Submit`.
+For now, defaults for the model should have been populated. If you would like the model to be able to control devices then you must select the `Assist` API.
+
+Once the desired API has been selected, scroll to the bottom and click `Submit`.
 
 > NOTE: The key settings in this case are that our prompt references the `{{ response_examples }}` variable and the `Enable in context learning (ICL) examples` option is turned on.
 
