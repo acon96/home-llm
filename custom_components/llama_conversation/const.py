@@ -76,7 +76,6 @@ DEFAULT_PORT = "5000"
 DEFAULT_SSL = False
 CONF_EXTRA_ATTRIBUTES_TO_EXPOSE = "extra_attributes_to_expose"
 DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "media_title", "volume_level", "item", "wind_speed"]
-ALLOWED_LEGACY_SERVICE_CALL_ARGUMENTS = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "hvac_mode", "preset_mode", "item", "duration"]
 CONF_PROMPT_TEMPLATE = "prompt_template"
 PROMPT_TEMPLATE_CHATML = "chatml"
 PROMPT_TEMPLATE_COMMAND_R = "command-r"

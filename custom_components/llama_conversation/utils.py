@@ -203,3 +203,6 @@ def install_llama_cpp_python(config_dir: str):
         time.sleep(0.5) # I still don't know why this is required
 
         return True
+
+def format_url(*, hostname: str, port: str, ssl: bool, path: str):
+    return f"{'https' if ssl else 'http'}://{hostname}{ ':' + port if port else ''}{path}"

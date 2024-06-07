@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Final
 
 import homeassistant.components.conversation as ha_conversation
 from homeassistant.config_entries import ConfigEntry
@@ -107,8 +108,8 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
 class HassServiceTool(llm.Tool):
     """Tool to get the current time."""
 
-    name = SERVICE_TOOL_NAME
-    description = "Executes a Home Assistant service"
+    name: Final[str] = SERVICE_TOOL_NAME
+    description: Final[str] = "Executes a Home Assistant service"
 
     # Optional. A voluptuous schema of the input parameters.
     parameters = vol.Schema({
@@ -125,6 +126,17 @@ class HassServiceTool(llm.Tool):
         vol.Optional('item'): str,
     })
 
+    ALLOWED_SERVICES: Final[list[str]] = [
+        "turn_on", "turn_off", "toggle", "press", "increase_speed", "decrease_speed", "open_cover", "close_cover", "stop_cover",
+        "lock", "unlock", "start", "stop", "return_to_base", "pause", "cancel", "add_item"
+    ]
+    ALLOWED_DOMAINS: Final[list[str]] = [
+        "light", "switch", "button", "fan", "cover", "lock", "media_player", "climate", "vacuum", "todo", "timer", "script",
+    ]
+    ALLOWED_SERVICE_CALL_ARGUMENTS: Final[list[str]] = [
+        "rgb_color", "brightness", "temperature", "humidity", "fan_mode", "hvac_mode", "preset_mode", "item", "duration",
+    ]
+
     async def async_call(
         self, hass: HomeAssistant, tool_input: llm.ToolInput, llm_context: llm.LLMContext
     ) -> JsonObjectType:
@@ -132,8 +144,14 @@ class HassServiceTool(llm.Tool):
         domain, service = tuple(tool_input.tool_args["service"].split("."))
         target_device = tool_input.tool_args["target_device"]
 
+        if domain not in self.ALLOWED_DOMAINS or service not in self.ALLOWED_SERVICES:
+            return { "result": "unknown service" }
+        
+        if domain == "script" and service not in ["reload", "turn_on", "turn_off", "toggle"]:
+            return { "result": "unknown service" }
+
         service_data = {ATTR_ENTITY_ID: target_device}
-        for attr in ALLOWED_LEGACY_SERVICE_CALL_ARGUMENTS:
+        for attr in self.ALLOWED_SERVICE_CALL_ARGUMENTS:
             if attr in tool_input.tool_args.keys():
                 service_data[attr] = tool_input.tool_args[attr]
         try:

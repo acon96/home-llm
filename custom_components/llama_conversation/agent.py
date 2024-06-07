@@ -29,8 +29,9 @@ from homeassistant.util import ulid, color
 
 import voluptuous_serialize
 
+from . import HassServiceTool
 from .utils import closest_color, flatten_vol_schema, custom_custom_serializer, install_llama_cpp_python, \
-    validate_llama_cpp_python_installation
+    validate_llama_cpp_python_installation, format_url
 from .const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -106,7 +107,6 @@ from .const import (
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT,
     TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT,
-    ALLOWED_LEGACY_SERVICE_CALL_ARGUMENTS,
     DOMAIN,
     HOME_LLM_API_ID,
     SERVICE_TOOL_NAME,
@@ -670,7 +670,7 @@ class LocalLLMAgent(AbstractConversationAgent):
                     
                     for name, service in service_dict.get(domain, {}).items():
                         args = flatten_vol_schema(service.schema)
-                        args_to_expose = set(args).intersection(ALLOWED_LEGACY_SERVICE_CALL_ARGUMENTS)
+                        args_to_expose = set(args).intersection(HassServiceTool.ALLOWED_SERVICE_CALL_ARGUMENTS)
                         service_schema = vol.Schema({
                             vol.Optional(arg): str for arg in args_to_expose
                         })
@@ -1042,7 +1042,13 @@ class GenericOpenAIAPIAgent(LocalLLMAgent):
     model_name: str
 
     def _load_model(self, entry: ConfigEntry) -> None:
-        self.api_host = f"{'https' if entry.data[CONF_SSL] else 'http'}://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
+        self.api_host = format_url(
+            hostname=entry.data[CONF_HOST],
+            port=entry.data[CONF_PORT],
+            ssl=entry.data[CONF_SSL],
+            path=""
+        )
+        
         self.api_key = entry.data.get(CONF_OPENAI_API_KEY)
         self.model_name = entry.data.get(CONF_CHAT_MODEL)
 
@@ -1249,7 +1255,12 @@ class OllamaAPIAgent(LocalLLMAgent):
     model_name: str
 
     def _load_model(self, entry: ConfigEntry) -> None:
-        self.api_host = f"{'https' if entry.data[CONF_SSL] else 'http'}://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
+        self.api_host = format_url(
+            hostname=entry.data[CONF_HOST],
+            port=entry.data[CONF_PORT],
+            ssl=entry.data[CONF_SSL],
+            path=""
+        )
         self.api_key = entry.data.get(CONF_OPENAI_API_KEY)
         self.model_name = entry.data.get(CONF_CHAT_MODEL)
 
