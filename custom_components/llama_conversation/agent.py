@@ -223,17 +223,6 @@ class LocalLLMAgent(AbstractConversationAgent):
         remember_num_interactions = self.entry.options.get(CONF_REMEMBER_NUM_INTERACTIONS, DEFAULT_REMEMBER_NUM_INTERACTIONS)
         service_call_regex = self.entry.options.get(CONF_SERVICE_CALL_REGEX, DEFAULT_SERVICE_CALL_REGEX)
 
-        llm_context = llm.LLMContext(
-            platform=DOMAIN,
-            context=user_input.context,
-            user_prompt=user_input.text,
-            language=user_input.language,
-            assistant=ha_conversation.DOMAIN,
-            device_id=user_input.device_id,
-        )
-
-        _LOGGER.info(llm_context.context)
-
         try:
             service_call_pattern = re.compile(service_call_regex)
         except Exception as err:
@@ -252,7 +241,16 @@ class LocalLLMAgent(AbstractConversationAgent):
         if self.entry.options.get(CONF_LLM_HASS_API):
             try:
                 llm_api = await llm.async_get_api(
-                    self.hass, self.entry.options[CONF_LLM_HASS_API], llm_context
+                    self.hass,
+                    self.entry.options[CONF_LLM_HASS_API],
+                    llm_context=llm.LLMContext(
+                        platform=DOMAIN,
+                        context=user_input.context,
+                        user_prompt=user_input.text,
+                        language=user_input.language,
+                        assistant=ha_conversation.DOMAIN,
+                        device_id=user_input.device_id,
+                    )
                 )
             except HomeAssistantError as err:
                 _LOGGER.error("Error getting LLM API: %s", err)
@@ -905,92 +903,91 @@ class LlamaCppAgent(LocalLLMAgent):
         if entity:
             self.last_updated_entities[entity] = refresh_start
 
+        llm_api: llm.APIInstance | None = None
+        if self.entry.options.get(CONF_LLM_HASS_API):
+            try:
+                llm_api = await llm.async_get_api(
+                    self.hass, self.entry.options[CONF_LLM_HASS_API]
+                )
+            except HomeAssistantError:
+                _LOGGER.exception("Failed to get LLM API when caching prompt!")
+                return
+
         _LOGGER.debug(f"refreshing cached prompt because {entity} changed...")
-        # await self.hass.async_add_executor_job(self._cache_prompt)
+        await self.hass.async_add_executor_job(self._cache_prompt, llm_api)
 
         refresh_end = time.time()
         _LOGGER.debug(f"cache refresh took {(refresh_end - refresh_start):.2f} sec")
 
-    # def _cache_prompt(self) -> None:
-    #     # if a refresh is already scheduled then exit
-    #     if self.cache_refresh_after_cooldown:
-    #         return
+    def _cache_prompt(self, llm_api: llm.API) -> None:
+        # if a refresh is already scheduled then exit
+        if self.cache_refresh_after_cooldown:
+            return
         
-    #     # if we are inside the cooldown period, request a refresh and exit
-    #     current_time = time.time()
-    #     fastest_prime_interval = self.entry.options.get(CONF_PROMPT_CACHING_INTERVAL, DEFAULT_PROMPT_CACHING_INTERVAL)
-    #     if self.last_cache_prime and current_time - self.last_cache_prime < fastest_prime_interval:
-    #         self.cache_refresh_after_cooldown = True
-    #         return
+        # if we are inside the cooldown period, request a refresh and exit
+        current_time = time.time()
+        fastest_prime_interval = self.entry.options.get(CONF_PROMPT_CACHING_INTERVAL, DEFAULT_PROMPT_CACHING_INTERVAL)
+        if self.last_cache_prime and current_time - self.last_cache_prime < fastest_prime_interval:
+            self.cache_refresh_after_cooldown = True
+            return
         
-    #     # try to acquire the lock, if we are still running for some reason, request a refresh and exit
-    #     lock_acquired = self.model_lock.acquire(False)
-    #     if not lock_acquired:
-    #         self.cache_refresh_after_cooldown = True
-    #         return
+        # try to acquire the lock, if we are still running for some reason, request a refresh and exit
+        lock_acquired = self.model_lock.acquire(False)
+        if not lock_acquired:
+            self.cache_refresh_after_cooldown = True
+            return
         
-    #     llm_api: llm.APIInstance | None = None
-    #     if self.entry.options.get(CONF_LLM_HASS_API):
-    #         try:
-    #             llm_api = await llm.async_get_api(
-    #                 self.hass, self.entry.options[CONF_LLM_HASS_API]
-    #             )
-    #         except HomeAssistantError:
-    #             _LOGGER.exception("Failed to get LLM API when caching prompt!")
-    #             return
+        try:
+            raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
+            prompt = self._format_prompt([
+                { "role": "system", "message": self._generate_system_prompt(raw_prompt, llm_api)},
+                { "role": "user", "message": "" }
+            ], include_generation_prompt=False)
         
-    #     try:
-    #         raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
-    #         prompt = self._format_prompt([
-    #             { "role": "system", "message": self._generate_system_prompt(raw_prompt, llm_api)},
-    #             { "role": "user", "message": "" }
-    #         ], include_generation_prompt=False)
-        
-        
-    #         input_tokens = self.llm.tokenize(
-    #             prompt.encode(), add_bos=False
-    #         )
+            input_tokens = self.llm.tokenize(
+                prompt.encode(), add_bos=False
+            )
 
-    #         temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
-    #         top_k = int(self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K))
-    #         top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
-    #         grammar = self.grammar if self.entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR) else None
+            temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
+            top_k = int(self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K))
+            top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
+            grammar = self.grammar if self.entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR) else None
 
-    #         _LOGGER.debug(f"Options: {self.entry.options}")
+            _LOGGER.debug(f"Options: {self.entry.options}")
 
-    #         _LOGGER.debug(f"Processing {len(input_tokens)} input tokens...")
+            _LOGGER.debug(f"Processing {len(input_tokens)} input tokens...")
 
-    #         # grab just one token. should prime the kv cache with the system prompt
-    #         next(self.llm.generate(
-    #             input_tokens,
-    #             temp=temperature,
-    #             top_k=top_k,
-    #             top_p=top_p,
-    #             grammar=grammar
-    #         ))
+            # grab just one token. should prime the kv cache with the system prompt
+            next(self.llm.generate(
+                input_tokens,
+                temp=temperature,
+                top_k=top_k,
+                top_p=top_p,
+                grammar=grammar
+            ))
 
-    #         self.last_cache_prime = time.time()
-    #     finally:
-    #         self.model_lock.release()
+            self.last_cache_prime = time.time()
+        finally:
+            self.model_lock.release()
 
         
-    #     # schedule a refresh using async_call_later
-    #     # if the flag is set after the delay then we do another refresh
+        # schedule a refresh using async_call_later
+        # if the flag is set after the delay then we do another refresh
         
-    #     @callback
-    #     async def refresh_if_requested(_now):
-    #         if self.cache_refresh_after_cooldown:
-    #             self.cache_refresh_after_cooldown = False
+        @callback
+        async def refresh_if_requested(_now):
+            if self.cache_refresh_after_cooldown:
+                self.cache_refresh_after_cooldown = False
 
-    #             refresh_start = time.time()
-    #             _LOGGER.debug(f"refreshing cached prompt after cooldown...")
-    #             await self.hass.async_add_executor_job(self._cache_prompt)
+                refresh_start = time.time()
+                _LOGGER.debug(f"refreshing cached prompt after cooldown...")
+                await self.hass.async_add_executor_job(self._cache_prompt)
 
-    #             refresh_end = time.time()
-    #             _LOGGER.debug(f"cache refresh took {(refresh_end - refresh_start):.2f} sec")
+                refresh_end = time.time()
+                _LOGGER.debug(f"cache refresh took {(refresh_end - refresh_start):.2f} sec")
 
-    #     refresh_delay = self.entry.options.get(CONF_PROMPT_CACHING_INTERVAL, DEFAULT_PROMPT_CACHING_INTERVAL)
-    #     async_call_later(self.hass, float(refresh_delay), refresh_if_requested)
+        refresh_delay = self.entry.options.get(CONF_PROMPT_CACHING_INTERVAL, DEFAULT_PROMPT_CACHING_INTERVAL)
+        async_call_later(self.hass, float(refresh_delay), refresh_if_requested)
         
     
     def _generate(self, conversation: dict) -> str:
