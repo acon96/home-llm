@@ -48,7 +48,7 @@ def flatten_vol_schema(schema):
                     _flatten(val, prefix + str(key) + '/')
         elif isinstance(current_schema, vol.validators._WithSubValidators):
             for subval in current_schema.validators:
-                _flatten(subval, prefix)            
+                _flatten(subval, prefix)
         elif callable(current_schema):
             flattened.append(prefix[:-1] if prefix else prefix)
     _flatten(schema)
