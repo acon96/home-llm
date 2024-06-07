@@ -1,8 +1,6 @@
 # Home LLM
 This project provides the required "glue" components to control your Home Assistant installation with a **completely local** Large Language Model acting as a personal assistant. The goal is to provide a drop in solution to be used as a "conversation agent" component by Home Assistant.  The 2 main pieces of this solution are the Home LLM model and Local LLM Conversation integration.
 
-NOTE: This integration has **NOT** been updated yet to support the new LLM API changes in Home Assistant `2024.6.0`.
-
 ## Quick Start
 Please see the [Setup Guide](./docs/Setup.md) for more information on installation.
 
@@ -134,6 +132,7 @@ In order to facilitate running the project entirely on the system where Home Ass
 ## Version History
 | Version | Description                                                                                                                                                                                                          |
 |---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| v0.3    | Adds support for Home Assistant LLM APIs, improved model prompting and tool formatting options, and automatic detection of GGUF quantization levels on HuggingFace                                                   |
 | v0.2.17 | Disable native llama.cpp wheel optimizations, add Command R prompt format                                                                                                                                            |
 | v0.2.16 | Fix for missing huggingface_hub package preventing startup                                                                                                                                                           |
 | v0.2.15 | Fix startup error when using llama.cpp backend and add flash attention to llama.cpp backend                                                                                                                          |

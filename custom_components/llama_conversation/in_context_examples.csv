@@ -10,19 +10,13 @@ light,Lights off in <area>,HassTurnOff,Turning off the light as requested.
 light,Hit toggle for the lights in <area>,HassToggle,Toggling the lights in the <area> for you.
 light,Set the brightness for <name> to <brightness>,HassLightSet,Setting the brightness now.
 light,Make the lights in <area> <color>,HassLightSet,The color should be changed now.
-media_player,TODO,HassTurnOn,Turning on the media player for you.
-media_player,TODO,HassTurnOff,Turning off the media player as requested.
-media_player,TODO,HassToggle,Toggling the media player for you.
-media_player,TODO,HassSetVolume,Muting the volume for you.
-media_player,TODO,HassSetVolume,Setting the volume as requested.
-media_player,TODO,HassMediaUnpause,Starting media playback.
-media_player,TODO,HassMediaPause,Pausing the media playback.
-media_player,TODO,HassMediaNext,Skipping to the next track.
+media_player,Can you turn on <name>,HassTurnOn,Turning on the media player for you.
+media_player,<name> should be turned off,HassTurnOff,Turning off the media player as requested.
+media_player,Can you press play on <name>,HassMediaUnpause,Starting media playback.
+media_player,Pause the <name>,HassMediaPause,Pausing the media playback.
+media_player,Play the next thing on <name>,HassMediaNext,Skipping to the next track.
 switch,Turn on the <name>,HassTurnOn,Turning on the switch for you.
 switch,Turn off the switches in <area>,HassTurnOff,Turning off the devices as requested.
 switch,Toggle the switch <name>,HassToggle,Toggling the switch for you.
 vacuum,Start the vacuum called <name>,HassVacuumStart,Starting the vacuum now.
 vacuum,Stop the <name> vacuum,HassVacuumReturnToBase,Sending the vacuum back to its base.
-todo,TODO,HassListAddItem,the todo has been added to your todo list.
-timer,TODO,HassStartTimer,Starting timer now.
-timer,TODO,HassCancelTimer,Timer has been canceled.

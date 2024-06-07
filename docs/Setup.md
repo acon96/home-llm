@@ -52,9 +52,9 @@ This should download and install `llama-cpp-python` from GitHub. If the installa
 Once `llama-cpp-python` is installed, continue to the model selection.
 
 ### Step 2: Model Selection
-The next step is to specify which model will be used by the integration. You may select any repository on HuggingFace that has a model in GGUF format in it.  We will use `acon96/Home-3B-v3-GGUF` for this example.  If you have less than 4GB of RAM then use `acon96/Home-1B-v2-GGUF`.
+The next step is to specify which model will be used by the integration. You may select any repository on HuggingFace that has a model in GGUF format in it.  We will use `acon96/Home-3B-v3-GGUF` for this example.  If you have less than 4GB of RAM then use `acon96/Home-1B-v3-GGUF`.
 
-**Model Name**: Use either `acon96/Home-3B-v3-GGUF` or `acon96/Home-1B-v2-GGUF`  
+**Model Name**: Use either `acon96/Home-3B-v3-GGUF` or `acon96/Home-1B-v3-GGUF`  
 **Quantization Level**: The model will be downloaded in the selected quantization level from the HuggingFace repository. If unsure which level to choose, select `Q4_K_M`.  
 
 Pressing `Submit` will download the model from HuggingFace.

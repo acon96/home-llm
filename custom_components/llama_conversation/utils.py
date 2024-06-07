@@ -48,14 +48,14 @@ def flatten_vol_schema(schema):
                     _flatten(val, prefix + str(key) + '/')
         elif isinstance(current_schema, vol.validators._WithSubValidators):
             for subval in current_schema.validators:
-                _flatten(subval, prefix)            
+                _flatten(subval, prefix)
         elif callable(current_schema):
             flattened.append(prefix[:-1] if prefix else prefix)
     _flatten(schema)
     return flattened
 
 def custom_custom_serializer(value):
-    """Why is vol so hard to convert back into a readable schema?"""
+    """a vol schema is really not straightforward to convert back into a dictionary"""
 
     if value is cv.ensure_list:
         return { "type": "list" }
@@ -67,10 +67,9 @@ def custom_custom_serializer(value):
         return { "type": "string" }
     
     # media player registers an intent using a lambda...
-    # there's literally no way to detect that properly
+    # there's literally no way to detect that properly. with that in mind, we have this
     try:
         if value(100) == 1:
-            _LOGGER.debug("bad")
             return { "type": "integer" }
     except Exception:
         pass
@@ -105,7 +104,6 @@ def download_model_from_hf(model_name: str, quantization_type: str, storage_fold
         repo_id=model_name,
         repo_type="model",
         filename=wanted_file[0].removeprefix(model_name + "/"),
-        resume_download=True,
         cache_dir=storage_folder,
     )
 
