@@ -134,6 +134,7 @@ In order to facilitate running the project entirely on the system where Home Ass
 ## Version History
 | Version | Description                                                                                                                                                                                                          |
 |---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| v0.3    | Adds support for Home Assistant LLM APIs, improved model prompting and tool formatting options, and automatic detection of GGUF quantization levels on HuggingFace                                                   |
 | v0.2.17 | Disable native llama.cpp wheel optimizations, add Command R prompt format                                                                                                                                            |
 | v0.2.16 | Fix for missing huggingface_hub package preventing startup                                                                                                                                                           |
 | v0.2.15 | Fix startup error when using llama.cpp backend and add flash attention to llama.cpp backend                                                                                                                          |

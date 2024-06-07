@@ -291,7 +291,7 @@ class BaseLlamaConversationConfigFlow(FlowHandler, ABC):
 class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Local LLM Conversation."""
 
-    VERSION = 1
+    VERSION = 2
     install_wheel_task = None
     install_wheel_error = None
     download_task = None

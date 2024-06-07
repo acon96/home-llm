@@ -31,6 +31,7 @@ from .const import (
     BACKEND_TYPE_GENERIC_OPENAI,
     BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER,
     BACKEND_TYPE_OLLAMA,
+    ALLOWED_LEGACY_SERVICE_CALL_ARGUMENTS,
     DOMAIN,
     HOME_LLM_API_ID,
     SERVICE_TOOL_NAME,
@@ -94,17 +95,10 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
-    if config_entry.version > 1:
-      # This means the user has downgraded from a future version
-      return False
-
-    # if config_entry.version < 2:
-    #     # just ensure that the defaults are set
-    #     new_options = dict(DEFAULT_OPTIONS)
-    #     new_options.update(config_entry.options)
-
-    #     config_entry.version = 2
-    #     hass.config_entries.async_update_entry(config_entry, options=new_options)
+    # 1 -> 2: This was a breaking change so force users to re-create entries
+    if config_entry.version == 1:
+        _LOGGER.error("Cannot upgrade models that were created prior to v0.3. Please delete and re-create them.")
+        return False
 
     _LOGGER.debug("Migration to version %s successful", config_entry.version)
 
@@ -131,8 +125,6 @@ class HassServiceTool(llm.Tool):
         vol.Optional('item'): str,
     })
 
-    optional_allowed_args = []
-
     async def async_call(
         self, hass: HomeAssistant, tool_input: llm.ToolInput, llm_context: llm.LLMContext
     ) -> JsonObjectType:
@@ -141,7 +133,7 @@ class HassServiceTool(llm.Tool):
         target_device = tool_input.tool_args["target_device"]
 
         service_data = {ATTR_ENTITY_ID: target_device}
-        for attr in self.optional_allowed_args:
+        for attr in ALLOWED_LEGACY_SERVICE_CALL_ARGUMENTS:
             if attr in tool_input.tool_args.keys():
                 service_data[attr] = tool_input.tool_args[attr]
         try:
