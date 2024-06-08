@@ -57,7 +57,7 @@ The next step is to specify which model will be used by the integration. You may
 **Model Name**: Use either `acon96/Home-3B-v3-GGUF` or `acon96/Home-1B-v3-GGUF`  
 **Quantization Level**: The model will be downloaded in the selected quantization level from the HuggingFace repository. If unsure which level to choose, select `Q4_K_M`.  
 
-Pressing `Submit` will download the model from HuggingFace.
+Pressing `Submit` will download the model from HuggingFace. The downloaded files will be stored by default in `/media/models/`.
 
 **Note for Docker/sanboxed HA install users:** The model download may fail if it does not have the permissions to create the ```media``` folder in your Home Assistant install. To fix this, you will need to manually create the folder beside your existing ```config``` folder called ```media``` and set the permissions accordingly so that the addon can access it. If you're using Docker or similar, you may need to map the folder in your Compose file too and ```Update the Stack```. Once created and updated, you can open the model download screen again and it should now download as normal.
 
