@@ -14,6 +14,11 @@
     * [Step 1: Downloading and serving the Model](#step-1-downloading-and-serving-the-model)
     * [Step 2: Connect to the Ollama API](#step-2-connect-to-the-ollama-api)
     * [Step 3: Model Configuration](#step-3-model-configuration-1)
+* [Path 3: Using Llama-3-8B-Instruct with LM Studio](#path-3-using-llama-3-8b-instruct-with-lm-studio)
+    * [Overview](#overview-2)
+    * [Step 1: Downloading and serving the Model](#step-1-downloading-and-serving-the-model-1)
+    * [Step 2: Connect to the LM Studio API](#step-2-connect-to-the-lm-studio-api)
+    * [Step 3: Model Configuration](#step-3-model-configuration-2)
 * [Configuring the Integration as a Conversation Agent](#configuring-the-integration-as-a-conversation-agent)
 * [Finished!](#finished)
 
@@ -91,6 +96,41 @@ In order to access the model from another machine, we need to run the Ollama API
     - **Port**: leave on `11434`
     - **Use HTTPS**: unchecked
     - **Model Name**: `mistral:latest`
+    - **API Key**: leave blank
+6. Click `Submit`
+
+### Step 3: Model Configuration
+This step allows you to configure how the model is "prompted". See [here](./Model%20Prompting.md) for more information on how that works.
+
+For now, defaults for the model should have been populated. If you would like the model to be able to control devices then you must select the `Assist` API.
+
+Once the desired API has been selected, scroll to the bottom and click `Submit`.
+
+> NOTE: The key settings in this case are that our prompt references the `{{ response_examples }}` variable and the `Enable in context learning (ICL) examples` option is turned on.
+
+## Path 3: Using Llama-3-8B-Instruct with LM Studio
+### Overview
+Another model you can use if you have a GPU is Meta's Llama-3-8B-Instruct Model. This path assumes you have a machine with a GPU that already has [LM Studio](https://lmstudio.ai/) installed on it.  This path utilizes in-context learning examples, to prompt the model to produce the output that we expect.
+
+### Step 1: Downloading and serving the Model
+Llama 3 8B can be set up and downloaded on the serving machine using LM Studio by:
+1. Search for `lmstudio-community/Meta-Llama-3-8B-Instruct-GGUF` in the main interface.
+2. Select and download the version of the model that is recommended for your VRAM configuration.
+3. Select the 'Local Server' tab on the left side of the application.
+4. Load the model by selecting it from the bar in the top middle of the screen. The server should start automatically when the model finishes loading.
+5. Take note of the port that the server is running on.
+
+### Step 2: Connect to the LM Studio API
+
+1. In Home Assistant: navigate to `Settings > Devices and Services`
+2. Select the `+ Add Integration` button in the bottom right corner
+3. Search for, and select `Local LLM Conversation`
+4. Select `Generic OpenAI Compatible API` from the dropdown and click `Submit`
+5. Set up the connection to the API:
+    - **IP Address**: Fill out IP Address for the machine hosting LM Studio
+    - **Port**: enter the port that was listed in LM Studio
+    - **Use HTTPS**: unchecked
+    - **Model Name**: This can be any value, as LM Studio uses the currently loaded model for all incoming requests.
     - **API Key**: leave blank
 6. Click `Submit`
 

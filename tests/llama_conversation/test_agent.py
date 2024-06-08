@@ -86,8 +86,10 @@ from homeassistant.components.conversation import ConversationInput
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
-    CONF_SSL
+    CONF_SSL,
+    CONF_LLM_HASS_API
 )
+from homeassistant.helpers.llm import LLM_API_ASSIST, APIInstance
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -122,26 +124,19 @@ def config_entry():
         },
         options={
             **DEFAULT_OPTIONS,
+            CONF_LLM_HASS_API: LLM_API_ASSIST,
             CONF_PROMPT: DEFAULT_PROMPT_BASE,
+            CONF_SERVICE_CALL_REGEX: r"({[\S \t]*})"
         }
     )
 
 @pytest.fixture
-def home_assistant_mock():
-    mock_home_assistant = MagicMock()
-    async def call_now(func, *args, **kwargs):
-        return func(*args, **kwargs)
-    mock_home_assistant.async_add_executor_job.side_effect = call_now
-    mock_home_assistant.services.async_call = AsyncMock()
-
-    yield mock_home_assistant
-
-@pytest.fixture
-def local_llama_agent_fixture(config_entry, home_assistant_mock):
+def local_llama_agent_fixture(config_entry, hass, enable_custom_integrations):
     with patch.object(LlamaCppAgent, '_load_icl_examples') as load_icl_examples_mock, \
          patch.object(LlamaCppAgent, '_load_grammar') as load_grammar_mock, \
          patch.object(LlamaCppAgent, 'entry', new_callable=PropertyMock) as entry_mock, \
          patch.object(LlamaCppAgent, '_async_get_exposed_entities') as get_exposed_entities_mock, \
+         patch.object(APIInstance, 'async_call_tool') as call_tool_mock, \
          patch('homeassistant.helpers.template.Template') as template_mock, \
          patch('custom_components.llama_conversation.agent.importlib.import_module') as import_module_mock, \
          patch('custom_components.llama_conversation.agent.install_llama_cpp_python') as install_llama_cpp_python_mock:
@@ -166,14 +161,17 @@ def local_llama_agent_fixture(config_entry, home_assistant_mock):
         generate_mock.return_value = list(range(20))
 
         detokenize_mock = llama_instance_mock.detokenize
-        detokenize_mock.return_value = json.dumps({
-            "to_say": "I am saying something!",
-            "service": "light.turn_on",
-            "target_device": "light.kitchen_light",
-        }).encode()
+        detokenize_mock.return_value = ("I am saying something!\n" + json.dumps({
+            "name": "HassTurnOn",
+            "arguments": {
+                "name": "light.kitchen_light"
+            }
+        })).encode()
+
+        call_tool_mock.return_value = {"result": "success"}
 
         agent_obj = LlamaCppAgent(
-            home_assistant_mock,
+            hass,
             config_entry
         )
 
@@ -268,10 +266,11 @@ async def test_local_llama_agent(local_llama_agent_fixture):
     )
     
 @pytest.fixture
-def ollama_agent_fixture(config_entry, home_assistant_mock):
+def ollama_agent_fixture(config_entry, hass, enable_custom_integrations):
     with patch.object(OllamaAPIAgent, '_load_icl_examples') as load_icl_examples_mock, \
          patch.object(OllamaAPIAgent, 'entry', new_callable=PropertyMock) as entry_mock, \
          patch.object(OllamaAPIAgent, '_async_get_exposed_entities') as get_exposed_entities_mock, \
+         patch.object(APIInstance, 'async_call_tool') as call_tool_mock, \
          patch('homeassistant.helpers.template.Template') as template_mock, \
          patch('custom_components.llama_conversation.agent.requests.get') as requests_get_mock, \
          patch('custom_components.llama_conversation.agent.requests.post') as requests_post_mock:
@@ -291,8 +290,10 @@ def ollama_agent_fixture(config_entry, home_assistant_mock):
         response_mock.json.return_value = { "models": [ {"name": config_entry.data[CONF_CHAT_MODEL] }] }
         requests_get_mock.return_value = response_mock
 
+        call_tool_mock.return_value = {"result": "success"}
+
         agent_obj = OllamaAPIAgent(
-            home_assistant_mock,
+            hass,
             config_entry
         )
 
@@ -318,10 +319,11 @@ async def test_ollama_agent(ollama_agent_fixture):
     response_mock.json.return_value = {
         "model": ollama_agent.entry.data[CONF_CHAT_MODEL],
         "created_at": "2023-11-09T21:07:55.186497Z",
-        "response": json.dumps({
-            "to_say": "I am saying something!",
-            "service": "light.turn_on",
-            "target_device": "light.kitchen_light",
+        "response": "I am saying something!\n" + json.dumps({
+            "name": "HassTurnOn",
+            "arguments": {
+                "name": "light.kitchen_light"
+            }
         }),
         "done": True,
         "context": [1, 2, 3],
@@ -410,10 +412,11 @@ async def test_ollama_agent(ollama_agent_fixture):
 
 
 @pytest.fixture
-def text_generation_webui_agent_fixture(config_entry, home_assistant_mock):
+def text_generation_webui_agent_fixture(config_entry, hass, enable_custom_integrations):
     with patch.object(TextGenerationWebuiAgent, '_load_icl_examples') as load_icl_examples_mock, \
          patch.object(TextGenerationWebuiAgent, 'entry', new_callable=PropertyMock) as entry_mock, \
          patch.object(TextGenerationWebuiAgent, '_async_get_exposed_entities') as get_exposed_entities_mock, \
+         patch.object(APIInstance, 'async_call_tool') as call_tool_mock, \
          patch('homeassistant.helpers.template.Template') as template_mock, \
          patch('custom_components.llama_conversation.agent.requests.get') as requests_get_mock, \
          patch('custom_components.llama_conversation.agent.requests.post') as requests_post_mock:
@@ -433,8 +436,10 @@ def text_generation_webui_agent_fixture(config_entry, home_assistant_mock):
         response_mock.json.return_value = { "model_name": config_entry.data[CONF_CHAT_MODEL] }
         requests_get_mock.return_value = response_mock
 
+        call_tool_mock.return_value = {"result": "success"}
+
         agent_obj = TextGenerationWebuiAgent(
-            home_assistant_mock,
+            hass,
             config_entry
         )
 
@@ -464,10 +469,11 @@ async def test_text_generation_webui_agent(text_generation_webui_agent_fixture):
         "model": "gpt-3.5-turbo-instruct",
         "system_fingerprint": "fp_44709d6fcb",
         "choices": [{
-            "text": json.dumps({
-                "to_say": "I am saying something!",
-                "service": "light.turn_on",
-                "target_device": "light.kitchen_light",
+            "text": "I am saying something!\n" + json.dumps({
+                "name": "HassTurnOn",
+                "arguments": {
+                    "name": "light.kitchen_light"
+                }
             }),
             "index": 0,
             "logprobs": None,
@@ -559,10 +565,11 @@ async def test_text_generation_webui_agent(text_generation_webui_agent_fixture):
             "index": 0,
             "message": {
                 "role": "assistant",
-                "content": json.dumps({
-                    "to_say": "I am saying something!",
-                    "service": "light.turn_on",
-                    "target_device": "light.kitchen_light",
+                "content": "I am saying something!\n" + json.dumps({
+                    "name": "HassTurnOn",
+                    "arguments": {
+                        "name": "light.kitchen_light"
+                    }
                 }),
             },
             "logprobs": None,
@@ -669,10 +676,11 @@ async def test_text_generation_webui_agent(text_generation_webui_agent_fixture):
     )
 
 @pytest.fixture
-def generic_openai_agent_fixture(config_entry, home_assistant_mock):
+def generic_openai_agent_fixture(config_entry, hass, enable_custom_integrations):
     with patch.object(GenericOpenAIAPIAgent, '_load_icl_examples') as load_icl_examples_mock, \
          patch.object(GenericOpenAIAPIAgent, 'entry', new_callable=PropertyMock) as entry_mock, \
          patch.object(GenericOpenAIAPIAgent, '_async_get_exposed_entities') as get_exposed_entities_mock, \
+         patch.object(APIInstance, 'async_call_tool') as call_tool_mock, \
          patch('homeassistant.helpers.template.Template') as template_mock, \
          patch('custom_components.llama_conversation.agent.requests.get') as requests_get_mock, \
          patch('custom_components.llama_conversation.agent.requests.post') as requests_post_mock:
@@ -688,8 +696,10 @@ def generic_openai_agent_fixture(config_entry, home_assistant_mock):
             ["light", "switch", "fan"]
         )
 
+        call_tool_mock.return_value = {"result": "success"}
+
         agent_obj = GenericOpenAIAPIAgent(
-            home_assistant_mock,
+            hass,
             config_entry
         )
 
@@ -714,10 +724,11 @@ async def test_generic_openai_agent(generic_openai_agent_fixture):
         "model": "gpt-3.5-turbo-instruct",
         "system_fingerprint": "fp_44709d6fcb",
         "choices": [{
-            "text": json.dumps({
-                "to_say": "I am saying something!",
-                "service": "light.turn_on",
-                "target_device": "light.kitchen_light",
+            "text": "I am saying something!\n" + json.dumps({
+                "name": "HassTurnOn",
+                "arguments": {
+                    "name": "light.kitchen_light"
+                }
             }),
             "index": 0,
             "logprobs": None,
@@ -774,10 +785,11 @@ async def test_generic_openai_agent(generic_openai_agent_fixture):
             "index": 0,
             "message": {
                 "role": "assistant",
-                "content": json.dumps({
-                    "to_say": "I am saying something!",
-                    "service": "light.turn_on",
-                    "target_device": "light.kitchen_light",
+                "content": "I am saying something!\n" + json.dumps({
+                    "name": "HassTurnOn",
+                    "arguments": {
+                        "name": "light.kitchen_light"
+                    }
                 }),
             },
             "logprobs": None,

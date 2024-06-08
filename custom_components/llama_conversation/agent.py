@@ -394,10 +394,12 @@ class LocalLLMAgent(AbstractConversationAgent):
 
             try:
                 tool_response = await llm_api.async_call_tool(tool_input)
+                _LOGGER.debug("Tool response: %s", tool_response)
             except (HomeAssistantError, vol.Invalid) as e:
                 tool_response = {"error": type(e).__name__}
                 if str(e):
                     tool_response["error_text"] = str(e)
+                _LOGGER.debug("Tool response: %s", tool_response)
 
                 intent_response = intent.IntentResponse(language=user_input.language)
                 intent_response.async_set_error(
@@ -407,8 +409,6 @@ class LocalLLMAgent(AbstractConversationAgent):
                 return ConversationResult(
                     response=intent_response, conversation_id=conversation_id
                 )
-
-            _LOGGER.debug("Tool response: %s", tool_response)
 
         # handle models that generate a function call and wait for the result before providing a response
         if self.entry.options.get(CONF_TOOL_MULTI_TURN_CHAT, DEFAULT_TOOL_MULTI_TURN_CHAT):
@@ -436,7 +436,7 @@ class LocalLLMAgent(AbstractConversationAgent):
         
         # generate intent response to Home Assistant
         intent_response = intent.IntentResponse(language=user_input.language)
-        intent_response.async_set_speech(to_say)
+        intent_response.async_set_speech(to_say.strip())
         return ConversationResult(
             response=intent_response, conversation_id=conversation_id
         )
@@ -672,7 +672,8 @@ class LocalLLMAgent(AbstractConversationAgent):
                 "state": state,
                 "attributes": exposed_attributes,
                 "area_name": attributes.get("area_name"),
-                "area_id": attributes.get("area_id")
+                "area_id": attributes.get("area_id"),
+                "is_alias": False
             })
             if "aliases" in attributes:
                 for alias in attributes["aliases"]:
@@ -683,17 +684,25 @@ class LocalLLMAgent(AbstractConversationAgent):
                         "state": state,
                         "attributes": exposed_attributes,
                         "area_name": attributes.get("area_name"),
-                        "area_id": attributes.get("area_id")
+                        "area_id": attributes.get("area_id"),
+                        "is_alias": True
                     })
 
         if llm_api:
             if llm_api.api.id == HOME_LLM_API_ID:
                 service_dict = self.hass.services.async_services()
                 all_services = []
+                scripts_added = False
                 for domain in domains:
                     # scripts show up as individual services
-                    if domain == "script":
-                        all_services.extend(["script.reload()", "script.turn_on()", "script.turn_off()", "script.toggle()"])
+                    if domain == "script" and not scripts_added:
+                        all_services.extend([
+                            ("script.reload", vol.Schema({}), ""),
+                            ("script.turn_on", vol.Schema({}), ""),
+                            ("script.turn_off", vol.Schema({}), ""),
+                            ("script.toggle", vol.Schema({}), ""),
+                        ])
+                        scripts_added = True
                         continue
                     
                     for name, service in service_dict.get(domain, {}).items():
