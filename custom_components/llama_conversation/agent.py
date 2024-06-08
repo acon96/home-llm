@@ -23,14 +23,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_SSL, MATCH_ALL, CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryError, TemplateError, HomeAssistantError
-from homeassistant.helpers import config_validation as cv, intent, template, entity_registry as er, llm
+from homeassistant.helpers import config_validation as cv, intent, template, entity_registry as er, llm, area_registry as ar
 from homeassistant.helpers.event import async_track_state_change, async_call_later
 from homeassistant.util import ulid, color
 
 import voluptuous_serialize
 
 from .utils import closest_color, flatten_vol_schema, custom_custom_serializer, install_llama_cpp_python, \
-    validate_llama_cpp_python_installation
+    validate_llama_cpp_python_installation, format_url
 from .const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -106,7 +106,6 @@ from .const import (
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT,
     TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT,
-    ALLOWED_LEGACY_SERVICE_CALL_ARGUMENTS,
     DOMAIN,
     HOME_LLM_API_ID,
     SERVICE_TOOL_NAME,
@@ -114,6 +113,7 @@ from .const import (
     TOOL_FORMAT_FULL,
     TOOL_FORMAT_REDUCED,
     TOOL_FORMAT_MINIMAL,
+    ALLOWED_SERVICE_CALL_ARGUMENTS,
 )
 
 # make type checking work for llama-cpp-python without importing it directly at runtime
@@ -254,11 +254,12 @@ class LocalLLMAgent(AbstractConversationAgent):
                 )
             except HomeAssistantError as err:
                 _LOGGER.error("Error getting LLM API: %s", err)
+                intent_response = intent.IntentResponse(language=user_input.language)
                 intent_response.async_set_error(
                     intent.IntentResponseErrorCode.UNKNOWN,
                     f"Error preparing LLM API: {err}",
                 )
-                return conversation.ConversationResult(
+                return ConversationResult(
                     response=intent_response, conversation_id=user_input.conversation_id
                 )
 
@@ -445,6 +446,7 @@ class LocalLLMAgent(AbstractConversationAgent):
         entity_states = {}
         domains = set()
         entity_registry = er.async_get(self.hass)
+        area_registry = ar.async_get(self.hass)
 
         for state in self.hass.states.async_all():
             if not async_should_expose(self.hass, CONVERSATION_DOMAIN, state.entity_id):
@@ -456,10 +458,14 @@ class LocalLLMAgent(AbstractConversationAgent):
             attributes["state"] = state.state
             if entity and entity.aliases:
                 attributes["aliases"] = entity.aliases
+
+            if entity and entity.area_id:
+                area = area_registry.async_get_area(entity.area_id)
+                attributes["area_id"] = area.id
+                attributes["area_name"] = area.name
+            
             entity_states[state.entity_id] = attributes
             domains.add(state.domain)
-
-        # _LOGGER.debug(f"Exposed entities: {entity_states}")
 
         return entity_states, list(domains)
 
@@ -556,6 +562,9 @@ class LocalLLMAgent(AbstractConversationAgent):
         entity_names = entity_names[:]
         entity_domains = set([x.split(".")[0] for x in entity_names])
 
+        area_registry = ar.async_get(self.hass)
+        all_areas = list(area_registry.async_list_areas())
+
         in_context_examples = [
             x for x in self.in_context_examples
             if x["type"] in entity_domains
@@ -575,7 +584,7 @@ class LocalLLMAgent(AbstractConversationAgent):
             response = chosen_example["response"]
 
             random_device = [ x for x in entity_names if x.split(".")[0] == chosen_example["type"] ][0]
-            random_area = "bedroom" # todo, pick a random area
+            random_area = random.choice(all_areas).name
             random_brightness = round(random.random(), 2)
             random_color = random.choice(list(color.COLORS.keys()))
 
@@ -619,8 +628,8 @@ class LocalLLMAgent(AbstractConversationAgent):
         extra_attributes_to_expose = self.entry.options \
             .get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE)
 
-        def expose_attributes(attributes):
-            result = attributes["state"]
+        def expose_attributes(attributes) -> list[str]:
+            result = []
             for attribute_name in extra_attributes_to_expose:
                 if attribute_name not in attributes:
                     continue
@@ -644,19 +653,38 @@ class LocalLLMAgent(AbstractConversationAgent):
                     elif attribute_name == "humidity":
                         value = f"{value}%"
 
-                    result = result + ";" + str(value)
+                    result.append(str(value))
             return result
 
-        device_states = []
+        devices = []
+        formatted_devices = ""
 
         # expose devices and their alias as well
         for name, attributes in entities_to_expose.items():
-            device_states.append(f"{name} '{attributes.get('friendly_name')}' = {expose_attributes(attributes)}")
+            state = attributes["state"]
+            exposed_attributes = expose_attributes(attributes)
+            str_attributes = ";".join([state] + exposed_attributes)
+            
+            formatted_devices = formatted_devices + f"{name} '{attributes.get('friendly_name')}' = {str_attributes}\n"
+            devices.append({
+                "entity_id": name,
+                "name": attributes.get('friendly_name'),
+                "state": state,
+                "attributes": exposed_attributes,
+                "area_name": attributes.get("area_name"),
+                "area_id": attributes.get("area_id")
+            })
             if "aliases" in attributes:
                 for alias in attributes["aliases"]:
-                    device_states.append(f"{name} '{alias}' = {expose_attributes(attributes)}")
-
-        formatted_states = "\n".join(device_states) + "\n"
+                    formatted_devices = formatted_devices + f"{name} '{alias}' = {str_attributes}\n"
+                    devices.append({
+                        "entity_id": name,
+                        "name": alias,
+                        "state": state,
+                        "attributes": exposed_attributes,
+                        "area_name": attributes.get("area_name"),
+                        "area_id": attributes.get("area_id")
+                    })
 
         if llm_api:
             if llm_api.api.id == HOME_LLM_API_ID:
@@ -670,7 +698,7 @@ class LocalLLMAgent(AbstractConversationAgent):
                     
                     for name, service in service_dict.get(domain, {}).items():
                         args = flatten_vol_schema(service.schema)
-                        args_to_expose = set(args).intersection(ALLOWED_LEGACY_SERVICE_CALL_ARGUMENTS)
+                        args_to_expose = set(args).intersection(ALLOWED_SERVICE_CALL_ARGUMENTS)
                         service_schema = vol.Schema({
                             vol.Optional(arg): str for arg in args_to_expose
                         })
@@ -681,17 +709,26 @@ class LocalLLMAgent(AbstractConversationAgent):
                     self._format_tool(*tool)
                     for tool in all_services
                 ]
+                
             else:
                 tools = [
                     self._format_tool(tool.name, tool.parameters, tool.description)
                     for tool in llm_api.tools
                 ]
+            
+            if  self.entry.options.get(CONF_TOOL_FORMAT, DEFAULT_TOOL_FORMAT) == TOOL_FORMAT_MINIMAL:
+                formatted_tools = ", ".join(tools)
+            else:
+                formatted_tools = json.dumps(tools)
         else:
-            tools = "No tools were provided. If the user requests you interact with a device, tell them you are unable to do so."
+            tools = ["No tools were provided. If the user requests you interact with a device, tell them you are unable to do so."]
+            formatted_tools = tools[0]
 
         render_variables = {
-            "devices": formatted_states,
+            "devices": devices,
+            "formatted_devices": formatted_devices,
             "tools": tools,
+            "formatted_tools": formatted_tools,
             "response_examples": []
         }
 
@@ -1042,7 +1079,13 @@ class GenericOpenAIAPIAgent(LocalLLMAgent):
     model_name: str
 
     def _load_model(self, entry: ConfigEntry) -> None:
-        self.api_host = f"{'https' if entry.data[CONF_SSL] else 'http'}://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
+        self.api_host = format_url(
+            hostname=entry.data[CONF_HOST],
+            port=entry.data[CONF_PORT],
+            ssl=entry.data[CONF_SSL],
+            path=""
+        )
+        
         self.api_key = entry.data.get(CONF_OPENAI_API_KEY)
         self.model_name = entry.data.get(CONF_CHAT_MODEL)
 
@@ -1249,7 +1292,12 @@ class OllamaAPIAgent(LocalLLMAgent):
     model_name: str
 
     def _load_model(self, entry: ConfigEntry) -> None:
-        self.api_host = f"{'https' if entry.data[CONF_SSL] else 'http'}://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
+        self.api_host = format_url(
+            hostname=entry.data[CONF_HOST],
+            port=entry.data[CONF_PORT],
+            ssl=entry.data[CONF_SSL],
+            path=""
+        )
         self.api_key = entry.data.get(CONF_OPENAI_API_KEY)
         self.model_name = entry.data.get(CONF_CHAT_MODEL)
 

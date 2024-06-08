@@ -38,7 +38,7 @@ from homeassistant.helpers.selector import (
 from homeassistant.util.package import is_installed
 from importlib.metadata import version
 
-from .utils import download_model_from_hf, install_llama_cpp_python, MissingQuantizationException
+from .utils import download_model_from_hf, install_llama_cpp_python, format_url, MissingQuantizationException
 from .const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -489,6 +489,8 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         self.download_task = None
         return self.async_show_progress_done(next_step_id=next_step)
     
+    # TODO: add validate for generic openAI API and hit the `/v1/models endpoint to check
+
     def _validate_text_generation_webui(self, user_input: dict) -> tuple:
         """
         Validates a connection to text-generation-webui and that the model exists on the remote server
@@ -503,7 +505,12 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                 headers["Authorization"] = f"Bearer {api_key}"
 
             models_result = requests.get(
-                f"{'https' if self.model_config[CONF_SSL] else 'http'}://{self.model_config[CONF_HOST]}:{self.model_config[CONF_PORT]}/v1/internal/model/list",
+                format_url(
+                    hostname=self.model_config[CONF_HOST],
+                    port=self.model_config[CONF_PORT],
+                    ssl=self.model_config[CONF_SSL],
+                    path="/v1/internal/model/list"
+                ),
                 timeout=5, # quick timeout
                 headers=headers
             )
@@ -535,7 +542,12 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                 headers["Authorization"] = f"Bearer {api_key}"
 
             models_result = requests.get(
-                f"{'https' if self.model_config[CONF_SSL] else 'http'}://{self.model_config[CONF_HOST]}:{self.model_config[CONF_PORT]}/api/tags",
+                format_url(
+                    hostname=self.model_config[CONF_HOST],
+                    port=self.model_config[CONF_PORT],
+                    ssl=self.model_config[CONF_SSL],
+                    path="/api/tags"
+                ),
                 timeout=5, # quick timeout
                 headers=headers
             )

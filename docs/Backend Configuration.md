@@ -44,15 +44,12 @@ After the wheel file has been copied to the correct folder, attempt the wheel in
 Pre-built wheel files (`*.whl`) are provided as part of the [GitHub release](https://github.com/acon96/home-llm/releases/latest) for the integration.
 
 To ensure compatibility with your Home Assistant and Python versions, select the correct `.whl` file for your hardware's architecture:
-- For Home Assistant `2024.1.4` and older, use the Python 3.11 wheels (`cp311`)
 - For Home Assistant `2024.2.0` and newer, use the Python 3.12 wheels (`cp312`)
 - **ARM devices** (e.g., Raspberry Pi 4/5):
-    - Example filenames:
-        - `llama_cpp_python-{version}-cp311-cp311-musllinux_1_2_aarch64.whl`
+    - Example filename:
         - `llama_cpp_python-{version}-cp312-cp312-musllinux_1_2_aarch64.whl`
 - **x86_64 devices** (e.g., Intel/AMD desktops):
-    - Example filenames:
-        - `llama_cpp_python-{version}-cp311-cp311-musllinux_1_2_x86_64.whl`
+    - Example filename:
         - `llama_cpp_python-{version}-cp312-cp312-musllinux_1_2_x86_64.whl`
 
 ## Build your own
