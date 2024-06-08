@@ -394,10 +394,12 @@ class LocalLLMAgent(AbstractConversationAgent):
 
             try:
                 tool_response = await llm_api.async_call_tool(tool_input)
+                _LOGGER.debug("Tool response: %s", tool_response)
             except (HomeAssistantError, vol.Invalid) as e:
                 tool_response = {"error": type(e).__name__}
                 if str(e):
                     tool_response["error_text"] = str(e)
+                _LOGGER.debug("Tool response: %s", tool_response)
 
                 intent_response = intent.IntentResponse(language=user_input.language)
                 intent_response.async_set_error(
@@ -407,8 +409,6 @@ class LocalLLMAgent(AbstractConversationAgent):
                 return ConversationResult(
                     response=intent_response, conversation_id=conversation_id
                 )
-
-            _LOGGER.debug("Tool response: %s", tool_response)
 
         # handle models that generate a function call and wait for the result before providing a response
         if self.entry.options.get(CONF_TOOL_MULTI_TURN_CHAT, DEFAULT_TOOL_MULTI_TURN_CHAT):
@@ -436,7 +436,7 @@ class LocalLLMAgent(AbstractConversationAgent):
         
         # generate intent response to Home Assistant
         intent_response = intent.IntentResponse(language=user_input.language)
-        intent_response.async_set_speech(to_say)
+        intent_response.async_set_speech(to_say.strip())
         return ConversationResult(
             response=intent_response, conversation_id=conversation_id
         )
