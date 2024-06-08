@@ -489,6 +489,8 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         self.download_task = None
         return self.async_show_progress_done(next_step_id=next_step)
     
+    # TODO: add validate for generic openAI API and hit the `/v1/models endpoint to check
+
     def _validate_text_generation_webui(self, user_input: dict) -> tuple:
         """
         Validates a connection to text-generation-webui and that the model exists on the remote server
