@@ -690,10 +690,17 @@ class LocalLLMAgent(AbstractConversationAgent):
             if llm_api.api.id == HOME_LLM_API_ID:
                 service_dict = self.hass.services.async_services()
                 all_services = []
+                scripts_added = False
                 for domain in domains:
                     # scripts show up as individual services
-                    if domain == "script":
-                        all_services.extend(["script.reload()", "script.turn_on()", "script.turn_off()", "script.toggle()"])
+                    if domain == "script" and not scripts_added:
+                        all_services.extend([
+                            ("script.reload", vol.Schema({}), ""),
+                            ("script.turn_on", vol.Schema({}), ""),
+                            ("script.turn_off", vol.Schema({}), ""),
+                            ("script.toggle", vol.Schema({}), ""),
+                        ])
+                        scripts_added = True
                         continue
                     
                     for name, service in service_dict.get(domain, {}).items():
