@@ -254,11 +254,12 @@ class LocalLLMAgent(AbstractConversationAgent):
                 )
             except HomeAssistantError as err:
                 _LOGGER.error("Error getting LLM API: %s", err)
+                intent_response = intent.IntentResponse(language=user_input.language)
                 intent_response.async_set_error(
                     intent.IntentResponseErrorCode.UNKNOWN,
                     f"Error preparing LLM API: {err}",
                 )
-                return conversation.ConversationResult(
+                return ConversationResult(
                     response=intent_response, conversation_id=user_input.conversation_id
                 )
 
