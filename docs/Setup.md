@@ -14,6 +14,11 @@
     * [Step 1: Downloading and serving the Model](#step-1-downloading-and-serving-the-model)
     * [Step 2: Connect to the Ollama API](#step-2-connect-to-the-ollama-api)
     * [Step 3: Model Configuration](#step-3-model-configuration-1)
+* [Path 3: Using Llama-3-8B-Instruct with LM Studio](#path-3-using-llama-3-8b-instruct-with-lm-studio)
+    * [Overview](#overview-2)
+    * [Step 1: Downloading and serving the Model](#step-1-downloading-and-serving-the-model-1)
+    * [Step 2: Connect to the LM Studio API](#step-2-connect-to-the-lm-studio-api)
+    * [Step 3: Model Configuration](#step-3-model-configuration-2)
 * [Configuring the Integration as a Conversation Agent](#configuring-the-integration-as-a-conversation-agent)
 * [Finished!](#finished)
 
@@ -103,9 +108,9 @@ Once the desired API has been selected, scroll to the bottom and click `Submit`.
 
 > NOTE: The key settings in this case are that our prompt references the `{{ response_examples }}` variable and the `Enable in context learning (ICL) examples` option is turned on.
 
-## Path 3: Using Llama-3-8B with LM Studio
+## Path 3: Using Llama-3-8B-Instruct with LM Studio
 ### Overview
-Another model you can use if you have a GPU is Meta's Llama-3-8B Model. This path assumes you have a machine with a GPU that already has [LM Studio](https://lmstudio.ai/) installed on it.  This path utilizes in-context learning examples, to prompt the model to produce the output that we expect.
+Another model you can use if you have a GPU is Meta's Llama-3-8B-Instruct Model. This path assumes you have a machine with a GPU that already has [LM Studio](https://lmstudio.ai/) installed on it.  This path utilizes in-context learning examples, to prompt the model to produce the output that we expect.
 
 ### Step 1: Downloading and serving the Model
 Llama 3 8B can be set up and downloaded on the serving machine using LM Studio by:
