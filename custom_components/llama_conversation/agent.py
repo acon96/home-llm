@@ -672,7 +672,8 @@ class LocalLLMAgent(AbstractConversationAgent):
                 "state": state,
                 "attributes": exposed_attributes,
                 "area_name": attributes.get("area_name"),
-                "area_id": attributes.get("area_id")
+                "area_id": attributes.get("area_id"),
+                "is_alias": False
             })
             if "aliases" in attributes:
                 for alias in attributes["aliases"]:
@@ -683,7 +684,8 @@ class LocalLLMAgent(AbstractConversationAgent):
                         "state": state,
                         "attributes": exposed_attributes,
                         "area_name": attributes.get("area_name"),
-                        "area_id": attributes.get("area_id")
+                        "area_id": attributes.get("area_id"),
+                        "is_alias": True
                     })
 
         if llm_api:
