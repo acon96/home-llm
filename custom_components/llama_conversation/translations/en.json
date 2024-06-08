@@ -10,6 +10,7 @@
             "other_existing_local": "Another model is already loaded locally. Please unload it or configure a remote model.",
             "unknown": "Unexpected error",
             "pip_wheel_error": "Pip returned an error while installing the wheel! Please check the Home Assistant logs for more details.",
+            "sys_refresh_caching_enabled": "System prompt refresh must be enabled for prompt caching to work!",
             "missing_gbnf_file": "The GBNF file was not found: {filename}",
             "missing_icl_file": "The in context learning example CSV file was not found: {filename}"
         },
