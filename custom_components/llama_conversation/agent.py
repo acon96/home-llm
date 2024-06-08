@@ -254,11 +254,12 @@ class LocalLLMAgent(AbstractConversationAgent):
                 )
             except HomeAssistantError as err:
                 _LOGGER.error("Error getting LLM API: %s", err)
+                intent_response = intent.IntentResponse(language=user_input.language)
                 intent_response.async_set_error(
                     intent.IntentResponseErrorCode.UNKNOWN,
                     f"Error preparing LLM API: {err}",
                 )
-                return conversation.ConversationResult(
+                return ConversationResult(
                     response=intent_response, conversation_id=user_input.conversation_id
                 )
 
@@ -708,15 +709,20 @@ class LocalLLMAgent(AbstractConversationAgent):
                     self._format_tool(*tool)
                     for tool in all_services
                 ]
-                formatted_tools = ", ".join(tools)
+                
             else:
                 tools = [
                     self._format_tool(tool.name, tool.parameters, tool.description)
                     for tool in llm_api.tools
                 ]
+            
+            if  self.entry.options.get(CONF_TOOL_FORMAT, DEFAULT_TOOL_FORMAT) == TOOL_FORMAT_MINIMAL:
+                formatted_tools = ", ".join(tools)
+            else:
                 formatted_tools = json.dumps(tools)
         else:
-            tools = "No tools were provided. If the user requests you interact with a device, tell them you are unable to do so."
+            tools = ["No tools were provided. If the user requests you interact with a device, tell them you are unable to do so."]
+            formatted_tools = tools[0]
 
         render_variables = {
             "devices": devices,

@@ -23,11 +23,6 @@ Devices:
 {% for device in area.list %}
 {{ device.entity_id }} '{{ device.name }}' = {{ device.state }};{{ device.attributes | join(";") }}
 {% endfor %}
-{% endfor %}
-{% for item in response_examples %}
-{{ item.request }}
-{{ item.response }}
-<functioncall> {{ item.tool | to_json }}
 {% endfor %}"""
 DEFAULT_PROMPT_BASE_LEGACY = """<persona>
 The current time and date is {{ (as_timestamp(now()) | timestamp_custom("%I:%M %p on %A %B %d, %Y", "")) }}
@@ -328,5 +323,5 @@ OPTIONS_OVERRIDES = {
     }
 }
 
-INTEGRATION_VERSION = "0.3"
+INTEGRATION_VERSION = "0.3.1"
 EMBEDDED_LLAMA_CPP_PYTHON_VERSION = "0.2.77"
