@@ -11,6 +11,6 @@
   "requirements": [
     "requests>=2.31.0",
     "huggingface-hub==0.23.0",
-    "webcolors>=1.13"
+    "webcolors<=1.13"
   ]
 }
