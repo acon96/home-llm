@@ -312,6 +312,9 @@ class LocalLLMAgent(AbstractConversationAgent):
             return ConversationResult(
                 response=intent_response, conversation_id=conversation_id
             )
+        
+        # remove end of text token if it was returned
+        response = response.replace(template_desc["assistant"]["suffix"], "")
 
         conversation.append({"role": "assistant", "message": response})
         if remember_conversation:
