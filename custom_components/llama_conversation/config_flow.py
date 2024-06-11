@@ -213,11 +213,13 @@ def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, ss
         default_port = "8000"
     elif backend_type == BACKEND_TYPE_OLLAMA:
         default_port = "11434"
+    elif backend_type == BACKEND_TYPE_GENERIC_OPENAI:
+        default_port = ""
 
     return vol.Schema(
         {
             vol.Required(CONF_HOST, default=host if host else ""): str,
-            vol.Required(CONF_PORT, default=port if port else default_port): str,
+            vol.Optional(CONF_PORT, default=port if port else default_port): str,
             vol.Required(CONF_SSL, default=ssl if ssl else DEFAULT_SSL): bool,
             vol.Required(CONF_CHAT_MODEL, default=chat_model if chat_model else DEFAULT_CHAT_MODEL): SelectSelector(SelectSelectorConfig(
                 options=available_chat_models,
