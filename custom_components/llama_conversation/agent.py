@@ -23,8 +23,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_SSL, MATCH_ALL, CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryError, TemplateError, HomeAssistantError
-from homeassistant.helpers import config_validation as cv, intent, template, entity_registry as er, llm, area_registry as ar
+from homeassistant.helpers import config_validation as cv, intent, template, entity_registry as er, llm, \
+    area_registry as ar, device_registry as dr
 from homeassistant.helpers.event import async_track_state_change, async_call_later
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.util import ulid, color
 
 import voluptuous_serialize
@@ -451,6 +453,7 @@ class LocalLLMAgent(AbstractConversationAgent):
         entity_states = {}
         domains = set()
         entity_registry = er.async_get(self.hass)
+        device_registry = dr.async_get(self.hass)
         area_registry = ar.async_get(self.hass)
 
         for state in self.hass.states.async_all():
@@ -458,13 +461,28 @@ class LocalLLMAgent(AbstractConversationAgent):
                 continue
 
             entity = entity_registry.async_get(state.entity_id)
+            device = None
+            if entity and entity.device_id:
+                device = device_registry.async_get(entity.device_id)
 
             attributes = dict(state.attributes)
             attributes["state"] = state.state
-            if entity and entity.aliases:
-                attributes["aliases"] = entity.aliases
 
+            if entity:
+                if entity.aliases:
+                    attributes["aliases"] = entity.aliases
+                    
+                if entity.unit_of_measurement:
+                    attributes["state"] = attributes["state"] + " " + entity.unit_of_measurement
+
+            # area could be on device or entity. prefer device area
+            area_id = None
+            if device and device.area_id:
+                area_id = device.area_id
             if entity and entity.area_id:
+                area_id = entity.area_id
+            
+            if area_id:
                 area = area_registry.async_get_area(entity.area_id)
                 attributes["area_id"] = area.id
                 attributes["area_name"] = area.name
