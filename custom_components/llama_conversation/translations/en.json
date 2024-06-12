@@ -5,7 +5,7 @@
             "missing_quantization": "The GGUF quantization level {missing} does not exist in the provided HuggingFace repo. The following quantization levels were found: {available}",
             "no_supported_ggufs": "The provided HuggingFace repo does not contain any compatible GGUF files!",
             "failed_to_connect": "Failed to connect to the remote API: {exception}",
-            "missing_model_api": "The selected model is not provided by this API.",
+            "missing_model_api": "The selected model is not provided by this API. The available models have been populated in the dropdown.",
             "missing_model_file": "The provided file does not exist.",
             "other_existing_local": "Another model is already loaded locally. Please unload it or configure a remote model.",
             "unknown": "Unexpected error",
@@ -36,13 +36,15 @@
                     "port": "API Port",
                     "ssl": "Use HTTPS",
                     "openai_api_key": "API Key",
+                    "openai_path": "API Path",
+                    "openai_validate_model": "Validate model exists?",
                     "text_generation_webui_admin_key": "Admin Key",
                     "text_generation_webui_preset": "Generation Preset/Character Name",
                     "remote_use_chat_endpoint": "Use chat completions endpoint",
                     "text_generation_webui_chat_mode": "Chat Mode",
                     "selected_language": "Model Language"
                 },
-                "description": "Provide the connection details to connect to the API that is hosting the model.\n\n**Models supported out of the box:**\n1. [Home LLM](https://huggingface.co/collections/acon96/home-llm-6618762669211da33bb22c5a): Home 3B & Home 1B\n2. Mistral: [Mistral 7B](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2) or [Mixtral 8x7B](https://huggingface.co/mistralai/Mixtral-8x7B-Instruct-v0.1)",
+                "description": "Provide the connection details to connect to the API that is hosting the model.\n\n**Models supported out of the box:**\n1. [Home LLM](https://huggingface.co/collections/acon96/home-llm-6618762669211da33bb22c5a): Home 3B & Home 1B\n2. Mistral: [Mistral 7B](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2) or [Mixtral 8x7B](https://huggingface.co/mistralai/Mixtral-8x7B-Instruct-v0.1)\n3. Llama 3: [8B](https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct) and [70B](https://huggingface.co/meta-llama/Meta-Llama-3-70B-Instruct)",
                 "title": "Configure connection to remote API"
             },
             "pick_backend": {

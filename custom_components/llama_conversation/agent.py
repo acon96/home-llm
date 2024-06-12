@@ -66,6 +66,7 @@ from .const import (
     CONF_TEXT_GEN_WEBUI_CHAT_MODE,
     CONF_OLLAMA_KEEP_ALIVE_MIN,
     CONF_OLLAMA_JSON_MODE,
+    CONF_GENERIC_OPENAI_PATH,
     CONF_CONTEXT_LENGTH,
     CONF_BATCH_SIZE,
     CONF_THREAD_COUNT,
@@ -99,6 +100,7 @@ from .const import (
     DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
     DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
     DEFAULT_OLLAMA_JSON_MODE,
+    DEFAULT_GENERIC_OPENAI_PATH,
     DEFAULT_CONTEXT_LENGTH,
     DEFAULT_BATCH_SIZE,
     DEFAULT_THREAD_COUNT,
@@ -1104,16 +1106,18 @@ class GenericOpenAIAPIAgent(LocalLLMAgent):
 
     def _chat_completion_params(self, conversation: dict) -> (str, dict):
         request_params = {}
+        api_base_path = self.entry.options.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
 
-        endpoint = "/v1/chat/completions"
+        endpoint = f"{api_base_path}/chat/completions"
         request_params["messages"] = [ { "role": x["role"], "content": x["message"] } for x in conversation ]
 
         return endpoint, request_params
 
     def _completion_params(self, conversation: dict) -> (str, dict):
         request_params = {}
+        api_base_path = self.entry.options.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
 
-        endpoint = "/v1/completions"
+        endpoint = f"/{api_base_path}/completions"
         request_params["prompt"] = self._format_prompt(conversation)
 
         return endpoint, request_params

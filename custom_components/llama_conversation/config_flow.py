@@ -78,6 +78,8 @@ from .const import (
     CONF_TEXT_GEN_WEBUI_CHAT_MODE,
     CONF_OLLAMA_KEEP_ALIVE_MIN,
     CONF_OLLAMA_JSON_MODE,
+    CONF_GENERIC_OPENAI_PATH,
+    CONF_GENERIC_OPENAI_VALIDATE_MODEL,
     CONF_CONTEXT_LENGTH,
     CONF_BATCH_SIZE,
     CONF_THREAD_COUNT,
@@ -116,6 +118,8 @@ from .const import (
     DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
     DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
     DEFAULT_OLLAMA_JSON_MODE,
+    DEFAULT_GENERIC_OPENAI_PATH,
+    DEFAULT_GENERIC_OPENAI_VALIDATE_MODEL,
     DEFAULT_CONTEXT_LENGTH,
     DEFAULT_BATCH_SIZE,
     DEFAULT_THREAD_COUNT,
@@ -201,20 +205,27 @@ def STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(*, chat_model=None, downloaded_model_q
         }
     )
 
-def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, ssl=None, chat_model=None, available_chat_models=[], selected_language=None):
+def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, ssl=None, chat_model=None, available_chat_models=[], selected_language=None, selected_path=None):
 
     extra1, extra2 = ({}, {})
     default_port = DEFAULT_PORT
 
     if backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI: 
-        extra2[vol.Optional(CONF_TEXT_GEN_WEBUI_ADMIN_KEY)] = TextSelector(TextSelectorConfig(type="password"))
-
+        extra2[vol.Optional(CONF_TEXT_GEN_WEBUI_ADMIN_KEY)] = TextSelector(TextSelectorConfig(type="password"))        
     elif backend_type == BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER:
         default_port = "8000"
     elif backend_type == BACKEND_TYPE_OLLAMA:
         default_port = "11434"
     elif backend_type == BACKEND_TYPE_GENERIC_OPENAI:
         default_port = ""
+        extra2[vol.Required(
+            CONF_GENERIC_OPENAI_PATH,
+            default=selected_path if selected_path else DEFAULT_GENERIC_OPENAI_PATH
+        )] = TextSelector(TextSelectorConfig(prefix="/"))
+        extra1[vol.Required(
+            CONF_GENERIC_OPENAI_VALIDATE_MODEL,
+            default=DEFAULT_GENERIC_OPENAI_VALIDATE_MODEL
+        )] = BooleanSelector(BooleanSelectorConfig())
 
     return vol.Schema(
         {
@@ -227,13 +238,13 @@ def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, ss
                 multiple=False,
                 mode=SelectSelectorMode.DROPDOWN,
             )),
+            **extra1,
             vol.Required(CONF_SELECTED_LANGUAGE, default=selected_language if selected_language else "en"): SelectSelector(SelectSelectorConfig(
                 options=CONF_SELECTED_LANGUAGE_OPTIONS,
                 translation_key=CONF_SELECTED_LANGUAGE,
                 multiple=False,
                 mode=SelectSelectorMode.DROPDOWN,
             )),
-            **extra1,
             vol.Optional(CONF_OPENAI_API_KEY): TextSelector(TextSelectorConfig(type="password")),
             **extra2
         }
@@ -491,7 +502,43 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         self.download_task = None
         return self.async_show_progress_done(next_step_id=next_step)
     
-    # TODO: add validate for generic openAI API and hit the `/v1/models endpoint to check
+    def _validate_generic_openai(self, user_input: dict) -> tuple:
+        """
+        Validates a connection to an OpenAI compatible API server and that the model exists on the remote server
+
+        :param user_input: the input dictionary used to build the connection
+        :return: a tuple of (error message name, exception detail); both can be None
+        """
+        try:
+            headers = {}
+            api_key = user_input.get(CONF_TEXT_GEN_WEBUI_ADMIN_KEY, user_input.get(CONF_OPENAI_API_KEY))
+            api_base_path = user_input.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
+            if api_key:
+                headers["Authorization"] = f"Bearer {api_key}"
+
+            models_result = requests.get(
+                format_url(
+                    hostname=self.model_config[CONF_HOST],
+                    port=self.model_config[CONF_PORT],
+                    ssl=self.model_config[CONF_SSL],
+                    path=f"/{api_base_path}/models"
+                ),
+                timeout=5, # quick timeout
+                headers=headers
+            )
+            models_result.raise_for_status()
+
+            models = [ model["id"] for model in models_result.json()["data"] ]
+
+            for model in models:
+                if model == self.model_config[CONF_CHAT_MODEL]:
+                    return None, None, []
+
+            return "missing_model_api", None, models
+
+        except Exception as ex:
+            _LOGGER.info("Connection error was: %s", repr(ex))
+            return "failed_to_connect", ex, []
 
     def _validate_text_generation_webui(self, user_input: dict) -> tuple:
         """
@@ -592,6 +639,11 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                     error_message, ex, possible_models = await self.hass.async_add_executor_job(
                         self._validate_ollama, user_input
                     )
+                elif backend_type == BACKEND_TYPE_GENERIC_OPENAI and \
+                    user_input.get(CONF_GENERIC_OPENAI_VALIDATE_MODEL, DEFAULT_GENERIC_OPENAI_VALIDATE_MODEL):
+                    error_message, ex, possible_models = await self.hass.async_add_executor_job(
+                        self._validate_generic_openai, user_input
+                    )
                 else:
                     possible_models = []
 
@@ -607,6 +659,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                         chat_model=user_input[CONF_CHAT_MODEL],
                         available_chat_models=possible_models,
                         selected_language=self.selected_language,
+                        selected_path=user_input[CONF_GENERIC_OPENAI_PATH]
                     )
                 else:
                     return await self.async_step_model_parameters()
@@ -680,6 +733,9 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         if backend == BACKEND_TYPE_LLAMA_EXISTING:
             model_name = os.path.basename(self.model_config.get(CONF_DOWNLOADED_MODEL_FILE))
         location = "llama.cpp" if is_local_backend(backend) else "remote"
+
+        _LOGGER.debug(f"creating model with config: {self.model_config}")
+        _LOGGER.debug(f"options: {self.options}")
 
         return self.async_create_entry(
             title=f"LLM Model '{model_name}' ({location})",
