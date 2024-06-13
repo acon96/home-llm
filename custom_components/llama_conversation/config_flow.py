@@ -654,7 +654,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                         chat_model=user_input[CONF_CHAT_MODEL],
                         available_chat_models=possible_models,
                         selected_language=self.selected_language,
-                        selected_path=user_input[CONF_GENERIC_OPENAI_PATH]
+                        selected_path=user_input.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH),
                     )
                 else:
                     return await self.async_step_model_parameters()

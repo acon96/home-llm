@@ -153,8 +153,6 @@ class LocalLLMAgent(AbstractConversationAgent):
         if entry.options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES, DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES):
             self._load_icl_examples(entry.options.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE))
 
-        self._load_model(entry)
-
     def _load_icl_examples(self, filename: str):
         """Load info used for generating in context learning examples"""
         try:

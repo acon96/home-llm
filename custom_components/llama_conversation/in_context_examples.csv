@@ -3,8 +3,6 @@ fan,Turn on the <name>,HassTurnOn,Turning on the fan for you.
 fan,Turn on the fans in the <area>,HassTurnOn,Turning on the fans in <area>
 fan,Turn off the <name>,HassTurnOff,Switching off the fan as requested.
 fan,Toggle the fan <name> for me,HassToggle,I'll toggle the fan's state for you.
-cover,Can you open the <name>?,HassOpenCover,Opening the garage door for you.
-cover,Close the <name> now,HassCloseCover,Closing the garage door as requested.
 light,Turn the <name> light on,HassTurnOn,Turning on the light for you.
 light,Lights off in <area>,HassTurnOff,Turning off the light as requested.
 light,Hit toggle for the lights in <area>,HassToggle,Toggling the lights in the <area> for you.
