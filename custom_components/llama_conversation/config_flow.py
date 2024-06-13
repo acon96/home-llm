@@ -1,13 +1,11 @@
 """Config flow for Local LLM Conversation integration."""
 from __future__ import annotations
 
-import os
-import sys
 import logging
-import requests
+import os
+from abc import ABC, abstractmethod
 from types import MappingProxyType
 from typing import Any
-from abc import ABC, abstractmethod
 
 import voluptuous as vol
 
@@ -21,6 +19,7 @@ from homeassistant.data_entry_flow import (
     FlowResult,
 )
 from homeassistant.helpers import llm
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -502,7 +501,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         self.download_task = None
         return self.async_show_progress_done(next_step_id=next_step)
     
-    def _validate_generic_openai(self, user_input: dict) -> tuple:
+    async def _async_validate_generic_openai(self, user_input: dict) -> tuple:
         """
         Validates a connection to an OpenAI compatible API server and that the model exists on the remote server
 
@@ -516,7 +515,8 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             if api_key:
                 headers["Authorization"] = f"Bearer {api_key}"
 
-            models_result = requests.get(
+            session = async_get_clientsession(self.hass)
+            async with session.get(
                 format_url(
                     hostname=self.model_config[CONF_HOST],
                     port=self.model_config[CONF_PORT],
@@ -525,10 +525,11 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                 ),
                 timeout=5, # quick timeout
                 headers=headers
-            )
-            models_result.raise_for_status()
+            ) as response:
+                response.raise_for_status()
+                models_result = await response.json()
 
-            models = [ model["id"] for model in models_result.json()["data"] ]
+            models = [ model["id"] for model in models_result["data"] ]
 
             for model in models:
                 if model == self.model_config[CONF_CHAT_MODEL]:
@@ -540,7 +541,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             _LOGGER.info("Connection error was: %s", repr(ex))
             return "failed_to_connect", ex, []
 
-    def _validate_text_generation_webui(self, user_input: dict) -> tuple:
+    async def _async_validate_text_generation_webui(self, user_input: dict) -> tuple:
         """
         Validates a connection to text-generation-webui and that the model exists on the remote server
 
@@ -553,7 +554,8 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             if api_key:
                 headers["Authorization"] = f"Bearer {api_key}"
 
-            models_result = requests.get(
+            session = async_get_clientsession(self.hass)
+            async with session.get(
                 format_url(
                     hostname=self.model_config[CONF_HOST],
                     port=self.model_config[CONF_PORT],
@@ -562,10 +564,9 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                 ),
                 timeout=5, # quick timeout
                 headers=headers
-            )
-            models_result.raise_for_status()
-
-            models = models_result.json()
+            ) as response:
+                response.raise_for_status()
+                models = response.json()
 
             for model in models["model_names"]:
                 if model == self.model_config[CONF_CHAT_MODEL].replace("/", "_"):
@@ -577,7 +578,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             _LOGGER.info("Connection error was: %s", repr(ex))
             return "failed_to_connect", ex, []
         
-    def _validate_ollama(self, user_input: dict) -> tuple:
+    async def _async_validate_ollama(self, user_input: dict) -> tuple:
         """
         Validates a connection to ollama and that the model exists on the remote server
 
@@ -590,7 +591,8 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             if api_key:
                 headers["Authorization"] = f"Bearer {api_key}"
 
-            models_result = requests.get(
+            session = async_get_clientsession(self.hass)
+            async with session.get(
                 format_url(
                     hostname=self.model_config[CONF_HOST],
                     port=self.model_config[CONF_PORT],
@@ -599,17 +601,16 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                 ),
                 timeout=5, # quick timeout
                 headers=headers
-            )
-            models_result.raise_for_status()
+            ) as response:
+                response.raise_for_status()
+                models_result = await response.json()
 
-            models = models_result.json()["models"]
-
-            for model in models:
+            for model in models_result["models"]:
                 model_name = self.model_config[CONF_CHAT_MODEL]
                 if model["name"] == model_name:
                     return (None, None, [])
                 
-            return "missing_model_api", None, [x["name"] for x in models]
+            return "missing_model_api", None, [x["name"] for x in models_result["models"]]
 
         except Exception as ex:
             _LOGGER.info("Connection error was: %s", repr(ex))
@@ -632,18 +633,12 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
 
                 # validate and load when using text-generation-webui or ollama
                 if backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
-                    error_message, ex, possible_models = await self.hass.async_add_executor_job(
-                        self._validate_text_generation_webui, user_input
-                    )
+                    error_message, ex, possible_models = await self._async_validate_text_generation_webui(user_input)
                 elif backend_type == BACKEND_TYPE_OLLAMA:
-                    error_message, ex, possible_models = await self.hass.async_add_executor_job(
-                        self._validate_ollama, user_input
-                    )
+                    error_message, ex, possible_models = await self._async_validate_ollama(user_input)
                 elif backend_type == BACKEND_TYPE_GENERIC_OPENAI and \
                     user_input.get(CONF_GENERIC_OPENAI_VALIDATE_MODEL, DEFAULT_GENERIC_OPENAI_VALIDATE_MODEL):
-                    error_message, ex, possible_models = await self.hass.async_add_executor_job(
-                        self._validate_generic_openai, user_input
-                    )
+                     error_message, ex, possible_models = await self._async_validate_generic_openai(user_input)
                 else:
                     possible_models = []
 
