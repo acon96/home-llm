@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import aiohttp
+import asyncio
 import csv
 import importlib
 import json
@@ -1181,6 +1182,7 @@ class GenericOpenAIAPIAgent(LocalLLMAgent):
             headers["Authorization"] = f"Bearer {self.api_key}"
 
         session = async_get_clientsession(self.hass)
+        response = None
         try:
             async with session.post(
                 f"{self.api_host}{endpoint}",
@@ -1190,7 +1192,7 @@ class GenericOpenAIAPIAgent(LocalLLMAgent):
             ) as response:
                 response.raise_for_status()
                 result = await response.json()
-        except aiohttp.ClientTimeout:
+        except asyncio.TimeoutError:
             return "The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities."
         except aiohttp.ClientError as err:
             _LOGGER.debug(f"Err was: {err}")
@@ -1446,6 +1448,7 @@ class OllamaAPIAgent(LocalLLMAgent):
             headers["Authorization"] = f"Bearer {self.api_key}"
         
         session = async_get_clientsession(self.hass)
+        response = None
         try:
             async with session.post(
                 f"{self.api_host}{endpoint}",
@@ -1455,7 +1458,7 @@ class OllamaAPIAgent(LocalLLMAgent):
             ) as response:
                 response.raise_for_status()
                 result = await response.json()
-        except aiohttp.ClientTimeout:
+        except asyncio.TimeoutError:
             return "The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities."
         except aiohttp.ClientError as err:
             _LOGGER.debug(f"Err was: {err}")
