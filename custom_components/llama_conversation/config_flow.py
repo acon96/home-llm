@@ -566,7 +566,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                 headers=headers
             ) as response:
                 response.raise_for_status()
-                models = response.json()
+                models = await response.json()
 
             for model in models["model_names"]:
                 if model == self.model_config[CONF_CHAT_MODEL].replace("/", "_"):
