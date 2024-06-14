@@ -5,23 +5,22 @@ blinds.close_cover,główna_sypialnia,Zasuń rolety w głównej sypialni
 blinds.open_cover,kuchnia,Czy mógłbyś podnieść rolety w kuchni?
 blinds.open_cover,salon,Otwórz rolety w salonie
 blinds.open_cover,główna_sypialnia,Podnieś rolety w głównej sypialni
-blinds.stop_cover,kuchnia,"Zatrzymaj rolety kuchenne tam, gdzie są"
+blinds.stop_cover,kuchnia,Zatrzymaj rolety kuchenne
 blinds.stop_cover,salon,Przestań regulować rolety w salonie
 blinds.stop_cover,główna_sypialnia,Proszę zaciągnąć rolety w głównej sypialni
 blinds.toggle,kuchnia,Zmień stan rolet kuchennych
 blinds.toggle,salon,Przełącz rolety w salonie
 blinds.toggle,główna_sypialnia,Odwróć rolety w głównej sypialni
 fan.decrease_speed,poddasze_1,Zwolnij wentylator na poddaszu
-fan.decrease_speed,poddasze_1,Wyłącz wentylator na poddaszu
 fan.decrease_speed,strych,Zwolnij wentylator na poddaszu
 fan.decrease_speed,sypialnia_mistrz,Zwolnij wentylator w głównej sypialni
-fan.decrease_speed,garaż,Wyłącz wentylator w garażu
+fan.decrease_speed,garaż,Zmniejsz prędkość wentylatora w garażu
 fan.decrease_speed,pokój_gościnny,Zmniejsz prędkość wentylatora w pokoju gościnnym
 fan.decrease_speed,korytarz,Zmniejsz prędkość wentylatora w korytarzu
-fan.decrease_speed,kuchnia,Zwolnij wentylator kuchenny
-fan.decrease_speed,kuchnia,Wyłącz wentylator kuchenny
+fan.decrease_speed,kuchnia,Zmniejsz wentylator kuchenny
+fan.decrease_speed,kuchnia,Zmniejsz wentylator kuchenny
 fan.decrease_speed,salon,Zmniejsz prędkość wentylatora w salonie
-fan.decrease_speed,salon,Wyłącz wentylator w salonie
+fan.decrease_speed,salon,Zmniejsz wentylator w salonie
 fan.decrease_speed,badanie,Zmniejsz prędkość wentylatora w badaniu
 fan.increase_speed,poddasze_1,Zwiększ prędkość wentylatora na poddaszu
 fan.increase_speed,strych,Przyspiesz wentylator na poddaszu
@@ -36,9 +35,9 @@ fan.toggle,strych,Zmień stan wentylatora na poddaszu
 fan.toggle,piwnica,Przełącz wentylator w piwnicy
 fan.toggle,sypialnia_mistrz,Zmień stan wentylatora w głównej sypialni
 fan.toggle,sypialnia,Przełącz wentylator w sypialni
-fan.toggle,jadalnia_stół_powyżej,Proszę włączyć wentylator nad stołem
-fan.toggle,podjazd,Odwróć wentylator na podjeździe
-fan.toggle,garaż,Odwróć wentylator w garażu
+fan.toggle,jadalnia_stół_powyżej,włącz wentylator nad stołem
+fan.toggle,podjazd,Przełącz wentylator na podjeździe
+fan.toggle,garaż,Przełącz wentylator w garażu
 fan.toggle,pokój_gościnny,Możesz włączyć wentylator w pokoju gościnnym?
 fan.toggle,korytarz,Zmień stan wentylatora w korytarzu
 fan.toggle,kuchnia,Przełącz wentylator kuchenny
@@ -50,22 +49,19 @@ fan.toggle,szopa,Włączyć lub wyłączyć wentylator szopy
 fan.toggle,badanie,Zmień stan wentylatora w badaniu
 fan.turn_off,poddasze_1,Wyłącz wentylator na poddaszu
 fan.turn_off,sypialnia_mistrz,Wyłącz wentylator w głównej sypialni
-fan.turn_off,jadalnia,Proszę wyłączyć wentylator w jadalni
+fan.turn_off,jadalnia,Proszę wyłącz wentylator w jadalni
 fan.turn_off,jadalnia,Wyłącz wentylator w jadalni
 fan.turn_off,garaż,Wyłącz wentylator garażowy
-fan.turn_off,garaż,Wyłączyć wentylator garażowy
 fan.turn_off,pokój_gościnny,Wyłącz wentylator w pokoju gościnnym
 fan.turn_off,kuchnia,Wyłącz wentylator kuchenny
 fan.turn_off,salon,Wyłącz wentylator w salonie
 fan.turn_off,biuro,Czy mógłbyś wyłączyć wentylator w biurze?
 fan.turn_off,biuro,Wyłącz wentylator w biurze
 fan.turn_off,patio,Wyłącz wentylator tarasowy
-fan.turn_off,badanie,Wyłącz wentylator do nauki
-fan.turn_off,badanie,Wyłącz wentylator do nauki
 fan.turn_on,łazienka,Włącz wentylator w łazience
 fan.turn_on,łazienka,Włącz wentylator w łazience
-fan.turn_on,sypialnia_mistrz,Włącz wentylator w głównej sypialni
-fan.turn_on,jadalnia,Proszę włączyć wentylator w jadalni
+fan.turn_on,sypialnia_główna,Włącz wentylator w głównej sypialni
+fan.turn_on,jadalnia,włącz  wentylator w jadalni
 fan.turn_on,garaż,Włącz wentylator garażowy
 fan.turn_on,korytarz,Włącz wentylator w korytarzu
 fan.turn_on,kuchnia,Włącz wentylator kuchenny
@@ -74,12 +70,12 @@ fan.turn_on,salon,Włącz wentylator w salonie
 fan.turn_on,biuro,Czy mógłbyś włączyć wentylator biurowy?
 fan.turn_on,badanie,Aktywuj wentylator do nauki
 fan.turn_on,badanie,Włącz wentylator do nauki
-garage_door.close_cover,magazyn_rowerów,Dezaktywuj garaż do przechowywania rowerów
+garage_door.close_cover,magazyn_rowerów,Zakmnij garaż do przechowywania rowerów
 garage_door.close_cover,główny,Zamknij główną bramę garażową
-garage_door.close_cover,jeden_samochód,"Upewnij się, że garaż na jeden samochód jest zamknięty"
+garage_door.close_cover,jeden_samochód,"Upewnij się, że pojedyncza brama garażowa jest zamknięta"
 garage_door.close_cover,strona,Opuść boczną bramę garażową
 garage_door.open_cover,piwnica,Proszę podnieść bramę do garażu w piwnicy
-garage_door.open_cover,magazyn_rowerów,Aktywuj garaż do przechowywania rowerów
+garage_door.open_cover,magazyn_rowerów,Otwórz garaż do przechowywania rowerów
 garage_door.open_cover,główny,Otwórz główną bramę garażową
 garage_door.open_cover,strona,Czy mógłbyś podnieść boczną bramę garażową?
 garage_door.open_cover,dwa_samochody,Otwórz garaż na dwa samochody
@@ -87,7 +83,7 @@ garage_door.stop_cover,główny,Zatrzymaj główną bramę garażową
 garage_door.stop_cover,strona,Zatrzymaj boczną bramę garażową
 garage_door.toggle,główny,Przełącz główną bramę garażową
 garage_door.toggle,strona,Zmień stan bocznej bramy garażowej
-light.toggle,strych,Zmień stan oświetlenia na poddaszu
+light.toggle,strych,Prezłącz oświetlenia na poddaszu
 light.toggle,sypialnia_1,Przełącz światło w sypialni
 light.toggle,jadalnia_stół_powyżej,Proszę włączyć światło nad stołem w jadalni
 light.toggle,podjazd,Włącz światło na podjeździe
@@ -95,32 +91,32 @@ light.toggle,garaż,Włącz światło w garażu
 light.toggle,pokój_gościnny,Mógłbyś włączyć światło w pokoju gościnnym?
 light.toggle,pokój_gościnny,Włącz światło w pokoju gościnnym
 light.toggle,korytarz,Zmień stan oświetlenia w korytarzu
-light.toggle,korytarz,Przełącz światło w korytarzu
-light.toggle,kuchnia_1,Przełącz światło w kuchni
-light.toggle,kuchnia_2,Przełącz światło w kuchni
-light.toggle,biuro,Przełącz światło w biurze
-light.toggle,na_wolnym_powietrzu,Przełącz światło zewnętrzne
-light.toggle,patio,Przełącz światło na patio
+light.toggle,korytarz,Wyłącz światło w korytarzu
+light.toggle,kuchnia_1,Wyłącz światło w kuchni
+light.toggle,kuchnia_2,Wyłącz światło w kuchni
+light.toggle,biuro,Wyłącz światło w biurze
+light.toggle,na_wolnym_powietrzu,Wyłącz światło zewnętrzne
+light.toggle,patio,Wyłącz światło na patio
 light.toggle,basen,Zmień stan oświetlenia basenu
 light.toggle,szopa,Włącz lub wyłącz oświetlenie szopy
 light.toggle,badanie,Zmień stan oświetlenia w badaniu
-light.toggle,badanie,Przełącz światło do nauki
+light.toggle,badanie,Wyłącz światło do nauki
 light.turn_off,łazienka_1,Proszę zgasić światło w łazience
 light.turn_off,łazienka,Wyłącz światło w łazience
 light.turn_off,łazienka,Wyłącz światło w łazience
 light.turn_off,sypialnia_1,Wyłącz światło w sypialni
 light.turn_off,sypialnia_2,Wyłącz światło w sypialni
-light.turn_off,jadalnia,Wyłącz światło w jadalni
-light.turn_off,jadalnia,Wyłącz światło w jadalni
-light.turn_off,ogród_1,Wyłącz światło ogrodowe
-light.turn_off,pokój_gościnny,Wyłącz oświetlenie pokoju gościnnego
+light.turn_off,jadalnia,Zgaś światło w jadalni
+light.turn_off,jadalnia,Zgaś światło w jadalni
+light.turn_off,ogród_1,Zgaś światło ogrodowe
+light.turn_off,pokój_gościnny,WyłZgaśącz oświetlenie pokoju gościnnego
 light.turn_off,pokój_gościnny,Wyłącz światło w pokoju gościnnym
 light.turn_off,korytarz,Wyłącz światło w korytarzu
 light.turn_off,korytarz,Wyłącz światło w korytarzu
-light.turn_off,kuchnia_2,Wyłącz światło w kuchni
+light.turn_off,kuchnia_2,Zgaś światło w kuchni
 light.turn_off,blat_kuchenny,Wyłącz światło na blacie kuchennym
 light.turn_off,salon_1,Wyłącz światło w salonie
-light.turn_off,salon,Wyłącz światło w salonie
+light.turn_off,salon,Zgaś światło w salonie
 light.turn_off,główna_sypialnia_1,Wyłącz światło w głównej sypialni
 light.turn_off,główna_lampa_sypialni,Wyłącz światło w sypialni
 light.turn_off,biuro,Dezaktywuj oświetlenie biurowe
@@ -129,35 +125,35 @@ light.turn_off,patio,Wyłącz oświetlenie patio
 light.turn_off,basen,Wyłącz światło w basenie
 light.turn_off,badanie,Wyłącz światło do nauki
 light.turn_on,łazienka_1,Czy mógłbyś oświetlić łazienkę?
-light.turn_on,łazienka,Włącz światło w łazience
+light.turn_on,łazienka,Zapal światło w łazience
 light.turn_on,sypialnia_1,Włącz światło w sypialni
 light.turn_on,jadalnia_1,Włącz światła w jadalni
 light.turn_on,jadalnia,Włącz światło w jadalni
 light.turn_on,podjazd,Włącz światło na podjeździe
+light.turn_on,garaż,Zapal światło w garażu
 light.turn_on,garaż,Włącz światło w garażu
-light.turn_on,garaż,Włącz światło w garażu
-light.turn_on,ogród_1,Włącz światło ogrodowe
+light.turn_on,ogród_1,Zapal światło ogrodowe
 light.turn_on,ogród_1,Włącz światło ogrodowe
 light.turn_on,ogród_2,Włącz światło ogrodowe
 light.turn_on,ogród,Włącz światło ogrodowe
 light.turn_on,pokój_gościnny,Włącz światło w pokoju gościnnym
-light.turn_on,korytarz,Włącz światło w korytarzu
+light.turn_on,korytarz,Zapal światło w korytarzu
 light.turn_on,kuchnia_1,Włącz światło w kuchni
-light.turn_on,kuchnia_1,Włącz światło w kuchni
+light.turn_on,kuchnia_1,Zapal światło w kuchni
 light.turn_on,blat_kuchenny,Włącz oświetlenie blatu kuchennego
-light.turn_on,salon,Włącz światło w salonie
+light.turn_on,salon,Zapal światło w salonie
 light.turn_on,główna_sypialnia_1,Włącz światło w głównej sypialni
 light.turn_on,biuro_1,Włącz światło biurowe
 light.turn_on,patio,Włącz oświetlenie patio
-light.turn_on,patio,Włącz światło na tarasie
+light.turn_on,patio,Zapal światło na tarasie
 light.turn_on,patio,Włącz światło na patio
 light.turn_on,basen,Włącz oświetlenie basenu
 light.turn_on,basen,Włącz światło w basenie
-light.turn_on,szopa,Aktywuj rzucone światło
-light.turn_on,szopa,Włącz szopę
+light.turn_on,szopa,Włąćz światłą w szopie
+light.turn_on,szopa,Włącz światłą w szopie
 light.turn_on,badanie,Włącz lampkę do nauki
 light.turn_on,jadalnia_żyrandol,Włącz światło w jadalni
-light.turn_on,żyrandol_przedpokój_przedpokój,"Hej, możesz włączyć żyrandol w przedpokoju?"
+light.turn_on,żyrandol_przedpokój_przedpokój,"Hej, możesz zapalić żyrandol w przedpokoju?"
 lock.lock,tylne_drzwi,Włączyć zamek tylnych drzwi
 lock.lock,drzwi_wejściowe,Zamknij drzwi wejściowe
 lock.lock,żłobek,Czy możesz zabezpieczyć drzwi do pokoju dziecięcego?
@@ -333,8 +329,8 @@ switch.turn_on,czujnik_przedni,Włączyć światło czujnika na werandzie.
 switch.turn_on,listwa_świetlna_schodów,Czy mógłbyś zapalić listwę świetlną na klatce schodowej?
 switch.turn_on,lampa_biurowa_biurowa,Zapal lampę biurkową w moim biurze.
 switch.turn_on,biblioteka_sufit,Włącz lampy sufitowe w bibliotece.
-switch.turn_on,łazienka_gościnna,Proszę o oświetlenie łazienki dla gości.
-switch.turn_on,żyrandol_przedpokój,Oświetl żyrandol w przedpokoju.
+switch.turn_on,łazienka_gościnna,Włącz światła łazienki dla gości.
+switch.turn_on,żyrandol_przedpokój,Włącz żyrandol w przedpokoju.
 switch.turn_on,oświetlenie_ścieżki_sypialni,Rozjaśnij oświetlenie szynowe w sypialni.
 switch.turn_on,oświetlenie_nastroju_balkonu,Włącz nastrojowe oświetlenie na balkonie.
 switch.turn_on,pokój_zabaw_nocne_światło,Czy możesz włączyć lampkę nocną w pokoju zabaw?
@@ -593,9 +589,9 @@ light.turn_on,angies_lamp,Czy możesz włączyć lampę Angie?
 light.turn_on,louis_lampa,"Czy mógłbyś włączyć lampę Louisa, proszę?"
 light.turn_on,katniss_lamp,Czy mógłbyś włączyć lampę Katniss?
 light.turn_on,lampa_waynesa,Włącz lampę Wayne’a
-light.turn_on,lampa_suelsa,Proszę włączyć lampę Samuela
+light.turn_on,lampa_suelsa,Proszę włącz lampę Samuela
 light.turn_on,lampa_wejściowa,Włącz lampę wejściową
-light.turn_on,lampa_wejściowa,Proszę włączyć lampę w przedpokoju
-light.turn_on,lampa_wejściowa,Proszę włączyć lampę w przedpokoju
+light.turn_on,lampa_wejściowa,Proszę włącz lampę w przedpokoju
+light.turn_on,lampa_wejściowa,Proszę włącz lampę w przedpokoju
 light.turn_on,lampa_wejściowa,Włącz światło wejściowe
 light.turn_on,lampa_wejściowa,Włącz oświetlenie wejścia.
