@@ -1,0 +1,647 @@
+device_name,description
+blinds.tylne_okno,Rolety na tylne okno
+blinds.piwnica,Żaluzje piwniczne
+blinds.łazienka_1,Pierwsze rolety łazienkowe
+blinds.łazienka,Żaluzje łazienkowe
+blinds.pokój_rzemieślniczy,"Zrób to sam, rolety do pokoju"
+blinds.jadalnia,Rolety do jadalni
+blinds.okno_przednie,Rolety na przednią szybę
+blinds.garaż,Żaluzje garażowe
+blinds.łazienka_gościnna,Rolety do łazienki dla gości
+blinds.pokój_gościnny,Rolety do pokoju gościnnego
+blinds.korytarz_1,Pierwsze rolety do przedpokoju
+blinds.korytarz_2,Drugie rolety do przedpokoju
+blinds.korytarz,Żaluzje do przedpokoju
+blinds.ikea_smart,Inteligentne rolety z Ikei
+blinds.pokój_dziecięcy,Rolety do pokoju dziecięcego
+blinds.okno_kuchni,Rolety okienne kuchenne
+blinds.kuchnia,Rolety kuchenne
+blinds.salon_pokój_duży,Główne rolety w salonie
+blinds.salon,Rolety do salonu
+blinds.główna_sypialnia,Rolety do głównej sypialni
+blinds.żłobek,Rolety do przedszkola
+blinds.biuro,Rolety biurowe
+blinds.okno_biura,Zasłony okienne do biura
+blinds.patio,Żaluzje tarasowe
+blinds.świetlik,Żaluzje świetlikowe
+blinds.świetlik,Żaluzje świetlikowe
+blinds.somfy_kuchnia,Rolety kuchenne
+blinds.somfy_living,Rolety do salonu
+blinds.solarium,Rolety przeciwsłoneczne
+blinds.sala_teatralna,Rolety do kina domowego
+fan.poddasze_1,Fani na poddaszu
+fan.poddasze_2,Fani na poddaszu
+fan.poddasze_3,Fani na poddaszu
+fan.wentylacja_poddasza,Wentylator na poddaszu
+fan.strych,Wentylator na poddaszu
+fan.tylny_ganek,Wentylator na tylnym ganku
+fan.balkon,Wentylator balkonowy
+fan.piwnica,Wentylator piwnicy
+fan.łazienka_w_dół,Wentylator w łazience na parterze
+fan.łazienka,Wentylator łazienkowy
+fan.sypialnia_mistrz,Wentylator głównej sypialni
+fan.sypialnia_prawa,Wentylator do sypialni po prawej stronie
+fan.sypialnia,Wentylator sypialni
+fan.sufit_1,Wentylatory sufitowe
+fan.sufit_2,Wentylatory sufitowe
+fan.jadalnia,Wentylator w jadalni
+fan.jadalnia,Wentylator do jadalni
+fan.dyson_pure,Czysty wentylator Dysona
+fan.ganek,Wentylator na werandzie
+fan.garaż_warsztat,Wentylator warsztatowy garażowy
+fan.garaż,Wentylator garażowy
+fan.pokój_gościnny,Wentylator pokoju gościnnego
+fan.pokój_gościnny,Wentylator pokoju gościnnego
+fan.korytarz,Wentylator przedpokojowy
+fan.honeywell_turbo,Turbowentylator Honeywell
+fan.sala_siłownia,Fan siłowni
+fan.pokój_dziecięcy,Wentylator do pokoju dziecięcego
+fan.kuchnia_1,Fani Kuchni
+fan.kuchnia_2,Fani Kuchni
+fan.wyspa_kuchenna,Chłodzący wentylator kuchenny
+fan.kuchnia,Fan kuchni
+fan.pralnia,Wentylator do pralni
+fan.salon_1,Wentylator do salonu
+fan.salon_2,Wentylator do salonu
+fan.salon_pokoju_centrum,Centralny wentylator do salonu
+fan.salon,Wentylator do salonu
+fan.mistrz_kąpiel,Główny wentylator łazienkowy
+fan.żłobek,Fanka przedszkola
+fan.biuro,Fan biura
+fan.kuchnia_zewnętrzna,Wentylator kuchenny na świeżym powietrzu
+fan.patio_na_świeżym_powietrzu,Wentylator ogrodowy
+fan.na_wolnym_powietrzu,Wentylator zewnętrzny
+fan.patio,Wentylator tarasowy
+fan.ganek,Wentylator sufitowy na werandzie
+fan.szopa,Wentylator szopy
+fan.badanie_1,Miłośnik nauki
+fan.badanie_2,Miłośnik nauki
+fan.badanie,miłośnik nauki
+garage_door.piwnica,Brama garażowa w piwnicy
+garage_door.schowek_na_rower,Drzwi do szopy na rowery
+garage_door.magazyn_rowerów,Garaż do przechowywania rowerów
+garage_door.łódź,Drzwi garażowe dla łodzi
+garage_door.łódź,Drzwi do przechowywania łodzi
+garage_door.wiata_samochodowa,Brama garażowa z wiatą
+garage_door.wiata_samochodowa,Drzwi do wiaty
+garage_door.szambelan_1,Szambelan
+garage_door.szambelan_2,Szambelan
+garage_door.wózek_golfowy,Garaż wózków golfowych
+garage_door.wózek_golfowy,Drzwi do wózka golfowego
+garage_door.szklarnia,Drzwi do szklarni
+garage_door.gość,Brama garażowa dla gości
+garage_door.sprzęt_trawnikowy,Drzwi do sprzętu trawnikowego
+garage_door.mistrz_wyciągu_1,LiftMaster
+garage_door.mistrz_wyciągu_2,LiftMaster
+garage_door.główny_1,Główna brama garażowa
+garage_door.główny,Główna brama garażowa
+garage_door.motocykl,Garaż motocyklowy
+garage_door.jeden_samochód,Garaż na jeden samochód
+garage_door.wpis_zwierzaka,Drzwi wejściowe dla zwierząt
+garage_door.rv_storage,Drzwi do przechowywania samochodu kempingowego
+garage_door.rv,Brama garażowa do samochodu kempingowego
+garage_door.szopa_1,Pierwsze drzwi do szopy
+garage_door.szopa_2,Drugie drzwi do szopy
+garage_door.sklep,Warsztatowa brama garażowa
+garage_door.lewe_drzwi,Lewe drzwi garażowe
+garage_door.strona_2,Boczna brama garażowa
+garage_door.strona,Boczne drzwi garażowe
+garage_door.zapasowy,Zapasowe drzwi garażowe
+garage_door.dwa_samochody,Garaż na dwa samochody
+garage_door.wyższy_poziom,Garaż na górnym poziomie
+garage_door.piwnica_na_wino,Drzwi do piwnicy z winami
+light.nad_stołem_jadalnym,Lampa stołowa do jadalni
+light.akwarium,Światło do akwarium
+light.strych,Światło na poddaszu
+light.podwórko,Światło podwórkowe
+light.piwnica,Światło w piwnicy
+light.łazienka_1,Światło w łazience
+light.łazienka_2,Światło w łazience
+light.łazienka_lustro,Światła lustrzane
+light.łazienka,Światło w łazience
+light.sypialnia_1,Światło do sypialni
+light.sypialnia_2,Światło do sypialni
+light.sypialnia_3,Światło do sypialni
+light.sypialnia,Światło do sypialni
+light.szafa_pod_schodami,Oświetlenie szafy pod schodami
+light.pokład_lewy,Lewe światło pokładowe
+light.jadalnia_1,Światło w jadalni
+light.jadalnia_2,Światło w jadalni
+light.jadalnia_3,Światło w jadalni
+light.jadalnia,Światło w jadalni
+light.podjazd_1,Pierwsze światło na podjeździe
+light.podjazd,Światło na podjeździe
+light.ganek,Światło na ganku
+light.podwórko,Oświetlenie podwórka przed domem
+light.garaż,Światło garażowe
+light.ogród_1,Światło ogrodowe
+light.ogród_2,Światło ogrodowe
+light.ścieżka_ogrodowa,Oświetlenie ścieżki ogrodowej
+light.ogród,Światło ogrodowe
+light.pokój_gościnny,Światła pokoju gościnnego
+light.korytarz_na_górze,Światło w korytarzu na piętrze
+light.korytarz,Światła na korytarzu
+light.korytarz,Światło w korytarzu
+light.gorąca_wanna,Oświetlenie wanny z hydromasażem
+light.kuchnia_1,Główne światło kuchenne
+light.kuchnia_2,Drugie światło kuchenne
+light.blat_kuchenny,Lampka kuchenna
+light.blat_kuchenny,Oświetlenie blatu kuchennego
+light.stół_kuchenny,Światło na stół kuchenny
+light.kuchnia,Światło kuchenne
+light.lifx_master,Mistrz Światła
+light.salon_1,Lampy do salonu
+light.salon_2,Lampy do salonu
+light.salon_sufit,Lampa sufitowa do salonu
+light.salon_sufit,Jasne światło sufitowe
+light.salon,Światło do salonu
+light.główna_sypialnia_1,Główne oświetlenie sypialni
+light.główna_sypialnia_2,Główne oświetlenie sypialni
+light.główna_lampa_sypialni,Główna lampa do sypialni
+light.żłobek,Światło w przedszkolu
+light.biuro_1,Światło biurowe
+light.biuro_2,Światło biurowe
+light.biurko,Lampka na biurko
+light.biuro,Światło biurowe
+light.na_wolnym_powietrzu,Światła zewnętrzne
+light.patio_1,Zewnętrzne oświetlenie tarasowe
+light.patio,Światła tarasowe
+light.patio,Światło tarasowe
+light.philips_hue_1,Philips Hue
+light.philips_hue_2,Philips Hue
+light.basen,Światło basenowe
+light.szopa,Rzuć światło
+light.badanie_1,Światła do nauki
+light.badanie_2,Światła do nauki
+light.badanie_3,Światła do nauki
+light.badanie,Badanie światła
+light.stoł_warsztatowy,Lampa warsztatowa do garażu
+light.yeelight_smart,Inteligentne światło Yeelight
+light.na_piętrze_master_bedroom_hue,Odcień głównej sypialni na piętrze
+light.na_dole_guest_bedroom_zigbee,Światło w sypialni dla gości na parterze
+light.front_office_mqtt,Światło w biurze
+light.back_rodzinny_pokój_ciepły,Tył Pokój rodzinny Ciepłe światło
+light.lada_kuchenna_fajna,Blat kuchenny Fajne światło
+light.góra_łazienka_homekit,Światło w łazience na piętrze
+light.parter_salon_lifx,Światło do salonu na parterze
+light.front_porch_zwave,Światło na ganku
+light.odcień_przedpokoju_bocznego,Odcień bocznego korytarza
+light.garaż_osram,Garaż Osrama
+light.piwnica_warsztat_mqtt,Światło warsztatu w piwnicy
+light.na_piętrze_dzieci_sypialnia_zigbee,Lampa do sypialni dziecięcej na piętrze
+light.parter_master_bedroom_homekit,Światło w głównej sypialni na parterze
+light.front_salon_ge,Przednie światło do salonu
+light.tylna_sypialnia_ciepła,Tylna sypialnia Ciepłe światło
+light.kuchnia_wyspa_fajna,Wyspa kuchenna Chłodne światło
+light.góra_przedpokój_zwave,Światło w korytarzu na piętrze
+light.dół_łazienka_ciepło,Łazienka na dole Ciepłe światło
+light.front_yard_osram,Front Yard Osram
+light.back_yard_zwave,Światło na podwórku
+light.na_górze_guest_bedroom_zigbee,Światło w sypialni gościnnej na piętrze
+light.parter_biuro_mqtt,Światło biurowe na parterze
+light.front_bedroom_homekit,Światło przednie do sypialni
+light.back_office_lifx,Światło na zapleczu biura
+light.kuchnia_stół_ciepły,Ciepłe światło kuchennego stołu
+light.na_górze_tv_room_zigbee,Światło w pokoju telewizyjnym na piętrze
+light.na_dole_tv_room_homekit,Światło w pokoju telewizyjnym na parterze
+light.front_tv_room_ge,Przednie oświetlenie pokoju telewizyjnego
+light.back_tv_room_warm,Tył Pokój telewizyjny Ciepłe światło
+light.kuchnia_zlew_fajny,Chłodne światło zlewu kuchennego
+light.piętro_spiżarnia_zwave,Światło w spiżarni na piętrze
+light.dół_spiżarnia_mqtt,Światło w spiżarni na dole
+light.front_pantry_homekit,Przednia lampa w spiżarni
+light.back_pantry_lifx,Tylne światło w spiżarni
+light.kuchnia_szafka_ciepła,Szafka kuchenna Ciepłe światło
+light.piętro_korytarz_zigbee,Światło w korytarzu na piętrze
+light.dół_korytarz_mqtt,Światło na korytarzu na dole
+light.front_korytarz_homekit,Światło w przednim korytarzu
+light.back_corridor_lifx,Światło tylnego korytarza
+light.garaż_workbench_cool,Stół warsztatowy w garażu Fajne światło
+light.piętro_przedszkole_zwave,Światło w przedszkolu na górze
+light.na_dole_nursery_mqtt,Światło w przedszkolu na dole
+light.front_nursery_homekit,Przednie światło do przedszkola
+light.back_nursery_warm,Powrót Przedszkole Ciepłe światło
+light.kuchnia_sufit_fajny,Chłodne światło sufitowe w kuchni
+light.na_piętrze_lounge_zigbee,Światło w salonie na piętrze
+light.na_dole_lounge_homekit,Światło w salonie na dole
+light.front_lounge_ge,Przednie oświetlenie salonowe
+light.back_lounge_warm,Ciepłe światło w salonie na plecach
+light.piwnica_storage_cool,Chłodne światło do przechowywania w piwnicy
+light.góra_szafa_zwave,Światło w szafie na górze
+light.dół_szafa_mqtt,Światło w szafie na dole
+light.front_closet_homekit,Światło przednie w szafie
+light.tylna_szafa_ciepła,Tylna szafa Ciepłe światło
+light.na_górze_den_zigbee,Światło na górze
+light.na_dole_den_homekit,Światło na dole
+light.front_den_ge,Światło przednie
+light.back_den_warm,Tylne Den Ciepłe Światło
+light.kuchnia_okno_fajne,Chłodne światło w oknie kuchennym
+light.piętro_entryway_zwave,Światło w wejściu na górę
+light.parter_entryway_mqtt,Światło w wejściu na dół
+light.front_entryway_homekit,Światło w przedpokoju
+light.back_entryway_lifx,Światło tylnego wejścia
+light.kuchnia_biurko_ciepłe,Ciepłe światło na biurko w kuchni
+light.na_górze_mudroom_zigbee,Światło w błocie na piętrze
+light.na_dole_mudroom_homekit,Światło w błocie na dole
+light.front_mudroom_ge,Przednie światło błotne
+light.back_mudroom_warm,Powrót Błoto Ciepłe Światło
+light.kuchnia_podłoga_fajna,Chłodne światło na podłodze w kuchni
+light.piętro_poddasze_zwave,Światło na poddaszu na piętrze
+light.parter_poddasze_mqtt,Światło na poddaszu na parterze
+light.front_attic_homekit,Światło na poddaszu z przodu
+light.back_attic_lifx,Światło na poddaszu z tyłu
+light.kuchnia_szuflada_ciepła,Szuflada kuchenna Ciepłe światło
+light.na_górze_sunroom_zigbee,Światło słoneczne na piętrze
+light.dolny_sunroom_homekit,Światło słoneczne na dole
+light.front_sunroom_ge,Przednie światło słoneczne
+light.back_sunroom_warm,Tylne Sunroom Ciepłe światło
+light.kuchnia_rack_cool,Półka kuchenna Fajne światło
+light.góra_gabinet_zwave,Światło do nauki na piętrze
+light.parter_study_mqtt,Światło do nauki na dole
+light.front_study_homekit,Przednie światło do nauki
+light.back_study_lifx,Światło do nauki pleców
+light.kuchnia_bar_ciepły,Kuchnia Bar Ciepłe Światło
+light.na_górze_jadalnia_zigbee,Światło do jadalni na piętrze
+light.dolny_jadalnia_homekit,Światło do jadalni na dole
+light.front_jadalnia_ge,Przednia lampa do jadalni
+light.back_dining_warm,Powrót Jadalnia Ciepłe światło
+light.kuchnia_ściana_fajna,Chłodne światło na ścianie kuchennej
+light.piętro_kominek_zwave,Światło kominkowe na piętrze
+light.dół_kominek_mqtt,Światło kominkowe na dole
+light.front_kominek_homekit,Przednia lampa kominkowa
+light.back_fireplace_lifx,Tylne światło kominkowe
+light.kuchnia_półka_ciepła,Półka kuchenna Ciepłe światło
+light.górze_sideyard_zigbee,Boczne oświetlenie ogrodu na piętrze
+light.dolny_sideyard_homekit,Boczne oświetlenie ogrodu na dole
+light.front_sideyard_ge,Przednie boczne światło ogrodowe
+light.back_sideyard_warm,Ciepłe światło na podwórku z tyłu
+light.kuchnia_szafka_fajna,Szafka kuchenna Fajne światło
+light.piętro_kino_zwave,Światło kinowe na górze
+light.na_dole_kino_mqtt,Światło kina na dole
+light.front_cinema_homekit,Przednie światło kinowe
+light.back_cinema_lifx,Tylne światło kinowe
+light.kuchnia_piekarnik_ciepły,Ciepłe światło piekarnika kuchennego
+light.na_górze_mancave_zigbee,Światło w jaskini człowieka na górze
+light.na_dole_mancave_homekit,Światło w jaskini człowieka na dole
+light.front_mancave_ge,Światło jaskiniowe z przodu
+light.back_mancave_warm,Ciepłe światło w jaskini człowieka z tyłu
+light.kuchnia_półka_fajna,Półka kuchenna Fajne światło
+light.piętro_balkon_zwave,Światło na balkonie na piętrze
+light.parter_balkon_mqtt,Światło na balkonie na dole
+light.front_balcony_homekit,Przednia lampa balkonowa
+light.back_balcony_lifx,Tylne światło balkonowe
+light.kuchnia_karnisz_ciepły,Kuchenny Gzyms Ciepłe Światło
+light.piętro_schody_zigbee,Światło na klatce schodowej na piętrze
+light.na_dole_klatka_schodowa_homekit,Światło na klatce schodowej na dole
+light.front_stairwell_ge,Światło na klatce schodowej z przodu
+light.back_stairwell_warm,Tylna klatka schodowa Ciepłe światło
+light.kuchnia_lustro_fajne,Lustro kuchenne Chłodne światło
+light.piętro_piwnica_zwave,Światło w piwnicy na piętrze
+light.parter_basement_mqtt,Światło w piwnicy na dole
+light.front_basement_homekit,Przednie oświetlenie piwnicy
+light.back_basement_lifx,Tylne światło w piwnicy
+light.kuchnia_okno_ciepłe,Ciepłe światło przy oknie kuchennym
+light.na_górze_rekreacja_zigbee,Światło rekreacyjne na piętrze
+light.dół_rekreacja_homekit,Światło rekreacyjne na dole
+light.front_recreation_ge,Przednie światło rekreacyjne
+light.back_recreation_warm,Powrót Rekreacja Ciepłe światło
+light.kuchnia_kredens_fajny,Kredens kuchenny Fajne światło
+light.piętro_dziedziniec_zwave,Światło na dziedzińcu na piętrze
+light.parter_dziedziniec_mqtt,Światło na dziedzińcu na dole
+light.front_courtyard_homekit,Światło na dziedzińcu z przodu
+light.back_courtyard_lifx,Tylne światło na dziedzińcu
+light.kuchnia_piwnica_wina_ciepła,Kuchenna piwnica na wino Ciepłe światło
+light.na_górze_arcade_zigbee,Światło na górze Arcade
+light.na_dole_arcade_homekit,Światło na dole Arcade
+light.front_arcade_ge,Przednie światło arkadowe
+light.back_arcade_warm,Powrót Arcade Ciepłe światło
+light.kuchnia_spiżarnia_fajna,Kuchenna spiżarnia Fajne światło
+light.piętro_łazienka_zwave,Światło w łazience na piętrze
+light.na_dole_łazienka_mqtt,Światło w łazience na dole
+light.front_washroom_homekit,Przednie oświetlenie toalety
+light.back_washroom_lifx,Tylne światło toalety
+light.kuchnia_lodówka_ciepła,Kuchnia Lodówka Ciepłe Światło
+light.na_górze_biblioteka_zigbee,Światło biblioteki na piętrze
+light.na_dole_library_homekit,Światło biblioteki na dole
+light.front_library_ge,Przednie światło biblioteczne
+light.back_library_warm,Powrót Biblioteka Ciepłe światło
+light.kuchnia_coffeecorner_cool,Kuchenny kącik kawowy Fajne światło
+light.na_piętrze_playroom_zwave,Światło do pokoju zabaw na piętrze
+light.na_dole_playroom_mqtt,Światło w pokoju zabaw na dole
+light.front_playroom_homekit,Przednie oświetlenie pokoju zabaw
+light.back_playroom_lifx,Tylne światło do pokoju zabaw
+light.kuchnia_mikrofalówka_ciepła,Kuchenna kuchenka mikrofalowa Ciepłe światło
+light.piętro_obserwatorium_zigbee,Światło obserwatorium na górze
+light.dolne_obserwatorium_homekit,Światło obserwatorium na dole
+light.front_observatory_ge,Przednie światło obserwacyjne
+light.back_observatory_warm,Powrót Obserwatorium Ciepłe światło
+light.kuchnia_toster_fajny,Toster kuchenny Fajne światło
+light.góra_trening_zwave,Światło do ćwiczeń na górze
+light.na_dole_trening_mqtt,Światło do ćwiczeń na dole
+light.front_workout_homekit,Przednie światło treningowe
+light.back_workout_lifx,Światło do ćwiczeń pleców
+light.kuchnia_wyświetl_ciepło,Wyświetlacz kuchenny Ciepłe światło
+light.piętro_utility_zigbee,Światło użytkowe na piętrze
+light.dolny_utility_homekit,Światło użytkowe na dole
+light.front_utility_ge,Przednie światło użytkowe
+light.back_utility_warm,Powrót użytkowe Ciepłe światło
+light.kuchnia_trashbin_cool,Kuchenny kosz na śmieci Cool Light
+light.na_górze_siedzi_zwave,Światło w salonie na piętrze
+light.na_dole_siedzi_mqtt,Światło w salonie na parterze
+light.front_sitting_homekit,Przednie światło do salonu
+light.back_sitting_lifx,Tylne światło do salonu
+light.kuchnia_zamrażarka_ciepła,Oświetlenie zamrażarki kuchennej
+light.na_górze_zen_zigbee,Światło Zen na górze
+light.na_dole_zen_homekit,Światło Zen na dole
+light.front_zen_ge,Przednie światła
+light.back_zen_warm,Tylne światło Zen
+light.jadalnia_żyrandol,Żyrandol do jadalni
+light.żyrandol_przedpokój_przedpokój,Żyrandol w przedpokoju
+lock.tylne_drzwi,Zamek tylnych drzwi
+lock.tylne_drzwi,Zamek wjazdowy na podwórko
+lock.piwnica,Zamek w piwnicy
+lock.stojak_na_rowery,Blokada bagażnika rowerowego
+lock.magazyn_rowerów,Blokada do przechowywania rowerów
+lock.szafka_na_akta,Zamek szafki na dokumenty
+lock.front_drzwi_1,Główny zamek wejściowy
+lock.drzwi_wejściowe,Zamek drzwi przednich
+lock.garaż,Zamek drzwi garażowych
+lock.pokój_gościnny,Zamek do pokoju gościnnego
+lock.broń_bezpieczna,Blokada bezpiecznego pistoletu
+lock.skrzynka_pocztowa,Bezpieczna blokada skrzynki pocztowej
+lock.główna_sypialnia,Główny zamek do sypialni
+lock.żłobek,Zamek do drzwi przedszkola
+lock.biuro,Zamek biurowy
+lock.drzwi_na_patio,Drzwi przesuwne na taras
+lock.brama_basenu,Blokada bramy basenowej
+lock.brama_basenu,Brama basenowa
+lock.bezpieczny_depozyt,Sejf
+lock.schlage_smart,Inteligentny zamek Schlage
+lock.szopa_2,Drugi zamek szopy
+lock.szopa_na_narzędzia,Blokada szopy na narzędzia
+lock.szopa_na_narzędzia,Zamek szopy na narzędzia
+lock.pomieszczenie_gospodarcze,Zamek pomieszczenia gospodarczego
+lock.piwnica_na_wino,Zamek do piwnicy na wino
+lock.piwnica_na_wino,Zamek do piwnicy z winami
+lock.kuchnia_yale,Kuchnia Yale’a
+lock.yale_living,Pokój dzienny Yale
+lock.joga_pokój,Zamek do pokoju jogi
+lock.strych,Zamek drzwi na poddasze
+lock.drzwi_balkonu,Blokada dostępu do balkonu
+lock.sypialnia_2,Zamek w drugiej sypialni
+lock.sypialnia_3,Zamek w trzeciej sypialni
+lock.hangar_dla_łodzi,Zamek przy łodzi
+lock.gabinet,Zamek drzwi szafy
+lock.konserwatorium,Zamek do oranżerii
+lock.legowisko,Zamek Den
+lock.jadalnia,Zamek do jadalni
+lock.podjazd_brama,Zamek bramy wjazdowej
+lock.bramka_elektryczna,Elektryczny zamek do bramy
+lock.winda,Prywatna blokada windy
+lock.furtka,Zamek do bramy ogrodzeniowej
+lock.pokój_kartowania,Zamek do pokoju akt
+lock.frontowa_brama,Zamek bramy przedniej
+lock.brama_ogrodowa,Zamek do bramy ogrodowej
+lock.szklarnia,Blokada szklarni
+lock.siłownia,Blokada domowej siłowni
+lock.przedpokój_garderoba,Zamek do szafy w przedpokoju
+lock.kino_domowe,Blokada kina domowego
+lock.psiarnia,Blokada do budy dla zwierząt
+lock.drzwi_kuchni,Zamek wejściowy do kuchni
+lock.pralnia,Zamek do pralni
+lock.salon,Zamek do salonu
+lock.strych,Zamek na poddaszu
+lock.błoto,Zamek błotny
+lock.pokój_muzyczny,Zamek do pokoju muzycznego
+lock.gabinet_biurowy,Zamek do szafki biurowej
+lock.spiżarnia,Zamek do spiżarni
+lock.pokój_zabaw,Zamek do pokoju zabaw
+lock.drzwi_ganku,Zamek drzwi werandy
+lock.tylna_brama,Zamek tylnej bramy
+lock.drzwi_dachowe,Zamek dostępu na dachu
+lock.sauna,Zamek drzwi do sauny
+lock.bezpieczne_przechowywanie,Bezpieczny zamek do przechowywania
+lock.wejście_usługi,Zamek wejścia serwisowego
+lock.boczne_drzwi,Zamek z bocznym wejściem
+lock.boczna_brama,Zamek bramy bocznej
+lock.przechowywanie_nart,Zamek do przechowywania nart
+lock.brama_schodowa,Zamek do bramy schodowej
+lock.magazyn,Zamek do magazynu
+lock.studio,Blokada studyjna
+lock.solarium,Zamek Sunroom
+lock.drzwi_tarasu,Zamek do drzwi tarasowych
+lock.brama_pojazdu,Zamek bramy pojazdu
+lock.garderoba,Zamek do garderoby
+lock.warsztat,Zamek warsztatowy
+lock.warsztat_szafka,Zamek do szafki warsztatowej
+lock.podwórko_szopa,Zamek do szopy ogrodowej
+media_player.telewizor_apple,Odtwarzacz multimedialny Apple TV
+media_player.piwnica,Odtwarzacz multimedialny w piwnicy
+media_player.bose_sypialnia,Sypialnia Bosego
+media_player.bose_living,Pokój dzienny firmy Bose
+media_player.chrome_cast_sypialnia,Chromecast do sypialni
+media_player.chromecasta,Multimedia Chromecasta
+media_player.echo_dot,Kuchenna kropka echa
+media_player.fire_tv_stick,Fire TV Stick
+media_player.ogień_tv,Media Fire TV
+media_player.garaż,Garażowy odtwarzacz multimedialny
+media_player.pokój_gościnny,Media w pokoju gościnnym
+media_player.kino_domowe,Media kina domowego
+media_player.ipad_kuchnia,Kuchenny iPad
+media_player.kuchnia,Kuchenny odtwarzacz multimedialny
+media_player.strumień_laptopa,Laptop do transmisji strumieniowej
+media_player.salon,Media w salonie
+media_player.główna_sypialnia,Media w głównej sypialni
+media_player.przełącznik_nintendo,Przełącznik Nintendo
+media_player.żłobek,Odtwarzacz multimedialny dla przedszkola
+media_player.biuro,Biurowy odtwarzacz multimedialny
+media_player.patio,Odtwarzacz multimedialny na patio
+media_player.ps5_living_room,Salon PS5
+media_player.roku_sypialnia,Główna sypialnia Roku
+media_player.roku_sypialnia,Odtwarzacz Roku w sypialni
+media_player.roku_living,Pokój dzienny Roku
+media_player.telewizor_samsung,Telewizor w salonie
+media_player.sonos_sypialnia,Główna sypialnia Sonos
+media_player.sonos_kuchnia,Kuchnia Sonosa
+media_player.sonos_kuchnia,Głośnik kuchenny Sonos
+media_player.sonos_living,Salon Sonosa
+media_player.soundbar_living_room,Soundbar do salonu
+media_player.xbox_den,Konsola Xbox
+media_player.sony_bravia_tv,Inteligentny telewizor LED firmy Sony
+media_player.telewizor_samsung_qled_tv,Telewizor Samsung Quantum Dot
+media_player.lg_oled_tv,Telewizor LG OLED
+media_player.panasonic_4k_bluray_player,Odtwarzacz Blueray firmy Panasonic
+media_player.denon_av_receiver,Amplituner audio-wideo firmy Denon
+media_player.onkyo_tx_sr,Amplituner kina domowego Onkyo
+media_player.google_nest_hub,Inteligentny wyświetlacz Asystenta Google
+media_player.amazon_echo_show,Inteligentny ekran Amazon Echo
+media_player.apple_tv_4k,Urządzenie Apple do przesyłania strumieniowego 4K
+media_player.roku_ultra,Roku o wysokiej wydajności Streamer
+media_player.xbox_one,Xbox One
+media_player.playstation_5,SonyPS5
+media_player.joes_ps5,PS5 Joego
+media_player.stacja_dokująca_do_nintendo_switch,Stacja dokująca do konsoli Nintendo
+media_player.projektor_sony_4k,Projektor do kina domowego Sony
+media_player.epson_home_cinema,Projektor wideo Epsona
+media_player.bose_home_głośnik,Głośnik bezprzewodowy Bose
+media_player.sonos_beam,Kompaktowy soundbar Sonos
+media_player.harman_kardon_aura,Szklany głośnik Harman Kardon
+media_player.bang_olufsen_beovision,Wysokiej klasy telewizor B&O
+media_player.philips_ambilight_tv,Telewizor Philips z podświetleniem LED
+media_player.vizio_smartcast_tv,Telewizor Vizio z obsługą Cast
+media_player.sony_ps_lx310bt,Gramofon Bluetooth firmy Sony
+media_player.audio_technica_at_lp120,Odtwarzacz audio-technica
+media_player.samsung_hw_q90r,Soundbar Samsunga
+media_player.sonos_arc,Inteligentny soundbar Sonos
+media_player.home_theater_system_living_room,Kino domowe w salonie
+media_player.desktop_computer_media_suite,Centrum multimedialne komputera stacjonarnego
+media_player.sypialnia_tv_montowana_na_ścianie,Telewizor montowany na ścianie w sypialni
+media_player.kuchnia_radio,Odtwarzacz radia kuchennego
+media_player.system_głośników_łazienkowych,Wodoodporny głośnik łazienkowy
+media_player.garaż_warsztat_stereo,Zestaw stereo do warsztatu garażowego
+media_player.głośniki_zewnętrzne_patio,Głośniki zewnętrzne na patio
+media_player.piwnica_projektor_setup,System projektorów do piwnicy
+media_player.głośniki_biurowe_pc,Głośniki do komputera biurowego
+media_player.bedside_alarm_clock_radio,Radiobudzik przy łóżku
+media_player.gaming_room_console,Konsola do gier
+media_player.salon_hi_fi_system,Salonowy dźwięk Hi-Fi
+media_player.dining_room_jukebox,Szafa grająca w jadalni
+media_player.gość_pokój_tv_set,Telewizor w pokoju gościnnym
+media_player.study_room_audio_book_player,Studiuj odtwarzacz książek audio
+media_player.odtwarzacz_cd_sunroom,Odtwarzacz CD firmy Sunroom
+media_player.gramofon_poddaszowy_winylowy,Gramofon winylowy na poddaszu
+media_player.projektor_podwórkowy_zewnętrzny,Projektor podwórkowy
+media_player.wejście_asystent_głosu,Asystent głosowy przy wejściu
+media_player.korytarz_głośnik_ścienny,Głośnik ścienny do przedpokoju
+switch.oświetlenie_poddasza,Przełącznik oświetlenia na poddaszu
+switch.oświetlenie_balkonu,Sterowanie oświetleniem balkonu
+switch.światła_piwnicy,Przełącznik oświetlenia piwnicy
+switch.łazienka_wentylator,Przełącznik wentylatora łazienkowego
+switch.oświetlenie_sypialni,Przełącznik świateł w sypialni
+switch.boathouse_lights,Przełącznik świateł w hangarze na łodzie
+switch.oświetlenie_szafy,Sterowanie oświetleniem szafy
+switch.oświetlenie_ogrodu_zimowego,Przełącznik świateł w oranżerii
+switch.światła_pokładowe,Przełącznik oświetlenia pokładu
+switch.den_lights,Przełącznik świateł Den
+switch.oświetlenie_pokoju_jadalni,Przełącznik świateł w jadalni
+switch.światła_podjazdu,Sterowanie oświetleniem podjazdu
+switch.oświetlenie_frontowe_bramy,Włącznik świateł w bramie przedniej
+switch.światła_przednie_podwórka,Przełącznik świateł przednich podwórek
+switch.otwieracz_drzwi_garażowych,Przełącznik otwierania drzwi garażowych
+switch.oświetlenie_ogrodowe,Sterowanie oświetleniem ogrodu
+switch.oświetlenie_pokoju_gościnnego,Przełącznik świateł w pokoju gościnnym
+switch.oświetlenie_przedpokoju,Przełącznik świateł w korytarzu
+switch.oświetlenie_teatra_domowego,Sterowanie oświetleniem kina domowego
+switch.oświetlenie_kuchenne,Przełącznik świateł kuchennych
+switch.oświetlenie_pokoju_pralni,Przełącznik oświetlenia w pralni
+switch.oświetlenie_pokoju_dziennego,Przełącznik oświetlenia w salonie
+switch.loft_lights,Przełącznik świateł na poddaszu
+switch.master_bedroom_lights,Główny włącznik świateł w sypialni
+switch.oświetlenie_biurowe,Przełącznik świateł biurowych
+switch.oświetlenie_zewnętrzne_bezpieczeństwa,Przełącznik świateł bezpieczeństwa na zewnątrz
+switch.spiżarnia_światła,Przełącznik świateł w spiżarni
+switch.oświetlenie_patia,Przełącznik oświetlenia patio
+switch.światła_pokoju_zabaw,Przełącznik oświetlenia pokoju zabaw
+switch.oświetlenie_obszaru_basenu,Sterowanie oświetleniem terenu basenu
+switch.światła_ganku,Przełącznik świateł na werandzie
+switch.tylne_światła_podwórza,Przełącznik tylnych świateł ogrodowych
+switch.światła_sauny,Przełącznik oświetlenia sauny
+switch.system_bezpieczeństwa,Przełącznik systemu bezpieczeństwa
+switch.rzucić_światła,Przełącznik świateł szopy
+switch.światła_schodowe,Przełącznik świateł na klatce schodowej
+switch.study_room_lights,Przełącznik oświetlenia w pokoju do nauki
+switch.światła_słoneczne,Przełącznik świateł w pomieszczeniu słonecznym
+switch.oświetlenie_tarasu,Sterowanie oświetleniem tarasu
+switch.oświetlenie_podszafkowe,Przełącznik oświetlenia pod szafką
+switch.oświetlenie_pokoju_użytkowego,Przełącznik oświetlenia pomieszczenia gospodarczego
+switch.światła_chodnika,Przełącznik świateł chodnikowych
+switch.oświetlenie_magazynu,Przełącznik świateł magazynu
+switch.water_feature_lights,Przełącznik świateł funkcji wodnej
+switch.światła_warsztatowe,Przełącznik świateł warsztatowych
+switch.jard_floodlights,Przełącznik reflektorów ogrodowych
+switch.zoo_obudowa_oświetlenie,Sterowanie oświetleniem zagrody ogrodu zoologicznego
+switch.pompa_basenu,Przełącznik pompy basenowej
+switch.system_irygacyjny,Przełącznik systemu nawadniania
+switch.oświetlenie_warsztatu_garażowego,Przełącznik oświetlenia warsztatu garażowego
+climate.gniazdo_learning,Uczący się termostat Nest
+climate.ecobee_smart,Inteligentny termostat Ecobee
+climate.honeywell_lyric_t6,Honeywell Lyric T6 Pro
+climate.emerson_sensi_touch,Termostat Wi-Fi Emerson Sensi Touch
+climate.bosch_bcc100,Połączone sterowanie Bosch BCC100
+climate.johnson_glas,Johnson steruje inteligentnym termostatem GLAS
+climate.termostat_lux_geo,Termostat Lux Geo Wi-Fi
+climate.tado_smart,Inteligentny termostat Tado
+climate.trane_comfortlink_ii,Trane ComfortLink II XL1050
+climate.przewoźnik_kor,Termostat Carrier Cor Wi-Fi
+climate.netatmo_smart,Inteligentny termostat Netatmo
+climate.sinope_smart,Inteligentny termostat Sinopé
+climate.kono_termostat,Inteligentny termostat Kono
+climate.mysa_smart_termostat,Inteligentny termostat Mysa do elektrycznych grzejników listwowych
+climate.zen_wifi_termostat,Termostat Zen w wersji WiFi
+vacuum.salon_pokój_pokojowy,Odkurzacz w salonie
+vacuum.kitchen_xiaomi,Kuchenna próżnia
+vacuum.na_górze_dyson,Pogromca kurzu na górze
+vacuum.piwnica_deebot,Deebot z piwnicy
+vacuum.master_bedroom_shark,Odkurzacz w głównej sypialni
+vacuum.garaż_roomba_2,Robot sprzątający garaż
+vacuum.środek_do_czyszczenia_pod_sofą,Środek do czyszczenia sofy
+vacuum.jadalnia_bissel,Środek do usuwania zabrudzeń z jadalni
+vacuum.korytarz_neato,Środek do czyszczenia korytarzy
+vacuum.wejście_eufy,Odpylacz wejściowy
+vacuum.patio_doorway_vac,Środek do czyszczenia drzwi tarasowych
+vacuum.lewy_rogowiec_bot,Zasysacz brudu z lewego rogu
+vacuum.prawy_zamiatacz_schodów,Prawy odkurzacz na klatce schodowej
+vacuum.na_górze_łazienka_vac,Pomocnik w łazience na górze
+vacuum.pokój_gościnny_na_parterze,Odkurz pokój gościnny na parterze
+vacuum.smart_home_automator,Inteligentny robot sprzątający dom
+vacuum.powyżej_schodów_robota,Urządzenie odkurzające nad schodami
+vacuum.under_bed_cleaner,Odkurzacz pod łóżkiem
+vacuum.front_hall_samsung,Robot zamiatający przedpokój
+vacuum.back_deck_sweeper,Środek do czyszczenia powierzchni tylnego pokładu
+todo.lista_codziennych_chorów,Monitor codziennych obowiązków
+todo.lista_zakupów_spożywczych,Organizator zakupów spożywczych
+todo.projekty_weekendowe,Weekendowa lista projektów DIY
+todo.planista_rodziny_wydarzeń,Planista wydarzeń rodzinnych
+todo.trening_routine_tracker,Harmonogram rutynowych treningów
+todo.kids_homework_deadlines,Terminy prac domowych dla dzieci
+todo.harmonogram_szczepień_zwierząt,Harmonogram szczepień zwierząt domowych
+todo.dziennik_konserwacji_samochodu,Narzędzie do śledzenia konserwacji samochodu
+todo.lista_przypomnień_urodzinowych,Lista przypomnień o urodzinach
+todo.rocznica_planera,Planista wydarzeń rocznicowych
+todo.planowanie_wakacji,Asystent planowania wakacji
+todo.lista_czytań_książek,Organizator listy lektur
+todo.lista_obserwowanych_filmów,Lista obejrzeń wieczoru filmowego
+todo.zbiór_przepisów,Zbiór przepisów
+todo.planista_remontu_domu,Harmonogram remontów domu
+todo.harmonogram_pielęgnacji_ogrodu,Planista pielęgnacji ogrodu
+todo.przypomnienia_opłaty_rachunków,Przypomnienia o płatnościach rachunków
+todo.alerty_odnowienia_ubezpieczenia,Alerty dotyczące odnowienia ubezpieczenia
+todo.zarządzanie_subskrypcjami,Narzędzie do zarządzania subskrypcjami
+todo.gwarancja_tracker,Śledzenie wygaśnięcia gwarancji
+timer.kuchnia_piekarnik,Minutnik piekarnika kuchennego
+timer.pralka_1,Śledzenie cyklu prania
+timer.podlewanie_ogrodu,Harmonogram podlewania ogrodu
+timer.światła_przednie_ganku,Zegar oświetlenia przedniego werandy
+timer.backyard_floodlights,Sterownik oświetlenia podwórkowego
+timer.drzwi_garażu_1,Zegar do bramy garażowej
+timer.timer_lampy_sypialni,Programator lamp do sypialni
+timer.jadalnia_ściemniacz,Timer oświetlenia w jadalni
+timer.na_górze_korytarz,Zegar na korytarzu na piętrze
+timer.światło_szafy_na_dole,Zegar w szafie na dole
+timer.żyrandol_przedpokój,Zegar żyrandolowy w przedpokoju
+timer.oświetlenie_patia,Zegar nastrojowy na patio
+timer.podjazd_zabezpieczenia_światła,Zegar bezpieczeństwa na podjeździe
+timer.kids_room_nightlight,Timer oświetlenia nocnego do pokoju dziecięcego
+timer.minutnik0,Timer ogólnego przeznaczenia
+timer.minutnik7,Niestandardowy timer 7
+timer.mój_timer,Spersonalizowany minutnik
+timer.minutnik,Odliczanie w kuchni
+timer.odliczanie_prania,Timer cyklu prania
+timer.poranny_budzik,Budzik o poranku
+timer.timer_treningu,Zegar sesji ćwiczeń
+timer.sesja_studia,Timer skupiający się na nauce
+timer.zegar_medytacyjny,Śledzenie czasu trwania medytacji
+timer.baby_nap_timer,Monitor drzemki dziecka
+timer.zaparzanie_herbaty,Odliczanie do zaparzenia herbaty
+timer.licznik_gry,Zegar do gry planszowej
+timer.poranna_kawa,Timer do porannej kawy

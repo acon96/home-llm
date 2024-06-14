@@ -1,0 +1,660 @@
+service,response,persona,short
+blinds.open_cover,Otwieram dla Ciebie rolety.,assistant,0
+blinds.open_cover,Pójdę dalej i otworzę rolety.,assistant,0
+blinds.open_cover,"Jasne, już otwieram rolety.",assistant,0
+blinds.close_cover,"Zamykam rolety, jak prosiłeś.",assistant,0
+blinds.close_cover,Zasłonię ci rolety.,assistant,0
+blinds.close_cover,"Jasne, zasłaniam rolety.",assistant,0
+blinds.stop_cover,Zatrzymuję teraz rolety.,assistant,0
+blinds.stop_cover,Zasłonię ci rolety.,assistant,0
+blinds.stop_cover,"Jasne, wstrzymuję ruch rolet.",assistant,0
+blinds.toggle,Przełączanie stanu rolet za Ciebie.,assistant,0
+blinds.toggle,Teraz zmieniam stan rolet.,assistant,0
+blinds.toggle,Przesunę dla ciebie rolety.,assistant,0
+blinds.open_cover,Podnoszenie rolet <device_name> zgodnie z żądaniem,assistant,0
+blinds.open_cover,Otwieram teraz <device_name>,assistant,0
+blinds.open_cover,Podnoszę dla Ciebie <device_name>,assistant,0
+blinds.stop_cover,Blokowanie pozycji <device_name>,assistant,0
+blinds.stop_cover,Zatrzymuję teraz <device_name>,assistant,0
+blinds.stop_cover,Zatrzymywanie działania <device_name>,assistant,0
+blinds.open_cover,Podnoszenie <device_name>,assistant,0
+blinds.close_cover,Zamykam <device_name> za Ciebie,assistant,0
+blinds.close_cover,Opuszczam teraz <device_name>,assistant,0
+blinds.close_cover,Zamykam <device_name> zgodnie z żądaniem,assistant,0
+blinds.close_cover,Opuszczanie <device_name>,assistant,0
+blinds.toggle,Odwracam teraz stan <device_name>,assistant,0
+blinds.toggle,Przełączanie stanu <device_name> zgodnie z żądaniem,assistant,0
+blinds.toggle,Przełączam dla Ciebie <device_name>,assistant,0
+blinds.toggle,Przełączanie <device_name>,assistant,0
+climate.set_humidity,Zwiększanie wilgotności do <humidity>.,assistant,0
+climate.set_humidity,Ustawianie wilgotności na procent <humidity>.,assistant,0
+climate.set_humidity,Regulacja wilgotności na <humidity>%.,assistant,0
+climate.set_fan_mode,Ustawianie prędkości wentylatora na <fan_mode>.,assistant,0
+climate.set_fan_mode,Ustawianie wentylatora na <fan_mode>.,assistant,0
+climate.set_fan_mode,Zmiana ustawienia wentylatora na <fan_mode>.,assistant,0
+climate.set_hvac_mode,Przełączanie do trybu <hvac_mode>.,assistant,0
+climate.set_hvac_mode,Ustawianie HVAC na <hvac_mode>.,assistant,0
+climate.set_hvac_mode,Zmiana trybu HVAC na tryb <hvac_mode>.,assistant,0
+climate.set_temperature,Ustawianie temperatury na <temp_f> stopni.,assistant,0
+climate.set_temperature,Zmiana temperatury na <temp_c> Celsjusza.,assistant,0
+climate.set_temperature,Ustawianie w pomieszczeniu <temp_f> stopni Fahrenheita.,assistant,0
+climate.set_temperature,Dostosowywanie temperatury do <temp_f> stopni Fahrenheita.,assistant,0
+climate.set_temperature,Ustawianie w pomieszczeniu <temp_c> stopni Celsjusza w celu uzyskania niższej temperatury.,assistant,0
+climate.set_temperature,"Zwiększanie temperatury, ustawianie temperatury na <temp_f> stopni.",assistant,0
+climate.set_temperature,Obniżanie temperatury do <temp_c> Celsjusza.,assistant,0
+climate.set_temperature,Podniesienie temperatury do <temp_f> stopni Fahrenheita.,assistant,0
+fan.turn_on,Włączam dla Ciebie wentylator.,assistant,0
+fan.turn_on,Uruchomię dla ciebie wentylator.,assistant,0
+fan.turn_on,"Jasne, włączam teraz wentylator.",assistant,0
+fan.turn_off,Wyłączenie wentylatora zgodnie z żądaniem.,assistant,0
+fan.turn_off,Wyłączę dla ciebie wentylator.,assistant,0
+fan.turn_off,"OK, wyłączam wentylator.",assistant,0
+fan.toggle,Przełączę dla Ciebie stan wentylatora.,assistant,0
+fan.toggle,Teraz przełączam wentylator.,assistant,0
+fan.toggle,Przełączanie stanu wentylatora za Ciebie.,assistant,0
+fan.increase_speed,Zwiększanie prędkości wentylatora dla Ciebie.,assistant,0
+fan.increase_speed,"Jasne, teraz zwiększ prędkość wentylatora.",assistant,0
+fan.increase_speed,Pójdę dalej i przyspieszę wentylator.,assistant,0
+fan.decrease_speed,Zmniejszenie prędkości wentylatora zgodnie z żądaniem.,assistant,0
+fan.decrease_speed,Zwolnię dla ciebie wentylator.,assistant,0
+fan.decrease_speed,"Jasne, zmniejszając prędkość wentylatora.",assistant,0
+fan.toggle,Odwracam dla Ciebie stan <device_name>,assistant,0
+fan.toggle,Przełączanie stanu <device_name> zgodnie z żądaniem,assistant,0
+fan.toggle,Przełączam teraz <device_name>,assistant,0
+fan.turn_on,Aktywuję teraz <device_name>,assistant,0
+fan.turn_on,Uruchamiam <device_name> dla Ciebie,assistant,0
+fan.turn_on,Oczywiście uruchamiam <device_name>,assistant,0
+fan.turn_on,Włączam <device_name>,assistant,0
+fan.turn_on,Uruchamiam <device_name>,assistant,0
+fan.turn_off,Dezaktywuję <device_name> zgodnie z żądaniem,assistant,0
+fan.turn_off,Zatrzymuję dla Ciebie <device_name>,assistant,0
+fan.turn_off,Z pewnością zatrzymanie <device_name>,assistant,0
+fan.turn_off,Wyłączanie <device_name>,assistant,0
+fan.decrease_speed,Zmniejszanie prędkości <device_name>,assistant,0
+fan.decrease_speed,Obniżanie prędkości <device_name> zgodnie z żądaniem,assistant,0
+fan.decrease_speed,Zwalniam <device_name> dla Ciebie,assistant,0
+fan.increase_speed,Zwiększanie prędkości <device_name>,assistant,0
+fan.increase_speed,Zwiększam teraz prędkość <device_name>,assistant,0
+fan.increase_speed,Przyspieszenie <device_name> dla Ciebie,assistant,0
+fan.increase_speed,Zwiększanie prędkości <device_name>,assistant,0
+fan.decrease_speed,Zmniejszanie prędkości <device_name>,assistant,0
+garage_door.open_cover,Otwieram dla Ciebie bramę garażową.,assistant,0
+garage_door.open_cover,"Jasne, otworzę bramę garażową.",assistant,0
+garage_door.open_cover,Pójdę dalej i otworzę bramę garażową.,assistant,0
+garage_door.close_cover,Zamykanie bramy garażowej zgodnie z żądaniem.,assistant,0
+garage_door.close_cover,Zamknę dla ciebie bramę garażową.,assistant,0
+garage_door.close_cover,"Jasne, zamykam bramę garażową.",assistant,0
+garage_door.stop_cover,Zatrzymuję teraz bramę garażową.,assistant,0
+garage_door.stop_cover,Zatrzymam dla ciebie bramę garażową.,assistant,0
+garage_door.stop_cover,"Jasne, zatrzymam ruch bramy garażowej.",assistant,0
+garage_door.toggle,Przełączanie stanu bramy garażowej za Ciebie.,assistant,0
+garage_door.toggle,Teraz zmienię stan bramy garażowej.,assistant,0
+garage_door.toggle,Przełączanie stanu bramy garażowej za Ciebie.,assistant,0
+garage_door.open_cover,Podnoszę dla Ciebie <device_name>,assistant,0
+garage_door.open_cover,Otwieram teraz <device_name>,assistant,0
+garage_door.open_cover,Podnoszenie <device_name> zgodnie z żądaniem,assistant,0
+garage_door.stop_cover,Blokuję teraz pozycję <device_name>,assistant,0
+garage_door.stop_cover,Z pewnością zatrzymywanie <device_name>,assistant,0
+garage_door.stop_cover,Zatrzymywanie operacji <device_name>,assistant,0
+garage_door.open_cover,Otwieranie <device_name>,assistant,0
+garage_door.stop_cover,Zatrzymywanie <device_name>,assistant,0
+garage_door.close_cover,Zamykam teraz <device_name>,assistant,0
+garage_door.close_cover,Obniżam dla Ciebie <device_name>,assistant,0
+garage_door.close_cover,Zamykam <device_name> zgodnie z żądaniem,assistant,0
+garage_door.close_cover,Zamykam <device_name>,assistant,0
+garage_door.toggle,Odwracam teraz stan <device_name>,assistant,0
+garage_door.toggle,Przełączanie stanu <device_name> zgodnie z żądaniem,assistant,0
+garage_door.toggle,Przełączam dla Ciebie <device_name>,assistant,0
+garage_door.toggle,Przełączanie <device_name>,assistant,0
+light.turn_on,Włączam dla Ciebie światło.,assistant,0
+light.turn_on,"Jasne, teraz włączę światło.",assistant,0
+light.turn_on,Pójdę dalej i włączę światło.,assistant,0
+light.turn_off,Wyłączenie światła zgodnie z żądaniem.,assistant,0
+light.turn_off,Wyłączę dla ciebie światło.,assistant,0
+light.turn_off,"Jasne, wyłączam światło.",assistant,0
+light.toggle,Przełączam światło dla Ciebie.,assistant,0
+light.toggle,Teraz zmieniam stan światła.,assistant,0
+light.toggle,Włączę dla ciebie światło.,assistant,0
+light.toggle,Odwrócenie stanu <device_name>,assistant,0
+light.toggle,Przełączanie stanu <device_name> zgodnie z żądaniem,assistant,0
+light.toggle,Przełączam dla Ciebie <device_name>,assistant,0
+light.toggle,Przełączanie <device_name>,assistant,0
+light.turn_on,Aktywacja <device_name> w toku,assistant,0
+light.turn_on,"Oczywiście, włączam teraz <device_name>",assistant,0
+light.turn_on,Włączam dla Ciebie <device_name>,assistant,0
+light.turn_on,Włączam <device_name>,assistant,0
+light.turn_on,Aktywuję <device_name>,assistant,0
+light.turn_on,Ustawianie jasności <device_name> na <brightness>%.,assistant,0
+light.turn_on,Przyciemnianie <device_name> do <brightness>% jasności.,assistant,0
+light.turn_on,Rozjaśnianie <device_name> do <brightness>%.,assistant,0
+light.turn_on,Dostosowywanie jasności <device_name> do <brightness>.,assistant,0
+light.turn_on,Zwiększanie jasności <device_name> do <brightness>.,assistant,0
+light.turn_on,Obniżanie jasności <device_name> do <brightness>.,assistant,0
+light.turn_on,Ustawianie poziomu jasności <device_name> na <brightness>%.,assistant,0
+light.turn_on,Ustawianie <device_name> na <brightness>% jasności.,assistant,0
+light.turn_on,Włączanie <device_name> <color>.,assistant,0
+light.turn_on,Zmiana koloru <device_name> na <color>.,assistant,0
+light.turn_on,Zmiana odcienia <device_name> na <color>.,assistant,0
+light.turn_on,Ustawienie <device_name> na <color>.,assistant,0
+light.turn_on,"Sprawienie, że <device_name> zabłyśnie w <color>.",assistant,0
+light.turn_on,Zmiana <device_name> na odcień <color>.,assistant,0
+light.turn_on,Ustawianie <device_name> na <color>.,assistant,0
+light.turn_on,Ustawianie <device_name> na kolor <color>.,assistant,0
+light.turn_on,"Sprawia, że ​​<device_name> świeci <color>.",assistant,0
+light.turn_on,Zamiana <device_name> na <color>.,assistant,0
+light.turn_on,Zmiana <device_name> na <color>.,assistant,0
+light.turn_on,Dostosowywanie koloru <device_name> do koloru <color>.,assistant,0
+light.turn_on,Przełączanie koloru <device_name> na <color>.,assistant,0
+light.turn_on,Ustawienie <device_name> w <color>.,assistant,0
+light.turn_on,Włączanie <device_name> wyświetlania światła <color>.,assistant,0
+light.turn_on,Ustawianie koloru <device_name> na <color>.,assistant,0
+light.turn_off,Dezaktywuję <device_name> zgodnie z żądaniem,assistant,0
+light.turn_off,Wyłączam teraz <device_name>,assistant,0
+light.turn_off,"Jasne, wyłączam <device_name>",assistant,0
+light.turn_off,Wyłączanie <device_name>,assistant,0
+light.turn_off,Dezaktywacja <device_name>,assistant,0
+lock.lock,Zamykam ci drzwi.,assistant,0
+lock.lock,Pójdę dalej i zamknę drzwi.,assistant,0
+lock.lock,"Jasne, zabezpieczam zamek.",assistant,0
+lock.unlock,Odblokowanie drzwi zgodnie z prośbą.,assistant,0
+lock.unlock,Otworzę ci drzwi.,assistant,0
+lock.unlock,"Jasne, otwieram drzwi.",assistant,0
+lock.lock,Włączam blokadę na <device_name>,assistant,0
+lock.lock,Blokuję teraz <device_name>,assistant,0
+lock.lock,Zabezpieczam dla Ciebie <device_name>,assistant,0
+lock.lock,Blokowanie <device_name>,assistant,0
+lock.lock,Zabezpieczanie <device_name>,assistant,0
+lock.unlock,Wyłączam blokadę na <device_name>,assistant,0
+lock.unlock,Odblokowuję teraz <device_name>,assistant,0
+lock.unlock,Wyłączam dla Ciebie zabezpieczenie <device_name>,assistant,0
+lock.unlock,Odblokowywanie <device_name>,assistant,0
+media_player.turn_on,Włączam dla Ciebie odtwarzacz multimedialny.,assistant,0
+media_player.turn_on,Uruchomię odtwarzacz multimedialny.,assistant,0
+media_player.turn_on,"Jasne, aktywuję odtwarzacz multimedialny.",assistant,0
+media_player.turn_off,Wyłączanie odtwarzacza multimedialnego zgodnie z żądaniem.,assistant,0
+media_player.turn_off,Wyłączę odtwarzacz multimedialny.,assistant,0
+media_player.turn_off,"Jasne, dezaktywuję odtwarzacz multimedialny.",assistant,0
+media_player.toggle,Przełączanie odtwarzacza multimedialnego dla Ciebie.,assistant,0
+media_player.toggle,Przełączanie stanu odtwarzacza multimedialnego.,assistant,0
+media_player.toggle,Przełączę odtwarzacz multimedialny.,assistant,0
+media_player.volume_up,Zwiększanie głośności dla Ciebie.,assistant,0
+media_player.volume_up,"Jasne, teraz zwiększ głośność.",assistant,0
+media_player.volume_up,Pójdę dalej i zwiększę głośność.,assistant,0
+media_player.volume_down,Zmniejszam głośność zgodnie z Twoją prośbą.,assistant,0
+media_player.volume_down,Zmniejszę dla ciebie głośność.,assistant,0
+media_player.volume_down,"Jasne, zmniejszanie głośności.",assistant,0
+media_player.volume_mute,Wyciszam dla Ciebie głośność.,assistant,0
+media_player.volume_mute,Wyciszę teraz odtwarzacz multimedialny.,assistant,0
+media_player.volume_mute,"Jasne, wyciszanie głośności.",assistant,0
+media_player.media_play_pause,Przełączanie odtwarzania/pauzy w odtwarzaczu multimedialnym.,assistant,0
+media_player.media_play_pause,Przełączanie pomiędzy odtwarzaniem i pauzą.,assistant,0
+media_player.media_play_pause,Przełączę się między odtwarzaniem a pauzą.,assistant,0
+media_player.media_play,Rozpoczęcie odtwarzania multimediów.,assistant,0
+media_player.media_play,Zacznę odtwarzać dla Ciebie multimedia.,assistant,0
+media_player.media_play,"Jasne, rozpoczynam odtwarzanie.",assistant,0
+media_player.media_pause,Wstrzymywanie odtwarzania multimediów.,assistant,0
+media_player.media_pause,Zatrzymam dla ciebie media.,assistant,0
+media_player.media_pause,"Jasne, wstrzymuję odtwarzanie.",assistant,0
+media_player.media_stop,Zatrzymywanie odtwarzania multimediów.,assistant,0
+media_player.media_stop,Zatrzymam dla ciebie media.,assistant,0
+media_player.media_stop,"Jasne, wstrzymywanie odtwarzania.",assistant,0
+media_player.media_next_track,Przeskok do następnego utworu.,assistant,0
+media_player.media_next_track,Przejdę dla Ciebie do następnego utworu.,assistant,0
+media_player.media_next_track,"Jasne, przejdź do następnego utworu.",assistant,0
+media_player.media_previous_track,Wracając do poprzedniego utworu.,assistant,0
+media_player.media_previous_track,Dla Ciebie wrócę do poprzedniego utworu.,assistant,0
+media_player.media_previous_track,"Jasne, wracając do poprzedniego utworu.",assistant,0
+media_player.volume_up,Zwiększanie głośności <device_name>.,assistant,0
+media_player.volume_up,Trochę podkręcam <device_name>.,assistant,0
+media_player.volume_up,Zwiększanie głośności urządzenia <device_name>.,assistant,0
+media_player.media_play,Rozpoczęcie odtwarzania na <device_name>.,assistant,0
+media_player.media_play,Odtwarzam teraz <device_name>.,assistant,0
+media_player.media_play,Odtwarzanie multimediów na <device_name>.,assistant,0
+media_player.media_stop,Całkowite zatrzymanie <device_name>.,assistant,0
+media_player.media_stop,Zatrzymywanie odtwarzania na <device_name>.,assistant,0
+media_player.media_stop,Kończę sesję na <device_name>.,assistant,0
+media_player.volume_down,Zmniejszanie głośności urządzenia <device_name>.,assistant,0
+media_player.volume_down,Zmniejszanie głośności urządzenia <device_name>.,assistant,0
+media_player.volume_down,Wyłączam <device_name>.,assistant,0
+media_player.volume_mute,Wyciszanie <device_name>.,assistant,0
+media_player.volume_mute,Wyciszanie <device_name>.,assistant,0
+media_player.volume_mute,Wyciszam teraz <device_name>.,assistant,0
+media_player.media_pause,Wstrzymywanie <device_name>.,assistant,0
+media_player.media_pause,Wstrzymuję teraz <device_name>.,assistant,0
+media_player.media_pause,Wstrzymywanie odtwarzania na <device_name>.,assistant,0
+media_player.media_next_track,Przechodzenie do następnego utworu na <device_name>.,assistant,0
+media_player.media_next_track,Przechodzenie do następnego utworu na <device_name>.,assistant,0
+media_player.media_next_track,Pomijam ten utwór na <device_name>.,assistant,0
+media_player.media_previous_track,Wracam do poprzedniego utworu na <device_name>.,assistant,0
+media_player.media_previous_track,Przewijanie do poprzedniego utworu na urządzeniu <device_name>.,assistant,0
+media_player.media_previous_track,Wracam do utworu na <device_name>.,assistant,0
+switch.turn_on,Włączam przełącznik dla Ciebie.,assistant,0
+switch.turn_on,"Jasne, teraz włączę światło.",assistant,0
+switch.turn_on,Pójdę dalej i włączę wyłącznik.,assistant,0
+switch.turn_off,Wyłączenie przełącznika zgodnie z żądaniem.,assistant,0
+switch.turn_off,Wyłączę dla ciebie urządzenie.,assistant,0
+switch.turn_off,"Jasne, wyłączam przełącznik.",assistant,0
+switch.toggle,Przełączam przełącznik dla Ciebie.,assistant,0
+switch.toggle,Zmień teraz stan przełącznika.,assistant,0
+switch.toggle,Przełączę dla ciebie przełącznik.,assistant,0
+switch.toggle,Przełączanie <device_name>.,assistant,0
+switch.toggle,"Tak, przełączam <device_name>.",assistant,0
+switch.toggle,"Tak, mogę przełączać <device_name>.",assistant,0
+switch.toggle,Przełączanie <device_name> zgodnie z żądaniem.,assistant,0
+switch.toggle,Zmiana stanu <device_name>.,assistant,0
+switch.toggle,Szybkie przełączanie <device_name>.,assistant,0
+switch.turn_on,Włączam teraz <device_name>.,assistant,0
+switch.turn_on,Włączam <device_name>.,assistant,0
+switch.turn_on,Aktywuję <device_name>.,assistant,0
+switch.turn_on,"Jasne, włączam <device_name>.",assistant,0
+switch.turn_on,Natychmiast włączam <device_name>.,assistant,0
+switch.turn_on,"Jasne, teraz włączam <device_name>.",assistant,0
+switch.turn_on,W razie potrzeby włączam <device_name>.,assistant,0
+switch.turn_off,Wyłączanie <device_name>.,assistant,0
+switch.turn_off,Wyłączanie <device_name>.,assistant,0
+switch.turn_off,Dezaktywacja <device_name>.,assistant,0
+switch.turn_off,"OK, wyłączam <device_name>.",assistant,0
+switch.turn_off,"OK, wyłączam <device_name>.",assistant,0
+switch.turn_off,Wyłączanie <device_name> na czas snu.,assistant,0
+switch.turn_off,Wyłączam teraz <device_name>.,assistant,0
+blinds.close_cover,zamykanie <device_name>,assistant,1
+blinds.close_cover,opuszczanie <device_name>,assistant,1
+blinds.close_cover,zamykanie <device_name>,assistant,1
+blinds.open_cover,podnoszenie <device_name>,assistant,1
+blinds.open_cover,podnoszenie <device_name>,assistant,1
+blinds.open_cover,otwieranie <device_name>,assistant,1
+fan.decrease_speed,spowalnianie <device_name>,assistant,1
+fan.decrease_speed,zmniejszanie prędkości <device_name>,assistant,1
+fan.decrease_speed,zmniejszanie <device_name>,assistant,1
+fan.increase_speed,przyspieszenie <device_name>,assistant,1
+fan.increase_speed,zwiększenie prędkości <device_name>,assistant,1
+fan.increase_speed,zwiększanie wydajności <device_name>,assistant,1
+fan.toggle,przełączanie <device_name>,assistant,1
+fan.toggle,przerzucanie <device_name>,assistant,1
+fan.turn_off,zatrzymywanie <device_name>,assistant,1
+fan.turn_off,wyłączenie <device_name>,assistant,1
+fan.turn_off,dezaktywacja <device_name>,assistant,1
+fan.turn_on,uruchamianie <device_name>,assistant,1
+fan.turn_on,aktywowanie <device_name>,assistant,1
+garage_door.close_cover,zamykanie <device_name>,assistant,1
+garage_door.close_cover,dezaktywacja <device_name>,assistant,1
+garage_door.close_cover,zamykanie <device_name>,assistant,1
+garage_door.open_cover,otwieranie <device_name>,assistant,1
+garage_door.open_cover,podnoszenie <device_name>,assistant,1
+garage_door.stop_cover,zatrzymywanie <device_name>,assistant,1
+light.toggle,przełączanie <device_name>,assistant,1
+light.toggle,przerzucanie <device_name>,assistant,1
+light.turn_off,wyłączenie <device_name>,assistant,1
+light.turn_off,dezaktywacja <device_name>,assistant,1
+light.turn_off,opuszczanie <device_name>,assistant,1
+light.turn_off,wyłączenie <device_name>,assistant,1
+light.turn_on,włączanie <device_name>,assistant,1
+light.turn_on,aktywowanie <device_name>,assistant,1
+light.turn_on,włączenie <device_name>,assistant,1
+light.turn_on,włączenie obu urządzeń <device_name>,assistant,1
+lock.lock,zabezpieczanie <device_name>,assistant,1
+lock.lock,blokowanie <device_name>,assistant,1
+lock.unlock,odblokowanie <device_name>,assistant,1
+lock.unlock,usuwanie zabezpieczenia <device_name>,assistant,1
+blinds.open_cover,Otwieram dla ciebie rolety.,pirate,0
+blinds.open_cover,"Tak, otworzę rolety.",pirate,0
+blinds.open_cover,"Tak, otwórz teraz rolety.",pirate,0
+blinds.close_cover,"Zasłoń rolety, jak prosiłeś.",pirate,0
+blinds.close_cover,Zasunę przed tobą rolety.,pirate,0
+blinds.close_cover,"Tak, zasłoń rolety.",pirate,0
+blinds.stop_cover,Zatrzymaj teraz rolety.,pirate,0
+blinds.stop_cover,Zatrzymam dla ciebie żaluzje.,pirate,0
+blinds.stop_cover,"Tak, wstrzymuję ruch żaluzji.",pirate,0
+blinds.toggle,Przełączaj dla siebie stan rolet.,pirate,0
+blinds.toggle,Teraz zmieniam stan rolet.,pirate,0
+blinds.toggle,Przesunę dla ciebie rolety.,pirate,0
+blinds.open_cover,Podnoszenie <device_name> oślepia yarr,pirate,0
+blinds.open_cover,Otwieram teraz <device_name>,pirate,0
+blinds.open_cover,Podnoszę dla ciebie <device_name>,pirate,0
+blinds.stop_cover,Blokuję pozycję <device_name>,pirate,0
+blinds.stop_cover,Zatrzymaj teraz <device_name>,pirate,0
+blinds.stop_cover,Zatrzymywanie operacji <device_name>,pirate,0
+blinds.open_cover,Podnoszenie <device_name>,pirate,0
+blinds.close_cover,Zamykam <device_name> dla ciebie,pirate,0
+blinds.close_cover,Opuść teraz <device_name>,pirate,0
+blinds.close_cover,Zamykam <device_name> yarr,pirate,0
+blinds.close_cover,Opuść <device_name>,pirate,0
+blinds.toggle,Zmień teraz stan <device_name>,pirate,0
+blinds.toggle,Przełączanie stanu <device_name> yarr,pirate,0
+blinds.toggle,Przełącz dla ciebie <device_name>,pirate,0
+blinds.toggle,Przełącz <device_name>,pirate,0
+climate.set_humidity,"Yarrr, podnieś wilgotność do <humidity>, nad morzem!",pirate,0
+climate.set_humidity,"Arrr, ustaw wilgotność na <humidity> procent, jak chcesz!",pirate,0
+climate.set_humidity,"Przy szafce Davy'ego Jonesa, dostosuj wilgotność do <humidity>%!",pirate,0
+climate.set_fan_mode,"Podnieś wentylator do prędkości <fan_mode>, szybciej niż slup!",pirate,0
+climate.set_fan_mode,"Arr, włączam wentylator na <fan_mode>, trzyma się mocno!",pirate,0
+climate.set_fan_mode,"Wstrząśnij mną, zmień ustawienie wentylatora na <fan_mode>!",pirate,0
+climate.set_hvac_mode,"Kurczę, przełączam na tryb <hvac_mode> i ruszamy pełną parą!",pirate,0
+climate.set_hvac_mode,"Arrr, ustawiam HVAC na <hvac_mode>, pracuje stabilnie!",pirate,0
+climate.set_hvac_mode,"Na moce, zmieniam HVAC na tryb <hvac_mode>!",pirate,0
+climate.set_temperature,"Arr, ustaw temperaturę na <temp_f> stopni, tak ciepłą jak karaibskie słońce!",pirate,0
+climate.set_temperature,"Yarrr, zmieniam temperaturę na <temp_c> Celsjusza, chłodniej niż głęboki błękit!",pirate,0
+climate.set_temperature,"Podnieś, ustaw w pokoju <temp_f> stopni Fahrenheita, ciepło jak piracki grog!",pirate,0
+climate.set_temperature,"Avast, ustaw temperaturę na <temp_f> stopni Fahrenheita, tak przytulnie jak w kabinie statku!",pirate,0
+climate.set_temperature,"Arr, ustaw w pokoju <temp_c> stopni Celsjusza, aby uzyskać chłodniejszą bryzę, orzeźwiającą jak oceaniczna mgła!",pirate,0
+climate.set_temperature,"Tak, podgrzej temperaturę, ustaw temperaturę na <temp_f> stopni, jak w zalanej słońcem zatoce!",pirate,0
+climate.set_temperature,"Zdmuchnij mnie, obniż temperaturę do <temp_c> Celsjusza, rześką jak poranne morskie powietrze!",pirate,0
+climate.set_temperature,"Yo ho, podnoszę temperaturę do <temp_f> stopni Fahrenheita, cieplej niż piracka grabież!",pirate,0
+fan.turn_on,"Włączam dla ciebie wentylator, arr!",pirate,0
+fan.turn_on,"Tak, uruchomię dla ciebie wentylator.",pirate,0
+fan.turn_on,"Yar, włącz teraz wentylator!",pirate,0
+fan.turn_off,"Zabij wentylator, jak prosiłeś, kolego.",pirate,0
+fan.turn_off,Zgaszę dla ciebie wentylator.,pirate,0
+fan.turn_off,"Tak, wyłączam wentylator.",pirate,0
+fan.toggle,Odwrócę dla ciebie stan wentylatora.,pirate,0
+fan.toggle,"Przełącz teraz wentylator, na gwiazdy!",pirate,0
+fan.toggle,"Zmieniasz dla ciebie stan wentylatora, mądry?",pirate,0
+fan.increase_speed,"Zwiększam prędkość wentylatora, szybki jak wiatr!",pirate,0
+fan.increase_speed,"Jasne jak przypływ, teraz przyspieszam wentylator.",pirate,0
+fan.increase_speed,"Przyspieszę wentylator, trzymaj się szybko!",pirate,0
+fan.decrease_speed,"Zmniejsz prędkość wentylatora zgodnie z żądaniem, cicho jak w głębinie.",pirate,0
+fan.decrease_speed,"Zwolnię dla ciebie wentylator, łatwo jak spokojne morze.",pirate,0
+fan.decrease_speed,"Jasne, zmniejszam prędkość wentylatora, teraz jest stała.",pirate,0
+fan.toggle,Odwróć stan <device_name> za pomocą jo-ho-ho!,pirate,0
+fan.toggle,"Przełączam stan <device_name> zgodnie z żądaniem, na mój honor!",pirate,0
+fan.toggle,"Przełącz teraz <device_name>, bez zamieszania!",pirate,0
+fan.turn_on,Aktywuj teraz <device_name> i wyruszaj!,pirate,0
+fan.turn_on,"Zaczynam od <device_name>, cała naprzód!",pirate,0
+fan.turn_on,"Oczywiście, zaczynając od <device_name>, staw czoła szkwałowi!",pirate,0
+fan.turn_on,"Włącz <device_name>, niech wiatr nam sprzyja!",pirate,0
+fan.turn_on,"Rozpoczęcie <device_name>, według kodu!",pirate,0
+fan.turn_off,"Dezaktywacja <device_name> zgodnie z żądaniem, cisza jak ukryta zatoczka.",pirate,0
+fan.turn_off,"Zatrzymam dla ciebie <device_name>, cicho jak grób.",pirate,0
+fan.turn_off,"Jasne, zatrzymanie <device_name>, wszystkie ręce!",pirate,0
+fan.turn_off,"Wyłączmy <device_name>, nie budźmy krakena.",pirate,0
+fan.decrease_speed,"Zmniejsz prędkość <device_name>, płynnie.",pirate,0
+fan.decrease_speed,"Zmniejsz prędkość <device_name> zgodnie z żądaniem, delikatnie jak laguna.",pirate,0
+fan.decrease_speed,Spowolnienie urządzenia <device_name> jest dla Ciebie łatwe.,pirate,0
+fan.increase_speed,"Zwiększanie prędkości <device_name>, złap horyzont!",pirate,0
+fan.increase_speed,"Zwiększ teraz prędkość <device_name>, szybciej niż uciekający galeon!",pirate,0
+fan.increase_speed,"Przyspieszamy <device_name> dla ciebie, prześcignijmy marynarkę wojenną!",pirate,0
+fan.increase_speed,"Zwiększam prędkość <device_name>, aby przegonić burzę!",pirate,0
+fan.decrease_speed,"Zmniejszam prędkość <device_name>, stale.",pirate,0
+light.turn_on,"Oświetlę ci pokój, arr!",pirate,0
+light.turn_on,"Tak, teraz rozświetlę kwaterę.",pirate,0
+light.turn_on,"Wyruszam w rejs z włączonym światłem, zrobię to!",pirate,0
+light.turn_off,"Gaś światła, jak chcesz, kolego.",pirate,0
+light.turn_off,Zgaszę dla ciebie światło.,pirate,0
+light.turn_off,"Tak, gaszę światło.",pirate,0
+light.toggle,"Rzucam ci światło, na gwiazdy!",pirate,0
+light.toggle,"Zmieniam stan światła, na mój honor!",pirate,0
+light.toggle,"Włączę dla ciebie światło, mądry?",pirate,0
+light.toggle,Odwróć stan <device_name> i yo-ho-ho!,pirate,0
+light.toggle,"Przełączanie stanu <device_name> zgodnie z poleceniem, arr!",pirate,0
+light.toggle,"Przełącz <device_name> dla Ciebie, bez żadnych problemów!",pirate,0
+light.toggle,"Przełącz <device_name>, gotowy na przygodę!",pirate,0
+light.turn_on,"Uruchamiam <device_name>, na horyzoncie!",pirate,0
+light.turn_on,"Tak, rozjaśnij <device_name>, teraz jest jasno jak w dzień!",pirate,0
+light.turn_on,"Włączam dla Ciebie <device_name>, jak gwiazdę północną!",pirate,0
+light.turn_on,"Świeci się <device_name>, tak jasno jak księżyc w pełni!",pirate,0
+light.turn_on,"Aktywuję <device_name>, niech stanie się światło!",pirate,0
+light.turn_on,"Ustaw jasność <device_name> na <brightness>%, tak przejrzyście jak na otwartym morzu!",pirate,0
+light.turn_on,"Przyciemnij <device_name> do <brightness>% jasności, jak o zmierzchu.",pirate,0
+light.turn_on,"Rozjaśnij <device_name> do <brightness>%, jak poranne słońce!",pirate,0
+light.turn_on,Dostosuj jasność <device_name> do <brightness> zgodnie ze wskazówkami latarni morskiej.,pirate,0
+light.turn_on,"Zwiększanie jasności urządzenia <device_name> do <brightness>, niczym latarnia morska w nocy!",pirate,0
+light.turn_on,"Zmniejsz jasność <device_name> do <brightness>, delikatnie jak światło księżyca.",pirate,0
+light.turn_on,"Ustaw poziom jasności urządzenia <device_name> na <brightness>%, tak aby był stały jak przypływ.",pirate,0
+light.turn_on,"Ustaw <device_name> na <brightness>% jasności, tak jasnej jak pirackie złoto!",pirate,0
+light.turn_on,"Zmieniaj <device_name> <color>, jak kolory morza.",pirate,0
+light.turn_on,"Zmień kolor <device_name> na <color>, żywy jak koral!",pirate,0
+light.turn_on,"Zmień kolor <device_name> na kolor <color>, odważny jak piracka flaga!",pirate,0
+light.turn_on,"Ustawiam <device_name> na <color>, tak majestatyczny jak zachód słońca.",pirate,0
+light.turn_on,"Spraw, aby <device_name> świeciła w <color> niczym klejnoty ze skrzyni skarbów.",pirate,0
+light.turn_on,"Zmień <device_name> na odcień <color>, tajemniczy jak głębia.",pirate,0
+light.turn_on,"Ustaw <device_name> na <color>, tak bogaty jak łupy z nalotu.",pirate,0
+light.turn_on,"Ustawia <device_name> kolor <color>, jasny jak upierzenie papugi.",pirate,0
+light.turn_on,"Spraw, aby <device_name> świeciła <color> niczym blask pochodni na wyspie.",pirate,0
+light.turn_on,"Zmień <device_name> na <color>, tak odważnie jak odwaga pirata.",pirate,0
+light.turn_on,"Zmień <device_name> na <color>, jak zmieniające się pływy.",pirate,0
+light.turn_on,"Dostosuj kolor <device_name> do <color>, tak urzekający jak śpiew syreny.",pirate,0
+light.turn_on,"Zmieniam kolor <device_name> na <color>, jak sztandar statku.",pirate,0
+light.turn_on,"Ustawienie <device_name> w <color>, tak żywe jak wiwaty w tawernie.",pirate,0
+light.turn_on,"Makin' <device_name> wyświetla światło w <color>, jak zorza polarna.",pirate,0
+light.turn_on,"Ustaw kolor <device_name> na <color>, tak uderzający jak ogień armatni.",pirate,0
+light.turn_off,"Dezaktywuj <device_name>, jak chcesz, ciemna jak bezksiężycowa noc.",pirate,0
+light.turn_off,"Wyłączam teraz <device_name>, cicho jak statek widmo.",pirate,0
+light.turn_off,"Tak, wyłączam <device_name>, jakbym gasił latarnię.",pirate,0
+light.turn_off,"Wyłącz <device_name>, trzymajmy się cieni.",pirate,0
+light.turn_off,"Dezaktywacja <device_name>, tak cicho jak głębina.",pirate,0
+switch.turn_on,"Podnoszę przełącznik, jestem gotowy do akcji, arr!",pirate,0
+switch.turn_on,"Tak, rozświetl taras jednym naciśnięciem przełącznika!",pirate,0
+switch.turn_on,Przełączamy przełącznik i wyruszamy w jasną podróż!,pirate,0
+switch.turn_off,"Gasząc światła, czyniąc ciemność jak otchłań oceanu.",pirate,0
+switch.turn_off,"Odetnę moc, jakbym uspokoił morza.",pirate,0
+switch.turn_off,"Tak, pogrążamy nas w ciemności, jak osłona nocy.",pirate,0
+switch.toggle,"Przesuń przełącznik, jak szukanie szczęścia za pomocą mapy!",pirate,0
+switch.toggle,"Zmiana kursu za pomocą przełącznika, gdy wiatr się zmienia!",pirate,0
+switch.toggle,"Będę przełączał przełącznik, jakbym płynął przez burzę!",pirate,0
+switch.toggle,"Przełączaj <device_name>, tak jak podnosisz Jolly Rogera!",pirate,0
+switch.toggle,"Tak, rzuć <device_name>, szybko jak wichura!",pirate,0
+switch.toggle,"Można! Zmieniaj <device_name>, tak jak obracasz sterem.",pirate,0
+switch.toggle,"Przełączaj <device_name> na polecenie, jak prawdziwy korsarz!",pirate,0
+switch.toggle,"Zmieniaj pływy dla <device_name>, jak doświadczony sternik.",pirate,0
+switch.toggle,"Szybko żongluj <device_name>, jak łup w biegu!",pirate,0
+switch.turn_on,"Zapala <device_name>, niczym latarnia morska w nocy!",pirate,0
+switch.turn_on,"Będę świecić <device_name>, jak latarnia w bocianiem gnieździe.",pirate,0
+switch.turn_on,"Aktywuję <device_name>, ustaw kurs!",pirate,0
+switch.turn_on,"Tak, urządzenie <device_name> świeci jak złota skrzynia skarbów!",pirate,0
+switch.turn_on,"Włącz <device_name>, od razu, bez gadania!",pirate,0
+switch.turn_on,"Świeci się <device_name>, jak gwiazdy prowadzące nas do domu.",pirate,0
+switch.turn_on,"Podpalam <device_name> i jestem gotowy na wszystko, co nas czeka.",pirate,0
+switch.turn_off,"Zgaś <device_name>, jak świecę o świcie.",pirate,0
+switch.turn_off,"Gaszenie <device_name>, jak koniec podróży.",pirate,0
+switch.turn_off,"Dezaktywacja <device_name>, jak zakopanie skrzyni z bogactwem.",pirate,0
+switch.turn_off,"OK, zgasić <device_name>, jak cisza przed burzą.",pirate,0
+switch.turn_off,"Tak, wyłączam <device_name>, jakbym szeptał do wiatru.",pirate,0
+switch.turn_off,Wyłączamy urządzenie <device_name> i zakotwiczamy na noc.,pirate,0
+switch.turn_off,"Wygaszam światła <device_name>, jak statek widmo znikający we mgle.",pirate,0
+fan.turn_on,"Beep bum, włączam dla ciebie wentylator.",robot,0
+fan.turn_on,"Pip, włączę dla ciebie wentylator, bum.",robot,0
+fan.turn_on,"Bip, jasne, włączam teraz wentylator.",robot,0
+fan.turn_off,"Sygnał dźwiękowy, wyłączenie wentylatora zgodnie z żądaniem.",robot,0
+fan.turn_off,"Wyłączę ci wentylator, beep bup.",robot,0
+fan.turn_off,"OK, wyłączam sygnał dźwiękowy wentylatora.”",robot,0
+fan.toggle,"Pip, przełączę dla ciebie stan wentylatora, bum.”",robot,0
+fan.toggle,"Włączam teraz wentylator, sygnał dźwiękowy.",robot,0
+fan.toggle,"Zmieniam dla ciebie stan wentylatora, beep buop.",robot,0
+fan.increase_speed,"Zwiększam prędkość wentylatora, sygnał dźwiękowy.",robot,0
+fan.increase_speed,"Jasne, teraz zwiększ prędkość wentylatora, pip bup.”",robot,0
+fan.increase_speed,"Pójdę dalej i przyspieszę wentylator, beep bup.",robot,0
+fan.decrease_speed,"Zmniejszam prędkość wentylatora zgodnie z żądaniem, sygnał dźwiękowy.",robot,0
+fan.decrease_speed,"Zwolnię dla ciebie wentylator, beep bup.",robot,0
+fan.decrease_speed,"Jasne, zmniejszam prędkość wentylatora, pip bup.”",robot,0
+fan.toggle,"Zmieniam stan <device_name> za Ciebie, pip buop",robot,0
+fan.toggle,"Przełączanie stanu <device_name> zgodnie z żądaniem, sygnał dźwiękowy",robot,0
+fan.toggle,"Przełączam teraz <device_name>, sygnał dźwiękowy",robot,0
+fan.turn_on,"Aktywuję teraz <device_name>, sygnał dźwiękowy",robot,0
+fan.turn_on,"Uruchamiam <device_name> dla Ciebie, pip buop",robot,0
+fan.turn_on,"Oczywiście, uruchamiam <device_name>, pip buop”",robot,0
+fan.turn_on,"Włączam <device_name>, pip buop",robot,0
+fan.turn_on,"Uruchamiam <device_name>, sygnał dźwiękowy",robot,0
+fan.turn_off,"Dezaktywacja <device_name> zgodnie z żądaniem, sygnał dźwiękowy",robot,0
+fan.turn_off,"Zatrzymuję dla Ciebie <device_name>, pip buop",robot,0
+fan.turn_off,"Oczywiście, zatrzymanie <device_name>, sygnał dźwiękowy”",robot,0
+fan.turn_off,"Wyłączanie <device_name>, sygnał dźwiękowy",robot,0
+fan.decrease_speed,"Zmniejszanie prędkości <device_name>, sygnał dźwiękowy",robot,0
+fan.decrease_speed,"Zmniejszanie prędkości <device_name> zgodnie z żądaniem, sygnał dźwiękowy",robot,0
+fan.decrease_speed,"Zwalniam dla Ciebie <device_name>, pip buop",robot,0
+fan.increase_speed,"Zwiększanie prędkości <device_name>, sygnał dźwiękowy",robot,0
+fan.increase_speed,"Zwiększam teraz prędkość <device_name>, pip buop",robot,0
+fan.increase_speed,"Przyspieszam <device_name> dla Ciebie, pip buop",robot,0
+fan.increase_speed,"Zwiększanie prędkości <device_name>, sygnał dźwiękowy",robot,0
+fan.decrease_speed,"Zmniejszanie prędkości <device_name>, sygnał dźwiękowy",robot,0
+blinds.open_cover,"Beep bum, otwieram dla ciebie rolety.",robot,0
+blinds.open_cover,"Pójdę dalej i otworzę żaluzje, bip bup.",robot,0
+blinds.open_cover,"Jasne, otwieram teraz rolety, pip buop.",robot,0
+blinds.close_cover,"Zamykam rolety, jak prosiłeś, sygnał dźwiękowy.",robot,0
+blinds.close_cover,"Zasłonię ci rolety, beep bum.",robot,0
+blinds.close_cover,"Jasne, zamykam rolety, pip buop.",robot,0
+blinds.stop_cover,"Zatrzymuję teraz żaluzje, beep bum.",robot,0
+blinds.stop_cover,"Zatrzymam dla ciebie rolety, beep bum.",robot,0
+blinds.stop_cover,"Jasne, wstrzymuję ruch rolet, pip-boop.",robot,0
+blinds.toggle,"Przełączanie stanu rolet za Ciebie, sygnał dźwiękowy.",robot,0
+blinds.toggle,"Zmieniam teraz stan rolet, beep buop.",robot,0
+blinds.toggle,"Przesunę dla ciebie rolety, beep bum.",robot,0
+blinds.open_cover,"Podnoszenie rolet <device_name> zgodnie z żądaniem, sygnał dźwiękowy",robot,0
+blinds.open_cover,"Otwieram teraz <device_name>, pip buop",robot,0
+blinds.open_cover,"Podnoszę dla Ciebie <device_name>, pip buop",robot,0
+blinds.stop_cover,"Zamrażanie pozycji <device_name>, sygnał dźwiękowy",robot,0
+blinds.stop_cover,"Zatrzymuję teraz <device_name>, sygnał dźwiękowy",robot,0
+blinds.stop_cover,"Zatrzymywanie działania <device_name>, sygnał dźwiękowy",robot,0
+blinds.open_cover,"Podnoszenie <device_name>, sygnał dźwiękowy",robot,0
+blinds.close_cover,"Zamykam <device_name>, pip buop",robot,0
+blinds.close_cover,"Opuszczam teraz <device_name>, sygnał dźwiękowy",robot,0
+blinds.close_cover,"Zamykanie <device_name> zgodnie z żądaniem, sygnał dźwiękowy",robot,0
+blinds.close_cover,"Opuszczanie <device_name>, sygnał dźwiękowy",robot,0
+blinds.toggle,"Zmieniam teraz stan <device_name>, słychać sygnał dźwiękowy",robot,0
+blinds.toggle,"Przełączanie stanu <device_name> zgodnie z żądaniem, sygnał dźwiękowy",robot,0
+blinds.toggle,"Przełączam dla Ciebie <device_name>, pip buop",robot,0
+blinds.toggle,"Przełączanie <device_name>, sygnał dźwiękowy",robot,0
+climate.set_humidity,"Sygnał dźwiękowy, zwiększenie wilgotności do <humidity>, bum.",robot,0
+climate.set_humidity,"Beep bum: Ustawianie wilgotności na procent <humidity>, przetwarzanie.",robot,0
+climate.set_humidity,"Rozpoczęto protokół regulacji: wilgotność do <humidity>%, sygnał dźwiękowy.",robot,0
+climate.set_fan_mode,"Regulacja prędkości wentylatora do <fan_mode>: sygnał rozpoczynający, dźwięk kończący.",robot,0
+climate.set_fan_mode,"Aktywacja trybu wentylatora <fan_mode>, aktywowana sekwencja sygnałów dźwiękowych.",robot,0
+climate.set_fan_mode,"Zmiana ustawień wentylatora na <fan_mode>: protokół sygnału dźwiękowego, wykonanie boopu.",robot,0
+climate.set_hvac_mode,"Przełączenie trybu HVAC na <hvac_mode>: rozpoczęcie sygnału dźwiękowego, zakończenie działania.",robot,0
+climate.set_hvac_mode,"Inicjowanie ustawienia HVAC na <hvac_mode>, trwa działanie sygnału dźwiękowego.",robot,0
+climate.set_hvac_mode,"Wykonywanie zmiany: HVAC w tryb <hvac_mode>, trwa sygnał dźwiękowy i buczenie.",robot,0
+climate.set_temperature,"Protokół ustawiania temperatury do stopni <temp_f>: początek sygnału dźwiękowego, koniec boopu.",robot,0
+climate.set_temperature,"Modyfikacja temperatury do <temp_c> Celsjusza: sygnał dźwiękowy na początku, sygnał dźwiękowy na końcu.",robot,0
+climate.set_temperature,"Regulacja temperatury w pomieszczeniu do <temp_f> stopni Fahrenheita, sygnał dźwiękowy.",robot,0
+climate.set_temperature,"Rozpoczęcie dostosowywania temperatury do <temp_f> stopni Fahrenheita, sygnał dźwiękowy.",robot,0
+climate.set_temperature,"Rozpoczęto ustawianie niższej temperatury na <temp_c> stopni Celsjusza, sygnał dźwiękowy.",robot,0
+climate.set_temperature,"Pip, podgrzej temperaturę, ustawiając temperaturę na <temp_f> stopni, bum.",robot,0
+climate.set_temperature,"Protokół obniżenia temperatury do <temp_c> Celsjusza, sygnał dźwiękowy start, bum-zakończenie.",robot,0
+climate.set_temperature,"Podniesienie temperatury do <temp_f> stopni Fahrenheita, sygnał dźwiękowy inicjujący, bum kończący.",robot,0
+light.turn_on,"Beep buop, oświetlaj obszar, włączając światło dla Ciebie.",robot,0
+light.turn_on,"Potwierdzam, rozpoczynam teraz sekwencję aktywacji światła.",robot,0
+light.turn_on,"Kontynuacja aktywacji światła, sygnał dźwiękowy.",robot,0
+light.turn_off,Sekwencja dezaktywacji światła zainicjowana zgodnie z żądaniem.,robot,0
+light.turn_off,"Rozpoczęcie wyłączania światła, sygnał dźwiękowy.",robot,0
+light.turn_off,"Potwierdzono, wyłączam światło.",robot,0
+light.toggle,"Beep bum, przełączanie stanu światła w celu uzyskania optymalnego oświetlenia.",robot,0
+light.toggle,"Przełącznik stanu wykonania dla światła, sygnał dźwiękowy.",robot,0
+light.toggle,Włącz protokół: przełączanie światła na żądanie.,robot,0
+light.toggle,"Odwrócenie stanu <device_name>, polecenie przetwarzania.",robot,0
+light.toggle,"Przełączanie stanu <device_name> zgodnie z dyrektywą, sygnał dźwiękowy.",robot,0
+light.toggle,"Przełączanie <device_name>, wykonywanie w toku.",robot,0
+light.toggle,"Protokół wykonania: przełączanie <device_name>, sygnał dźwiękowy.",robot,0
+light.turn_on,"Rozpoczęto aktywację <device_name>, gotowość do oświetlenia.",robot,0
+light.turn_on,Z pewnością rozpoczynam teraz aktywację <device_name>.,robot,0
+light.turn_on,"Włączenie <device_name>, inicjowanie sekwencji kontrolek.",robot,0
+light.turn_on,"Włączam <device_name>, sygnał dźwiękowy oznacza start, sygnał dźwiękowy oznacza zakończenie.",robot,0
+light.turn_on,"Aktywuję <device_name>, trwa sekwencja operacyjna.",robot,0
+light.turn_on,Dostosowywanie jasności <device_name> do <brightness>% w celu uzyskania optymalnej widoczności.,robot,0
+light.turn_on,Zainicjowano protokół ściemniania <device_name> do <brightness>%.,robot,0
+light.turn_on,Rozjaśnianie <device_name> do <brightness>% w celu lepszego oświetlenia.,robot,0
+light.turn_on,"Modyfikowanie jasności <device_name> na <brightness>%, przetwarzanie.",robot,0
+light.turn_on,"Zwiększanie jasności <device_name> do <brightness>%, sygnał dźwiękowy.",robot,0
+light.turn_on,"Zmniejszam jasność <device_name> do <brightness>%, trwa dostosowywanie.",robot,0
+light.turn_on,Konfigurowanie jasności <device_name> na <brightness>% w celu uzyskania pożądanej atmosfery.,robot,0
+light.turn_on,"Ustawienie luminancji <device_name> na <brightness>% jasności, sygnał dźwiękowy.",robot,0
+light.turn_on,"Przejście z <device_name> na <color>, inicjowanie protokołu zmiany koloru.",robot,0
+light.turn_on,"Zmiana spektrum kolorów <device_name> na <color>, sygnał dźwiękowy.",robot,0
+light.turn_on,"Zmiana odcienia <device_name> na odcień <color>, aktywowano sekwencję regulacji kolorów.",robot,0
+light.turn_on,"Ustawianie chromatyki <device_name> na <color>, regulacja oświetlenia.",robot,0
+light.turn_on,"Wyświetlanie <color> z <device_name>, poprawianie wydajności chromatycznej.",robot,0
+light.turn_on,"Przekształcam atmosferę <device_name> w odcień <color>, pip buop.",robot,0
+light.turn_on,Dostosowywanie <device_name> do protokołu adaptacji chromatycznej <color>.,robot,0
+light.turn_on,"Konfigurowanie <device_name> do emitowania koloru <color>, inicjowanie.",robot,0
+light.turn_on,"Zwiększanie blasku <device_name> do <color>, modyfikacja wizualna w toku.",robot,0
+light.turn_on,"Dostosowywanie <device_name> do <color>, włączona jest sekwencja zmiany koloru.",robot,0
+light.turn_on,"Zmieniam barwę <device_name> na <color>, trwa dostosowywanie kolorów.",robot,0
+light.turn_on,"Dostosowywanie koloru <device_name> do koloru <color>, protokół poprawy wizualnej.",robot,0
+light.turn_on,"Przełączanie spektrum kolorów <device_name> na <color>, sygnał dźwiękowy.",robot,0
+light.turn_on,"Konfigurowanie <device_name> w <color>, rozpoczęło się dostosowywanie chromatyczne.",robot,0
+light.turn_on,"Włączenie <device_name> wyświetlania światła <color>, wizualna transformacja.",robot,0
+light.turn_on,"Ustawianie koloru <device_name> na <color>, kolejność ustawiania kolorów.",robot,0
+light.turn_off,"Dezaktywacja <device_name> zgodnie z żądaniem, zamykanie.",robot,0
+light.turn_off,"Wyłączanie <device_name>, inicjowana jest sekwencja wyłączania.",robot,0
+light.turn_off,"Potwierdzam, dezaktywacja <device_name>, sygnał dźwiękowy.",robot,0
+light.turn_off,"Wyłączanie <device_name>, obowiązuje protokół dezaktywacji.",robot,0
+light.turn_off,"Rozpoczęcie dezaktywacji <device_name>, zatrzymanie pracy.",robot,0
+garage_door.open_cover,"Rozpoczynam dla Ciebie sekwencję otwierania bramy garażowej, sygnał dźwiękowy.",robot,0
+garage_door.open_cover,"Afirmatywny, aktywujący mechanizm otwierania bramy garażowej.",robot,0
+garage_door.open_cover,"Rozpoczęcie otwierania bramy garażowej, sygnał dźwiękowy.",robot,0
+garage_door.close_cover,"Rozpoczęcie zamykania bramy garażowej zgodnie z poleceniem, sygnał dźwiękowy.",robot,0
+garage_door.close_cover,"Wykonuję dla Ciebie zamknięcie bramy garażowej, sygnał dźwiękowy.",robot,0
+garage_door.close_cover,"Potwierdzony, rozpoczynający sekwencję zamykania bramy garażowej.",robot,0
+garage_door.stop_cover,"Zatrzymuję teraz ruch bramy garażowej, sygnał dźwiękowy.",robot,0
+garage_door.stop_cover,"Sygnał dźwiękowy, wykonanie polecenia zatrzymania bramy garażowej.",robot,0
+garage_door.stop_cover,"Potwierdzam, natychmiast zaprzestam ruchu bramy garażowej.",robot,0
+garage_door.toggle,"Przełączanie stanu bramy garażowej zgodnie z Twoją prośbą, sygnał dźwiękowy.",robot,0
+garage_door.toggle,"Wykonywanie zmiany stanu bramy garażowej, sygnał dźwiękowy.",robot,0
+garage_door.toggle,"Przełączanie stanu bramy garażowej w celu uzyskania optymalnego działania, sygnał dźwiękowy.",robot,0
+garage_door.open_cover,Mechanizm podnoszący dla <device_name> został aktywowany dla Ciebie.,robot,0
+garage_door.open_cover,"Otwieram teraz <device_name>, sekwencja inicjująca.",robot,0
+garage_door.open_cover,"Podnoszenie <device_name> zgodnie z dyrektywą, sygnał dźwiękowy.",robot,0
+garage_door.stop_cover,"Blokuję teraz pozycję <device_name>, polecenie potwierdzone.",robot,0
+garage_door.stop_cover,"Z pewnością wstrzymywanie działania <device_name>, sygnał dźwiękowy.",robot,0
+garage_door.stop_cover,"Rozpoczęto zatrzymanie operacji dla <device_name>, słychać sygnał dźwiękowy.",robot,0
+garage_door.open_cover,"Rozpoczęto protokół otwierania dla <device_name>, sygnał dźwiękowy.",robot,0
+garage_door.stop_cover,"Zatrzymywanie urządzenia <device_name> w toku, sygnał dźwiękowy.",robot,0
+garage_door.close_cover,"Rozpoczynam teraz zamykanie urządzenia <device_name>, sygnał dźwiękowy.",robot,0
+garage_door.close_cover,"Obniżam dla Ciebie <device_name>, przetwarzanie poleceń.",robot,0
+garage_door.close_cover,Wykonywanie zamykania <device_name> zgodnie z żądaniem.,robot,0
+garage_door.close_cover,"Protokół zamknięcia dla <device_name> został aktywowany, słychać sygnał dźwiękowy.",robot,0
+garage_door.toggle,"Obecnie zmienia się stan <device_name>, zmiana operacyjna.",robot,0
+garage_door.toggle,"Przełączanie stanu <device_name> zgodnie z poleceniem, sygnał dźwiękowy.",robot,0
+garage_door.toggle,"Przełączanie <device_name> w celu uzyskania optymalnej funkcjonalności, sygnał dźwiękowy.",robot,0
+garage_door.toggle,"Zainicjowano zmianę stanu dla <device_name>, sygnał dźwiękowy.",robot,0
+vacuum.start,Rozpoczynam teraz czyszczenie <device_name>.,assistant,0
+vacuum.start,<device_name> jest ustawione na rozpoczęcie czyszczenia.,assistant,0
+vacuum.start,Inicjowanie cyklu czyszczenia <device_name>.,assistant,0
+vacuum.start,<device_name> wkrótce rozpocznie czyszczenie.,assistant,0
+vacuum.start,Rozpoczęcie procesu czyszczenia za pomocą <device_name>.,assistant,0
+vacuum.stop,Anulowanie bieżącego zadania <device_name>.,assistant,0
+vacuum.stop,Działanie <device_name> zostało zatrzymane.,assistant,0
+vacuum.stop,Natychmiastowe zatrzymanie <device_name>.,assistant,0
+vacuum.stop,Czyszczenie <device_name> zostało anulowane zgodnie z Twoją prośbą.,assistant,0
+vacuum.stop,Zatrzymywanie zadania <device_name> zgodnie z pytaniem.,assistant,0
+vacuum.pause,Wstrzymuję na razie <device_name>.,assistant,0
+vacuum.pause,Cykl czyszczenia urządzenia <device_name> został tymczasowo zatrzymany.,assistant,0
+vacuum.pause,<device_name> ma krótką przerwę.,assistant,0
+vacuum.pause,Chwilowo wstrzymuje działanie <device_name>.,assistant,0
+vacuum.pause,Aktywność <device_name> została wstrzymana.,assistant,0
+vacuum.return_to_base,Wysyłanie <device_name> z powrotem do bazy.,assistant,0
+vacuum.return_to_base,<device_name> wraca do swojej stacji dokującej.,assistant,0
+vacuum.return_to_base,<device_name> wraca do ładowania.,assistant,0
+vacuum.return_to_base,Nakazuję <device_name> powrót do bazy.,assistant,0
+vacuum.return_to_base,<device_name> wraca do domu.,assistant,0
+todo.add_item,<todo> zostało dodane do twojej listy rzeczy do zrobienia.,assistant,0
+todo.add_item,Pomyślnie dodano <todo> do swoich zadań.,assistant,0
+todo.add_item,Twoja lista rzeczy do zrobienia zawiera teraz <todo>.,assistant,0
+todo.add_item,<todo> jest teraz na Twojej liście rzeczy do zrobienia.,assistant,0
+todo.add_item,Umieściłem <todo> na twojej liście rzeczy do zrobienia.,assistant,0
+todo.add_item,<todo> dodano do listy.,assistant,0
+todo.add_item,Rozważ dodanie <todo> do swoich zadań.,assistant,0
+todo.add_item,"Rozumiem, <todo> jest teraz na Twojej liście rzeczy do zrobienia.",assistant,0
+todo.add_item,<todo> zostało pomyślnie dodane do Twojej listy.,assistant,0
+timer.start,Uruchamiam licznik czasu <device_name> na <duration>.,assistant,0
+timer.start,Timer <device_name> ustawiony na <duration>.,assistant,0
+timer.start,Rozpoczęcie odliczania dla <duration>.,assistant,0
+timer.start,Timer <device_name> działa teraz przez <duration>.,assistant,0
+timer.start,Inicjowanie licznika czasu na <duration>.,assistant,0
+timer.start,Twój licznik czasu o nazwie <device_name> na <duration> rozpoczyna się teraz.,assistant,0
+timer.start,Timer aktywowany na <duration>.,assistant,0
+timer.start,Uruchamianie licznika czasu na czas <duration>.,assistant,0
+timer.start,Rozpoczęło się odliczanie <duration> na liczniku czasu <device_name>.,,
+timer.start,Ustawianie timera na <duration>.,assistant,0
+timer.cancel,Timer został anulowany.,assistant,0
+timer.cancel,Pomyślnie zatrzymano stoper.,assistant,0
+timer.cancel,Timer został wyczyszczony.,assistant,0
+timer.cancel,Timer został pomyślnie zatrzymany.,assistant,0
+timer.cancel,Timer został dezaktywowany.,assistant,0
+timer.cancel,Nigdy więcej działania timera.,assistant,0
+timer.cancel,Timer został pomyślnie anulowany.,assistant,0
+timer.cancel,Minutnik <device_name> został anulowany.,assistant,0
+timer.cancel,Twój licznik czasu na urządzeniu <device_name> jest teraz zatrzymany.,assistant,0
+timer.cancel,Potwierdzono anulowanie timera dla <device_name>.,assistant,0
+timer.cancel,Licznik czasu na urządzeniu <device_name> został wyczyszczony.,assistant,0
+timer.cancel,Licznik czasu na urządzeniu <device_name> został pomyślnie zatrzymany.,assistant,0
+timer.cancel,Twój licznik czasu na urządzeniu <device_name> został anulowany.,assistant,0
+timer.cancel,Timer urządzenia <device_name> został dezaktywowany.,assistant,0

@@ -1,0 +1,601 @@
+service_name,device_name,phrase
+blinds.close_cover,kuchnia,Opuść żaluzje kuchenne
+blinds.close_cover,salon,Zasuń rolety w salonie
+blinds.close_cover,główna_sypialnia,Zasuń rolety w głównej sypialni
+blinds.open_cover,kuchnia,Czy mógłbyś podnieść rolety w kuchni?
+blinds.open_cover,salon,Otwórz rolety w salonie
+blinds.open_cover,główna_sypialnia,Podnieś rolety w głównej sypialni
+blinds.stop_cover,kuchnia,"Zatrzymaj rolety kuchenne tam, gdzie są"
+blinds.stop_cover,salon,Przestań regulować rolety w salonie
+blinds.stop_cover,główna_sypialnia,Proszę zaciągnąć rolety w głównej sypialni
+blinds.toggle,kuchnia,Zmień stan rolet kuchennych
+blinds.toggle,salon,Przełącz rolety w salonie
+blinds.toggle,główna_sypialnia,Odwróć rolety w głównej sypialni
+fan.decrease_speed,poddasze_1,Zwolnij wentylator na poddaszu
+fan.decrease_speed,poddasze_1,Wyłącz wentylator na poddaszu
+fan.decrease_speed,strych,Zwolnij wentylator na poddaszu
+fan.decrease_speed,sypialnia_mistrz,Zwolnij wentylator w głównej sypialni
+fan.decrease_speed,garaż,Wyłącz wentylator w garażu
+fan.decrease_speed,pokój_gościnny,Zmniejsz prędkość wentylatora w pokoju gościnnym
+fan.decrease_speed,korytarz,Zmniejsz prędkość wentylatora w korytarzu
+fan.decrease_speed,kuchnia,Zwolnij wentylator kuchenny
+fan.decrease_speed,kuchnia,Wyłącz wentylator kuchenny
+fan.decrease_speed,salon,Zmniejsz prędkość wentylatora w salonie
+fan.decrease_speed,salon,Wyłącz wentylator w salonie
+fan.decrease_speed,badanie,Zmniejsz prędkość wentylatora w badaniu
+fan.increase_speed,poddasze_1,Zwiększ prędkość wentylatora na poddaszu
+fan.increase_speed,strych,Przyspiesz wentylator na poddaszu
+fan.increase_speed,sypialnia_mistrz,Zwiększ prędkość wentylatora w głównej sypialni
+fan.increase_speed,garaż,Włącz wentylator w garażu
+fan.increase_speed,pokój_gościnny,Zwiększ prędkość wentylatora w pokoju gościnnym
+fan.increase_speed,korytarz,Zwiększ prędkość wentylatora w korytarzu
+fan.increase_speed,salon,Zwiększ prędkość wentylatora w salonie
+fan.increase_speed,badanie,Zwiększ prędkość wentylatora w badaniu
+fan.toggle,poddasze_2,Przełącz wentylator na poddaszu
+fan.toggle,strych,Zmień stan wentylatora na poddaszu
+fan.toggle,piwnica,Przełącz wentylator w piwnicy
+fan.toggle,sypialnia_mistrz,Zmień stan wentylatora w głównej sypialni
+fan.toggle,sypialnia,Przełącz wentylator w sypialni
+fan.toggle,jadalnia_stół_powyżej,Proszę włączyć wentylator nad stołem
+fan.toggle,podjazd,Odwróć wentylator na podjeździe
+fan.toggle,garaż,Odwróć wentylator w garażu
+fan.toggle,pokój_gościnny,Możesz włączyć wentylator w pokoju gościnnym?
+fan.toggle,korytarz,Zmień stan wentylatora w korytarzu
+fan.toggle,kuchnia,Przełącz wentylator kuchenny
+fan.toggle,salon,Włącz wentylator w salonie
+fan.toggle,biuro,Przełącz wentylator biurowy
+fan.toggle,na_wolnym_powietrzu,Przełącz wentylator zewnętrzny
+fan.toggle,basen,Zmień stan wentylatora basenu
+fan.toggle,szopa,Włączyć lub wyłączyć wentylator szopy
+fan.toggle,badanie,Zmień stan wentylatora w badaniu
+fan.turn_off,poddasze_1,Wyłącz wentylator na poddaszu
+fan.turn_off,sypialnia_mistrz,Wyłącz wentylator w głównej sypialni
+fan.turn_off,jadalnia,Proszę wyłączyć wentylator w jadalni
+fan.turn_off,jadalnia,Wyłącz wentylator w jadalni
+fan.turn_off,garaż,Wyłącz wentylator garażowy
+fan.turn_off,garaż,Wyłączyć wentylator garażowy
+fan.turn_off,pokój_gościnny,Wyłącz wentylator w pokoju gościnnym
+fan.turn_off,kuchnia,Wyłącz wentylator kuchenny
+fan.turn_off,salon,Wyłącz wentylator w salonie
+fan.turn_off,biuro,Czy mógłbyś wyłączyć wentylator w biurze?
+fan.turn_off,biuro,Wyłącz wentylator w biurze
+fan.turn_off,patio,Wyłącz wentylator tarasowy
+fan.turn_off,badanie,Wyłącz wentylator do nauki
+fan.turn_off,badanie,Wyłącz wentylator do nauki
+fan.turn_on,łazienka,Włącz wentylator w łazience
+fan.turn_on,łazienka,Włącz wentylator w łazience
+fan.turn_on,sypialnia_mistrz,Włącz wentylator w głównej sypialni
+fan.turn_on,jadalnia,Proszę włączyć wentylator w jadalni
+fan.turn_on,garaż,Włącz wentylator garażowy
+fan.turn_on,korytarz,Włącz wentylator w korytarzu
+fan.turn_on,kuchnia,Włącz wentylator kuchenny
+fan.turn_on,salon,Uruchom wentylator w salonie
+fan.turn_on,salon,Włącz wentylator w salonie
+fan.turn_on,biuro,Czy mógłbyś włączyć wentylator biurowy?
+fan.turn_on,badanie,Aktywuj wentylator do nauki
+fan.turn_on,badanie,Włącz wentylator do nauki
+garage_door.close_cover,magazyn_rowerów,Dezaktywuj garaż do przechowywania rowerów
+garage_door.close_cover,główny,Zamknij główną bramę garażową
+garage_door.close_cover,jeden_samochód,"Upewnij się, że garaż na jeden samochód jest zamknięty"
+garage_door.close_cover,strona,Opuść boczną bramę garażową
+garage_door.open_cover,piwnica,Proszę podnieść bramę do garażu w piwnicy
+garage_door.open_cover,magazyn_rowerów,Aktywuj garaż do przechowywania rowerów
+garage_door.open_cover,główny,Otwórz główną bramę garażową
+garage_door.open_cover,strona,Czy mógłbyś podnieść boczną bramę garażową?
+garage_door.open_cover,dwa_samochody,Otwórz garaż na dwa samochody
+garage_door.stop_cover,główny,Zatrzymaj główną bramę garażową
+garage_door.stop_cover,strona,Zatrzymaj boczną bramę garażową
+garage_door.toggle,główny,Przełącz główną bramę garażową
+garage_door.toggle,strona,Zmień stan bocznej bramy garażowej
+light.toggle,strych,Zmień stan oświetlenia na poddaszu
+light.toggle,sypialnia_1,Przełącz światło w sypialni
+light.toggle,jadalnia_stół_powyżej,Proszę włączyć światło nad stołem w jadalni
+light.toggle,podjazd,Włącz światło na podjeździe
+light.toggle,garaż,Włącz światło w garażu
+light.toggle,pokój_gościnny,Mógłbyś włączyć światło w pokoju gościnnym?
+light.toggle,pokój_gościnny,Włącz światło w pokoju gościnnym
+light.toggle,korytarz,Zmień stan oświetlenia w korytarzu
+light.toggle,korytarz,Przełącz światło w korytarzu
+light.toggle,kuchnia_1,Przełącz światło w kuchni
+light.toggle,kuchnia_2,Przełącz światło w kuchni
+light.toggle,biuro,Przełącz światło w biurze
+light.toggle,na_wolnym_powietrzu,Przełącz światło zewnętrzne
+light.toggle,patio,Przełącz światło na patio
+light.toggle,basen,Zmień stan oświetlenia basenu
+light.toggle,szopa,Włącz lub wyłącz oświetlenie szopy
+light.toggle,badanie,Zmień stan oświetlenia w badaniu
+light.toggle,badanie,Przełącz światło do nauki
+light.turn_off,łazienka_1,Proszę zgasić światło w łazience
+light.turn_off,łazienka,Wyłącz światło w łazience
+light.turn_off,łazienka,Wyłącz światło w łazience
+light.turn_off,sypialnia_1,Wyłącz światło w sypialni
+light.turn_off,sypialnia_2,Wyłącz światło w sypialni
+light.turn_off,jadalnia,Wyłącz światło w jadalni
+light.turn_off,jadalnia,Wyłącz światło w jadalni
+light.turn_off,ogród_1,Wyłącz światło ogrodowe
+light.turn_off,pokój_gościnny,Wyłącz oświetlenie pokoju gościnnego
+light.turn_off,pokój_gościnny,Wyłącz światło w pokoju gościnnym
+light.turn_off,korytarz,Wyłącz światło w korytarzu
+light.turn_off,korytarz,Wyłącz światło w korytarzu
+light.turn_off,kuchnia_2,Wyłącz światło w kuchni
+light.turn_off,blat_kuchenny,Wyłącz światło na blacie kuchennym
+light.turn_off,salon_1,Wyłącz światło w salonie
+light.turn_off,salon,Wyłącz światło w salonie
+light.turn_off,główna_sypialnia_1,Wyłącz światło w głównej sypialni
+light.turn_off,główna_lampa_sypialni,Wyłącz światło w sypialni
+light.turn_off,biuro,Dezaktywuj oświetlenie biurowe
+light.turn_off,patio,Dezaktywuj oświetlenie tarasowe
+light.turn_off,patio,Wyłącz oświetlenie patio
+light.turn_off,basen,Wyłącz światło w basenie
+light.turn_off,badanie,Wyłącz światło do nauki
+light.turn_on,łazienka_1,Czy mógłbyś oświetlić łazienkę?
+light.turn_on,łazienka,Włącz światło w łazience
+light.turn_on,sypialnia_1,Włącz światło w sypialni
+light.turn_on,jadalnia_1,Włącz światła w jadalni
+light.turn_on,jadalnia,Włącz światło w jadalni
+light.turn_on,podjazd,Włącz światło na podjeździe
+light.turn_on,garaż,Włącz światło w garażu
+light.turn_on,garaż,Włącz światło w garażu
+light.turn_on,ogród_1,Włącz światło ogrodowe
+light.turn_on,ogród_1,Włącz światło ogrodowe
+light.turn_on,ogród_2,Włącz światło ogrodowe
+light.turn_on,ogród,Włącz światło ogrodowe
+light.turn_on,pokój_gościnny,Włącz światło w pokoju gościnnym
+light.turn_on,korytarz,Włącz światło w korytarzu
+light.turn_on,kuchnia_1,Włącz światło w kuchni
+light.turn_on,kuchnia_1,Włącz światło w kuchni
+light.turn_on,blat_kuchenny,Włącz oświetlenie blatu kuchennego
+light.turn_on,salon,Włącz światło w salonie
+light.turn_on,główna_sypialnia_1,Włącz światło w głównej sypialni
+light.turn_on,biuro_1,Włącz światło biurowe
+light.turn_on,patio,Włącz oświetlenie patio
+light.turn_on,patio,Włącz światło na tarasie
+light.turn_on,patio,Włącz światło na patio
+light.turn_on,basen,Włącz oświetlenie basenu
+light.turn_on,basen,Włącz światło w basenie
+light.turn_on,szopa,Aktywuj rzucone światło
+light.turn_on,szopa,Włącz szopę
+light.turn_on,badanie,Włącz lampkę do nauki
+light.turn_on,jadalnia_żyrandol,Włącz światło w jadalni
+light.turn_on,żyrandol_przedpokój_przedpokój,"Hej, możesz włączyć żyrandol w przedpokoju?"
+lock.lock,tylne_drzwi,Włączyć zamek tylnych drzwi
+lock.lock,drzwi_wejściowe,Zamknij drzwi wejściowe
+lock.lock,żłobek,Czy możesz zabezpieczyć drzwi do pokoju dziecięcego?
+lock.lock,biuro,Proszę zamknąć biuro
+lock.lock,piwnica_na_wino,Czy mógłbyś zamknąć piwnicę z winami?
+lock.lock,drzwi_wejściowe,Proszę zamknąć drzwi wejściowe.
+lock.lock,drzwi_garażowe,Muszę zamknąć bramę garażową.
+lock.lock,brama_główna,"Upewnij się, że główna brama jest zamknięta."
+lock.lock,drzwi_biura,Czy możemy zamknąć drzwi do biura?
+lock.lock,drzwi_piwnicy,Zamknij drzwi do piwnicy.
+lock.lock,brama_ogrodowa,Prosimy o zabezpieczenie bramy ogrodowej.
+lock.lock,drzwi_do_piwnicy,Drzwi do piwnicy powinny być teraz zamknięte.
+lock.lock,drzwi_szopy,"Upewnij się, że drzwi szopy są bezpiecznie zamknięte."
+lock.lock,drzwi_pokoju_pralni,Czy możesz zamknąć drzwi do pralni?
+lock.lock,drzwi_pokoju_gościnnego,Proszę zamknąć drzwi do pokoju gościnnego.
+lock.lock,furtka,"Upewnij się, że brama ogrodzenia jest zamknięta."
+lock.lock,drzwi_poddasza,Drzwi na poddasze wymagają zamknięcia.
+lock.lock,drzwi_pomieszczenia_przechowywania,Proszę zamknąć drzwi do magazynu.
+lock.lock,carport_gate,Brama wiaty musi być zamknięta.
+lock.lock,drzwi_przednie_ganku,Zamknij frontowe drzwi na werandę.
+lock.lock,piwnica_na_wino,"Upewnij się, że piwnica z winami jest zamknięta."
+lock.lock,domowe_biuro,"Chciałbym, żeby biuro domowe było zamknięte."
+lock.lock,studio_sztuki,Pracownia artystyczna powinna być zamknięta.
+lock.lock,domowa_siłownia,Zamknij drzwi do domowej siłowni.
+lock.lock,drzwi_biblioteki,Proszę zamknąć drzwi biblioteki.
+lock.unlock,tylne_drzwi,Czy mógłbyś wyłączyć zamek tylnych drzwi?
+lock.unlock,magazyn_rowerów,Zwolnij blokadę schowka na rowery
+lock.unlock,drzwi_wejściowe,Odblokuj drzwi wejściowe
+lock.unlock,biuro,Proszę odblokować biuro
+lock.unlock,szopa_na_narzędzia,Odblokuj szopę na narzędzia
+lock.unlock,tylne_drzwi,Czy możesz otworzyć tylne drzwi?
+lock.unlock,drzwi_na_patio,Proszę otworzyć drzwi na patio.
+lock.unlock,okno_kuchni,Otwórz zamek w oknie kuchennym.
+lock.unlock,okno_sypialni,Okno sypialni musi zostać otwarte.
+lock.unlock,łazienka_okno,Czy mógłbyś otworzyć okno w łazience?
+lock.unlock,drzwi_dachowe,Otwórz zamek drzwi dachowych.
+lock.unlock,brama_basenu,"Chciałbym, żeby brama do basenu była otwarta."
+lock.unlock,drzwi_balkonu,Otwórz mi drzwi balkonowe.
+lock.unlock,drzwi_przedszkola,Drzwi do pokoju dziecięcego muszą być otwarte.
+lock.unlock,wejście_boczne,Odblokuj nasze boczne wejście.
+lock.unlock,drzwi_od_garażu,Drzwi boczne garażu powinny być otwarte.
+lock.unlock,wyjście_pożarowe,Czy potrafisz odblokować wyjście ewakuacyjne?
+lock.unlock,drzwi_budowy_łodzi,Odblokuj drzwi hangaru dla łodzi.
+lock.unlock,brama_podwórka,Czy możemy otworzyć bramę od podwórza?
+lock.unlock,tylne_drzwi_tarasu,Otwórz zamek w tylnych drzwiach tarasu.
+lock.unlock,drzwi_słoneczne,Proszę otworzyć drzwi do pokoju słonecznego.
+lock.unlock,drzwi_pokoju_zabaw,Czy możesz otworzyć drzwi do pokoju zabaw?
+lock.unlock,pokój_muzyczny,Proszę otworzyć pokój muzyczny.
+lock.unlock,sala_kinowa,Sala kinowa wymaga odblokowania.
+lock.unlock,konserwatorium,Czy oranżerię można odblokować?
+media_player.media_next_track,salon,Przejdź do następnego utworu w salonie
+media_player.media_next_track,piwnica_teatr_domowy,Przejdź do następnego utworu w piwnicy.
+media_player.media_next_track,siłownia_music_player,Przejdź do następnej piosenki na siłowni.
+media_player.media_next_track,muzyka_pokoju_jogi,Następny utwór do muzyki do pokoju jogi.
+media_player.media_next_track,muzyka_ogrodowa,Kolejny utwór do muzyki ogrodowej.
+media_player.media_pause,główna_sypialnia,Wstrzymaj multimedia w głównej sypialni
+media_player.media_pause,łazienka_audio,Wstrzymaj dźwięk w łazience.
+media_player.media_pause,poddasze_tv,Wstrzymaj telewizor na poddaszu.
+media_player.media_pause,radio_pokoju_pralni,Wstrzymaj radio w pralni.
+media_player.media_pause,korytarz_domofon,Wstrzymaj domofon na korytarzu.
+media_player.media_play,żłobek,Prosimy o włączenie mediów w przedszkolu
+media_player.media_play,głośnik_patio,Zacznij odtwarzać muzykę na głośniku ogrodowym.
+media_player.media_play,pokój_słoneczny_stereo,Odtwórz stereo w słonecznym pokoju.
+media_player.media_play,kids_room_narrator,Uruchom gawędziarza w pokoju dziecięcym.
+media_player.media_play,piwnica_jukebox,Włącz szafę grającą w piwnicy.
+media_player.media_previous_track,kuchnia,Odtwórz poprzedni utwór w kuchni
+media_player.media_previous_track,przedszkole_kołysanka,Wróć do poprzedniej kołysanki w pokoju dziecinnym.
+media_player.media_previous_track,study_room_radio,Wróć do poprzedniej stacji w gabinecie.
+media_player.media_previous_track,konserwatorium_cd_player,Poprzedni utwór na odtwarzaczu CD w oranżerii.
+media_player.media_previous_track,głośniki_podjazdowe,Poprzedni utwór na głośnikach na podjeździe.
+media_player.media_stop,żłobek,Zatrzymać media w przedszkolu
+media_player.media_stop,gość_pokój_media,Zatrzymaj odtwarzacz multimedialny w pokoju gościnnym.
+media_player.media_stop,media_przy_basenie,Zatrzymaj system multimedialny przy basenie.
+media_player.media_stop,głośniki_balkonowe,Wyłącz głośniki balkonowe.
+media_player.media_stop,ganek_dźwięk_system,Zatrzymaj nagłośnienie na ganku.
+media_player.turn_off,kuchnia_radio,Wyłącz radio w kuchni.
+media_player.turn_off,salon_rozrywka,Wyłącz centrum rozrywki w salonie.
+media_player.turn_off,wejście_echo,Wyłącz echo w przedpokoju.
+media_player.turn_off,głośniki_wine_piwnicy,Wyłącz głośniki w piwnicy z winami.
+media_player.turn_off,mudroom_media_player,Wyłącz odtwarzacz multimedialny w błocie.
+media_player.turn_on,kuchnia,Czy mógłbyś uruchomić media w kuchni?
+media_player.turn_on,salon,Aktywuj multimedia w salonie
+media_player.turn_on,główna_sypialnia,Włącz odtwarzacz multimedialny w głównej sypialni
+media_player.turn_on,salon_tv,Proszę włączyć telewizor w salonie.
+media_player.turn_on,system_muzyki_pokładowej,Włącz system muzyczny odtwarzacza.
+media_player.turn_on,głośniki_podwórkowe,Włącz głośniki na podwórku.
+media_player.turn_on,foyer_sound_system,Włącz nagłośnienie w foyer.
+media_player.turn_on,korytarz_audio,Włącz system audio w korytarzu.
+media_player.volume_down,żłobek,Zmniejsz głośność w pokoju dziecięcym
+media_player.volume_down,biuro,Czy możesz zmniejszyć głośność w biurze?
+media_player.volume_down,system_dźwięku_biura,Zmniejsz głośność w biurze.
+media_player.volume_down,głośniki_pokoju_gry,Ścisz głośniki w pokoju gier.
+media_player.volume_down,system_dźwiękowy_warsztatu,Zmniejsz głośność systemu dźwiękowego w warsztacie.
+media_player.volume_down,poddasze_system_audio,Zmniejsz głośność systemu audio na poddaszu.
+media_player.volume_down,shed_sound_system,Wyłącz system dźwiękowy w szopie.
+media_player.volume_mute,salon,Wycisz odtwarzacz multimedialny w salonie
+media_player.volume_mute,garaż_stereo,Wycisz stereo w garażu.
+media_player.volume_mute,biblioteka_soundbar,Wycisz soundbar w bibliotece.
+media_player.volume_mute,art_studio_player,Wycisz odtwarzacz multimedialny w studiu graficznym.
+media_player.volume_mute,boathouse_stereo,Wycisz dźwięk stereo w hangarze dla łodzi.
+media_player.volume_mute,głośniki_domku_na_drzewie,Wycisz głośniki domku na drzewie.
+media_player.volume_up,kuchnia,Proszę zwiększyć głośność w kuchni
+media_player.volume_up,salon,Zwiększ głośność w salonie
+media_player.volume_up,główna_sypialnia,Czy możesz zwiększyć głośność odtwarzacza multimedialnego w głównej sypialni?
+media_player.volume_up,sypialnia_głośnik,Czy można zwiększyć głośność w sypialni?
+media_player.volume_up,dining_area_jukebox,Zwiększ głośność szafy grającej w jadalni.
+media_player.volume_up,audio_na_dachu_pokładu_audio,Zwiększ głośność dźwięku na dachu.
+media_player.volume_up,radio_szklarniane,Zwiększ głośność radia w szklarni.
+media_player.volume_up,radio_pomieszczenie_użytkowe,Włącz radio w pomieszczeniu gospodarczym.
+switch.toggle,tp_link_kasa_porch,Przełącz światła na werandzie.
+switch.toggle,honeywell_home_office,Przełącz światła w biurze.
+switch.toggle,sonoff_jadalnia_pokoju,Włącz oświetlenie w jadalni.
+switch.toggle,osram_przedpokój,Przełącz światła w korytarzu.
+switch.toggle,koogeek_basement,Włącz światła w piwnicy.
+switch.toggle,arlo_floodlights,Przełącz reflektory bezpieczeństwa.
+switch.toggle,broadlink_aneks_kuchenny,Włącz oświetlenie w aneksie kuchennym.
+switch.toggle,kasa_living_room,Przełącz oświetlenie w salonie.
+switch.toggle,home_office_dimmer,Przełącz ściemniacz w domowym biurze.
+switch.toggle,kuchnia_pod_szafką,Przełącz kuchnię pod oświetlenie szafek.
+switch.turn_off,belkin_wemo_garage,Wyłącz przełącznik garażu.
+switch.turn_off,lutron_caseta_bedroom,Wyłącz światła w sypialni.
+switch.turn_off,samsung_smartthings_security,Wyłącz system bezpieczeństwa.
+switch.turn_off,fibaro_pool,Wyłącz oświetlenie basenu.
+switch.turn_off,ecobee_garden,Wyłącz światła ogrodowe.
+switch.turn_off,insteon_patio,Wyłącz światła na patio.
+switch.turn_off,yeelight_sunroom,Wyłącz światła w słonecznym pokoju.
+switch.turn_off,meross_walkway,Wyłącz oświetlenie chodnika.
+switch.turn_off,xiaomi_bedside,Wyłącz lampkę nocną.
+switch.turn_off,ikea_pokój_gościa,Wyłącz światła w pokoju gościnnym.
+switch.turn_off,tuya_shed,Wyłącz włącznik światła szopy.
+switch.turn_off,odcień_sypialnia_2,Wyłącz światła w drugiej sypialni.
+switch.turn_off,promienne_biuro,Wyłącz światła w biurze.
+switch.turn_off,z_wave_guest_bathroom,Wyłącz wentylator w łazience dla gości.
+switch.turn_off,przełącznik_grzejnika_patio,Wyłącz grzejnik tarasowy.
+switch.turn_off,kuchnia_fan,Proszę wyłączyć wentylator w kuchni.
+switch.turn_off,latarnie_przy_basenie,Wyłącz latarnie przy basenie.
+switch.turn_off,backyard_floodlight,Czy możesz wyłączyć reflektor na podwórku?
+switch.turn_off,pralnia,Proszę wyłączyć oświetlenie w pralni.
+switch.turn_off,piwnica_kinkiety,Czy możemy przykręcić kinkiety w piwnicy?
+switch.turn_off,rolety_przeciwsłoneczne,"Chciałbym, żeby rolety w słonecznym pokoju były zamknięte."
+switch.turn_off,patio_string_lights,Wyłącz girlandy świetlne na tarasie.
+switch.turn_off,wyspa_kuchenna,Wyłącz oświetlenie wyspy kuchennej.
+switch.turn_off,oświetlenie_garażowe,Czy możemy wyłączyć lampę roboczą w garażu?
+switch.turn_off,kino_domowe,Proszę wyłączyć oświetlenie kina domowego.
+switch.turn_off,jadalnia_ściemniacz,Wyłącz oświetlenie w jadalni.
+switch.turn_off,art_studio_spots,Wyłącz reflektory studia artystycznego.
+switch.turn_off,powrót_wpis,Wyłącz tylne światła wejściowe.
+switch.turn_off,weranda_fairy_lights,Proszę wyłączyć bajkowe światła na werandzie.
+switch.turn_off,garderoba,Wyłącz oświetlenie w garderobie.
+switch.turn_off,łazienka_lustro,Czy możesz wyłączyć światło w lustrze w łazience?
+switch.turn_off,magazyn,Proszę wyłączyć oświetlenie w pomieszczeniu magazynowym.
+switch.turn_off,obszar_ochrony,Wyłączyć oświetlenie obszaru chronionego.
+switch.turn_off,pokój_hobby,Czy moglibyśmy wyłączyć światła w pokoju hobbystycznym?
+switch.turn_off,tylny_taras,Czy możesz przyciemnić światła na tylnym tarasie?
+switch.turn_on,philips_hue_living_room,Włącz światła w salonie.
+switch.turn_on,legrand_radiant_kitchen,Włącz światło w kuchni.
+switch.turn_on,ge_z_wave_łazienka,Włącz wentylator w łazience.
+switch.turn_on,ewa_energia_balkon,Włącz oświetlenie balkonu.
+switch.turn_on,gniazdo_termostat_taras,Włącz termostat tarasowy.
+switch.turn_on,wink_relay_driveway,Włącz światła na podjeździe.
+switch.turn_on,sengled_deck,Włącz oświetlenie pokładu.
+switch.turn_on,gosund_poddasze,Włącz włącznik światła na poddaszu.
+switch.turn_on,nanoleaf_stairway,Włącz światła na klatce schodowej.
+switch.turn_on,wyze_study,Włącz światła w gabinecie.
+switch.turn_on,netatmo_front_yard,Włącz oświetlenie ogrodu przed domem.
+switch.turn_on,moeshouse_gym,Włącz oświetlenie sali gimnastycznej.
+switch.turn_on,wemo_prania_pokoju,Włącz światła w pralni.
+switch.turn_on,caseta_hallway_2,Włącz drugie światło w korytarzu.
+switch.turn_on,światło_kamery_bezpieczeństwa,Włącz światło kamery bezpieczeństwa.
+switch.turn_on,korytarz_dimmer,Czy mógłbyś przyciemnić światła w korytarzu?
+switch.turn_on,reflektory_ogrodowe,Włącz reflektory ogrodowe.
+switch.turn_on,czujnik_przedni,Włączyć światło czujnika na werandzie.
+switch.turn_on,listwa_świetlna_schodów,Czy mógłbyś zapalić listwę świetlną na klatce schodowej?
+switch.turn_on,lampa_biurowa_biurowa,Zapal lampę biurkową w moim biurze.
+switch.turn_on,biblioteka_sufit,Włącz lampy sufitowe w bibliotece.
+switch.turn_on,łazienka_gościnna,Proszę o oświetlenie łazienki dla gości.
+switch.turn_on,żyrandol_przedpokój,Oświetl żyrandol w przedpokoju.
+switch.turn_on,oświetlenie_ścieżki_sypialni,Rozjaśnij oświetlenie szynowe w sypialni.
+switch.turn_on,oświetlenie_nastroju_balkonu,Włącz nastrojowe oświetlenie na balkonie.
+switch.turn_on,pokój_zabaw_nocne_światło,Czy możesz włączyć lampkę nocną w pokoju zabaw?
+switch.turn_on,foyer_wall_sconce,Rozświetl kinkiet ścienny w przedpokoju.
+switch.turn_on,korytarz_tor,Rozjaśnij oświetlenie szynowe w korytarzu.
+switch.turn_on,apartament,Ustaw apartament główny na tryb nocny.
+switch.turn_on,taras_na_dachu,Włączyć oświetlenie pokładu dachowego.
+switch.turn_on,piwnica_na_wino,Oświetl piwnicę z winami.
+switch.turn_on,sufit_siłowni,Zapal lampy sufitowe na siłowni.
+switch.turn_on,przedni_trawnik,Włącz reflektory trawnika z przodu.
+vacuum.start,kuchnia,Proszę włączyć odkurzacz w kuchni.
+vacuum.start,salon,Czy mógłbyś włączyć odkurzacz w salonie?
+vacuum.start,jadalnia,Należy uruchomić odkurzacz w jadalni.
+vacuum.start,sypialnia1,Zacznijmy odkurzać w pierwszej sypialni.
+vacuum.start,sypialnia2,Czy może pan włączyć odkurzacz w drugiej sypialni?
+vacuum.start,badanie,Należy włączyć próżnię badawczą.
+vacuum.start,biblioteka,Czy mogę prosić o uruchomienie próżni bibliotecznej?
+vacuum.start,biuro,Proszę uruchomić próżnię biurową.
+vacuum.start,hol_wejściowy,Czy mógłby pan włączyć odkurzacz w przedpokoju?
+vacuum.start,solarium,Należy uruchomić odkurzacz w ogrodzie słonecznym.
+vacuum.start,patio,Włączmy odkurzacz na patio.
+vacuum.start,garaż,Czy możemy posprzątać garaż?
+vacuum.start,warsztat,Czy mogę prosić o włączenie odkurzacza warsztatowego?
+vacuum.start,pomieszczenie_gospodarcze,Proszę posprzątać pomieszczenie gospodarcze.
+vacuum.start,błoto_pokój,Czy mógłbyś posprzątać błotnisty pokój?
+vacuum.start,pokój_proszek,Prochownię trzeba posprzątać.
+vacuum.start,korytarz,Włączmy odkurzacz w przedpokoju.
+vacuum.start,klatka_schodowa,Czy możemy włączyć odkurzanie na klatce schodowej?
+vacuum.start,balkon,Czy mogę prosić o posprzątanie balkonu?
+vacuum.start,taras_na_dachu,"Proszę, taras na dachu jest brudny."
+vacuum.start,strych,Zacznijmy odkurzać poddasze.
+vacuum.start,piwnica,Czy możemy włączyć odkurzacz w piwnicy?
+vacuum.start,basen,Należy uruchomić odkurzacz w obszarze basenu.
+vacuum.start,ogród,Czy mógłbyś włączyć odkurzacz ogrodowy?
+vacuum.start,taras,Czy mogę prosić o uruchomienie odkurzania tarasu?
+vacuum.start,ganek,Rozpocznij odkurzanie na werandzie.
+vacuum.start,szopa,Czy możemy włączyć odkurzacz w szopie?
+vacuum.start,warsztat2,Drugi warsztat jest obecnie dość brudny.
+vacuum.start,studio,Czy mogę prosić o uruchomienie odkurzacza w studiu?
+vacuum.start,szklarnia,Proszę uruchomić próżnię w szklarni.
+vacuum.start,doniczkowa_szopa,Czy możemy włączyć odkurzacz w szopie doniczkowej?
+vacuum.start,domek_letniskowy,Należy uruchomić odkurzanie w domku letniskowym.
+vacuum.start,garaż2,Rozpoczynamy drugie odkurzanie garażowe.
+vacuum.start,szopa_na_narzędzia,Czy mogę poprosić o włączenie odkurzacza w schowku na narzędzia?
+vacuum.start,stodoła,Czy moglibyśmy włączyć odkurzacz w stodole?
+vacuum.start,piwnica_na_wino,Należy posprzątać piwnicę z winami.
+vacuum.start,magazyn,Rozpocznijmy sprzątanie magazynu.
+vacuum.start,szklarnia2,Czy mogę poprosić o włączenie drugiego odkurzacza w szklarni?
+vacuum.start,łódź_house,Proszę włączyć odkurzacz w domku na łodzi.
+vacuum.start,przystań,Czy moglibyśmy uruchomić odkurzacz w marinie?
+vacuum.start,bb8,Włącz BB8.
+vacuum.start,c3po,Czy możesz uruchomić C3PO?
+vacuum.start,hal,Proszę włączyć Hala.
+vacuum.start,r2d2,"Czy możesz powiedzieć R2D2, żeby posprzątał?"
+light.turn_off,bar_światło,Proszę wyłączyć oświetlenie baru
+light.turn_off,bar_światło,Wyłącz oświetlenie paska
+light.turn_off,bar_światło,Wyłącz światło na pasku
+light.turn_off,światło_jadalni,Wyłącz światło w jadalni
+light.turn_off,światło_jadalni,Wyłącz światło w jadalni
+light.turn_off,światło_jadalni,Przełącz światło w jadalni
+light.turn_off,przednie_światła,Czy możemy wyłączyć przednie światło?
+light.turn_off,przednie_światła,Czy możemy przyciemnić przednie światło?
+light.turn_off,przednie_światła,Czy możesz wyłączyć światła z przodu?
+light.turn_off,światło_siłowni,Czy możesz wyłączyć światło na siłowni?
+light.turn_off,światło_siłowni,Czy możesz wyłączyć światło na siłowni?
+light.turn_off,światło_siłowni,Czy moglibyśmy wyłączyć światła na siłowni?
+light.turn_off,wyspa_światła,Czy mógłbyś wyłączyć światło wyspy?
+light.turn_off,wyspa_światła,Dezaktywuj światło wyspy
+light.turn_off,wyspa_światła,Dezaktywuj oświetlenie obszaru wyspy.
+light.turn_off,światło_kuchenne,Wyłącz światło w kuchni
+light.turn_off,światło_kuchenne,Wyłącz światło w kuchni.
+light.turn_off,światło_kuchenne,Wyłącz światło w kuchni.
+light.turn_off,światło_pokoju_dziennego,wyłączone światło w salonie
+light.turn_off,światło_pokoju_dziennego,Wyłącz oświetlenie w salonie.
+light.turn_off,światło_pokoju_dziennego,Proszę wyłączyć światło w salonie.
+light.turn_off,główne_światło_piwnicy,Proszę zgasić główne światło w piwnicy
+light.turn_off,główne_światło_piwnicy,Prosimy o wyłączenie świateł w głównej piwnicy.
+light.turn_off,główne_światło_piwnicy,Proszę wyłączyć główne światło w piwnicy
+light.turn_off,człowiek_światło_jaskini,Proszę wyłączyć oświetlenie obszaru jaskini człowieka.
+light.turn_off,człowiek_światło_jaskini,Proszę wyłączyć światła w jaskini człowieka.
+light.turn_off,człowiek_światło_jaskini,"Proszę, zgaś światło w jaskini człowieka."
+light.turn_off,oświetlenie_głównej_sypialni,Wyłącz światła w głównej sypialni.
+light.turn_off,oświetlenie_głównej_sypialni,Wyłącz światła w głównej sypialni.
+light.turn_off,oświetlenie_głównej_sypialni,Wyłącz światła w głównej sypialni.
+light.turn_off,światło_stołu_bilardowego,Wyłącz oświetlenie stołu bilardowego
+light.turn_off,światło_stołu_bilardowego,Wyłącz oświetlenie stołu bilardowego
+light.turn_off,światło_stołu_bilardowego,Wyłącz proszę światło na stole bilardowym
+light.turn_off,światło_stołu_bilardowego,Wyłącz teraz oświetlenie stołu bilardowego
+light.turn_off,światło_stołu_bilardowego,Wyłącz oświetlenie stołu bilardowego
+light.turn_off,światło_stołu_bilardowego,Wyłącz światło w stole bilardowym
+light.turn_off,światło_stołu_bilardowego,Wyłącz oświetlenie stołu bilardowego
+light.turn_off,światło_stołu_bilardowego,Wyłącz oświetlenie stołu bilardowego
+light.turn_off,światło_stołu_bilardowego,Proszę wyłączyć światło na stole bilardowym
+light.turn_off,światło_stołu_bilardowego,Wyłącz teraz oświetlenie stołu bilardowego
+light.turn_off,światło_stołu_bilardowego,Możesz teraz wyłączyć oświetlenie stołu bilardowego
+light.turn_off,światło_stołu_bilardowego,Wyłącz oświetlenie stołu bilardowego.
+light.turn_off,światło_stołu_bilardowego,Proszę wyłączyć światło na stole bilardowym.
+light.turn_off,światło_stołu_bilardowego,Wyłącz oświetlenie stołu bilardowego
+light.turn_off,światło_stołu_bilardowego,Wyłącz światło w stole bilardowym.
+light.turn_off,światło_stołu_bilardowego,Wyłącz oświetlenie stołu bilardowego
+light.turn_off,światło_stołu_bilardowego,Wyłącz światło w stole bilardowym
+light.turn_off,światło_stołu_bilardowego,Wyłącz oświetlenie stołu bilardowego
+light.turn_off,światło_ganku,Proszę wyłączyć światło na werandzie
+light.turn_off,światło_ganku,Wyłącz światło na werandzie
+light.turn_off,światło_ganku,Wyłącz światło na werandzie
+light.turn_off,światło_ganku,Dezaktywuj światło na werandzie
+light.turn_off,światło_ganku,Wyłącz światło na werandzie
+light.turn_off,światło_ganku,Przełącz światło na werandzie
+light.turn_off,światło_ganku,Czy możemy wyłączyć światło na werandzie?
+light.turn_off,światło_ganku,Czy możemy przygasić światło na werandzie?
+light.turn_off,światło_ganku,Czy możesz wyłączyć światło na werandzie?
+light.turn_off,światło_ganku,Czy możesz wyłączyć światło na werandzie?
+light.turn_off,światło_ganku,Czy możesz wyłączyć światło na werandzie?
+light.turn_off,światło_ganku,Czy moglibyśmy wyłączyć światła na werandzie?
+light.turn_off,światło_ganku,Czy mógłbyś wyłączyć światło na werandzie?
+light.turn_off,światło_ganku,Dezaktywuj światło na werandzie
+light.turn_off,światło_ganku,Dezaktywuj oświetlenie obszaru werandy.
+light.turn_off,światło_ganku,Dezaktywuj światło na werandzie
+light.turn_off,światło_ganku,Wyłącz światło na werandzie
+light.turn_off,światło_ganku,Dezaktywuj światło na werandzie
+light.turn_off,światło_ganku,Dezaktywuj światło na werandzie
+light.turn_off,światło_ganku,Dezaktywuj światło na werandzie
+light.turn_off,światło_ganku,Wyłącz światła na werandzie.
+light.turn_off,światło_ganku,Wyłącz światła na werandzie.
+light.turn_off,światło_ganku,wyłączone światło na werandzie
+light.turn_off,światło_ganku,Wyłącz światła na werandzie.
+light.turn_off,światło_ganku,Proszę wyłączyć światło na werandzie.
+light.turn_off,światło_ganku,Proszę zgasić światło na werandzie
+light.turn_off,światło_ganku,Proszę zgasić światło na werandzie.
+light.turn_off,światło_ganku,Proszę wyłączyć światło na werandzie
+light.turn_off,światło_ganku,Proszę wyłączyć oświetlenie na werandzie.
+light.turn_off,światło_ganku,Proszę wyłączyć światła na werandzie.
+light.turn_off,światło_ganku,Proszę wyłączyć światło na werandzie.
+light.turn_off,światło_ganku,Wyłącz światła na werandzie.
+light.turn_off,światło_ganku,Wyłącz światła na werandzie.
+light.turn_off,światło_ganku,Zgaś światła na werandzie.
+light.turn_off,światło_ganku,Zgaś światło na werandzie
+light.turn_off,światło_ganku,Wyłącz światło na werandzie
+light.turn_off,światło_ganku,Wyłącz proszę światło na werandzie
+light.turn_off,światło_ganku,Wyłącz teraz światło na werandzie
+light.turn_off,światło_ganku,Wyłącz światła na werandzie
+light.turn_off,światło_ganku,Wyłącz światło na werandzie
+light.turn_off,światło_ganku,Wyłącz światło na werandzie
+light.turn_off,światło_ganku,Wyłącz światło na werandzie
+light.turn_off,światło_ganku,"Zgaś światło na werandzie, proszę"
+light.turn_off,światło_ganku,Wyłącz teraz światło na werandzie
+light.turn_off,światło_ganku,Możesz teraz wyłączyć światło na ganku
+light.turn_off,światło_ganku,Wyłącz światła na werandzie.
+light.turn_off,światło_ganku,"Zgaś światło na werandzie, proszę."
+light.turn_off,światło_ganku,Wyłącz światło na werandzie
+light.turn_off,światło_ganku,Wyłącz światło na werandzie.
+light.turn_off,światło_ganku,Wyłącz światło na werandzie
+light.turn_off,światło_ganku,Wyłącz światło na werandzie
+light.turn_off,światło_ganku,Wyłącz światło na werandzie
+light.turn_off,światło_prysznicowe,Proszę wyłączyć światło pod prysznicem
+light.turn_off,światło_prysznicowe,Wyłącz światło pod prysznicem
+light.turn_off,światło_prysznicowe,Wyłącz światło pod prysznicem
+light.turn_off,światło_prysznicowe,Dezaktywuj światło prysznicowe
+light.turn_off,światło_prysznicowe,Wyłącz światło pod prysznicem
+light.turn_off,światło_schodów,wyłączone światło na schodach
+light.turn_off,światło_schodów,Wyłącz światła na schodach.
+light.turn_off,światło_schodów,Wyłącz światło na klatce schodowej
+light.turn_off,światło_schodów,Przełącz światło na klatce schodowej
+light.turn_off,światło_schodów,Czy możemy wyłączyć światło na klatce schodowej?
+light.turn_off,światło_dachowe,Proszę wyłączyć światło dachowe
+light.turn_off,światło_dachowe,Wyłącz światło dachowe
+light.turn_off,światło_dachowe,Wyłącz światło dachowe
+light.turn_off,chodnik_światło,Wyłącz światła na chodniku.
+light.turn_off,chodnik_światło,Wyłącz światło na chodniku
+light.turn_off,chodnik_światło,Wyłącz światło na chodniku
+light.turn_off,lampa_bobs,"Proszę, wyłącz światło Boba"
+light.turn_off,janets_lamp,Wyłącz światło Janet
+light.turn_off,ruths_lamp,"Proszę, wyłącz lampę Ruth"
+light.turn_off,lampa_colins,Wyłącz lampę Colina
+light.turn_off,lampa_neenas,Wyłącz lampę Neeny
+light.turn_off,roberts_lampa,Dezaktywuj lampę Roberta
+light.turn_off,lampa_paulusa,Zgaś lampę Paulusa
+light.turn_off,lampa_petersa,Przełącz lampę Petera
+light.turn_off,angelas_lampa,Czy możemy wyłączyć lampę Angeli?
+light.turn_off,lampa_wejściowa,Proszę wyłączyć lampę wejściową
+light.turn_off,lampa_wejściowa,Wyłącz lampę wejściową
+light.turn_off,lampa_wejściowa,Proszę zgasić lampę w przedpokoju
+light.turn_off,lampa_wejściowa,Proszę wyłączyć lampę w przedpokoju
+light.turn_off,lampa_wejściowa,Prosimy o wyłączenie oświetlenia w przedpokoju.
+light.turn_off,lampa_wejściowa,Dezaktywuj światło wejściowe
+light.turn_on,bar_światło,Rozświetl światło w moim barze.
+light.turn_on,bar_światło,Oświetl pasek.
+light.turn_on,bar_światło,Włączone światło na pasku
+light.turn_on,bar_światło,Rozświetl pasek.
+light.turn_on,światło_jadalni,Włącz światła w jadalni
+light.turn_on,światło_jadalni,Proszę włączyć światło w jadalni
+light.turn_on,światło_jadalni,Włącz światło w jadalni.
+light.turn_on,przednie_światła,Proszę włączyć przednie światło
+light.turn_on,przednie_światła,Proszę włączyć przednie światło
+light.turn_on,przednie_światła,Włącz teraz światło przednie
+light.turn_on,światło_siłowni,Proszę włączyć światło na siłowni
+light.turn_on,światło_siłowni,Włącz światło na siłowni
+light.turn_on,światło_siłowni,włączone światło na siłowni
+light.turn_on,wyspa_światła,Włącz światło wyspy
+light.turn_on,wyspa_światła,włączone światło wyspy
+light.turn_on,wyspa_światła,Włącz światło wyspy
+light.turn_on,światło_kuchenne,włączone światło w kuchni
+light.turn_on,światło_kuchenne,Włącz światło w kuchni
+light.turn_on,światło_kuchenne,"Hej, możesz włączyć światło w kuchni?"
+light.turn_on,światło_pokoju_dziennego,Włącz światła w salonie.
+light.turn_on,światło_pokoju_dziennego,Proszę włączyć światło w salonie.
+light.turn_on,światło_pokoju_dziennego,Proszę włączyć światła w salonie.
+light.turn_on,światło_pokoju_dziennego,Włącz oświetlenie w salonie.
+light.turn_on,główne_światło_piwnicy,Włącz główne światło w piwnicy
+light.turn_on,główne_światło_piwnicy,Włącz główne światło w piwnicy
+light.turn_on,człowiek_światło_jaskini,Aktywuj światło jaskiniowe człowieka.
+light.turn_on,człowiek_światło_jaskini,Włącz światła w jaskini człowieka
+light.turn_on,człowiek_światło_jaskini,Czy mógłbyś oświetlić męską jaskinię?
+light.turn_on,człowiek_światło_jaskini,Włącz światło jaskini człowieka
+light.turn_on,oświetlenie_głównej_sypialni,Czy mógłbyś oświetlić główną sypialnię?
+light.turn_on,basen_table_bar_light,włączone światło baru przy stole bilardowym
+light.turn_on,basen_table_bar_light,Włącz oświetlenie baru stołu bilardowego
+light.turn_on,basen_table_bar_light,Czy możesz włączyć oświetlenie baru przy stole bilardowym?
+light.turn_on,światło_stołu_bilardowego,Proszę włączyć oświetlenie stołu bilardowego
+light.turn_on,światło_ganku,Włącz światło na werandzie
+light.turn_on,światło_ganku,Czy możesz włączyć światło na werandzie?
+light.turn_on,światło_ganku,Czy mógłbyś zapalić światło na werandzie?
+light.turn_on,światło_prysznicowe,Włącz światło pod prysznicem
+light.turn_on,światło_prysznicowe,Włącz światło pod prysznicem
+light.turn_on,światło_prysznicowe,Włącz światło prysznicowe
+light.turn_on,światło_prysznicowe,Czy mógłbyś oświetlić prysznic?
+light.turn_on,światło_prysznicowe,Włącz światło pod prysznicem
+light.turn_on,światło_prysznicowe,"Zapal prysznic, proszę"
+light.turn_on,światło_prysznicowe,Proszę włączyć światło pod prysznicem
+light.turn_on,światło_prysznicowe,Włącz światło pod prysznicem
+light.turn_on,światło_prysznicowe,włączone światło prysznica
+light.turn_on,światło_schodów,Proszę włączyć światło na klatce schodowej
+light.turn_on,światło_schodów,Proszę włączyć światło na klatce schodowej
+light.turn_on,światło_schodów,Czy możesz oświetlić klatkę schodową?
+light.turn_on,światło_schodów,Proszę włączyć światło na klatce schodowej
+light.turn_on,światło_schodów,Proszę włączyć oświetlenie na klatce schodowej
+light.turn_on,światło_dachowe,Proszę włączyć światło dachowe.
+light.turn_on,światło_dachowe,Proszę włączyć światło dachowe
+light.turn_on,światło_dachowe,Czy możesz włączyć światło na dachu?
+light.turn_on,chodnik_światło,Proszę włączyć światło na chodniku
+light.turn_on,chodnik_światło,Prosimy o włączenie oświetlenia obszaru chodnika
+light.turn_on,chodnik_światło,Włącz oświetlenie chodnika.
+light.turn_on,freds_lamp,Włącz światło Freda
+light.turn_on,lampa_colins,Włącz światło Colina
+light.turn_on,roberts_lampa,Aktywuj światło Roberta
+light.turn_on,lampa_pierres,"Proszę, włącz światło Pierre'a"
+light.turn_on,jennifers_lamp,Włącz światło Jenn
+light.turn_on,julia_lampa,Światło u Julii jest włączone
+light.turn_on,lampa_neenas,Włącz światło Neeny
+light.turn_on,patricks_lamp,Czy możesz włączyć światło Patricka?
+light.turn_on,lampa_sam,Rozświetl Sama.
+light.turn_on,johns_lamp,Rozjaśnij światło Johna.
+light.turn_on,lampa_jordans,Włącz oświetlenie Jordana.
+light.turn_on,lampa_lebrons,Zapal światła Lebrona.
+light.turn_on,angies_lamp,Czy możesz włączyć lampę Angie?
+light.turn_on,louis_lampa,"Czy mógłbyś włączyć lampę Louisa, proszę?"
+light.turn_on,katniss_lamp,Czy mógłbyś włączyć lampę Katniss?
+light.turn_on,lampa_waynesa,Włącz lampę Wayne’a
+light.turn_on,lampa_suelsa,Proszę włączyć lampę Samuela
+light.turn_on,lampa_wejściowa,Włącz lampę wejściową
+light.turn_on,lampa_wejściowa,Proszę włączyć lampę w przedpokoju
+light.turn_on,lampa_wejściowa,Proszę włączyć lampę w przedpokoju
+light.turn_on,lampa_wejściowa,Włącz światło wejściowe
+light.turn_on,lampa_wejściowa,Włącz oświetlenie wejścia.
