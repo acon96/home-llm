@@ -489,8 +489,9 @@ class LocalLLMAgent(AbstractConversationAgent):
             
             if area_id:
                 area = area_registry.async_get_area(entity.area_id)
-                attributes["area_id"] = area.id
-                attributes["area_name"] = area.name
+                if area:
+                    attributes["area_id"] = area.id
+                    attributes["area_name"] = area.name
             
             entity_states[state.entity_id] = attributes
             domains.add(state.domain)
