@@ -1130,7 +1130,7 @@ class GenericOpenAIAPIAgent(LocalLLMAgent):
         request_params = {}
         api_base_path = self.entry.options.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
 
-        endpoint = f"{api_base_path}/chat/completions"
+        endpoint = f"/{api_base_path}/chat/completions"
         request_params["messages"] = [ { "role": x["role"], "content": x["message"] } for x in conversation ]
 
         return endpoint, request_params
