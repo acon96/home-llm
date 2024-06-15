@@ -75,9 +75,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         
         return agent_cls(hass, entry)
 
-    # load the model in an executor job because it takes a while and locks up the UI otherwise
+    # create the agent in an executor job because the constructor calls `open()`
     backend_type = entry.data.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE)
     agent = await hass.async_add_executor_job(create_agent, backend_type)
+
+    # call load model
+    await agent._async_load_model(entry)
 
     # handle updates to the options
     entry.async_on_unload(entry.add_update_listener(update_listener))

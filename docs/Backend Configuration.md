@@ -55,8 +55,9 @@ To ensure compatibility with your Home Assistant and Python versions, select the
 ## Build your own
 
 1. Clone the repository on the target machine that will be running Home Assistant
+2. Ensure `docker` is installed
 2. Run the `scripts/run_docker_to_make_wheels.sh` script
-3. The wheel files will be placed in the folder you executed the script from
+3. The compatible wheel files will be placed in the folder you executed the script from
 
 
 # text-generation-webui

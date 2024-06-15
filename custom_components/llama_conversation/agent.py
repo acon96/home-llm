@@ -1,19 +1,19 @@
 """Defines the various LLM Backend Agents"""
 from __future__ import annotations
 
-import logging
-import threading
-import importlib
-from typing import Literal, Any, Callable
-import voluptuous as vol
-
-import requests
-import re
-import os
-import json
+import aiohttp
+import asyncio
 import csv
+import importlib
+import json
+import logging
+import os
 import random
+import re
+import threading
 import time
+import voluptuous as vol
+from typing import Literal, Any, Callable
 
 from homeassistant.components.conversation import ConversationInput, ConversationResult, AbstractConversationAgent
 import homeassistant.components.conversation as ha_conversation
@@ -23,8 +23,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_SSL, MATCH_ALL, CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryError, TemplateError, HomeAssistantError
-from homeassistant.helpers import config_validation as cv, intent, template, entity_registry as er, llm, area_registry as ar
+from homeassistant.helpers import config_validation as cv, intent, template, entity_registry as er, llm, \
+    area_registry as ar, device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_state_change, async_call_later
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.util import ulid, color
 
 import voluptuous_serialize
@@ -66,6 +69,7 @@ from .const import (
     CONF_TEXT_GEN_WEBUI_CHAT_MODE,
     CONF_OLLAMA_KEEP_ALIVE_MIN,
     CONF_OLLAMA_JSON_MODE,
+    CONF_GENERIC_OPENAI_PATH,
     CONF_CONTEXT_LENGTH,
     CONF_BATCH_SIZE,
     CONF_THREAD_COUNT,
@@ -99,6 +103,7 @@ from .const import (
     DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
     DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
     DEFAULT_OLLAMA_JSON_MODE,
+    DEFAULT_GENERIC_OPENAI_PATH,
     DEFAULT_CONTEXT_LENGTH,
     DEFAULT_BATCH_SIZE,
     DEFAULT_THREAD_COUNT,
@@ -149,8 +154,6 @@ class LocalLLMAgent(AbstractConversationAgent):
         if entry.options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES, DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES):
             self._load_icl_examples(entry.options.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE))
 
-        self._load_model(entry)
-
     def _load_icl_examples(self, filename: str):
         """Load info used for generating in context learning examples"""
         try:
@@ -192,13 +195,19 @@ class LocalLLMAgent(AbstractConversationAgent):
     def _load_model(self, entry: ConfigEntry) -> None:
         """Load the model on the backend. Implemented by sub-classes"""
         raise NotImplementedError()
+
+    async def _async_load_model(self, entry: ConfigEntry) -> str:
+        """Default implementation is to call _load_model() which probably does blocking stuff"""
+        return await self.hass.async_add_executor_job(
+            self._load_model, entry
+        )
     
     def _generate(self, conversation: dict) -> str:
         """Call the backend to generate a response from the conversation. Implemented by sub-classes"""
         raise NotImplementedError()
 
     async def _async_generate(self, conversation: dict) -> str:
-        """Async wrapper for _generate()"""
+        """Default implementation is to call _generate() which probably does blocking stuff"""
         return await self.hass.async_add_executor_job(
             self._generate, conversation
         )
@@ -312,6 +321,9 @@ class LocalLLMAgent(AbstractConversationAgent):
             return ConversationResult(
                 response=intent_response, conversation_id=conversation_id
             )
+        
+        # remove end of text token if it was returned
+        response = response.replace(template_desc["assistant"]["suffix"], "")
 
         conversation.append({"role": "assistant", "message": response})
         if remember_conversation:
@@ -446,6 +458,7 @@ class LocalLLMAgent(AbstractConversationAgent):
         entity_states = {}
         domains = set()
         entity_registry = er.async_get(self.hass)
+        device_registry = dr.async_get(self.hass)
         area_registry = ar.async_get(self.hass)
 
         for state in self.hass.states.async_all():
@@ -453,16 +466,32 @@ class LocalLLMAgent(AbstractConversationAgent):
                 continue
 
             entity = entity_registry.async_get(state.entity_id)
+            device = None
+            if entity and entity.device_id:
+                device = device_registry.async_get(entity.device_id)
 
             attributes = dict(state.attributes)
             attributes["state"] = state.state
-            if entity and entity.aliases:
-                attributes["aliases"] = entity.aliases
 
+            if entity:
+                if entity.aliases:
+                    attributes["aliases"] = entity.aliases
+                    
+                if entity.unit_of_measurement:
+                    attributes["state"] = attributes["state"] + " " + entity.unit_of_measurement
+
+            # area could be on device or entity. prefer device area
+            area_id = None
+            if device and device.area_id:
+                area_id = device.area_id
             if entity and entity.area_id:
+                area_id = entity.area_id
+            
+            if area_id:
                 area = area_registry.async_get_area(entity.area_id)
-                attributes["area_id"] = area.id
-                attributes["area_name"] = area.name
+                if area:
+                    attributes["area_id"] = area.id
+                    attributes["area_name"] = area.name
             
             entity_states[state.entity_id] = attributes
             domains.add(state.domain)
@@ -1087,7 +1116,7 @@ class GenericOpenAIAPIAgent(LocalLLMAgent):
     api_key: str
     model_name: str
 
-    def _load_model(self, entry: ConfigEntry) -> None:
+    async def _async_load_model(self, entry: ConfigEntry) -> None:
         self.api_host = format_url(
             hostname=entry.data[CONF_HOST],
             port=entry.data[CONF_PORT],
@@ -1101,16 +1130,18 @@ class GenericOpenAIAPIAgent(LocalLLMAgent):
 
     def _chat_completion_params(self, conversation: dict) -> (str, dict):
         request_params = {}
+        api_base_path = self.entry.options.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
 
-        endpoint = "/v1/chat/completions"
+        endpoint = f"/{api_base_path}/chat/completions"
         request_params["messages"] = [ { "role": x["role"], "content": x["message"] } for x in conversation ]
 
         return endpoint, request_params
 
     def _completion_params(self, conversation: dict) -> (str, dict):
         request_params = {}
+        api_base_path = self.entry.options.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
 
-        endpoint = "/v1/completions"
+        endpoint = f"/{api_base_path}/completions"
         request_params["prompt"] = self._format_prompt(conversation)
 
         return endpoint, request_params
@@ -1125,7 +1156,7 @@ class GenericOpenAIAPIAgent(LocalLLMAgent):
         else:
             return choices[0]["text"]
     
-    def _generate(self, conversation: dict) -> str:
+    async def _async_generate(self, conversation: dict) -> str:
         max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
         temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
         top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
@@ -1151,53 +1182,58 @@ class GenericOpenAIAPIAgent(LocalLLMAgent):
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
 
+        session = async_get_clientsession(self.hass)
+        response = None
         try:
-            result = requests.post(
-                f"{self.api_host}{endpoint}", 
+            async with session.post(
+                f"{self.api_host}{endpoint}",
                 json=request_params,
                 timeout=timeout,
-                headers=headers,
-            )
-            
-            result.raise_for_status()
-        except requests.exceptions.Timeout:
-            return f"The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities."
-        except requests.RequestException as err:
+                headers=headers
+            ) as response:
+                response.raise_for_status()
+                result = await response.json()
+        except asyncio.TimeoutError:
+            return "The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities."
+        except aiohttp.ClientError as err:
             _LOGGER.debug(f"Err was: {err}")
             _LOGGER.debug(f"Request was: {request_params}")
-            _LOGGER.debug(f"Result was: {result.text}")
+            _LOGGER.debug(f"Result was: {response}")
             return f"Failed to communicate with the API! {err}"
 
-        _LOGGER.debug(result.json())
+        _LOGGER.debug(result)
 
-        return self._extract_response(result.json())
+        return self._extract_response(result)
         
 class TextGenerationWebuiAgent(GenericOpenAIAPIAgent):
     admin_key: str
 
-    def _load_model(self, entry: ConfigEntry) -> None:
-        super()._load_model(entry)
+    async def _async_load_model(self, entry: ConfigEntry) -> None:
+        await super()._async_load_model(entry)
         self.admin_key = entry.data.get(CONF_TEXT_GEN_WEBUI_ADMIN_KEY, self.api_key)
 
         try:
             headers = {}
+            session = async_get_clientsession(self.hass)
+
             if self.admin_key:
                 headers["Authorization"] = f"Bearer {self.admin_key}"
-                
-            currently_loaded_result = requests.get(
+            
+            async with session.get(
                 f"{self.api_host}/v1/internal/model/info",
-                headers=headers,
-            )
-            currently_loaded_result.raise_for_status()
-
-            loaded_model = currently_loaded_result.json()["model_name"]
+                headers=headers
+            ) as response:
+                response.raise_for_status()
+                currently_loaded_result = await response.json()
+            
+            loaded_model = currently_loaded_result["model_name"]
             if loaded_model == self.model_name:
                 _LOGGER.info(f"Model {self.model_name} is already loaded on the remote backend.")
                 return
             else:
                 _LOGGER.info(f"Model is not {self.model_name} loaded on the remote backend. Loading it now...")
             
-            load_result = requests.post(
+            async with session.post(
                 f"{self.api_host}/v1/internal/model/load",
                 json={
                     "model_name": self.model_name,
@@ -1205,8 +1241,8 @@ class TextGenerationWebuiAgent(GenericOpenAIAPIAgent):
                     # "args": {},
                 },
                 headers=headers
-            )
-            load_result.raise_for_status()
+            ) as response:
+                response.raise_for_status()
 
         except Exception as ex:
             _LOGGER.debug("Connection error was: %s", repr(ex))
@@ -1267,9 +1303,14 @@ class LlamaCppPythonAPIAgent(GenericOpenAIAPIAgent):
     """https://llama-cpp-python.readthedocs.io/en/latest/server/"""
     grammar: str
 
-    def _load_model(self, entry: ConfigEntry):
-        super()._load_model(entry)
+    async def _async_load_model(self, entry: ConfigEntry):
+        await super()._async_load_model(entry)
 
+        return await self.hass.async_add_executor_job(
+            self._load_model, entry
+        )
+
+    def _load_model(self, entry: ConfigEntry):
         with open(os.path.join(os.path.dirname(__file__), DEFAULT_GBNF_GRAMMAR_FILE)) as f:
             self.grammar = "".join(f.readlines())
 
@@ -1300,7 +1341,7 @@ class OllamaAPIAgent(LocalLLMAgent):
     api_key: str
     model_name: str
 
-    def _load_model(self, entry: ConfigEntry) -> None:
+    async def _async_load_model(self, entry: ConfigEntry) -> None:
         self.api_host = format_url(
             hostname=entry.data[CONF_HOST],
             port=entry.data[CONF_PORT],
@@ -1313,20 +1354,22 @@ class OllamaAPIAgent(LocalLLMAgent):
         # ollama handles loading for us so just make sure the model is available
         try:
             headers = {}
+            session = async_get_clientsession(self.hass)
             if self.api_key:
                 headers["Authorization"] = f"Bearer {self.api_key}"
-                
-            currently_downloaded_result = requests.get(
+            
+            async with session.get(
                 f"{self.api_host}/api/tags",
                 headers=headers,
-            )
-            currently_downloaded_result.raise_for_status()
+            ) as response:
+                response.raise_for_status()
+                currently_downloaded_result = await response.json()
                 
         except Exception as ex:
             _LOGGER.debug("Connection error was: %s", repr(ex))
             raise ConfigEntryNotReady("There was a problem connecting to the remote server") from ex
 
-        model_names = [ x["name"] for x in currently_downloaded_result.json()["models"] ]
+        model_names = [ x["name"] for x in currently_downloaded_result["models"] ]
         if ":" in self.model_name:
             if not any([ name == self.model_name for name in model_names]):
                 raise ConfigEntryNotReady(f"Ollama server does not have the provided model: {self.model_name}")    
@@ -1365,7 +1408,7 @@ class OllamaAPIAgent(LocalLLMAgent):
         else:
             return response_json["message"]["content"]
     
-    def _generate(self, conversation: dict) -> str:
+    async def _async_generate(self, conversation: dict) -> str:
         context_length = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
         max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
         temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
@@ -1404,24 +1447,26 @@ class OllamaAPIAgent(LocalLLMAgent):
         headers = {}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
-
+        
+        session = async_get_clientsession(self.hass)
+        response = None
         try:
-            result = requests.post(
-                f"{self.api_host}{endpoint}", 
+            async with session.post(
+                f"{self.api_host}{endpoint}",
                 json=request_params,
                 timeout=timeout,
-                headers=headers,
-            )
-            
-            result.raise_for_status()
-        except requests.exceptions.Timeout:
-            return f"The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities."
-        except requests.RequestException as err:
+                headers=headers
+            ) as response:
+                response.raise_for_status()
+                result = await response.json()
+        except asyncio.TimeoutError:
+            return "The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities."
+        except aiohttp.ClientError as err:
             _LOGGER.debug(f"Err was: {err}")
             _LOGGER.debug(f"Request was: {request_params}")
-            _LOGGER.debug(f"Result was: {result.text}")
+            _LOGGER.debug(f"Result was: {response}")
             return f"Failed to communicate with the API! {err}"
         
-        _LOGGER.debug(result.json())
+        _LOGGER.debug(result)
 
-        return self._extract_response(result.json())
+        return self._extract_response(result)

@@ -1,7 +1,7 @@
 {
   "domain": "llama_conversation",
   "name": "Local LLM Conversation",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "codeowners": ["@acon96"],
   "config_flow": true,
   "dependencies": ["conversation"],
@@ -9,8 +9,7 @@
   "integration_type": "service",
   "iot_class": "local_polling",
   "requirements": [
-    "requests>=2.31.0",
     "huggingface-hub==0.23.0",
-    "webcolors>=1.13"
+    "webcolors<=1.13"
   ]
 }

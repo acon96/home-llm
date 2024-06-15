@@ -1,14 +1,14 @@
 # TODO
-- [ ] support new LLM APIs  
+- [x] support new LLM APIs  
     - rewrite how services are called  
     - handle no API selected  
     - rewrite prompts + service block formats  
     - implement new LLM API that has `HassCallService` so old models can still work  
-    - update dataset so new models will work with the API  
+- [ ] update dataset so new models will work with the API  
 - [ ] make ICL examples into conversation turns  
 - [ ] translate ICL examples + make better ones  
-- [ ] areas/room support  
-- [ ] convert requests to aiohttp  
+- [x] areas/room support  
+- [x] convert requests to aiohttp  
 - [x] detection/mitigation of too many entities being exposed & blowing out the context length  
 - [ ] figure out DPO to improve response quality  
 - [x] setup github actions to build wheels that  are optimized for RPIs
