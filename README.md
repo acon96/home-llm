@@ -132,6 +132,7 @@ In order to facilitate running the project entirely on the system where Home Ass
 ## Version History
 | Version | Description                                                                                                                                                                                                          |
 |---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| v0.3.3  | Improvements to the Generic OpenAI Backend, improved area handling, fix issue using RGB colors, remove EOS token from responses, replace requests dependency with aiohttp included with Home Assistant               |
 | v0.3.2  | Fix for exposed script entities causing errors, fix missing GBNF error, trim whitespace from model output                                                                                                            |
 | v0.3.1  | Adds basic area support in prompting, Fix for broken requirements, fix for issue with formatted tools, fix custom API not registering on startup properly                                                            |
 | v0.3    | Adds support for Home Assistant LLM APIs, improved model prompting and tool formatting options, and automatic detection of GGUF quantization levels on HuggingFace                                                   |
