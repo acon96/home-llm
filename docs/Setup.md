@@ -130,8 +130,9 @@ Llama 3 8B can be set up and downloaded on the serving machine using LM Studio b
     - **IP Address**: Fill out IP Address for the machine hosting LM Studio
     - **Port**: enter the port that was listed in LM Studio
     - **Use HTTPS**: unchecked
-    - **Model Name**: This can be any value, as LM Studio uses the currently loaded model for all incoming requests.
+    - **Model Name**: Set this to the name of the model as it appears in LM Studio. If you receive an error that the model does not exist, then select the model from the dropdown list.
     - **API Key**: leave blank
+    - **API Path**: leave as `/v1`
 6. Click `Submit`
 
 ### Step 3: Model Configuration

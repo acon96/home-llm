@@ -26,6 +26,10 @@ The latest models can be found on HuggingFace:
 3B v3 (Based on StableLM-Zephyr-3B): https://huggingface.co/acon96/Home-3B-v3-GGUF  (Zephyr prompt format)  
 1B v3 (Based on TinyLlama-1.1B): https://huggingface.co/acon96/Home-1B-v3-GGUF  (Zephyr prompt format)  
 
+Non English experiments:  
+German, French, & Spanish (3B): https://huggingface.co/acon96/stablehome-multilingual-experimental  
+Polish (1B): https://huggingface.co/acon96/tinyhome-polish-experimental  
+
 <details>
 
 <summary>Old Models</summary>  
