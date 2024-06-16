@@ -1,3 +1,4 @@
+#!/bin/env python3
 import argparse
 import json
 import csv
@@ -1011,6 +1012,19 @@ def merge_languages(filename_prefix: str, languages: list):
         f.writelines(all_examples)
 
 
+def shard_languages(filename_prefix: str, main_lang: str, secondary_lang: str, ratio: float):
+    all_examples = []
+    with open(f"{filename_prefix}_{main_lang}.jsonl") as f:
+        all_examples.extend(f.readlines())
+
+    with open(f"{filename_prefix}_{secondary_lang}.jsonl") as f:
+        lines = f.readlines()
+        all_examples.extend(random.sample(lines, int(len(lines) * ratio)))
+
+    with open(f"{filename_prefix}.jsonl", "w") as f:
+        f.writelines(all_examples)
+
+
 def load_dataset_piles(language):
     global pile_of_durations, pile_of_media_names, pile_of_todo_items, stacks_of_device_names, \
         pile_of_templated_actions, pile_of_specific_actions, pile_of_responses, pile_of_status_requests, \
@@ -1096,6 +1110,7 @@ def main():
     parser.add_argument("--dpo", action="store_true", help="Set this flag to enable generation of the DPO dataset.")
     parser.add_argument("--merge", help="Set this flag to merge the generated datasets with the specified dataset.")
     parser.add_argument("--language", nargs="+", default=["english"], help="List of languages to generate")
+    parser.add_argument("--shard", action="store_true", help="Shard the provided language with examples from another language at a 10:1 ratio. Only supports 2 languages, and the first one will be the majority language.")
 
     train_size_group = parser.add_mutually_exclusive_group()
     train_size_group.add_argument('--small', action='store_const', const='small', dest='size')
@@ -1116,6 +1131,10 @@ def main():
     if args.size and not args.train:
         print("Train size was provided but not generating the training set!")
         exit(-1)
+
+    if args.shard and len(args.language) != 2:
+        print("Can only shard when 2 languages are provided!")
+        exit(-1)
     
     if not args.format or args.format == "raw":
         format_func = format_example_raw_chatml
@@ -1123,6 +1142,7 @@ def main():
         format_func = format_example_sharegpt
 
     for language in args.language:
+        print(f"Handling {language}")
         load_dataset_piles(language)
         personas = list(pile_of_system_prompts.keys())
         suffix = f"_{language}" if len(args.language) > 1 else ""
@@ -1145,11 +1165,20 @@ def main():
 
     if len(args.language) > 1:
         if args.sample:
-            merge_languages("sample", args.language)
+            if args.shard:
+                shard_languages("sample", args.language[0], args.language[1], 0.1)
+            else:
+                merge_languages("sample", args.language)
         if args.train:
-            merge_languages("home_assistant_train", args.language)
+            if args.shard:
+                shard_languages("home_assistant_train", args.language[0], args.language[1], 0.1)
+            else:
+                merge_languages("home_assistant_train", args.language)
         if args.test:
-            merge_languages("home_assistant_test", args.language)
+            if args.shard:
+                shard_languages("home_assistant_test", args.language[0], args.language[1], 0.1)
+            else:
+                merge_languages("home_assistant_test", args.language)
 
     if args.dpo:
         generate_dpo_file(f"home_assistant_dpo", 42, format_example_dpo, personas, wrong_argument_factor=1, no_argument_factor=1, extra_service_call_factor=1, incorrect_persona_factor=1)

@@ -11,8 +11,7 @@ fi
 
 echo "Converting to GGUF..."
 if [ ! -f "./models/$MODEL_NAME/$MODEL_NAME.f16.gguf" ]; then
-    $LLAMA_CPP/convert.py --outfile ./models/$MODEL_NAME/$MODEL_NAME.f16.gguf --outtype f16 ./models/$MODEL_NAME/
-    # $LLAMA_CPP/convert-hf-to-gguf.py --outfile ./models/$MODEL_NAME/$MODEL_NAME.f16.gguf --outtype f16 ./models/$MODEL_NAME/
+    $LLAMA_CPP/convert-hf-to-gguf.py --outfile ./models/$MODEL_NAME/$MODEL_NAME.f16.gguf --outtype f16 ./models/$MODEL_NAME/
 else
     echo "Converted model for already exists. Skipping..."
 fi

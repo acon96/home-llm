@@ -79,11 +79,17 @@ def generate(model, tokenizer, prompts):
     inputs = tokenize(tokenizer, prompts)
     with torch.no_grad():
         outputs = model.generate(**inputs)
-    text = tokenizer.batch_decode(outputs)
+    
+    text = []
+    for batch_inputs, batch_outputs in zip(inputs["input_ids"], outputs):
+        text.append(tokenizer.decode(batch_outputs[batch_inputs.shape[0]:]))
+    
     return text
 
 def evaluate(output_folder, trained_model, trained_tokenizer, dataset, batch_size, use_icl):
-    split = trained_tokenizer.apply_chat_template(conversation=[{"role": "assistant", "content":  r"%%%%%%%%%%%%%%%%"}], tokenize=False).split( r"%%%%%%%%%%%%%%%%")[0].replace(trained_tokenizer.bos_token, "")
+    split = trained_tokenizer.apply_chat_template(conversation=[{"role": "assistant", "content":  r"%%%%%%%%%%%%%%%%"}], tokenize=False).split( r"%%%%%%%%%%%%%%%%")[0].replace(trained_tokenizer.bos_token or "", "")
+    # print(split)
+    split = "<|im_start|> assistant"
 
     print("Evaluating...")
     correct_answers = 0
@@ -93,6 +99,7 @@ def evaluate(output_folder, trained_model, trained_tokenizer, dataset, batch_siz
     # pre-allocate cuda buffers
     inputs = trained_tokenizer([""] * batch_size, return_tensors="pt", max_length=CTX_SIZE, padding="max_length", truncation=True)
     inputs = {k: v.to(trained_model.device) for k, v in inputs.items()}
+
     with torch.no_grad():
         outputs = trained_model(**inputs)
 
@@ -138,8 +145,13 @@ def evaluate(output_folder, trained_model, trained_tokenizer, dataset, batch_siz
             output = generate(trained_model, trained_tokenizer, prompts)
 
             for model_output, expected_response in zip(output, expected_responses):
-                response = model_output.replace(trained_tokenizer.pad_token, "").replace(trained_tokenizer.eos_token, "").split(split)[1]
-
+                try:
+                    response = model_output.split(trained_tokenizer.eos_token)[0]
+                except Exception as ex:
+                    print("model_output----------------------------------")
+                    print(model_output)
+                    raise ex
+                
                 expected_service_calls = []
 
                 if use_icl:
@@ -152,12 +164,12 @@ def evaluate(output_folder, trained_model, trained_tokenizer, dataset, batch_siz
                         if len(line) == 0:
                             continue
                         expected_service_calls.append(json.loads(line))
-                        total_answers = total_answers + 1
+                
+                total_answers = total_answers + 1
                 
                 found_responses = regex_to_use.findall(response.strip())
 
                 if len(expected_service_calls) == 0:
-                    total_answers = total_answers + 1
                     if len(found_responses) == 0:
                         correct_answers = correct_answers + 1
                         continue
@@ -169,14 +181,21 @@ def evaluate(output_folder, trained_model, trained_tokenizer, dataset, batch_siz
                     failed_examples.append({ "expected": expected_response, "actual": response, "no_response_found": True })
                     continue
 
+                processed_tool_calls = 0
+                color_mismatch = False
+                failure_flags = {}
                 for block in found_responses:
+                    if processed_tool_calls >= len(expected_service_calls):
+                        failure_flags.update({"extra_service_calls": True})
+                        break
+                    
                     for line in block.split("\n"):
                         if len(line) == 0:
                             continue
                         try:
                             json_output = json.loads(line)
                         except:
-                            failed_examples.append({ "expected": expected_response, "actual": response, "invalid_json": True })
+                            failure_flags.update({"invalid_json": True})
                             continue
 
                         if use_icl:
@@ -184,7 +203,8 @@ def evaluate(output_folder, trained_model, trained_tokenizer, dataset, batch_siz
                             
                         if json_output in expected_service_calls:
                             expected_service_calls.pop(expected_service_calls.index(json_output))
-                            correct_answers = correct_answers + 1
+
+                            processed_tool_calls = processed_tool_calls + 1
                         elif "rgb_color" in json_output:
                             for sc in expected_service_calls:
                                 sc = { **sc }
@@ -196,10 +216,19 @@ def evaluate(output_folder, trained_model, trained_tokenizer, dataset, batch_siz
                                 if sc == json_output_copy:
                                     correct_answers = correct_answers + 1
                                     color_mismatches = color_mismatches + 1
+                                    processed_tool_calls = processed_tool_calls + 1
                                 else:
-                                    failed_examples.append({ "expected": expected_response, "actual": response })
+                                    failure_flags.update({"bad_service_call": True})
                         else:
-                            failed_examples.append({ "expected": expected_response, "actual": response })
+                            failure_flags.update({"bad_service_call": True})
+
+                if len(failure_flags) == 0:
+                    correct_answers = correct_answers + 1
+                else:
+                    failed_examples.append({ "expected": expected_response, "actual": response, **failure_flags })
+                
+                if color_mismatch:
+                    color_mismatches = color_mismatches + 1
 
             pbar.update(batch_size)
             pbar.set_description(f"Accuracy: {correct_answers/total_answers*100:.2f}% ({correct_answers}/{total_answers})")
@@ -350,7 +379,7 @@ def main():
                     print(f"Evaluation already exists for {output_folder}. Skipping...")
                     continue
 
-            trained_model, trained_tokenizer = load_model(args.model, args.lora, ckpt, False)
+            trained_model, trained_tokenizer = load_model(args.model, args.lora, False, False, ckpt)
             evaluate(output_folder, trained_model, trained_tokenizer, dataset, batch_size, False)
 
 

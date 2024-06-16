@@ -37,3 +37,14 @@
   - 900: 
   - 1000: 
   - Final: 0.9817813765182186
+
+
+# tinyhome-polish-rev2
+- dataset size: small (polish sharded with english)
+- learning rate 2e-5
++ evaluation results: NEEDS RE-TEST b/c OF BAD EVAL SCRIPT
+
+# tinyhome-polish-rev2
+- dataset size: medium (polish sharded with english)
+- learning rate 2e-5
++ evaluation results: 0.8115246098439376
