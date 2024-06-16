@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import aiohttp
+import asyncio
 import csv
 import importlib
 import json
@@ -488,8 +489,9 @@ class LocalLLMAgent(AbstractConversationAgent):
             
             if area_id:
                 area = area_registry.async_get_area(entity.area_id)
-                attributes["area_id"] = area.id
-                attributes["area_name"] = area.name
+                if area:
+                    attributes["area_id"] = area.id
+                    attributes["area_name"] = area.name
             
             entity_states[state.entity_id] = attributes
             domains.add(state.domain)
@@ -1130,7 +1132,7 @@ class GenericOpenAIAPIAgent(LocalLLMAgent):
         request_params = {}
         api_base_path = self.entry.options.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
 
-        endpoint = f"{api_base_path}/chat/completions"
+        endpoint = f"/{api_base_path}/chat/completions"
         request_params["messages"] = [ { "role": x["role"], "content": x["message"] } for x in conversation ]
 
         return endpoint, request_params
@@ -1181,6 +1183,7 @@ class GenericOpenAIAPIAgent(LocalLLMAgent):
             headers["Authorization"] = f"Bearer {self.api_key}"
 
         session = async_get_clientsession(self.hass)
+        response = None
         try:
             async with session.post(
                 f"{self.api_host}{endpoint}",
@@ -1190,7 +1193,7 @@ class GenericOpenAIAPIAgent(LocalLLMAgent):
             ) as response:
                 response.raise_for_status()
                 result = await response.json()
-        except aiohttp.ClientTimeout:
+        except asyncio.TimeoutError:
             return "The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities."
         except aiohttp.ClientError as err:
             _LOGGER.debug(f"Err was: {err}")
@@ -1446,6 +1449,7 @@ class OllamaAPIAgent(LocalLLMAgent):
             headers["Authorization"] = f"Bearer {self.api_key}"
         
         session = async_get_clientsession(self.hass)
+        response = None
         try:
             async with session.post(
                 f"{self.api_host}{endpoint}",
@@ -1455,7 +1459,7 @@ class OllamaAPIAgent(LocalLLMAgent):
             ) as response:
                 response.raise_for_status()
                 result = await response.json()
-        except aiohttp.ClientTimeout:
+        except asyncio.TimeoutError:
             return "The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities."
         except aiohttp.ClientError as err:
             _LOGGER.debug(f"Err was: {err}")
