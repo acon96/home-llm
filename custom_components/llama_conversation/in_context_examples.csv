@@ -20,3 +20,5 @@ switch,Schalte die Schalter in der <area> aus,HassTurnOff,Ich habe die Geräte w
 switch,Schalte den Schalter <name> um,HassToggle,Ich habe den Schalter umgeschaltet.
 vacuum,Starte den Staubsauger namens <name>,HassVacuumStart,Ich habe den Staubsauger gestartet.
 vacuum,Stoppe den Staubsauger <name>,HassVacuumReturnToBase,Ich habe den Staubsauger zurück zur Basis geschickt.
+cover, Schliesse den Rolladen <name>, HassSetPosition, Ich habe den Rolladen geschlossen.
+cover, Öffne den Rolladen <name>, HassSetPosition, Ich habe den Rolladen geöffnet.
