@@ -4,7 +4,8 @@ fan,Schalte die Ventilatoren in der <area> ein.,HassTurnOn,Ich habe den Ventilat
 fan,Schalte den <name> aus,HassTurnOff,Ich habe den Ventilator ausgeschaltet.
 fan,Schalte den Ventilator <name> um,HassToggle,Ich habe den Ventilator umgeschaltet.
 light,Schalte das <name> Licht an,HassTurnOn,Ich habe das Licht eingeschaltet.
-light,Schalte das Licht in <area> aus,HassTurnOff,Ich habe das Licht ausgeschaltet.
+light,Schalte das <name> Licht aus,HassTurnOff,Ich habe das Licht ausgeschaltet.
+light,Schalte das Licht in <area> aus,HassTurnOff,Ich habe das Licht in <area>  ausgeschaltet.
 light,Schalte das Licht in <area> um,HassToggle,Ich habe das Licht in <area> umgeschaltet.
 light,Schalte die Helligkeit von <name> auf <brightness>,HassLightSet,Ich habe die Helligkeit umgeschaltet.
 light,Schalte die Lichter in <area> auf <color>,HassLightSet,Ich habe die Farbe jetzt geändert.
@@ -14,6 +15,7 @@ media_player,Drücke den Play-Knopf am <name>,HassMediaUnpause,Starte die Medien
 media_player,Pausiere den <name>,HassMediaPause,Pausiere die Medienwiedergabe.
 media_player,Spiele das nächste auf <name>,HassMediaNext,Überspringe zum nächsten Track.
 switch,Schalte den <name> ein,HassTurnOn,Ich habe den Schalter eingeschaltet.
+switch,Schalte den <name> aus,HassTurnOff,Ich habe den Schalter ausgeschaltet.
 switch,Schalte die Schalter in der <area> aus,HassTurnOff,Ich habe die Geräte wie gewünscht ausgeschaltet.
 switch,Schalte den Schalter <name> um,HassToggle,Ich habe den Schalter umgeschaltet.
 vacuum,Starte den Staubsauger namens <name>,HassVacuumStart,Ich habe den Staubsauger gestartet.
