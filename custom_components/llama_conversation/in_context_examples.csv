@@ -1,20 +1,20 @@
 type,request,tool,response
-fan,Turn on the <name>,HassTurnOn,Turning on the fan for you.
-fan,Turn on the fans in the <area>,HassTurnOn,Turning on the fans in <area>
-fan,Turn off the <name>,HassTurnOff,Switching off the fan as requested.
-fan,Toggle the fan <name> for me,HassToggle,I'll toggle the fan's state for you.
-light,Turn the <name> light on,HassTurnOn,Turning on the light for you.
-light,Lights off in <area>,HassTurnOff,Turning off the light as requested.
-light,Hit toggle for the lights in <area>,HassToggle,Toggling the lights in the <area> for you.
-light,Set the brightness for <name> to <brightness>,HassLightSet,Setting the brightness now.
-light,Make the lights in <area> <color>,HassLightSet,The color should be changed now.
-media_player,Can you turn on <name>,HassTurnOn,Turning on the media player for you.
-media_player,<name> should be turned off,HassTurnOff,Turning off the media player as requested.
-media_player,Can you press play on <name>,HassMediaUnpause,Starting media playback.
-media_player,Pause the <name>,HassMediaPause,Pausing the media playback.
-media_player,Play the next thing on <name>,HassMediaNext,Skipping to the next track.
-switch,Turn on the <name>,HassTurnOn,Turning on the switch for you.
-switch,Turn off the switches in <area>,HassTurnOff,Turning off the devices as requested.
-switch,Toggle the switch <name>,HassToggle,Toggling the switch for you.
-vacuum,Start the vacuum called <name>,HassVacuumStart,Starting the vacuum now.
-vacuum,Stop the <name> vacuum,HassVacuumReturnToBase,Sending the vacuum back to its base.
+fan,Schalte den <name> ein,HassTurnOn,Ich habe den Ventilator eingeschaltet.
+fan,Schalte die Ventilatoren in der <area> ein.,HassTurnOn,Ich habe den Ventilator in der <area> eingeschaltet.
+fan,Schalte den <name> aus,HassTurnOff,Ich habe den Ventilator ausgeschaltet.
+fan,Schalte den Ventilator <name> um,HassToggle,Ich habe den Ventilator umgeschaltet.
+light,Schalte das <name> Licht an,HassTurnOn,Ich habe das Licht eingeschaltet.
+light,Schalte das Licht in <area> aus,HassTurnOff,Ich habe das Licht ausgeschaltet.
+light,Schalte das Licht in <area> um,HassToggle,Ich habe das Licht in <area> umgeschaltet.
+light,Schalte die Helligkeit von <name> auf <brightness>,HassLightSet,Ich habe die Helligkeit umgeschaltet.
+light,Schalte die Lichter in <area> auf <color>,HassLightSet,Ich habe die Farbe jetzt geändert.
+media_player,Schalte den <name> ein,HassTurnOn,Ich schalte den Media-Player für dich ein.
+media_player,<name> sollte ausgeschaltet werden,HassTurnOff,Ich habe den Media-Player ausgeschaltet.
+media_player,Drücke den Play-Knopf am <name>,HassMediaUnpause,Starte die Medienwiedergabe.
+media_player,Pausiere den <name>,HassMediaPause,Pausiere die Medienwiedergabe.
+media_player,Spiele das nächste auf <name>,HassMediaNext,Überspringe zum nächsten Track.
+switch,Schalte den <name> ein,HassTurnOn,Ich habe den Schalter eingeschaltet.
+switch,Schalte die Schalter in der <area> aus,HassTurnOff,Ich habe die Geräte wie gewünscht ausgeschaltet.
+switch,Schalte den Schalter <name> um,HassToggle,Ich habe den Schalter umgeschaltet.
+vacuum,Starte den Staubsauger namens <name>,HassVacuumStart,Ich habe den Staubsauger gestartet.
+vacuum,Stoppe den Staubsauger <name>,HassVacuumReturnToBase,Ich habe den Staubsauger zurück zur Basis geschickt.
