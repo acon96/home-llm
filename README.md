@@ -26,6 +26,10 @@ The latest models can be found on HuggingFace:
 3B v3 (Based on StableLM-Zephyr-3B): https://huggingface.co/acon96/Home-3B-v3-GGUF  (Zephyr prompt format)  
 1B v3 (Based on TinyLlama-1.1B): https://huggingface.co/acon96/Home-1B-v3-GGUF  (Zephyr prompt format)  
 
+Non English experiments:  
+German, French, & Spanish (3B): https://huggingface.co/acon96/stablehome-multilingual-experimental  
+Polish (1B): https://huggingface.co/acon96/tinyhome-polish-experimental  
+
 <details>
 
 <summary>Old Models</summary>  
@@ -132,6 +136,7 @@ In order to facilitate running the project entirely on the system where Home Ass
 ## Version History
 | Version | Description                                                                                                                                                                                                          |
 |---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| v0.3.4  | Update bundled llama-cpp-python to support new models, various bug fixes                                                                                                                                             |
 | v0.3.3  | Improvements to the Generic OpenAI Backend, improved area handling, fix issue using RGB colors, remove EOS token from responses, replace requests dependency with aiohttp included with Home Assistant               |
 | v0.3.2  | Fix for exposed script entities causing errors, fix missing GBNF error, trim whitespace from model output                                                                                                            |
 | v0.3.1  | Adds basic area support in prompting, Fix for broken requirements, fix for issue with formatted tools, fix custom API not registering on startup properly                                                            |

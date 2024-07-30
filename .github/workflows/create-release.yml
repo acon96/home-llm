@@ -29,27 +29,27 @@ jobs:
         - home_assistant_version: "2024.2.1"
           suffix: "-noavx"
           arch: "amd64"
-          extra_defines: "-DLLAMA_AVX=OFF -DLLAMA_AVX2=OFF -DLLAMA_FMA=OFF -DLLAMA_F16C=OFF"
+          extra_defines: "-DGGML_AVX=OFF -DGGML_AVX2=OFF -DGGML_FMA=OFF -DGGML_F16C=OFF"
         - home_assistant_version: "2024.2.1"
           arch: "i386"
           suffix: "-noavx"
-          extra_defines: "-DLLAMA_AVX=OFF -DLLAMA_AVX2=OFF -DLLAMA_FMA=OFF -DLLAMA_F16C=OFF"
+          extra_defines: "-DGGML_AVX=OFF -DGGML_AVX2=OFF -DGGML_FMA=OFF -DGGML_F16C=OFF"
 
         # AVX2 and AVX512
         - home_assistant_version: "2024.2.1"
           arch: "amd64"
-          extra_defines: "-DLLAMA_AVX=ON -DLLAMA_AVX2=ON -DLLAMA_FMA=ON -DLLAMA_F16C=ON"
+          extra_defines: "-DGGML_AVX=ON -DGGML_AVX2=ON -DGGML_FMA=ON -DGGML_F16C=ON"
         - home_assistant_version: "2024.2.1"
           arch: "amd64"
           suffix: "-avx512"
-          extra_defines: "-DLLAMA_AVX512=ON -DLLAMA_FMA=ON -DLLAMA_F16C=ON"
+          extra_defines: "-DGGML_AVX512=ON -DGGML_FMA=ON -DGGML_F16C=ON"
         - home_assistant_version: "2024.2.1"
           arch: "i386"
-          extra_defines: "-DLLAMA_AVX=ON -DLLAMA_AVX2=ON -DLLAMA_FMA=ON -DLLAMA_F16C=ON"
+          extra_defines: "-DGGML_AVX=ON -DGGML_AVX2=ON -DGGML_FMA=ON -DGGML_F16C=ON"
         - home_assistant_version: "2024.2.1"
           arch: "i386"
           suffix: "-avx512"
-          extra_defines: "-DLLAMA_AVX512=ON -DLLAMA_FMA=ON -DLLAMA_F16C=ON"
+          extra_defines: "-DGGML_AVX512=ON -DGGML_FMA=ON -DGGML_F16C=ON"
         
     steps:
       - name: Checkout code
@@ -87,7 +87,7 @@ jobs:
             git clone --quiet --recurse-submodules https://github.com/abetlen/llama-cpp-python --branch "v${{ env.EMBEDDED_LLAMA_CPP_PYTHON_VERSION }}"
             cd llama-cpp-python
 
-            export CMAKE_ARGS="-DLLAVA_BUILD=OFF -DLLAMA_NATIVE=OFF ${{ matrix.extra_defines }}"
+            export CMAKE_ARGS="-DLLAVA_BUILD=OFF -DGGML_NATIVE=OFF ${{ matrix.extra_defines }}"
             python3 -m build --wheel
 
             ls -la ./dist/

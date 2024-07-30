@@ -145,7 +145,11 @@ class HassServiceTool(llm.Tool):
         self, hass: HomeAssistant, tool_input: llm.ToolInput, llm_context: llm.LLMContext
     ) -> JsonObjectType:
         """Call the tool."""
-        domain, service = tuple(tool_input.tool_args["service"].split("."))
+        try:
+            domain, service = tuple(tool_input.tool_args["service"].split("."))
+        except ValueError:
+            return { "result": "unknown service" }
+        
         target_device = tool_input.tool_args["target_device"]
 
         if domain not in self.ALLOWED_DOMAINS or service not in self.ALLOWED_SERVICES:
