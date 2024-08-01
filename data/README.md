@@ -27,8 +27,8 @@ Start by installing system dependencies:
 
 Then create a Python virtual environment and install all necessary library:
 ```
-python3 -m venv .venv
-source ./.venv/bin/activate
+python3 -m venv .generate_data
+source ./.generate_data/bin/activate
 pip3 install pandas=2.2.2 datasets==2.20.0 webcolors==1.13
 ```
 
