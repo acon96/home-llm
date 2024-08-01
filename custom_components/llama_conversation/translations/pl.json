@@ -207,11 +207,11 @@
         },
         "selected_language": {
             "options": {
-                "en": "English",
-                "de": "German",
-                "fr": "French",
-                "es": "Spanish",
-                "pl": "Polish"
+                "en": "Angielski",
+                "de": "Niemiecki",
+                "fr": "Francuski",
+                "es": "Hiszpański",
+                "pl": "Polski"
             }
         }
     }
