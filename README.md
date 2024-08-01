@@ -103,7 +103,7 @@ Then create a Python virtual environment and install all necessary library:
 ```
 python3 -m venv .train_data
 source ./.train_data/bin/activate
-pip3 install datasets==2.20.0 dataclasses==0.6 transformers==4.43.3 torch==2.4.0 accelerate==0.33.0
+pip3 install datasets==2.20.0 dataclasses==0.6 transformers==4.43.3 torch==2.4.0 accelerate==0.33.0 tensorboard==2.17.0
 ```
 
 </details>
