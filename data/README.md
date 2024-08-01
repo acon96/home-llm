@@ -20,7 +20,7 @@ This dataset contains a list of requests and responses for a user interacting wi
 
 The dataset is generated from the different CSV "piles". The "piles" contain different chunks of requests that are assembled into a final context that is presented to the LLM. For example, `piles/<language>/pile_of_device_names.csv` contains only names of various devices to be used as part of context as well as inserted into `piles/<language>/pile_of_templated_actions.csv` and `piles/<language>/pile_of_status_requests.csv`. The logic for assembling the final dataset from the piles is contained in [generate_home_assistant_data.py](./generate_home_assistant_data.py).
 
-# Prepare environment
+## Prepare environment
 
 Start by installing system dependencies:
 `sudo apt-get install python3-dev`
