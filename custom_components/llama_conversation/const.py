@@ -12,23 +12,66 @@ PERSONA_PROMPTS = {
     "es": "Eres 'Al', un \u00fatil asistente de IA que controla los dispositivos de una casa. Complete la siguiente tarea seg\u00fan las instrucciones o responda la siguiente pregunta \u00fanicamente con la informaci\u00f3n proporcionada.",
     "pl": "Jesteś 'Al', pomocnym asystentem AI, który kontroluje urządzenia w domu. Wykonaj następujące zadanie zgodnie z instrukcjami, używając wyłącznie podanych informacji."
 }
+CURRENT_DATE_PROMPT = {
+    "en": "The current time and date is",
+    "de": "Die aktuelle Uhrzeit und das aktuelle Datum sind",
+    "fr": "L'heure et la date actuelles sont",
+    "es": "La hora y fecha actuales son",
+    "pl": "Aktualna godzina i data to",
+}
+DEVICES_PROMPT = {
+    "en": "Devices",
+    "de": "Ger\u00e4te",
+    "fr": "Appareils",
+    "es": "Dispositivos",
+    "pl": "Urządzenia",
+}
+SERVICES_PROMPT = {
+    "en": "Services",
+    "de": "Dienste",
+    "fr": "Services",
+    "es": "Servicios",
+    "pl": "Usługi",
+}
+TOOLS_PROMPT = {
+    "en": "Tools",
+    "de": "Werkzeuge",
+    "fr": "Outils",
+    "es": "Herramientas",
+    "pl": "Narzędzia",
+}
+AREA_PROMPT = {
+    "en": "Area",
+    "de": "Bereich",
+    "fr": "Zone",
+    "es": "Área",
+    "pl": "Obszar",
+}
+USER_INSTRUCTION = {
+    "en": "User instruction",
+    "de": "Benutzeranweisung",
+    "fr": "Instruction de l'utilisateur ",
+    "es": "Instrucción del usuario",
+    "pl": "Instrukcja użytkownika"
+}
+
 DEFAULT_PROMPT_BASE = """<persona>
-The current time and date is {{ (as_timestamp(now()) | timestamp_custom("%I:%M %p on %A %B %d, %Y", "")) }}
-Tools: {{ tools | to_json }}
-Devices:
+<current_date> {{ (as_timestamp(now()) | timestamp_custom("%I:%M %p on %A %B %d, %Y", "")) }}
+<tools>: {{ tools | to_json }}
+<devices>:
 {% for device in devices | selectattr('area_id', 'none'): %}
 {{ device.entity_id }} '{{ device.name }}' = {{ device.state }}{{ ([""] + device.attributes) | join(";") }}
 {% endfor %}
 {% for area in devices | rejectattr('area_id', 'none') | groupby('area_name') %}
-## Area: {{ area.grouper }}
+## <area>: {{ area.grouper }}
 {% for device in area.list %}
 {{ device.entity_id }} '{{ device.name }}' = {{ device.state }};{{ device.attributes | join(";") }}
 {% endfor %}
 {% endfor %}"""
 DEFAULT_PROMPT_BASE_LEGACY = """<persona>
-The current time and date is {{ (as_timestamp(now()) | timestamp_custom("%I:%M %p on %A %B %d, %Y", "")) }}
-Services: {{ formatted_tools }}
-Devices:
+<current_date> {{ (as_timestamp(now()) | timestamp_custom("%I:%M %p on %A %B %d, %Y", "")) }}
+<services>: {{ formatted_tools }}
+<devices>:
 {{ formatted_devices }}"""
 ICL_EXTRAS = """
 {% for item in response_examples %}
@@ -42,7 +85,7 @@ ICL_NO_SYSTEM_PROMPT_EXTRAS = """
 {{ item.response }}
 <functioncall> {{ item.tool | to_json }}
 {% endfor %}
-User instruction:"""
+<user_instruction>:"""
 DEFAULT_PROMPT = DEFAULT_PROMPT_BASE + ICL_EXTRAS
 CONF_CHAT_MODEL = "huggingface_model"
 DEFAULT_CHAT_MODEL = "acon96/Home-3B-v3-GGUF"
