@@ -10,68 +10,26 @@ PERSONA_PROMPTS = {
     "de": "Du bist \u201eAl\u201c, ein hilfreicher KI-Assistent, der die Ger\u00e4te in einem Haus steuert. F\u00fchren Sie die folgende Aufgabe gem\u00e4\u00df den Anweisungen durch oder beantworten Sie die folgende Frage nur mit den bereitgestellten Informationen.",
     "fr": "Vous \u00eates \u00ab\u00a0Al\u00a0\u00bb, un assistant IA utile qui contr\u00f4le les appareils d'une maison. Effectuez la t\u00e2che suivante comme indiqu\u00e9 ou r\u00e9pondez \u00e0 la question suivante avec les informations fournies uniquement.",
     "es": "Eres 'Al', un \u00fatil asistente de IA que controla los dispositivos de una casa. Complete la siguiente tarea seg\u00fan las instrucciones o responda la siguiente pregunta \u00fanicamente con la informaci\u00f3n proporcionada.",
-    "pl": "Jesteś 'Al', pomocnym asystentem AI, który kontroluje urządzenia w domu. Wykonaj następujące zadanie zgodnie z instrukcjami, używając wyłącznie podanych informacji."
-}
-CURRENT_DATE_PROMPT = {
-    "en": "The current time and date is",
-    "de": "Die aktuelle Uhrzeit und das aktuelle Datum sind",
-    "fr": "L'heure et la date actuelles sont",
-    "es": "La hora y fecha actuales son",
-    "pl": "Aktualna godzina i data to",
-}
-DEVICES_PROMPT = {
-    "en": "Devices",
-    "de": "Ger\u00e4te",
-    "fr": "Appareils",
-    "es": "Dispositivos",
-    "pl": "Urządzenia",
-}
-SERVICES_PROMPT = {
-    "en": "Services",
-    "de": "Dienste",
-    "fr": "Services",
-    "es": "Servicios",
-    "pl": "Usługi",
-}
-TOOLS_PROMPT = {
-    "en": "Tools",
-    "de": "Werkzeuge",
-    "fr": "Outils",
-    "es": "Herramientas",
-    "pl": "Narzędzia",
-}
-AREA_PROMPT = {
-    "en": "Area",
-    "de": "Bereich",
-    "fr": "Zone",
-    "es": "Área",
-    "pl": "Obszar",
-}
-USER_INSTRUCTION = {
-    "en": "User instruction",
-    "de": "Benutzeranweisung",
-    "fr": "Instruction de l'utilisateur ",
-    "es": "Instrucción del usuario",
-    "pl": "Instrukcja użytkownika"
+    "pl": "Jeste\u015b 'Al', pomocnym asystentem AI, kt\u00f3ry kontroluje urz\u0105dzenia w domu. Wykonaj poni\u017csze zadanie zgodnie z instrukcj\u0105 lub odpowiedz na poni\u017csze pytanie, korzystaj\u0105c wy\u0142\u0105cznie z podanych informacji."
 }
 
 DEFAULT_PROMPT_BASE = """<persona>
-<current_date> {{ (as_timestamp(now()) | timestamp_custom("%I:%M %p on %A %B %d, %Y", "")) }}
-<tools>: {{ tools | to_json }}
-<devices>:
+The current time and date is {{ (as_timestamp(now()) | timestamp_custom("%I:%M %p on %A %B %d, %Y", "")) }}
+Tools: {{ tools | to_json }}
+Devices:
 {% for device in devices | selectattr('area_id', 'none'): %}
 {{ device.entity_id }} '{{ device.name }}' = {{ device.state }}{{ ([""] + device.attributes) | join(";") }}
 {% endfor %}
 {% for area in devices | rejectattr('area_id', 'none') | groupby('area_name') %}
-## <area>: {{ area.grouper }}
+## Area: {{ area.grouper }}
 {% for device in area.list %}
 {{ device.entity_id }} '{{ device.name }}' = {{ device.state }};{{ device.attributes | join(";") }}
 {% endfor %}
 {% endfor %}"""
 DEFAULT_PROMPT_BASE_LEGACY = """<persona>
-<current_date> {{ (as_timestamp(now()) | timestamp_custom("%I:%M %p on %A %B %d, %Y", "")) }}
-<services>: {{ formatted_tools }}
-<devices>:
+The current time and date is {{ (as_timestamp(now()) | timestamp_custom("%I:%M %p on %A %B %d, %Y", "")) }}
+Services: {{ formatted_tools }}
+Devices:
 {{ formatted_devices }}"""
 ICL_EXTRAS = """
 {% for item in response_examples %}
@@ -85,7 +43,7 @@ ICL_NO_SYSTEM_PROMPT_EXTRAS = """
 {{ item.response }}
 <functioncall> {{ item.tool | to_json }}
 {% endfor %}
-<user_instruction>:"""
+User instruction:"""
 DEFAULT_PROMPT = DEFAULT_PROMPT_BASE + ICL_EXTRAS
 CONF_CHAT_MODEL = "huggingface_model"
 DEFAULT_CHAT_MODEL = "acon96/Home-3B-v3-GGUF"
