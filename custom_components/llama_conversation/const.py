@@ -10,7 +10,9 @@ PERSONA_PROMPTS = {
     "de": "Du bist \u201eAl\u201c, ein hilfreicher KI-Assistent, der die Ger\u00e4te in einem Haus steuert. F\u00fchren Sie die folgende Aufgabe gem\u00e4\u00df den Anweisungen durch oder beantworten Sie die folgende Frage nur mit den bereitgestellten Informationen.",
     "fr": "Vous \u00eates \u00ab\u00a0Al\u00a0\u00bb, un assistant IA utile qui contr\u00f4le les appareils d'une maison. Effectuez la t\u00e2che suivante comme indiqu\u00e9 ou r\u00e9pondez \u00e0 la question suivante avec les informations fournies uniquement.",
     "es": "Eres 'Al', un \u00fatil asistente de IA que controla los dispositivos de una casa. Complete la siguiente tarea seg\u00fan las instrucciones o responda la siguiente pregunta \u00fanicamente con la informaci\u00f3n proporcionada.",
+    "pl": "Jeste\u015b 'Al', pomocnym asystentem AI, kt\u00f3ry kontroluje urz\u0105dzenia w domu. Wykonaj poni\u017csze zadanie zgodnie z instrukcj\u0105 lub odpowiedz na poni\u017csze pytanie, korzystaj\u0105c wy\u0142\u0105cznie z podanych informacji."
 }
+
 DEFAULT_PROMPT_BASE = """<persona>
 The current time and date is {{ (as_timestamp(now()) | timestamp_custom("%I:%M %p on %A %B %d, %Y", "")) }}
 Tools: {{ tools | to_json }}
@@ -69,7 +71,7 @@ BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER = "llama_cpp_python_server"
 BACKEND_TYPE_OLLAMA = "ollama"
 DEFAULT_BACKEND_TYPE = BACKEND_TYPE_LLAMA_HF
 CONF_SELECTED_LANGUAGE = "selected_language"
-CONF_SELECTED_LANGUAGE_OPTIONS = [ "en", "de", "fr", "es" ]
+CONF_SELECTED_LANGUAGE_OPTIONS = [ "en", "de", "fr", "es", "pl"]
 CONF_DOWNLOADED_MODEL_QUANTIZATION = "downloaded_model_quantization"
 CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS = [
     "Q4_0", "Q4_1", "Q5_0", "Q5_1", "IQ2_XXS", "IQ2_XS", "IQ2_S", "IQ2_M", "IQ1_S", "IQ1_M",

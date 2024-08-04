@@ -1,0 +1,218 @@
+{
+    "config": {
+        "error": {
+            "download_failed": "Pobieranie nie zostało zakończone: {exception}",
+            "missing_quantization": "Poziom kwantyzacji GGUF {missing} nie istnieje w dostarczonym repozytorium HuggingFace. Znalezione zostały następujące poziomy kwantyzacji: {available}",
+            "no_supported_ggufs": "Dostarczone repozytorium HuggingFace nie zawiera żadnych kompatybilnych plików GGUF!",
+            "failed_to_connect": "Nie udało się połączyć z zdalnym API: {exception}",
+            "missing_model_api": "Wybrany model nie jest dostępny w tym API. Dostępne modele zostały umieszczone w rozwijanym menu.",
+            "missing_model_file": "Dostarczony plik nie istnieje.",
+            "other_existing_local": "Inny model jest już załadowany lokalnie. Proszę go wyładować lub skonfigurować model zdalny.",
+            "unknown": "Nieoczekiwany błąd",
+            "pip_wheel_error": "Pip zwrócił błąd podczas instalacji pliku wheel! Proszę sprawdzić logi Home Assistant, aby uzyskać więcej szczegółów.",
+            "sys_refresh_caching_enabled": "Aby buforowanie promptów działało, odświeżanie promptu systemowego musi być włączone!",
+            "missing_gbnf_file": "Plik GBNF nie został znaleziony: {filename}",
+            "missing_icl_file": "Plik CSV z przykładem nauki w kontekście nie został znaleziony: {filename}"
+        },
+        "progress": {
+            "download": "Proszę czekać, trwa pobieranie modelu z HuggingFace. Może to zająć kilka minut.",
+            "install_local_wheels": "Proszę czekać, trwa instalacja Llama.cpp..."
+        },
+        "step": {
+            "local_model": {
+                "data": {
+                    "downloaded_model_file": "Nazwa pliku lokalnego",
+                    "downloaded_model_quantization": "Kwantyzacja pobranego modelu",
+                    "huggingface_model": "Model HuggingFace",
+                    "selected_language": "Język modelu"
+                },
+                "description": "Proszę wybrać model do użycia.\n\n**Gotowe modele do zainstalowania:**\n1. [Home LLM](https://huggingface.co/collections/acon96/home-llm-6618762669211da33bb22c5a): Home 3B & Home 1B\n2. Mistral: [Mistral 7B](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2) or [Mixtral 8x7B](https://huggingface.co/mistralai/Mixtral-8x7B-Instruct-v0.1)\n3. Llama 3: [8B](https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct) and [70B](https://huggingface.co/meta-llama/Meta-Llama-3-70B-Instruct)",
+                "title": "Wybierz model"
+            },
+            "remote_model": {
+                "data": {
+                    "host": "Nazwa hosta API",
+                    "huggingface_model": "Nazwa modelu",
+                    "port": "Port API",
+                    "ssl": "Użyj HTTPS",
+                    "openai_api_key": "Klucz API",
+                    "openai_path": "Ścieżka API",
+                    "openai_validate_model": "Sprawdzić, czy model istnieje?",
+                    "text_generation_webui_admin_key": "Klucz administratora",
+                    "text_generation_webui_preset": "Nazwa ustawienia generacji/postaci",
+                    "remote_use_chat_endpoint": "Użyj punktu końcowego uzupełnień chata",
+                    "text_generation_webui_chat_mode": "Tryb czatu",
+                    "selected_language": "Język modelu"
+                },
+                "description": "Podaj szczegóły połączenia, aby połączyć się z API, które hostuje model.\n\n**Gotowe modele do zainstalowania:**\n1. [Home LLM](https://huggingface.co/collections/acon96/home-llm-6618762669211da33bb22c5a): Home 3B & Home 1B\n2. Mistral: [Mistral 7B](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2) i [Mixtral 8x7B](https://huggingface.co/mistralai/Mixtral-8x7B-Instruct-v0.1)\n3. Llama 3: [8B](https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct) i [70B](https://huggingface.co/meta-llama/Meta-Llama-3-70B-Instruct)",
+                "title": "Skonfiguruj połączenie z zdalnym API"
+            },
+            "pick_backend": {
+                "data": {
+                    "download_model_from_hf": "Pobierz model z HuggingFace",
+                    "use_local_backend": "Użyj Llama.cpp"
+                },
+                "description": "Wybierz zaplecze do uruchomienia modelu. Opcje to:\n1. Llama.cpp z modelem z HuggingFace\n2. Llama.cpp z modelem przechowywanym na dysku\n3. [text-generation-webui API](https://github.com/oobabooga/text-generation-webui)\n4. Ogólne API kompatybilne z OpenAI API\n5. [llama-cpp-python Server](https://llama-cpp-python.readthedocs.io/en/latest/server/)\n6. [Ollama API](https://github.com/jmorganca/ollama/blob/main/docs/api.md)",
+                "title": "Wybierz zaplecze modelu"
+            },
+            "model_parameters": {
+                "data": {
+                    "max_new_tokens": "Maksymalna liczba tokenów do zwrócenia w odpowiedzi",
+                    "llm_hass_api": "Wybrane API LLM",
+                    "prompt": "Prompt systemowy",
+                    "prompt_template": "Format promptu",
+                    "tool_format": "Tool Format",
+                    "tool_multi_turn_chat": "Multi-Turn Tool Use",
+                    "temperature": "Temperatura",
+                    "top_k": "Top K",
+                    "top_p": "Top P",
+                    "min_p": "Min P",
+                    "typical_p": "Typical P",
+                    "request_timeout": "Limit czasu żądania (sekundy)",
+                    "ollama_keep_alive": "Limit czasu nieaktywności/utrzymania połączenia (minuty)",
+                    "ollama_json_mode": "Tryb wyjścia JSON",
+                    "extra_attributes_to_expose": "Dodatkowy atrybut do ujawnienia w kontekście",
+                    "enable_flash_attention": "Włącz Flash Attention",
+                    "gbnf_grammar": "Włącz GBNF Grammar",
+                    "gbnf_grammar_file": "Nazwa pliku GBNF Grammar",
+                    "openai_api_key": "Klucz API",
+                    "text_generation_webui_admin_key": "Klucz administratora",
+                    "service_call_regex": "Wyrażenie regularne wywołania usługi",
+                    "refresh_prompt_per_turn": "Odśwież prompt systemowy przy każdej turze",
+                    "remember_conversation": "Pamiętaj rozmowę",
+                    "remember_num_interactions": "Liczba przeszłych interakcji do zapamiętania",
+                    "in_context_examples": "Włącz naukę z kontekstu (ICL) przykładów",
+                    "in_context_examples_file": "Nazwa pliku CSV z przykładami do nauki z kontekstu",
+                    "num_in_context_examples": "Liczba przykładów ICL do wygenerowania",
+                    "text_generation_webui_preset": "Ustawienie generacji/Nazwa postaci",
+                    "remote_use_chat_endpoint": "Użyj punktu końcowego chat completions",
+                    "text_generation_webui_chat_mode": "Tryb czatu",
+                    "prompt_caching": "Włącz buforowanie promptów",
+                    "prompt_caching_interval": "Najkrótszy interwał odświeżania buforowania promptów (sec)",
+                    "context_length": "Długość kontekstu",
+                    "batch_size": "Rozmiar partii (Batch Size)",
+                    "n_threads": "Liczba wątków (Thread Count)",
+                    "n_batch_threads": "Liczba wątków w partii (Batch Thread Count)"
+                },
+                "data_description": {
+                    "llm_hass_api": "Wybierz 'Assist', jeśli chcesz, aby model miał możliwość kontrolowania urządzeń. Jeśli używasz modelu Home-LLM v1, v2 lub v3, wybierz 'Home-LLM (v1-3)'.",
+                    "prompt": "Więcej informacji na temat konfigurowania promptu modelu znajdziesz [here](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md)",
+                    "in_context_examples": "Jeśli używasz modelu, który nie jest specjalnie dostosowany do użycia z tą integracją, włącz tę opcję.",
+                    "remote_use_chat_endpoint": "Jeśli ta opcja jest włączona, integracja będzie używać punktu końcowego HTTP dla ukończenia czatu zamiast ukończenia tekstowego.",
+                    "extra_attributes_to_expose": "Oto lista 'atrybutów' Home Assistant, które są udostępniane modelowi. Określa to, ile informacji model ma dostępnych i na jakie pytania może odpowiadać.",
+                    "gbnf_grammar": "Wymusza, aby model generował poprawnie sformatowane odpowiedzi. Upewnij się, że plik określony poniżej istnieje w katalogu integracji.",
+                    "prompt_caching": "Buforowanie promptów stara się wstępnie przetworzyć prompt (stan domu) i zapisać przetwarzanie potrzebne do zrozumienia promptu. Włączenie tej opcji spowoduje, że model będzie ponownie przetwarzać prompt za każdym razem, gdy stan jakiegoś bytu w domu ulegnie zmianie, z ograniczeniem określonym poniżej."
+                },
+                "description": "Proszę skonfigurować model zgodnie z tym, jak powinien być wywoływany. Istnieje wiele różnych opcji, a wybór odpowiednich dla Twojego modelu jest kluczowy dla uzyskania optymalnej wydajności. Więcej informacji na temat opcji na tej stronie znajdziesz [tutaj](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md).\n\n**Niektóre domyślne ustawienia mogły zostać wybrane na podstawie nazwy wybranego modelu lub pliku.** Jeśli zmieniłeś nazwę pliku lub używasz dostosowanego modelu, domyślne ustawienia mogły nie zostać wykryte.",
+                "title": "Skonfiguruj wybrany model"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "llm_hass_api": "Wybrane API LLM",
+                    "max_new_tokens": "Maksymalna liczba tokenów do zwrócenia w odpowiedzi",
+                    "prompt": "Prompt systemowy",
+                    "prompt_template": "Format promptu",
+                    "tool_format": "Format narzędzia",
+                    "tool_multi_turn_chat": "Użycie narzędzia wielokrotnego użytku",
+                    "temperature": "Temperatura",
+                    "top_k": "Top K",
+                    "top_p": "Top P",
+                    "min_p": "Min P",
+                    "typical_p": "Typical P",
+                    "request_timeout": "Limit czasu żądania (seconds)",
+                    "ollama_keep_alive": "Limit czasu nieaktywności/utrzymania połączenia (minuty)",
+                    "ollama_json_mode": "Tryb wyjścia JSON",
+                    "extra_attributes_to_expose": "Dodatkowy atrybut do ujawnienia w kontekście",
+                    "enable_flash_attention": "Włącz Flash Attention",
+                    "gbnf_grammar": "Włącz GBNF Grammar",
+                    "gbnf_grammar_file": "Nazwa pliku GBNF Grammar",
+                    "openai_api_key": "Klucz API",
+                    "text_generation_webui_admin_key": "Klucz administratora",
+                    "service_call_regex": "Wyrażenie regularne wywołania usługi",
+                    "refresh_prompt_per_turn": "Odśwież prompt systemowy przy każdej turze",
+                    "remember_conversation": "Pamiętaj rozmowę",
+                    "remember_num_interactions": "Liczba przeszłych interakcji do zapamiętania",
+                    "in_context_examples": "Włącz naukę z kontekstu (ICL) przykładów",
+                    "in_context_examples_file": "Nazwa pliku CSV z przykładami do nauki z kontekstu",
+                    "num_in_context_examples": "Liczba przykładów ICL do wygenerowania",
+                    "text_generation_webui_preset": "Ustawienie generacji/Nazwa postaci",
+                    "remote_use_chat_endpoint": "Użyj punktu końcowego chat completions",
+                    "text_generation_webui_chat_mode": "Tryb czatu",
+                    "prompt_caching": "Włącz buforowanie promptów",
+                    "prompt_caching_interval": "Najkrótszy interwał odświeżania buforowania promptów (sec)",
+                    "context_length": "Długość kontekstu",
+                    "batch_size": "Rozmiar partii (Batch Size)",
+                    "n_threads": "Liczba wątków (Thread Count)",
+                    "n_batch_threads": "Liczba wątków w partii (Batch Thread Count)"
+                },
+                "data_description": {
+                    "llm_hass_api": "Wybierz 'Assist', jeśli chcesz, aby model miał możliwość kontrolowania urządzeń. Jeśli używasz modelu Home-LLM v1, v2 lub v3, wybierz 'Home-LLM (v1-3)'.",
+                    "prompt": "Więcej informacji na temat konfigurowania promptu modelu znajdziesz [here](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md)",
+                    "in_context_examples": "Jeśli używasz modelu, który nie jest specjalnie dostosowany do użycia z tą integracją, włącz tę opcję.",
+                    "remote_use_chat_endpoint": "Jeśli ta opcja jest włączona, integracja będzie używać punktu końcowego HTTP dla ukończenia czatu zamiast ukończenia tekstowego.",
+                    "extra_attributes_to_expose": "Oto lista 'atrybutów' Home Assistant, które są udostępniane modelowi. Określa to, ile informacji model ma dostępnych i na jakie pytania może odpowiadać.",
+                    "gbnf_grammar": "Wymusza, aby model generował poprawnie sformatowane odpowiedzi. Upewnij się, że plik określony poniżej istnieje w katalogu integracji.",
+                    "prompt_caching": "Buforowanie promptów stara się wstępnie przetworzyć prompt (stan domu) i zapisać przetwarzanie potrzebne do zrozumienia promptu. Włączenie tej opcji spowoduje, że model będzie ponownie przetwarzać prompt za każdym razem, gdy stan jakiegoś bytu w domu ulegnie zmianie, z ograniczeniem określonym poniżej."
+                }
+            }
+        },
+        "error": {
+            "sys_refresh_caching_enabled": "Odświeżanie promptu systemowego musi być włączone, aby buforowanie promptów działało!",
+            "missing_gbnf_file": "Plik GBNF nie został znaleziony: {filename}",
+            "missing_icl_file": "Plik CSV z przykładami nauki w kontekście nie został znaleziony: {filename}"
+        }
+    },
+    "selector": {
+        "prompt_template": {
+            "options": {
+                "chatml": "ChatML",
+                "vicuna": "Vicuna",
+                "alpaca": "Alpaca",
+                "mistral": "Mistral",
+                "zephyr": "Zephyr (<|endoftext|>)",
+                "zephyr2": "Zephyr ('</s>')",
+                "zephyr3": "Zephyr (<|end|>)",
+                "llama3": "Llama 3",
+                "command-r": "Command R",
+                "no_prompt_template": "None"
+            }
+        },
+        "tool_format": {
+            "options": {
+                "full_tool_format": "Pełny format JSON",
+                "reduced_tool_format": "Ograniczony format JSON​",
+                "min_tool_format": "Minimalistyczny format narzędzia"
+            }
+        },
+        "model_backend": {
+            "options": {
+                "llama_cpp_hf": "Llama.cpp (HuggingFace)",
+                "llama_cpp_existing": "Llama.cpp (istniejący model)",
+                "text-generation-webui_api": "text-generation-webui API",
+                "generic_openai": "Ogólne API kompatybilne z OpenAI",
+                "llama_cpp_python_server": "llama-cpp-python Server",
+                "ollama": "Ollama API"
+            }
+        },
+        "text_generation_webui_chat_mode": {
+            "options": {
+                "chat": "Chat",
+                "instruct": "Instruct",
+                "chat-instruct": "Chat-Instruct"
+            }
+        },
+        "selected_language": {
+            "options": {
+                "en": "Angielski",
+                "de": "Niemiecki",
+                "fr": "Francuski",
+                "es": "Hiszpański",
+                "pl": "Polski"
+            }
+        }
+    }
+}

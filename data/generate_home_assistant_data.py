@@ -1025,6 +1025,8 @@ def load_dataset_piles(language):
         and_word = "et"
     elif language == "spanish":
         and_word = "y"
+    elif language == "polish":
+        and_word = "i"
     
     with open(f"piles/{language}/pile_of_durations.csv", encoding="utf8") as f:
         reader = csv.DictReader(f)
@@ -1091,11 +1093,11 @@ def load_dataset_piles(language):
 def main():
     parser = argparse.ArgumentParser(description="Generate the full dataset from the CSV piles")
     parser.add_argument("--sample", action="store_true", help="Set this flag to enable generation of the train dataset.")
-    parser.add_argument("--test", action="store_true", help="Set this flag to enable generation of the train dataset..")
+    parser.add_argument("--test", action="store_true", help="Set this flag to enable generation of the train dataset.")
     parser.add_argument("--train", action="store_true", help="Set this flag to enable generation of the train dataset.")
     parser.add_argument("--dpo", action="store_true", help="Set this flag to enable generation of the DPO dataset.")
     parser.add_argument("--merge", help="Set this flag to merge the generated datasets with the specified dataset.")
-    parser.add_argument("--language", nargs="+", default=["english"], help="List of languages to generate")
+    parser.add_argument("--language", nargs="+", default=["english"], help="List of languages to generate: english, german, french, spanish, polish")
 
     train_size_group = parser.add_mutually_exclusive_group()
     train_size_group.add_argument('--small', action='store_const', const='small', dest='size')
