@@ -6,6 +6,7 @@ import numpy as np
 import random
 import re
 import copy
+import babel.dates
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from datasets import load_dataset, concatenate_datasets
@@ -63,7 +64,7 @@ def closest_color(requested_color):
         min_colors[(rd + gd + bd)] = name
     return min_colors[min(min_colors.keys())]
 
-def generate_random_date():
+def generate_random_datetime():
     start_date = datetime(2022, 1, 1)
     end_date = datetime(2030, 12, 31)
     delta = end_date - start_date
@@ -329,6 +330,47 @@ SUPPORTED_DEVICES = {
         }
     ),
 }
+
+CURRENT_DATE_PROMPT = {
+    "english": "The current time and date is",
+    "polish": "Aktualna godzina i data to",
+    "german": "Die aktuelle Uhrzeit und das aktuelle Datum sind",
+    "french": "L'heure et la date actuelles sont",
+    "spanish": "La hora y fecha actuales son"
+}
+
+DEVICES_PROMPT = {
+    "english": "Devices",
+    "polish": "Urządzenia",
+    "german": "Ger\u00e4te",
+    "french": "Appareils",
+    "spanish": "Dispositivos"
+}
+
+SERVICES_PROMPT = {
+    "english": "Services",
+    "polish": "Usługi",
+    "german": "Dienste",
+    "french": "Services",
+    "spanish": "Servicios"
+}
+
+BABEL_LOCALE = {
+    "english": "en_US",
+    "polish": "pl_PL",
+    "german": "de_DE",
+    "french": "fr_FR",
+    "spanish": "es_ES"
+}
+
+BABEL_FORMAT = {
+    "english": "h:m a 'on' EEEE, MMMM d yyyy",
+    "polish": "H:m 'w' EEEE, d MMMM yyyy",
+    "german": "H:m EEEE, d MMMM yyyy",
+    "french": "H:m EEEE, d MMMM yyyy",
+    "spanish": "H:m EEEE, d 'de' MMMM 'de' yyyy"
+}
+
 
 class NoResponseAvailableException(Exception):
     pass
@@ -785,11 +827,11 @@ def generate_dpo_extra_service_call(template: dict, persona: str, max_devices: i
 def generate_dpo_incorrect_persona(template: dict, persona: str, max_devices: int = 32):
     pass
 
-def format_example_raw_chatml(example, persona):
+def format_example_raw_chatml(example, persona, language):
     """Don't use this one anymore"""
     sys_prompt = pile_of_system_prompts[persona]
-    services_block = "Services: " + ", ".join(sorted(example["available_services"]))
-    states_block = "Devices:\n" + "\n".join(example["states"])
+    services_block = f"{SERVICES_PROMPT[language]}: " + ", ".join(sorted(example["available_services"]))
+    states_block = f"{DEVICES_PROMPT[language]}:\n" + "\n".join(example["states"])
     question = example["question"]
     answers = " ".join(example["answers"])
 
@@ -813,11 +855,13 @@ def format_example_raw_chatml(example, persona):
     result = result.replace("garage_door.", "cover.")
     return { "text": result }
 
-def format_example_sharegpt(example, persona):
+def format_example_sharegpt(example, persona, language):
     sys_prompt = pile_of_system_prompts[persona]
-    time_block = "The current time and date is " + generate_random_date().strftime("%I:%M %p on %A %B %d, %Y")
-    services_block = "Services: " + ", ".join(sorted(example["available_services"]))
-    states_block = "Devices:\n" + "\n".join(example["states"])
+    random_datetime = generate_random_datetime()
+    translate_datetime = babel.dates.format_datetime(random_datetime, BABEL_FORMAT[language], locale=BABEL_LOCALE[language])
+    time_block = f"{CURRENT_DATE_PROMPT[language]} {translate_datetime}" 
+    services_block = f"{SERVICES_PROMPT[language]}: " + ", ".join(sorted(example["available_services"]))
+    states_block = f"{DEVICES_PROMPT[language]}:\n" + "\n".join(example["states"])
     question = example["question"]
     answers = " ".join(example["answers"])
 
@@ -845,8 +889,8 @@ def format_example_dpo(example, persona):
     example = example["accepted"]
 
     sys_prompt = pile_of_system_prompts[persona]
-    services_block = "Services: " + ", ".join(sorted(example["available_services"]))
-    states_block = "Devices:\n" + "\n".join(example["states"])
+    services_block = f"{SERVICES_PROMPT[language]}: " + ", ".join(sorted(example["available_services"]))
+    states_block = f"{DEVICES_PROMPT[language]}:\n" + "\n".join(example["states"])
     question = example["question"]
 
     assistant_block = " ".join(example["answers"])
@@ -874,19 +918,19 @@ def format_example_dpo(example, persona):
         "rejected": rejected_assistant_block,
     }
 
-def generate_sft_file(filename: str, seed: int, format_func: Callable, personas: list[str], *, static_factor: int, template_factor: int, status_request_factor: int):
+def generate_sft_file(filename: str, seed: int, format_func: Callable, personas: list[str], language: str, *, static_factor: int, template_factor: int, status_request_factor: int):
     random.seed(seed)
     np.random.seed(seed)
 
     print("Generating...")
 
-    def run_factor_times(func, examples, data, persona, factor):
+    def run_factor_times(func, examples, data, persona, factor, language):
         if factor >= 1:
             for i in range(factor):
-                examples.append(format_func(func(data, persona), persona))
+                examples.append(format_func(func(data, persona), persona, language))
         else:
             if random.random() < factor:
-                examples.append(format_func(func(data, persona), persona))
+                examples.append(format_func(func(data, persona), persona, language))
     
     generated_examples = []
 
@@ -895,18 +939,18 @@ def generate_sft_file(filename: str, seed: int, format_func: Callable, personas:
     for person in personas:
         for action in tqdm(pile_of_specific_actions):
             try:
-                run_factor_times(generate_static_example, generated_examples, action, person, static_factor)
+                run_factor_times(generate_static_example, generated_examples, action, person, static_factor, language)
             except NoResponseAvailableException as ex:
                 missing_responses.add(str(ex))
 
         for templated_action in tqdm(pile_of_templated_actions):
             try:
-                run_factor_times(generate_templated_example, generated_examples, templated_action, person, template_factor)
+                run_factor_times(generate_templated_example, generated_examples, templated_action, person, template_factor, language)
             except NoResponseAvailableException as ex:
                 missing_responses.add(str(ex))
 
     for status_request in tqdm(pile_of_status_requests):
-        run_factor_times(generate_status_request, generated_examples, status_request, "assistant", status_request_factor)
+        run_factor_times(generate_status_request, generated_examples, status_request, "assistant", status_request_factor, language)
 
     print(f"Generated {len(generated_examples)} examples. Saving...")
 
@@ -920,20 +964,19 @@ def generate_sft_file(filename: str, seed: int, format_func: Callable, personas:
 
     print("Done!")
 
-
-def generate_dpo_file(filename: str, seed: int, format_func: Callable, personas: list[str], *, wrong_argument_factor: int, no_argument_factor: int, extra_service_call_factor: int, incorrect_persona_factor: int):
+def generate_dpo_file(filename: str, seed: int, format_func: Callable, personas: list[str], language: str, *, wrong_argument_factor: int, no_argument_factor: int, extra_service_call_factor: int, incorrect_persona_factor: int):
     random.seed(seed)
     np.random.seed(seed)
 
     print("Generating...")
 
-    def run_factor_times(func, examples, data, persona, factor):
+    def run_factor_times(func, examples, data, persona, factor, language):
         if factor >= 1:
             for i in range(factor):
-                examples.append(format_func(func(data, persona), persona))
+                examples.append(format_func(func(data, persona), persona, language))
         else:
             if random.random() < factor:
-                examples.append(format_func(func(data, persona), persona))
+                examples.append(format_func(func(data, persona), persona, language))
     
     generated_examples = []
 
@@ -942,15 +985,15 @@ def generate_dpo_file(filename: str, seed: int, format_func: Callable, personas:
     for person in personas:
         for templated_action in tqdm(pile_of_templated_actions):
             try:
-                run_factor_times(generate_dpo_wrong_argument, generated_examples, templated_action, person, wrong_argument_factor)
-                run_factor_times(generate_dpo_no_service_call, generated_examples, templated_action, person, no_argument_factor)
+                run_factor_times(generate_dpo_wrong_argument, generated_examples, templated_action, person, wrong_argument_factor, language)
+                run_factor_times(generate_dpo_no_service_call, generated_examples, templated_action, person, no_argument_factor, language)
                 # run_factor_times(generate_dpo_incorrect_persona, generated_examples, templated_action, person, incorrect_persona_factor)
             except NoResponseAvailableException as ex:
                 missing_responses.add(str(ex))
 
     for status_request in tqdm(pile_of_status_requests):
         try:
-            run_factor_times(generate_dpo_extra_service_call, generated_examples, status_request, "assistant", extra_service_call_factor)
+            run_factor_times(generate_dpo_extra_service_call, generated_examples, status_request, "assistant", extra_service_call_factor, language)
         except NoServicesAvailableException as ex:
             pass # TODO: warn here?
 
@@ -1017,7 +1060,6 @@ def merge_languages(filename_prefix: str, languages: list):
 
     with open(f"{filename_prefix}.jsonl", "w") as f:
         f.writelines(all_examples)
-
 
 def load_dataset_piles(language):
     global pile_of_durations, pile_of_media_names, pile_of_todo_items, stacks_of_device_names, \
@@ -1129,20 +1171,20 @@ def main():
         suffix = f"_{language}" if len(args.language) > 1 else ""
 
         if args.sample:
-            generate_sft_file(f"sample{suffix}", 42, format_func, personas, static_factor=1, template_factor=1, status_request_factor=1)
+            generate_sft_file(f"sample{suffix}", 42, format_func, personas, language, static_factor=1, template_factor=1, status_request_factor=1)
         if args.train:
             if args.size == "small":
-                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, personas, static_factor=1, template_factor=10, status_request_factor=8)
+                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, personas, language, static_factor=1, template_factor=10, status_request_factor=8)
             elif args.size == "medium":
-                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, personas, static_factor=5, template_factor=15, status_request_factor=12)
+                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, personas, language, static_factor=5, template_factor=15, status_request_factor=12)
             elif args.size == "large":
-                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, personas, static_factor=5, template_factor=20, status_request_factor=15)
+                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, personas, language, static_factor=5, template_factor=20, status_request_factor=15)
             elif args.size == "xl":
-                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, personas, static_factor=7, template_factor=25, status_request_factor=18)
+                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, personas, language, static_factor=7, template_factor=25, status_request_factor=18)
             else:
                 raise Exception(f"Unrecognized dataset size: {args.size}")
         if args.test:
-            generate_sft_file(f"home_assistant_test{suffix}", 12345, format_func, personas, static_factor=0.25, template_factor=1, status_request_factor=2)
+            generate_sft_file(f"home_assistant_test{suffix}", 12345, format_func, personas, language, static_factor=0.25, template_factor=1, status_request_factor=2)
 
     if len(args.language) > 1:
         if args.sample:
@@ -1153,7 +1195,7 @@ def main():
             merge_languages("home_assistant_test", args.language)
 
     if args.dpo:
-        generate_dpo_file(f"home_assistant_dpo", 42, format_example_dpo, personas, wrong_argument_factor=1, no_argument_factor=1, extra_service_call_factor=1, incorrect_persona_factor=1)
+        generate_dpo_file(f"home_assistant_dpo", 42, format_example_dpo, personas, language, wrong_argument_factor=1, no_argument_factor=1, extra_service_call_factor=1, incorrect_persona_factor=1)
 
     if args.merge == "alpaca":
         merge_with_dataset("yahma/alpaca-cleaned", 42, "alpaca", format_alpaca, ["input", "output", "instruction"], format_func)
