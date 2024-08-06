@@ -51,7 +51,7 @@ pile_of_responses = None
 pile_of_status_requests = None
 pile_of_system_prompts = None
 pile_of_hallucinated_service_names = None
-and_word = None
+and_words = None
 
 def closest_color(requested_color):
     min_colors = {}
@@ -456,6 +456,12 @@ def generate_static_example(action: dict, persona: str, max_devices: int = 32):
         "service_calls": [ { "service": service_name, "target_device": target_device } ]
     }
 
+def replace_answer(list_of_answer, var, value):
+    new_list = []
+    for answer in list_of_answer:
+        new_list.append(answer.replace(var, value))
+    return new_list
+
 def generate_templated_example(template: dict, persona: str, max_devices: int = 32):
     template_device_types: list[str] = template["device_type"].split("|")
     service_names: list[str] = [ f"{x}.{y}" for x, y in zip(template_device_types, template["service"].split("|")) ]
@@ -527,7 +533,9 @@ def generate_templated_example(template: dict, persona: str, max_devices: int = 
             )
             answers.append(answer.replace(f"<device_name>", chosen_devices[i]["description"]))
 
-        answer = f" {and_word} ".join(answers)
+        answer = []
+        for word in and_words:
+            answer.append(f" {word} ".join(answers))
 
     # generate the list of service calls and answers
     service_calls = []
@@ -539,31 +547,31 @@ def generate_templated_example(template: dict, persona: str, max_devices: int = 
         if "<hvac_mode>" in question:
             hvac_mode = climate_device_type.get_random_parameter("hvac_mode")
             question = question.replace("<hvac_mode>", hvac_mode)
-            answer = answer.replace("<hvac_mode>", hvac_mode)
+            answer = replace_answer(answer, "<hvac_mode>", hvac_mode)
             service_calls = [ { **call, "hvac_mode": hvac_mode} for call in service_calls ]
 
         if "<fan_mode>" in question:
             fan_mode = climate_device_type.get_random_parameter("fan_mode")
             question = question.replace("<fan_mode>", fan_mode)
-            answer = answer.replace("<fan_mode>", fan_mode)
+            answer = replace_answer(answer, "<fan_mode>", fan_mode)
             service_calls = [ { **call, "fan_mode": fan_mode} for call in service_calls ]
 
         if "<temp_f>" in question:
             temp_f = climate_device_type.get_random_parameter("temp_f")
             question = question.replace("<temp_f>", str(temp_f))
-            answer = answer.replace("<temp_f>", str(temp_f))
+            answer = replace_answer(answer, "<temp_f>", str(temp_f))
             service_calls = [ { **call, "temperature": temp_f} for call in service_calls ]
 
         if "<temp_c>" in question:
             temp_c = climate_device_type.get_random_parameter("temp_c")
             question = question.replace("<temp_c>", str(temp_c))
-            answer = answer.replace("<temp_c>", str(temp_c))
+            answer = replace_answer(answer, "<temp_c>", str(temp_c))
             service_calls = [ { **call, "temperature": temp_c} for call in service_calls ]
 
         if "<humidity>" in question:
             humidity = climate_device_type.get_random_parameter("humidity")
             question = question.replace("<humidity>", str(humidity))
-            answer = answer.replace("<humidity>", str(humidity))
+            answer = replace_answer(answer, "<humidity>", str(humidity))
             service_calls = [ { **call, "humidity": humidity} for call in service_calls ]
 
     if any(["light" in service for service in service_names ]):
@@ -571,7 +579,7 @@ def generate_templated_example(template: dict, persona: str, max_devices: int = 
         if "<brightness>" in question:
             brightness = light_device_type.get_random_parameter("brightness")
             question = question.replace("<brightness>", str(brightness))
-            answer = answer.replace("<brightness>", str(brightness))
+            answer = replace_answer(answer, "<brightness>", str(brightness))
             service_calls = [ { **call, "brightness": round(brightness / 100, 2) } for call in service_calls ]
 
         if "<color>" in question:
@@ -580,7 +588,7 @@ def generate_templated_example(template: dict, persona: str, max_devices: int = 
             actual_random_rgb = webcolors.name_to_rgb(random_rgb_name)
             actual_random_rgb = (actual_random_rgb.red, actual_random_rgb.green, actual_random_rgb.blue)
             question = question.replace("<color>", str(random_rgb_name))
-            answer = answer.replace("<color>", str(random_rgb_name))
+            answer = replace_answer(answer, "<color>", str(random_rgb_name))
             service_calls = [ { **call, "rgb_color": str(actual_random_rgb) } for call in service_calls ]
 
     if any(["timer" in service for service in service_names ]):
@@ -589,7 +597,7 @@ def generate_templated_example(template: dict, persona: str, max_devices: int = 
             duration = timer_device_type.get_random_parameter("duration")
             duration_name = pile_of_durations[duration]
             question = question.replace("<duration>", duration_name)
-            answer = answer.replace("<duration>", duration_name)
+            answer = replace_answer(answer, "<duration>", duration_name)
             service_calls = [ { **call, "duration": str(duration) } for call in service_calls ]
 
     if any(["todo" in service for service in service_names ]):
@@ -597,14 +605,14 @@ def generate_templated_example(template: dict, persona: str, max_devices: int = 
         if "<todo>" in question:
             todo = todo_device_type.get_random_parameter("todo")
             question = question.replace("<todo>", todo)
-            answer = answer.replace("<todo>", todo)
+            answer = replace_answer(answer, "<todo>", todo)
             service_calls = [ { **call, "item": todo } for call in service_calls ]
 
     return {
         "states": device_list,
         "available_services": list(available_services),
         "question": question.lower(),
-        "answers": [ answer.lower() ],
+        "answers": [ sentence.lower() for sentence in answer ],
         "service_calls": service_calls
     }
 
@@ -1014,19 +1022,10 @@ def merge_languages(filename_prefix: str, languages: list):
 def load_dataset_piles(language):
     global pile_of_durations, pile_of_media_names, pile_of_todo_items, stacks_of_device_names, \
         pile_of_templated_actions, pile_of_specific_actions, pile_of_responses, pile_of_status_requests, \
-        pile_of_system_prompts, pile_of_hallucinated_service_names, and_word
+        pile_of_system_prompts, pile_of_hallucinated_service_names, and_words
     
-    # TODO: make this properly dynamic
-    if language == "english":
-        and_word = "and"
-    elif language == "german":
-        and_word = "und"
-    elif language == "french":
-        and_word = "et"
-    elif language == "spanish":
-        and_word = "y"
-    elif language == "polish":
-        and_word = "i"
+    with open(f"piles/{language}/pile_of_and_words.csv", encoding="utf8") as f:
+        and_words = [ x.strip() for x in f.readlines() ]
     
     with open(f"piles/{language}/pile_of_durations.csv", encoding="utf8") as f:
         reader = csv.DictReader(f)
