@@ -884,7 +884,7 @@ def format_example_sharegpt(example, persona, language):
     
     return { "conversations": conversation }
 
-def format_example_dpo(example, persona):
+def format_example_dpo(example, persona, language):
     rejected_example = example["rejected"]
     example = example["accepted"]
 
