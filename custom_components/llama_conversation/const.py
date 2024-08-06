@@ -12,24 +12,65 @@ PERSONA_PROMPTS = {
     "es": "Eres 'Al', un \u00fatil asistente de IA que controla los dispositivos de una casa. Complete la siguiente tarea seg\u00fan las instrucciones o responda la siguiente pregunta \u00fanicamente con la informaci\u00f3n proporcionada.",
     "pl": "Jeste\u015b 'Al', pomocnym asystentem AI, kt\u00f3ry kontroluje urz\u0105dzenia w domu. Wykonaj poni\u017csze zadanie zgodnie z instrukcj\u0105 lub odpowiedz na poni\u017csze pytanie, korzystaj\u0105c wy\u0142\u0105cznie z podanych informacji."
 }
-
+CURRENT_DATE_PROMPT = {
+    "en": """The current time and date is {{ (as_timestamp(now()) | timestamp_custom("%I:%M %p on %A %B %d, %Y", "")) }}""",
+    "de": """{% set day_name = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"] %}{% set month_name = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"] %}Die aktuelle Uhrzeit und das aktuelle Datum sind {{ (as_timestamp(now()) | timestamp_custom("%H:%M", local=True)) }} {{ day_name[now().weekday()] }}, {{ now().day }} {{ month_name[now().month -1]}} {{ now().year }}.""",
+    "fr": """{% set day_name = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"] %}{% set month_name = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"] %} L'heure et la date actuelles sont {{ (as_timestamp(now()) | timestamp_custom("%H:%M", local=True)) }} {{ day_name[now().weekday()] }}, {{ now().day }} {{ month_name[now().month -1]}} {{ now().year }}.""",
+    "es": """{% set day_name = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"] %}{% set month_name = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"] %}La hora y fecha actuales son {{ (as_timestamp(now()) | timestamp_custom("%H:%M", local=True)) }} {{ day_name[now().weekday()] }}, {{ now().day }} de {{ month_name[now().month -1]}} de {{ now().year }}.""",
+    "pl": """{% set day_name = ["poniedziałek", "wtorek", "środę", "czwartek", "piątek", "sobotę", "niedzielę"] %}{% set month_name = ["styczeń", "luty", "marzec", "kwiecień", "maj", "czerwiec", "lipiec", "sierpień", "wrzesień", "październik", "listopad", "grudzień"] %}Aktualna godzina i data to {{ (as_timestamp(now()) | timestamp_custom("%H:%M", local=True)) }} w {{ day_name[now().weekday()] }}, {{ now().day }} {{ month_name[now().month -1]}} {{ now().year }}."""
+}
+DEVICES_PROMPT = {
+    "en": "Devices",
+    "de": "Ger\u00e4te",
+    "fr": "Appareils",
+    "es": "Dispositivos",
+    "pl": "Urządzenia",
+}
+SERVICES_PROMPT = {
+    "en": "Services",
+    "de": "Dienste",
+    "fr": "Services",
+    "es": "Servicios",
+    "pl": "Usługi",
+}
+TOOLS_PROMPT = {
+    "en": "Tools",
+    "de": "Werkzeuge",
+    "fr": "Outils",
+    "es": "Herramientas",
+    "pl": "Narzędzia",
+}
+AREA_PROMPT = {
+    "en": "Area",
+    "de": "Bereich",
+    "fr": "Zone",
+    "es": "Área",
+    "pl": "Obszar",
+}
+USER_INSTRUCTION = {
+    "en": "User instruction",
+    "de": "Benutzeranweisung",
+    "fr": "Instruction de l'utilisateur ",
+    "es": "Instrucción del usuario",
+    "pl": "Instrukcja użytkownika"
+}
 DEFAULT_PROMPT_BASE = """<persona>
-The current time and date is {{ (as_timestamp(now()) | timestamp_custom("%I:%M %p on %A %B %d, %Y", "")) }}
-Tools: {{ tools | to_json }}
-Devices:
+<current_date>
+<tools>: {{ tools | to_json }}
+<devices>:
 {% for device in devices | selectattr('area_id', 'none'): %}
 {{ device.entity_id }} '{{ device.name }}' = {{ device.state }}{{ ([""] + device.attributes) | join(";") }}
 {% endfor %}
 {% for area in devices | rejectattr('area_id', 'none') | groupby('area_name') %}
-## Area: {{ area.grouper }}
+## <area>: {{ area.grouper }}
 {% for device in area.list %}
 {{ device.entity_id }} '{{ device.name }}' = {{ device.state }};{{ device.attributes | join(";") }}
 {% endfor %}
 {% endfor %}"""
 DEFAULT_PROMPT_BASE_LEGACY = """<persona>
-The current time and date is {{ (as_timestamp(now()) | timestamp_custom("%I:%M %p on %A %B %d, %Y", "")) }}
-Services: {{ formatted_tools }}
-Devices:
+<current_date>
+<services>: {{ formatted_tools }}
+<devices>:
 {{ formatted_devices }}"""
 ICL_EXTRAS = """
 {% for item in response_examples %}
@@ -43,7 +84,7 @@ ICL_NO_SYSTEM_PROMPT_EXTRAS = """
 {{ item.response }}
 <functioncall> {{ item.tool | to_json }}
 {% endfor %}
-User instruction:"""
+<user_instruction>:"""
 DEFAULT_PROMPT = DEFAULT_PROMPT_BASE + ICL_EXTRAS
 CONF_CHAT_MODEL = "huggingface_model"
 DEFAULT_CHAT_MODEL = "acon96/Home-3B-v3-GGUF"
