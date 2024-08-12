@@ -88,6 +88,12 @@ from .const import (
     DEFAULT_SSL,
     DEFAULT_MAX_TOKENS,
     PERSONA_PROMPTS,
+    CURRENT_DATE_PROMPT,
+    DEVICES_PROMPT,
+    SERVICES_PROMPT,
+    TOOLS_PROMPT,
+    AREA_PROMPT,
+    USER_INSTRUCTION,
     DEFAULT_PROMPT_BASE,
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_K,
@@ -681,7 +687,20 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                 selected_default_options.update(OPTIONS_OVERRIDES[key])
 
         persona = PERSONA_PROMPTS.get(self.selected_language, PERSONA_PROMPTS.get("en"))
+        current_date = CURRENT_DATE_PROMPT.get(self.selected_language, CURRENT_DATE_PROMPT.get("en"))
+        devices = DEVICES_PROMPT.get(self.selected_language, DEVICES_PROMPT.get("en"))
+        services = SERVICES_PROMPT.get(self.selected_language, SERVICES_PROMPT.get("en"))
+        tools = TOOLS_PROMPT.get(self.selected_language, TOOLS_PROMPT.get("en"))
+        area = AREA_PROMPT.get(self.selected_language, AREA_PROMPT.get("en"))
+        user_instruction = USER_INSTRUCTION.get(self.selected_language, USER_INSTRUCTION.get("en"))
+
         selected_default_options[CONF_PROMPT] = selected_default_options[CONF_PROMPT].replace("<persona>", persona)
+        selected_default_options[CONF_PROMPT] = selected_default_options[CONF_PROMPT].replace("<current_date>", current_date)
+        selected_default_options[CONF_PROMPT] = selected_default_options[CONF_PROMPT].replace("<devices>", devices)
+        selected_default_options[CONF_PROMPT] = selected_default_options[CONF_PROMPT].replace("<services>", services)
+        selected_default_options[CONF_PROMPT] = selected_default_options[CONF_PROMPT].replace("<tools>", tools)
+        selected_default_options[CONF_PROMPT] = selected_default_options[CONF_PROMPT].replace("<area>", area)
+        selected_default_options[CONF_PROMPT] = selected_default_options[CONF_PROMPT].replace("<user_instruction>", user_instruction)
         
         schema = vol.Schema(local_llama_config_option_schema(self.hass, selected_default_options, backend_type))
 

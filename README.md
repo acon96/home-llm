@@ -5,6 +5,8 @@ This project provides the required "glue" components to control your Home Assist
 Please see the [Setup Guide](./docs/Setup.md) for more information on installation.
 
 ## Local LLM Conversation Integration
+**The latest version of this integration requires Home Assistant 2024.8.0 or newer**
+
 In order to integrate with Home Assistant, we provide a custom component that exposes the locally running LLM as a "conversation agent".
 
 This component can be interacted with in a few ways:  
@@ -90,6 +92,25 @@ The dataset is available on HuggingFace: https://huggingface.co/datasets/acon96/
 The source for the dataset is in the [data](/data) of this repository.
 
 ### Training
+
+If you want to prepare your own testing environment, see the details on how to do it.
+
+<details>
+<summary>Prepare environment</summary>
+
+Start by installing system dependencies:
+`sudo apt-get install python3-dev`
+
+Then create a Python virtual environment and install all necessary library:
+```
+python3 -m venv .train_data
+source ./.train_data/bin/activate
+pip3 install datasets==2.20.0 dataclasses==0.6 transformers==4.43.3 torch==2.4.0 accelerate==0.33.0 tensorboard==2.17.0
+```
+
+</details>
+
+
 The 3B model was trained as a full fine-tuning on 2x RTX 4090 (48GB). Training time took approximately 28 hours. It was trained on the `--large` dataset variant.
 
 <details>
@@ -136,7 +157,7 @@ In order to facilitate running the project entirely on the system where Home Ass
 ## Version History
 | Version | Description                                                                                                                                                                                                          |
 |---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| v0.3.4  | Update bundled llama-cpp-python to support new models, various bug fixes                                                                                                                                             |
+| v0.3.4  | Significantly improved language support including full Polish translation, Update bundled llama-cpp-python to support new models, various bug fixes                                                                  |
 | v0.3.3  | Improvements to the Generic OpenAI Backend, improved area handling, fix issue using RGB colors, remove EOS token from responses, replace requests dependency with aiohttp included with Home Assistant               |
 | v0.3.2  | Fix for exposed script entities causing errors, fix missing GBNF error, trim whitespace from model output                                                                                                            |
 | v0.3.1  | Adds basic area support in prompting, Fix for broken requirements, fix for issue with formatted tools, fix custom API not registering on startup properly                                                            |

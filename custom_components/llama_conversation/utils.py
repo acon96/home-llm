@@ -73,6 +73,13 @@ def custom_custom_serializer(value):
             return { "type": "integer" }
     except Exception:
         pass
+
+    # this is throwing exceptions. I thought vol should handle this already
+    if isinstance(value, vol.In):
+        if isinstance(value.container, dict):
+            return { "enum": list(value.container.keys()) }
+        else:
+            return { "enum": list(value.container) }
     
     if isinstance(value, list):
         result = {}
