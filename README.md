@@ -5,6 +5,8 @@ This project provides the required "glue" components to control your Home Assist
 Please see the [Setup Guide](./docs/Setup.md) for more information on installation.
 
 ## Local LLM Conversation Integration
+**The latest version of this integration requires Home Assistant 2024.8.0 or newer**
+
 In order to integrate with Home Assistant, we provide a custom component that exposes the locally running LLM as a "conversation agent".
 
 This component can be interacted with in a few ways:  
