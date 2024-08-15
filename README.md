@@ -93,7 +93,7 @@ The source for the dataset is in the [data](/data) of this repository.
 
 ### Training
 
-If you want to prepare your own training environment, see the details on how to do it in [Training](./data/Training.md) document.
+If you want to prepare your own training environment, see the details on how to do it in [Training](./docs/Training.md) document.
 
 The 3B model was trained as a full fine-tuning on 2x RTX 4090 (48GB). Training time took approximately 28 hours. It was trained on the `--large` dataset variant.
 
