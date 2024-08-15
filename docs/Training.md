@@ -21,10 +21,9 @@ pip3 install datasets==2.20.0 dataclasses==0.6 transformers==4.43.3 torch==2.4.0
 
 ### Prepare your model
 
-Select model which you need to train your model: eg `TinyLlama/TinyLlama-1.1B-Chat-v1.0`. Remember that the choice of model depends on the VRAM your graphic card. If the model is larger, it is worth using the LoRA configuration which will allow you to train your model.
+Select which model you need to train: eg `TinyLlama/TinyLlama-1.1B-Chat-v1.0`. Remember that the choice of model depends on the VRAM your graphic card. If the model is larger, it is worth using the LoRA configuration which will allow you to train your model.
 
 Run train.py script to start Fine Tuning with selected model and prepared data. It is worth experimenting with several parameters to choose the best model. Few example with some params you can find below:
-
 
 The 3B model was trained as a full fine-tuning on 2x RTX 4090 (48GB). Training time took approximately 28 hours. It was trained on the `--large` dataset variant.
 
@@ -34,10 +33,17 @@ accelerate launch --config_file fsdp_config.yaml train.py \
     --base_model stabilityai/stablelm-zephyr-3b \
     --bf16 \
     --train_dataset data/home_assistant_train.jsonl \
-    --learning_rate 1e-5 --batch_size 64 --epochs 1 \
-    --micro_batch_size 2 --gradient_checkpointing --group_by_length \
+    --learning_rate 1e-5 \
+    --batch_size 64 \
+    --epochs 1 \
+    --micro_batch_size 2 \
+    --gradient_checkpointing \
+    --group_by_length \
     --ctx_size 2048 \
-    --save_steps 50 --save_total_limit 10 --eval_steps 100 --logging_steps 2
+    --save_steps 50 \
+    --save_total_limit 10 \
+    --eval_steps 100 \
+    --logging_steps 2
 ```
 
 The 1B model was trained as a full fine-tuning on an RTX 3090 (24GB). Training took approximately 2 hours. It was trained on the `--medium` dataset variant.
@@ -49,12 +55,17 @@ python3 train.py \
     --bf16 \
     --train_dataset data/home_assistant_train.jsonl \
     --test_dataset data/home_assistant_test.jsonl \
-    --learning_rate 2e-5 --batch_size 32 \
-    --micro_batch_size 8 --gradient_checkpointing --group_by_length \
-    --ctx_size 2048 --save_steps 100 --save_total_limit 10
+    --learning_rate 2e-5 \
+    --batch_size 32 \
+    --micro_batch_size 8 \
+    --gradient_checkpointing \
+    --group_by_length \
+    --ctx_size 2048 \
+    --save_steps 100 \
+    --save_total_limit 10
 ```
 
-Phi Modules: 
+#### Phi Modules: 
 - MLP: fc1,fc2
 - MHA: q_proj,v_proj,k_proj,dense
 - Embeddings: embed_tokens (input) lm_head (output)
@@ -100,7 +111,7 @@ python3 train.py \
     --ctx_size 2048 --save_steps 200
 ```
 
-StableLM Modules: 
+#### StableLM Modules: 
 - MLP: up_proj,down_proj,gate_proj
 - MHA: q_proj,v_proj,k_proj,o_proj
 - Embeddings: embed_tokens (input) lm_head (output)
@@ -156,7 +167,7 @@ python3 train.py \
     --use_lora --lora_rank 64 --lora_alpha 128 --lora_modules up_proj,down_proj,q_proj,v_proj,o_proj --lora_merge
 ```
 
-Llama 3 8B Instruct:
+#### Llama 3 8B Instruct:
 
 ```console
 python3 train.py \
@@ -172,7 +183,7 @@ python3 train.py \
     --use_lora --lora_rank 32 --lora_alpha 64 --lora_modules up_proj,down_proj,q_proj,v_proj,o_proj
 ```
 
-Llama 2 7B:
+#### Llama 2 7B:
 
 ```console
 python3 train.py \
@@ -184,7 +195,7 @@ python3 train.py \
     --add_pad_token --bf16 --micro_batch_size 4 --learning_rate 2e-5
 ```
 
-Bielik 7B Instruct:
+#### Bielik 7B Instruct:
 
 ```console
 python3 train.py \
@@ -200,7 +211,7 @@ python3 train.py \
     --use_lora --lora_rank 32 --lora_alpha 64 --lora_modules up_proj,down_proj,q_proj,v_proj,o_proj --load_in_4bit
 ```
 
-TinyLlama:
+#### TinyLlama:
 
 ```console
 python3 train.py \
@@ -214,7 +225,7 @@ python3 train.py \
     --ctx_size 2048 --save_steps 100 --save_total_limit 10
 ```
 
-Qwen2 0.5B Instruct:
+#### Qwen2 0.5B Instruct:
 
 ```console
 python3 train.py \
@@ -228,7 +239,7 @@ python3 train.py \
     --ctx_size 2048 --save_steps 1000
 ```
 
-polka 1.1b chat:
+#### polka 1.1b chat:
 
 ```console
 python3 train.py \
