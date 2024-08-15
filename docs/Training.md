@@ -2,7 +2,7 @@
 
 ## Initial requirements
 
-Before you start training you model you should prepare data. One off the way to prepare data is run script `data/generate_home_assistant_data.py`. Currently this script support english, french, german, polish and spanish language. This is not the only way and you can prepare your own data. More details can be found in the file [HOW TO PREPARE DATA](./data/README.md).
+Before you start training you model you should prepare data. One off the way to prepare data is run script `data/generate_home_assistant_data.py`. Currently this script support english, french, german, polish and spanish language. This is not the only way and you can prepare your own data. More details can be found in the file [HOW TO PREPARE DATA](../data/README.md).
 
 
 ## Training
