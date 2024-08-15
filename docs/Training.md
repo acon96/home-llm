@@ -270,7 +270,7 @@ warning! example had no assistant response in it!
 ...
 ```
 
-is happening is the script is printing the warning along with the tokenized version of the example that is being trained on. This is just a helpful thing I did to help determine what the correct prefix_ids and suffix_ids.
+The script is printing the warning along with the tokenized version of the example that is being trained on. This is just a helpful thing I did to help determine what the correct prefix_ids and suffix_ids.
 
 The idea is that the training script need to build a mask (array) that is True for all of the tokens that the assistant would respond with, and False for all of the tokens that the user inputted or was included in the system prompt. We don't want to train the model to reproduce those tokens because it is a waste of computation power and can also confuse the model. This is the biggest difference between pre-training an LLM and performing Supervised Fine Tuning. In pre-training you train the model on the entire example (mask is True for all tokens).
 
@@ -280,7 +280,7 @@ For a model like TinyLlama that uses Zephyr format, the prefix is <|assistant|>\
 
 The other issue is that tokenizers perform differently based on if a token is preceded by white-space or if it is adjacent to the token that came before it. For example, check out https://gpt-tokenizer.dev/ to mess around with the GPT tokenizers. Try tokenizing the word Computerwiz. You will see that it returns 2 tokens: [50411, 146049] split up with Computer and wiz. Now if you split the word up with a space as Computer wiz, you would expect there to be 3 tokens now, the same 2 tokens from before separated by the "space" token. Instead you get back 2 tokens [50411, 121731]. The first token is the same, but the second token has "consumed" the space we inserted and is now a totally different token. This means that figuring out the exact prefix and suffix IDs can be a bit hard to do without the full prompt assembled and all of the spaces, newlines, and tabs that are part of the full chat template.
 
-I tried to make a script to show this and potentially assist in determining the correct prefix and suffix tokens for your model:
+I made a script to show this and potentially assist in determining the correct prefix and suffix tokens for your model:
 https://github.com/acon96/home-llm/blob/develop/find_split.py
 
 Example to use the script:
