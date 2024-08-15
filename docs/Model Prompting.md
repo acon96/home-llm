@@ -95,7 +95,7 @@ Prompt Variables:
 
 `formatted_devices` and `formatted_tools` are provided for simplicity in exposing the correct devices and tools to the model if you are using the Home-LLM model or do not want to customize the formatting of the devices and tools.
 
-The examples used for the `response_examples` variable are loaded from the `in_context_examples.csv` file in the `/custom_components/llama_conversation/` folder.
+The examples used for the `response_examples` variable are loaded from the `in_context_examples.csv` file in the `/custom_components/llama_conversation/` folder. For different language add extra suffix to name of this file eg. for polish responses set `in_context_examples_pl.csv` (note: currently only polish language is supported).
 
 ### Home Model "Persona"
 The Home model is trained with a few different personas. They can be activated by using their system prompt found below:
