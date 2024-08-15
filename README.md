@@ -93,62 +93,12 @@ The source for the dataset is in the [data](/data) of this repository.
 
 ### Training
 
-If you want to prepare your own testing environment, see the details on how to do it.
-
-<details>
-<summary>Prepare environment</summary>
-
-Start by installing system dependencies:
-`sudo apt-get install python3-dev`
-
-Then create a Python virtual environment and install all necessary library:
-```
-python3 -m venv .train_data
-source ./.train_data/bin/activate
-pip3 install datasets==2.20.0 dataclasses==0.6 transformers==4.43.3 torch==2.4.0 accelerate==0.33.0 tensorboard==2.17.0
-```
-
-</details>
-
+If you want to prepare your own training environment, see the details on how to do it in [Training](./data/Training.md) document.
 
 The 3B model was trained as a full fine-tuning on 2x RTX 4090 (48GB). Training time took approximately 28 hours. It was trained on the `--large` dataset variant.
 
-<details>
-<summary>Training Arguments</summary>
-
-```console
-accelerate launch --config_file fsdp_config.yaml train.py \
-    --run_name home-3b \
-    --base_model stabilityai/stablelm-zephyr-3b \
-    --bf16 \
-    --train_dataset data/home_assistant_train.jsonl \
-    --learning_rate 1e-5 --batch_size 64 --epochs 1 \
-    --micro_batch_size 2 --gradient_checkpointing --group_by_length \
-    --ctx_size 2048 \
-    --save_steps 50 --save_total_limit 10 --eval_steps 100 --logging_steps 2
-```
-
-</details>
-
 The 1B model was trained as a full fine-tuning on an RTX 3090 (24GB). Training took approximately 2 hours. It was trained on the `--medium` dataset variant.
 
-<details>
-<summary>Training Arguments</summary>
-
-```console
-python3 train.py \
-    --run_name home-1b \
-    --base_model TinyLlama/TinyLlama-1.1B-Chat-v1.0 \
-    --bf16 \
-    --train_dataset data/home_assistant_train.jsonl \
-    --test_dataset data/home_assistant_test.jsonl \
-    --learning_rate 2e-5 --batch_size 32 \
-    --micro_batch_size 8 --gradient_checkpointing --group_by_length \
-    --ctx_size 2048 --save_steps 100 --save_total_limit 10
-```
-
-</details>
-<br/>
 
 ## Home Assistant Addon
 In order to facilitate running the project entirely on the system where Home Assistant is installed, there is an experimental Home Assistant Add-on that runs the oobabooga/text-generation-webui to connect to using the "remote" backend options.  The addon can be found in the [addon/](./addon/README.md) directory.
