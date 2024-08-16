@@ -53,10 +53,10 @@ class TrainingRunArguments:
     
     # lora config
     use_lora: bool = field(default=False, metadata={"help": "If set, then the trained model will be a LoRA"})
-    lora_rank: int = field(default=4)
-    lora_alpha: int = field(default=32)
+    lora_rank: int = field(default=4, metadata={"help": "Rank which determines LoRA matrix size. Rank typically starts at 8 but can go up to 256. Higher ranks can store more information but increase the computational and memory cost of LoRA."})
+    lora_alpha: int = field(default=32, metadata={"help": "Alpha a scaling factor for updates. Alpha directly impacts the adapters contribution and is often set to 1x or 2x the rank value."})
     lora_dropout: float = field(default=0.05)
-    lora_modules: str = field(default=None)
+    lora_modules: str = field(default=None, metadata={"help": "Target modules: LoRA can be applied to various model components, including attention mechanisms (Q, K, V matrices), output projections, feed-forward blocks, and linear output layers. While initially focused on attention mechanisms, extending LoRA to other components has shown benefits. However, adapting more modules increases the number of trainable parameters and memory needs."})
     lora_modules_to_save: str = field(default=None, metadata={"help": "Additional modules to save"})
     lora_merge: bool = field(default=False, metadata={"help": "If set, the Lora will be merged back into the base model an saved"})
 
@@ -72,8 +72,8 @@ class TrainingRunArguments:
     sync_to_bucket: str = field(default=None, metadata={"help": "If set, checkpoints will be synced to the s3 bucket specified by this argument"})
     flops_baseline: str = field(default=None, metadata={"help": "The baseline flops for the GPUs used for the training run. Outputs MFU"})
 
-    prefix_ids = str = field(default=None, metadata={"help": "Determine the prefix tokens that surround the response from the assistant for SFT if model can not correctly recognise response."})
-    suffix_ids = str = field(default=None, metadata={"help": "Determine the suffix tokens that surround the response from the assistant for SFT if model can not correctly recognise response."})
+    prefix_ids:str = field(default=None, metadata={"help": "Determine the prefix tokens that surround the response from the assistant for SFT if model can not correctly recognise response."})
+    suffix_ids:str = field(default=None, metadata={"help": "Determine the suffix tokens that surround the response from the assistant for SFT if model can not correctly recognise response."})
 
 
 class UploadToS3Callback(TrainerCallback):
@@ -307,7 +307,9 @@ class DataCollatorForSupervisedFineTuning(object):
         
         self.tokenizer = tokenizer
         if not prefix_ids and not suffix_ids:
-            assistant_prompt = tokenizer.apply_chat_template(conversation=[{"role": "assistant", "content":  r"%%%%%%%%%%%%%%%%"}], tokenize=False).split( r"%%%%%%%%%%%%%%%%")
+            assistant_prompt = tokenizer.apply_chat_template(
+                conversation=[{"role": "assistant", "content":  r"%%%%%%%%%%%%%%%%"}], 
+                tokenize=False).split( r"%%%%%%%%%%%%%%%%")
             self.response_prefix = assistant_prompt[0]
             self.response_suffix = assistant_prompt[1]
 
@@ -422,11 +424,13 @@ def tokenize_sharegpt_example(batch):
     result = []
     for example in batch["conversations"]:
         conversation = [ { "role": x["from"], "content": x["value"] }  for x in example ]
-        result.append(tokenizer.apply_chat_template(
-            conversation=conversation,
-            max_length=training_run_args.ctx_size,
-            truncation=True,
-        ))
+        result.append(
+            tokenizer.apply_chat_template(
+                conversation=conversation,
+                max_length=training_run_args.ctx_size,
+                truncation=True,
+            )
+        )
 
     return {"input_ids": result}
 
@@ -438,13 +442,15 @@ def template_dpo_example(batch):
             { "role": "system", "content": example[0] },
             { "role": "user", "content": example[1] },
         ]
-        result.append(tokenizer.apply_chat_template(
-            conversation=conversation,
-            max_length=training_run_args.ctx_size,
-            truncation=True,
-            tokenize=False,
-            add_generation_prompt=True
-        ))
+        result.append(
+            tokenizer.apply_chat_template(
+                conversation=conversation,
+                max_length=training_run_args.ctx_size,
+                truncation=True,
+                tokenize=False,
+                add_generation_prompt=True
+            )
+        )
 
     return {"prompt": result}
 

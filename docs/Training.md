@@ -350,3 +350,9 @@ python3 train.py \
     --prefix_ids 43883,20255,13 \
     --suffix_ids 43882,29871,13
 ```
+
+## Worth reading:
+
+* [Fine-tune Llama 3.1 Ultra-Efficiently with Unsloth](https://mlabonne.github.io/blog/posts/2024-07-29_Finetune_Llama31.html)
+* [Fine-tune Mistral-7b with Direct Preference Optimization](https://mlabonne.github.io/blog/posts/Fine_tune_Mistral_7b_with_DPO.html)
+* [Quantize Llama models with GGUF and llama.cpp](https://mlabonne.github.io/blog/posts/Quantize_Llama_2_models_using_ggml.html)
