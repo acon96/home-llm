@@ -314,7 +314,7 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
         service_call_regex = self.entry.options.get(CONF_SERVICE_CALL_REGEX, DEFAULT_SERVICE_CALL_REGEX)
 
         try:
-            service_call_pattern = re.compile(service_call_regex)
+            service_call_pattern = re.compile(service_call_regex, flags=re.MULTILINE)
         except Exception as err:
             _LOGGER.exception("There was a problem compiling the service call regex")
             
@@ -431,9 +431,9 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
                     vol.Required('service'): str,
                     vol.Required('target_device'): str,
                     vol.Optional('rgb_color'): str,
-                    vol.Optional('brightness'): float,
-                    vol.Optional('temperature'): float,
-                    vol.Optional('humidity'): float,
+                    vol.Optional('brightness'): vol.Coerce(float),
+                    vol.Optional('temperature'): vol.Coerce(float),
+                    vol.Optional('humidity'): vol.Coerce(float),
                     vol.Optional('fan_mode'): str,
                     vol.Optional('hvac_mode'): str,
                     vol.Optional('preset_mode'): str,
