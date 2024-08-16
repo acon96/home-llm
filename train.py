@@ -16,195 +16,6 @@ from datasets import load_dataset, Dataset
 from dataclasses import dataclass, field
 from typing import Dict, Optional, Sequence, Sized, Iterator
 
-"""
-Phi Modules: 
-- MLP: fc1,fc2
-- MHA: q_proj,v_proj,k_proj,dense
-- Embeddings: embed_tokens (input) lm_head (output)
-StableLM Modules: 
-- MLP: up_proj,down_proj,gate_proj
-- MHA: q_proj,v_proj,k_proj,o_proj
-- Embeddings: embed_tokens (input) lm_head (output)
-"""
-
-"""
-python3 train.py \
-    --run_name Home-3B-v2_ha-GGUF \
-    --base_model microsoft/phi-2 \
-    --add_pad_token \
-    --add_chatml_tokens \
-    --bf16 \
-    --train_dataset data/home_assistant_train.jsonl \
-    --learning_rate 1e-5 \
-    --save_steps 1000 \
-    --micro_batch_size 2 --gradient_checkpointing \
-    --ctx_size 2048 \
-    --use_lora --lora_rank 32 --lora_alpha 64 --lora_modules fc1,fc2,q_proj,v_proj,dense --lora_modules_to_save embed_tokens,lm_head --lora_merge
-"""
-
-"""
-python3 train.py \
-    --run_name home-1b-rev6 \
-    --base_model microsoft/phi-1_5 \
-    --add_pad_token \
-    --add_chatml_tokens \
-    --bf16 \
-    --train_dataset data/home_assistant_train.jsonl \
-    --test_dataset data/home_assistant_test.jsonl \
-    --learning_rate 1e-5 \
-    --micro_batch_size 4 --gradient_checkpointing \
-    --ctx_size 2048 --save_steps 200
-"""
-
-"""
-python3 train.py \
-    --run_name stablehome-1_6b-rev3 \
-    --base_model stabilityai/stablelm-2-zephyr-1_6b \
-    --bf16 \
-    --train_dataset data/home_assistant_train.jsonl \
-    --test_dataset data/home_assistant_test.jsonl \
-    --learning_rate 1e-5 --batch_size 32 \
-    --micro_batch_size 2 --gradient_checkpointing --group_by_length \
-    --ctx_size 2048 --save_steps 100 --save_total_limit 20
-"""
-
-"""
-python3 train.py \
-    --run_name stablehome-3b-rev8 \
-    --base_model stabilityai/stablelm-zephyr-3b \
-    --bf16 \
-    --train_dataset data/home_assistant_train.jsonl \
-    --test_dataset data/home_assistant_test.jsonl \
-    --learning_rate 1e-5 --batch_size 128 --epochs 2 \
-    --micro_batch_size 8 --gradient_checkpointing \
-    --ctx_size 2048 \
-    --save_steps 50 --save_total_limit 20 --eval_steps 100 --logging_steps 2 \
-    --use_lora --lora_rank 64 --lora_alpha 128 --lora_modules up_proj,down_proj,q_proj,v_proj,o_proj --lora_merge
-"""
-
-"""
-python3 train.py \
-    --run_name llamahome-8b-rev1 \
-    --base_model NousResearch/Meta-Llama-3-8B-Instruct \
-    --bf16 \
-    --train_dataset data/home_assistant_train.jsonl \
-    --test_dataset data/home_assistant_test.jsonl \
-    --learning_rate 1e-5 --learning_rate_warmup 0.03 --batch_size 64 --epochs 1 \
-    --micro_batch_size 2 --gradient_checkpointing --group_by_length \
-    --ctx_size 2048 \
-    --save_steps 25 --save_total_limit 20 --eval_steps 100 --logging_steps 2 \
-    --use_lora --lora_rank 32 --lora_alpha 64 --lora_modules up_proj,down_proj,q_proj,v_proj,o_proj
-"""
-
-"""
-python3 train.py \
-    --run_name mistralhome-bielik-rev1 \
-    --base_model speakleash/Bielik-7B-Instruct-v0.1 \
-    --bf16 \
-    --train_dataset data/home_assistant_train.jsonl \
-    --test_dataset data/home_assistant_test.jsonl \
-    --learning_rate 1e-5 --learning_rate_warmup 0.03 --batch_size 64 --epochs 1 \
-    --micro_batch_size 4 --gradient_checkpointing --group_by_length \
-    --ctx_size 2048 \
-    --save_steps 50 --save_total_limit 20 --eval_steps 200 --logging_steps 1 \
-    --use_lora --lora_rank 32 --lora_alpha 64 --lora_modules up_proj,down_proj,q_proj,v_proj,o_proj --load_in_4bit
-"""
-
-"""
-accelerate launch --config_file fsdp_config.yaml train.py \
-    --run_name stablehome-3b-rev10 \
-    --base_model stabilityai/stablelm-zephyr-3b \
-    --bf16 \
-    --train_dataset data/home_assistant_train.jsonl \
-    --learning_rate 1e-5 --batch_size 64 --epochs 1 \
-    --micro_batch_size 2 --gradient_checkpointing --group_by_length \
-    --ctx_size 2048 \
-    --save_steps 50 --save_total_limit 10 --eval_steps 100 --logging_steps 2
-"""
-
-"""
-python3 train.py \
-    --run_name stablehome-3b-rev9-dpo \
-    --base_model ./models/stablehome-3b-rev9/ \
-    --bf16 \
-    --train_dataset data/home_assistant_dpo.jsonl \
-    --learning_rate 2e-7 --batch_size 16 --epochs 1 \
-    --dpo --beta 0.1 --dpo_loss sigmoid \
-    --micro_batch_size 1 --gradient_checkpointing \
-    --ctx_size 2048 \
-    --save_steps 50 --save_total_limit 10 --eval_steps 100 --logging_steps 2
-"""
-
-"""
-python3 train.py \
-    --run_name home-7b-rev2 \
-    --base_model TheBloke/Llama-2-7B-GPTQ \
-    --train_dataset data/home_assistant_train.jsonl \
-    --test_dataset data/home_assistant_test.jsonl \
-    --load_as_gptq --use_lora --gradient_checkpointing \
-    --add_pad_token --bf16 --micro_batch_size 4 --learning_rate 2e-5
-"""
-
-"""
-python3 train.py \
-    --run_name tinyhome-rev4 \
-    --base_model TinyLlama/TinyLlama-1.1B-Chat-v1.0 \
-    --bf16 \
-    --train_dataset data/home_assistant_train.jsonl \
-    --test_dataset data/home_assistant_test.jsonl \
-    --learning_rate 2e-5 --batch_size 32 \
-    --micro_batch_size 8 --gradient_checkpointing --group_by_length \
-    --ctx_size 2048 --save_steps 100 --save_total_limit 10
-"""
-
-"""
-python3 train.py \
-    --run_name tinyhome-qwen-rev3 \
-    --base_model Qwen/Qwen2-0.5B-Instruct \
-    --bf16 \
-    --train_dataset data/home_assistant_train.jsonl \
-    --test_dataset data/home_assistant_test.jsonl \
-    --learning_rate 2e-5 --batch_size 64 \
-    --micro_batch_size 8 --gradient_checkpointing --group_by_length \
-    --ctx_size 2048 --save_steps 1000
-"""
-
-"""
-python3 train.py \
-    --run_name home-phi3-mini-rev1 \
-    --base_model microsoft/Phi-3-mini-4k-instruct \
-    --bf16 \
-    --train_dataset data/home_assistant_train.jsonl \
-    --test_dataset data/home_assistant_test.jsonl \
-    --learning_rate 5e-6 --batch_size 32 \
-    --micro_batch_size 8 --gradient_checkpointing --group_by_length \
-    --ctx_size 2048 --save_steps 100 --save_total_limit 10
-"""
-
-"""
-python3 train.py \
-    --run_name tinyhome-polish-rev1 \
-    --base_model eryk-mazus/polka-1.1b-chat \
-    --bf16 \
-    --train_dataset data/home_assistant_train.jsonl \
-    --test_dataset data/home_assistant_test.jsonl \
-    --learning_rate 2e-5 --batch_size 32 \
-    --micro_batch_size 8 --gradient_checkpointing --group_by_length \
-    --ctx_size 2048 --save_steps 100 --save_total_limit 10
-"""
-
-"""
-python3 train.py \
-    --run_name tinyhome-rev2-dpo \
-    --base_model ./models/tinyhome-rev2/ \
-    --bf16 \
-    --train_dataset data/home_assistant_dpo.jsonl \
-    --learning_rate 5e-7 --batch_size 16 --epochs 1 \
-    --dpo --beta 0.1 --dpo_loss sigmoid --learning_rate_warmup 0.03 \
-    --micro_batch_size 2 --gradient_checkpointing \
-    --ctx_size 2048 \
-    --save_steps 50 --save_total_limit 10 --eval_steps 100 --logging_steps 2
-"""
 
 MULTI_GPU_WORLD_SIZE = int(os.environ.get("WORLD_SIZE", "1"))
 MULTI_GPU_RANK = int(os.environ.get("RANK", "0"))
@@ -260,6 +71,10 @@ class TrainingRunArguments:
 
     sync_to_bucket: str = field(default=None, metadata={"help": "If set, checkpoints will be synced to the s3 bucket specified by this argument"})
     flops_baseline: str = field(default=None, metadata={"help": "The baseline flops for the GPUs used for the training run. Outputs MFU"})
+
+    prefix_ids = str = field(default=None, metadata={"help": "Determine the prefix tokens that surround the response from the assistant for SFT if model can not correctly recognise response."})
+    suffix_ids = str = field(default=None, metadata={"help": "Determine the suffix tokens that surround the response from the assistant for SFT if model can not correctly recognise response."})
+
 
 class UploadToS3Callback(TrainerCallback):
     def __init__(self, s3_bucket, s3_prefix, save_total_limit=None):
@@ -731,27 +546,11 @@ if not training_run_args.dpo:
     tokens_in_train_set, longest_example = sum(example_lengths), max(example_lengths)
     if IS_MASTER_PROCESS:
         print(f"Train dataset has {int(tokens_in_train_set / 1000000)}M tokens. Longest Example: {longest_example} tokens")
-
     
-    prefix_ids = None
-    suffix_ids = None
-
-    # fix for tinyllama not detecting split properly
-    # prefix_ids = [29966, 29989, 465, 22137, 29989, 29958, 13]
-    # suffix_ids = [2]
-
-    # fix for qwen2 not detecting split properly
-    # prefix_ids = [151644, 77091, 198]
-    # suffix_ids = [151645, 198]
-
-    # fix for polka-1.1 not detecting split properly
-    # prefix_ids = [43883, 20255, 13]
-    # suffix_ids = [43882, 29871, 13]
-
     data_collator = DataCollatorForSupervisedFineTuning(
         tokenizer=tokenizer,
-        prefix_ids=prefix_ids,
-        suffix_ids=suffix_ids,
+        prefix_ids=training_run_args.prefix_ids.split(",") if training_run_args.prefix_ids else None,
+        suffix_ids=training_run_args.suffix_ids.split(",") if training_run_args.suffix_ids else None,
     )
 
     trainer = CustomSFTTrainer(
