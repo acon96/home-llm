@@ -84,6 +84,17 @@ if mary is 7 years old, and I am 3 years older than her. how old am I?<|endoftex
 If Mary is 7 years old, then you are 10 years old (7+3=10).<|endoftext|>
 ```
 
+### Synthetic Dataset
+The synthetic dataset is aimed at covering basic day to day operations in home assistant such as turning devices on and off.
+The supported entity types are: light, fan, cover, lock, media_player, climate, switch
+
+The dataset is available on HuggingFace: https://huggingface.co/datasets/acon96/Home-Assistant-Requests  
+The source for the dataset is in the [data](/data) of this repository.
+
+### Training
+
+If you want to prepare your own training environment, see the details on how to do it in the [Training Guide](./docs/Training.md) document.
+
 <details>
 
 <summary>Training Details</summary>
@@ -131,21 +142,6 @@ python3 train.py \
 ```
 </details>
 
-### Synthetic Dataset
-The synthetic dataset is aimed at covering basic day to day operations in home assistant such as turning devices on and off.
-The supported entity types are: light, fan, cover, lock, media_player, climate, switch
-
-The dataset is available on HuggingFace: https://huggingface.co/datasets/acon96/Home-Assistant-Requests  
-The source for the dataset is in the [data](/data) of this repository.
-
-### Training
-
-If you want to prepare your own training environment, see the details on how to do it in [Training](./docs/Training.md) document.
-
-The 3B model was trained as a full fine-tuning on 2x RTX 4090 (48GB). Training time took approximately 28 hours. It was trained on the `--large` dataset variant.
-
-The 1B model was trained as a full fine-tuning on an RTX 3090 (24GB). Training took approximately 2 hours. It was trained on the `--medium` dataset variant.
-
 
 ## Home Assistant Addon
 In order to facilitate running the project entirely on the system where Home Assistant is installed, there is an experimental Home Assistant Add-on that runs the oobabooga/text-generation-webui to connect to using the "remote" backend options.  The addon can be found in the [addon/](./addon/README.md) directory.
@@ -154,7 +150,7 @@ In order to facilitate running the project entirely on the system where Home Ass
 ## Version History
 | Version | Description                                                                                                                                                                                                          |
 |---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| v0.3.5  | Fix for llama.cpp backend installation, Fix for Home LLM v1-3 API parameters                                                                                                                                         |
+| v0.3.5  | Fix for llama.cpp backend installation, Fix for Home LLM v1-3 API parameters, add Polish ICL examples                                                                                                                |
 | v0.3.4  | Significantly improved language support including full Polish translation, Update bundled llama-cpp-python to support new models, various bug fixes                                                                  |
 | v0.3.3  | Improvements to the Generic OpenAI Backend, improved area handling, fix issue using RGB colors, remove EOS token from responses, replace requests dependency with aiohttp included with Home Assistant               |
 | v0.3.2  | Fix for exposed script entities causing errors, fix missing GBNF error, trim whitespace from model output                                                                                                            |
