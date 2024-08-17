@@ -87,9 +87,6 @@ jobs:
             git clone --quiet --recurse-submodules https://github.com/abetlen/llama-cpp-python --branch "v${{ env.EMBEDDED_LLAMA_CPP_PYTHON_VERSION }}"
             cd llama-cpp-python
 
-            # for some reason, scikit-build-core v0.9.7+ doesn't produce properly tagged musllinux wheels
-            sed -i -e 's/scikit-build-core\[pyproject\]>=0.9.2/scikit-build-core\[pyproject\]==0.9.6/g' pyproject.toml
-
             export CMAKE_ARGS="-DLLAVA_BUILD=OFF -DGGML_NATIVE=OFF ${{ matrix.extra_defines }}"
             python3 -m build --wheel
 
