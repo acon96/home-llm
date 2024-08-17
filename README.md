@@ -93,28 +93,13 @@ The source for the dataset is in the [data](/data) of this repository.
 
 ### Training
 
-If you want to prepare your own testing environment, see the details on how to do it.
+If you want to prepare your own training environment, see the details on how to do it in the [Training Guide](./docs/Training.md) document.
 
 <details>
-<summary>Prepare environment</summary>
 
-Start by installing system dependencies:
-`sudo apt-get install python3-dev`
-
-Then create a Python virtual environment and install all necessary library:
-```
-python3 -m venv .train_data
-source ./.train_data/bin/activate
-pip3 install datasets==2.20.0 dataclasses==0.6 transformers==4.43.3 torch==2.4.0 accelerate==0.33.0 tensorboard==2.17.0
-```
-
-</details>
-
+<summary>Training Details</summary>
 
 The 3B model was trained as a full fine-tuning on 2x RTX 4090 (48GB). Training time took approximately 28 hours. It was trained on the `--large` dataset variant.
-
-<details>
-<summary>Training Arguments</summary>
 
 ```console
 accelerate launch --config_file fsdp_config.yaml train.py \
@@ -122,18 +107,20 @@ accelerate launch --config_file fsdp_config.yaml train.py \
     --base_model stabilityai/stablelm-zephyr-3b \
     --bf16 \
     --train_dataset data/home_assistant_train.jsonl \
-    --learning_rate 1e-5 --batch_size 64 --epochs 1 \
-    --micro_batch_size 2 --gradient_checkpointing --group_by_length \
+    --learning_rate 1e-5 \
+    --batch_size 64 \
+    --epochs 1 \
+    --micro_batch_size 2 \
+    --gradient_checkpointing \
+    --group_by_length \
     --ctx_size 2048 \
-    --save_steps 50 --save_total_limit 10 --eval_steps 100 --logging_steps 2
+    --save_steps 50 \
+    --save_total_limit 10 \
+    --eval_steps 100 \
+    --logging_steps 2
 ```
 
-</details>
-
 The 1B model was trained as a full fine-tuning on an RTX 3090 (24GB). Training took approximately 2 hours. It was trained on the `--medium` dataset variant.
-
-<details>
-<summary>Training Arguments</summary>
 
 ```console
 python3 train.py \
@@ -142,13 +129,19 @@ python3 train.py \
     --bf16 \
     --train_dataset data/home_assistant_train.jsonl \
     --test_dataset data/home_assistant_test.jsonl \
-    --learning_rate 2e-5 --batch_size 32 \
-    --micro_batch_size 8 --gradient_checkpointing --group_by_length \
-    --ctx_size 2048 --save_steps 100 --save_total_limit 10
+    --learning_rate 2e-5 \
+    --batch_size 32 \
+    --micro_batch_size 8 \
+    --gradient_checkpointing \
+    --group_by_length \
+    --ctx_size 2048 \
+    --save_steps 100 \
+    --save_total_limit 10
+    --prefix_ids 29966,29989,465,22137,29989,29958,13 \
+    --suffix_ids 2
 ```
-
 </details>
-<br/>
+
 
 ## Home Assistant Addon
 In order to facilitate running the project entirely on the system where Home Assistant is installed, there is an experimental Home Assistant Add-on that runs the oobabooga/text-generation-webui to connect to using the "remote" backend options.  The addon can be found in the [addon/](./addon/README.md) directory.
@@ -157,6 +150,7 @@ In order to facilitate running the project entirely on the system where Home Ass
 ## Version History
 | Version | Description                                                                                                                                                                                                          |
 |---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| v0.3.5  | Fix for llama.cpp backend installation, Fix for Home LLM v1-3 API parameters, add Polish ICL examples                                                                                                                |
 | v0.3.4  | Significantly improved language support including full Polish translation, Update bundled llama-cpp-python to support new models, various bug fixes                                                                  |
 | v0.3.3  | Improvements to the Generic OpenAI Backend, improved area handling, fix issue using RGB colors, remove EOS token from responses, replace requests dependency with aiohttp included with Home Assistant               |
 | v0.3.2  | Fix for exposed script entities causing errors, fix missing GBNF error, trim whitespace from model output                                                                                                            |

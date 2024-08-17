@@ -9,152 +9,18 @@ import time
 import shutil
 from torch.utils.data import SequentialSampler, Subset, RandomSampler
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer, \
-    PreTrainedTokenizerFast, HfArgumentParser, GPTQConfig, AutoConfig, TrainerCallback
+    PreTrainedTokenizerFast, HfArgumentParser, GPTQConfig, AutoConfig, TrainerCallback, BitsAndBytesConfig
 from transformers.trainer_utils import EvalPrediction
 from transformers.integrations.integration_utils import TensorBoardCallback
 from datasets import load_dataset, Dataset
 from dataclasses import dataclass, field
 from typing import Dict, Optional, Sequence, Sized, Iterator
 
-"""
-Phi Modules: 
-- MLP: fc1,fc2
-- MHA: q_proj,v_proj,k_proj,dense
-- Embeddings: embed_tokens (input) lm_head (output)
-StableLM Modules: 
-- MLP: up_proj,down_proj,gate_proj
-- MHA: q_proj,v_proj,k_proj,o_proj
-- Embeddings: embed_tokens (input) lm_head (output)
-"""
 
-"""
-python3 train.py \
-    --run_name Home-3B-v2_ha-GGUF \
-    --base_model microsoft/phi-2 \
-    --add_pad_token \
-    --add_chatml_tokens \
-    --bf16 \
-    --train_dataset data/home_assistant_train.jsonl \
-    --learning_rate 1e-5 \
-    --save_steps 1000 \
-    --micro_batch_size 2 --gradient_checkpointing \
-    --ctx_size 2048 \
-    --use_lora --lora_rank 32 --lora_alpha 64 --lora_modules fc1,fc2,q_proj,v_proj,dense --lora_modules_to_save embed_tokens,lm_head --lora_merge
-"""
-
-"""
-python3 train.py \
-    --run_name home-1b-rev6 \
-    --base_model microsoft/phi-1_5 \
-    --add_pad_token \
-    --add_chatml_tokens \
-    --bf16 \
-    --train_dataset data/home_assistant_train.jsonl \
-    --test_dataset data/home_assistant_test.jsonl \
-    --learning_rate 1e-5 \
-    --micro_batch_size 4 --gradient_checkpointing \
-    --ctx_size 2048 --save_steps 200
-"""
-
-"""
-python3 train.py \
-    --run_name stablehome-1_6b-rev3 \
-    --base_model stabilityai/stablelm-2-zephyr-1_6b \
-    --bf16 \
-    --train_dataset data/home_assistant_train.jsonl \
-    --test_dataset data/home_assistant_test.jsonl \
-    --learning_rate 1e-5 --batch_size 32 \
-    --micro_batch_size 2 --gradient_checkpointing --group_by_length \
-    --ctx_size 2048 --save_steps 100 --save_total_limit 20
-"""
-
-"""
-python3 train.py \
-    --run_name stablehome-3b-rev8 \
-    --base_model stabilityai/stablelm-zephyr-3b \
-    --bf16 \
-    --train_dataset data/home_assistant_train.jsonl \
-    --test_dataset data/home_assistant_test.jsonl \
-    --learning_rate 1e-5 --batch_size 128 --epochs 2 \
-    --micro_batch_size 8 --gradient_checkpointing \
-    --ctx_size 2048 \
-    --save_steps 50 --save_total_limit 20 --eval_steps 100 --logging_steps 2 \
-    --use_lora --lora_rank 64 --lora_alpha 128 --lora_modules up_proj,down_proj,q_proj,v_proj,o_proj --lora_merge
-"""
-
-"""
-python3 train.py \
-    --run_name llamahome-8b-rev1 \
-    --base_model NousResearch/Meta-Llama-3-8B-Instruct \
-    --bf16 \
-    --train_dataset data/home_assistant_train.jsonl \
-    --test_dataset data/home_assistant_test.jsonl \
-    --learning_rate 1e-5 --learning_rate_warmup 0.03 --batch_size 64 --epochs 1 \
-    --micro_batch_size 2 --gradient_checkpointing --group_by_length \
-    --ctx_size 2048 \
-    --save_steps 25 --save_total_limit 20 --eval_steps 100 --logging_steps 2 \
-    --use_lora --lora_rank 32 --lora_alpha 64 --lora_modules up_proj,down_proj,q_proj,v_proj,o_proj
-"""
-
-"""
-accelerate launch --config_file fsdp_config.yaml train.py \
-    --run_name stablehome-3b-rev10 \
-    --base_model stabilityai/stablelm-zephyr-3b \
-    --bf16 \
-    --train_dataset data/home_assistant_train.jsonl \
-    --learning_rate 1e-5 --batch_size 64 --epochs 1 \
-    --micro_batch_size 2 --gradient_checkpointing --group_by_length \
-    --ctx_size 2048 \
-    --save_steps 50 --save_total_limit 10 --eval_steps 100 --logging_steps 2
-"""
-
-"""
-python3 train.py \
-    --run_name stablehome-3b-rev9-dpo \
-    --base_model ./models/stablehome-3b-rev9/ \
-    --bf16 \
-    --train_dataset data/home_assistant_dpo.jsonl \
-    --learning_rate 2e-7 --batch_size 16 --epochs 1 \
-    --dpo --beta 0.1 --dpo_loss sigmoid \
-    --micro_batch_size 1 --gradient_checkpointing \
-    --ctx_size 2048 \
-    --save_steps 50 --save_total_limit 10 --eval_steps 100 --logging_steps 2
-"""
-
-"""
-python3 train.py \
-    --run_name home-7b-rev2 \
-    --base_model TheBloke/Llama-2-7B-GPTQ \
-    --train_dataset data/home_assistant_train.jsonl \
-    --test_dataset data/home_assistant_test.jsonl \
-    --load_as_gptq --use_lora --gradient_checkpointing \
-    --add_pad_token --bf16 --micro_batch_size 4 --learning_rate 2e-5
-"""
-
-"""
-python3 train.py \
-    --run_name tinyhome-rev4 \
-    --base_model TinyLlama/TinyLlama-1.1B-Chat-v1.0 \
-    --bf16 \
-    --train_dataset data/home_assistant_train.jsonl \
-    --test_dataset data/home_assistant_test.jsonl \
-    --learning_rate 2e-5 --batch_size 32 \
-    --micro_batch_size 8 --gradient_checkpointing --group_by_length \
-    --ctx_size 2048 --save_steps 100 --save_total_limit 10
-"""
-
-"""
-python3 train.py \
-    --run_name tinyhome-rev2-dpo \
-    --base_model ./models/tinyhome-rev2/ \
-    --bf16 \
-    --train_dataset data/home_assistant_dpo.jsonl \
-    --learning_rate 5e-7 --batch_size 16 --epochs 1 \
-    --dpo --beta 0.1 --dpo_loss sigmoid --learning_rate_warmup 0.03 \
-    --micro_batch_size 2 --gradient_checkpointing \
-    --ctx_size 2048 \
-    --save_steps 50 --save_total_limit 10 --eval_steps 100 --logging_steps 2
-"""
+MULTI_GPU_WORLD_SIZE = int(os.environ.get("WORLD_SIZE", "1"))
+MULTI_GPU_RANK = int(os.environ.get("RANK", "0"))
+IS_MULTI_GPU = os.environ.get("RANK") != None
+IS_MASTER_PROCESS = MULTI_GPU_RANK == 0
 
 @dataclass
 class TrainingRunArguments:
@@ -187,10 +53,10 @@ class TrainingRunArguments:
     
     # lora config
     use_lora: bool = field(default=False, metadata={"help": "If set, then the trained model will be a LoRA"})
-    lora_rank: int = field(default=4)
-    lora_alpha: int = field(default=32)
+    lora_rank: int = field(default=4, metadata={"help": "Rank which determines LoRA matrix size. Rank typically starts at 8 but can go up to 256. Higher ranks can store more information but increase the computational and memory cost of LoRA."})
+    lora_alpha: int = field(default=32, metadata={"help": "Alpha a scaling factor for updates. Alpha directly impacts the adapters contribution and is often set to 1x or 2x the rank value."})
     lora_dropout: float = field(default=0.05)
-    lora_modules: str = field(default=None)
+    lora_modules: str = field(default=None, metadata={"help": "Target modules: LoRA can be applied to various model components, including attention mechanisms (Q, K, V matrices), output projections, feed-forward blocks, and linear output layers. While initially focused on attention mechanisms, extending LoRA to other components has shown benefits. However, adapting more modules increases the number of trainable parameters and memory needs."})
     lora_modules_to_save: str = field(default=None, metadata={"help": "Additional modules to save"})
     lora_merge: bool = field(default=False, metadata={"help": "If set, the Lora will be merged back into the base model an saved"})
 
@@ -205,6 +71,10 @@ class TrainingRunArguments:
 
     sync_to_bucket: str = field(default=None, metadata={"help": "If set, checkpoints will be synced to the s3 bucket specified by this argument"})
     flops_baseline: str = field(default=None, metadata={"help": "The baseline flops for the GPUs used for the training run. Outputs MFU"})
+
+    prefix_ids:str = field(default=None, metadata={"help": "Determine the prefix tokens that surround the response from the assistant for SFT if model can not correctly recognise response."})
+    suffix_ids:str = field(default=None, metadata={"help": "Determine the suffix tokens that surround the response from the assistant for SFT if model can not correctly recognise response."})
+
 
 class UploadToS3Callback(TrainerCallback):
     def __init__(self, s3_bucket, s3_prefix, save_total_limit=None):
@@ -283,13 +153,14 @@ training_run_args, _ = parser.parse_args_into_dataclasses(return_remaining_strin
 if sum([training_run_args.load_in_8bit, training_run_args.load_in_4bit, training_run_args.load_as_gptq]) > 1:
     raise Exception("Please select exactly one of 'load_in_8bit', 'load_in_4bit', or 'load_as_gptq")
 
-print(f"Loading model '{training_run_args.base_model}'...")
+if IS_MASTER_PROCESS:
+    print(f"Loading model '{training_run_args.base_model}'...")
 
 model_kwargs = {}
 if training_run_args.load_in_8bit:
-    model_kwargs["load_in_8bit"] = True
+    model_kwargs["quantization_config"] = BitsAndBytesConfig(load_in_8bit=True)
 elif training_run_args.load_in_4bit:
-    model_kwargs["load_in_4bit"] = True
+    model_kwargs["quantization_config"] = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_compute_dtype=torch.bfloat16)
 elif training_run_args.load_as_gptq:
     model_kwargs["quantization_config"] = GPTQConfig(bits=4, disable_exllama=True)
 
@@ -310,7 +181,8 @@ def find_max_vram(min_buffer_mib=800):
         suggestion = round((total_mem - 1000) / 1000) * 1000
         suggestion = min(suggestion, total_mem - min_buffer_mib)
 
-        print(f"Model will target using {suggestion}MiB of VRAM on GPU {i}")
+        if IS_MASTER_PROCESS:
+            print(f"Model will target using {suggestion}MiB of VRAM on GPU {i}")
         max_memory[i] = f'{suggestion}MiB'
 
     return max_memory
@@ -361,7 +233,8 @@ original_model = model
 peft_config = None
 if training_run_args.use_lora:
     from peft import LoraConfig, TaskType, get_peft_model, prepare_model_for_kbit_training
-    print("Creating LoRA for model...")
+    if IS_MASTER_PROCESS:
+        print("Creating LoRA for model...")
     target_modules = training_run_args.lora_modules.split(",") if training_run_args.lora_modules else None
     modules_to_save = training_run_args.lora_modules_to_save.split(",") if training_run_args.lora_modules_to_save else None
     peft_config = LoraConfig(
@@ -390,8 +263,8 @@ training_kwargs = {}
 
 if training_run_args.test_dataset:
     training_kwargs.update({
-        "per_device_eval_batch_size": training_run_args.batch_size,
-        "evaluation_strategy": ("steps" if training_run_args.eval_steps != -1 else "epoch"),
+        "per_device_eval_batch_size": training_run_args.micro_batch_size,
+        "eval_strategy": ("steps" if training_run_args.eval_steps != -1 else "epoch"),
         "eval_steps": (training_run_args.eval_steps if training_run_args.eval_steps != -1 else None),
         "bf16_full_eval": training_run_args.bf16,
     })
@@ -430,12 +303,24 @@ class DataCollatorForSupervisedFineTuning(object):
     prefix_ids: list[int]
     suffix_ids: list[int]
 
-    def __init__(self, *, tokenizer: AutoTokenizer, prefix_ids = None, suffix_ids = None):
+    def __init__(self, *, tokenizer: AutoTokenizer, prefix_ids: Optional[list[int]] = None, suffix_ids: Optional[list[int]] = None):
         
         self.tokenizer = tokenizer
-        assistant_prompt = tokenizer.apply_chat_template(conversation=[{"role": "assistant", "content":  r"%%%%%%%%%%%%%%%%"}], tokenize=False).split( r"%%%%%%%%%%%%%%%%")
-        self.response_prefix = assistant_prompt[0]
-        self.response_suffix = assistant_prompt[1]
+        if not prefix_ids and not suffix_ids:
+            assistant_prompt = tokenizer.apply_chat_template(
+                conversation=[{"role": "assistant", "content":  r"%%%%%%%%%%%%%%%%"}], 
+                tokenize=False).split( r"%%%%%%%%%%%%%%%%")
+            
+            self.response_prefix = assistant_prompt[0]
+            self.response_suffix = assistant_prompt[1]
+
+            # check for inserted system prompt and remove it
+            if tokenizer.eos_token in self.response_prefix:
+                self.response_prefix = self.response_prefix.split(tokenizer.eos_token)[1].lstrip()
+
+            # some chat templates ALWAYS add the bos token
+            if tokenizer.bos_token in self.response_prefix:
+                self.response_prefix = self.response_prefix.replace(tokenizer.bos_token, "")
 
         if prefix_ids:
             self.prefix_ids = prefix_ids
@@ -514,8 +399,9 @@ class DataCollatorForSupervisedFineTuning(object):
         for label in labels:
             mask_ranges = self._find_mask_ranges(label)
             for start, end in mask_ranges:
-                if end - start == len(label):
+                if end - start == len(label) - 1:
                     print("warning! example had no assistant response in it!")
+                    print(input_ids)
                 label[start:end] = [-100] * (end - start)
 
         input_ids = torch.LongTensor(self._pad(input_ids, self.tokenizer.pad_token_id or self.tokenizer.eos_token_id))
@@ -527,7 +413,8 @@ class DataCollatorForSupervisedFineTuning(object):
             attention_mask=input_ids.ne(self.tokenizer.pad_token_id or self.tokenizer.eos_token_id),
         )
 
-print("Loading dataset...")
+if IS_MASTER_PROCESS:
+    print("Loading dataset...")
 data_files = { "train": training_run_args.train_dataset }
 if training_run_args.test_dataset:
     data_files["test"] = training_run_args.test_dataset
@@ -546,11 +433,13 @@ def tokenize_sharegpt_example(batch):
     result = []
     for example in batch["conversations"]:
         conversation = [ { "role": x["from"], "content": x["value"] }  for x in example ]
-        result.append(tokenizer.apply_chat_template(
-            conversation=conversation,
-            max_length=training_run_args.ctx_size,
-            truncation=True,
-        ))
+        result.append(
+            tokenizer.apply_chat_template(
+                conversation=conversation,
+                max_length=training_run_args.ctx_size,
+                truncation=True,
+            )
+        )
 
     return {"input_ids": result}
 
@@ -562,13 +451,15 @@ def template_dpo_example(batch):
             { "role": "system", "content": example[0] },
             { "role": "user", "content": example[1] },
         ]
-        result.append(tokenizer.apply_chat_template(
-            conversation=conversation,
-            max_length=training_run_args.ctx_size,
-            truncation=True,
-            tokenize=False,
-            add_generation_prompt=True
-        ))
+        result.append(
+            tokenizer.apply_chat_template(
+                conversation=conversation,
+                max_length=training_run_args.ctx_size,
+                truncation=True,
+                tokenize=False,
+                add_generation_prompt=True
+            )
+        )
 
     return {"prompt": result}
 
@@ -648,7 +539,8 @@ class CustomSFTTrainer(Trainer):
         return result
 
 if not training_run_args.dpo:
-    print("Tokenizing datasets...")
+    if IS_MASTER_PROCESS:
+        print("Tokenizing datasets...")
 
     if "text" in datasets["train"].column_names:
         tokenize_function = tokenize_raw_example
@@ -660,20 +552,31 @@ if not training_run_args.dpo:
         raise Exception("Unknown dataset input format (not raw corpus or sharegpt)")
 
     tokenized_test_dataset = None
-    tokenized_train_dataset = datasets["train"].map(tokenize_function, batched=True, num_proc=os.cpu_count()).remove_columns(columns_to_remove)
+    num_proc = os.cpu_count() // MULTI_GPU_WORLD_SIZE
+    tokenized_train_dataset = datasets["train"].map(tokenize_function, batched=True, num_proc=num_proc).remove_columns(columns_to_remove)
     if training_run_args.test_dataset:
-        tokenized_test_dataset = datasets["test"].map(tokenize_function, batched=True, num_proc=os.cpu_count()).remove_columns(columns_to_remove)
+        tokenized_test_dataset = datasets["test"].map(tokenize_function, batched=True, num_proc=num_proc).remove_columns(columns_to_remove)
 
     example_lengths = [ len(example) for example in tokenized_train_dataset["input_ids"] ]
     tokens_in_train_set, longest_example = sum(example_lengths), max(example_lengths)
-    print(f"Train dataset has {int(tokens_in_train_set / 1000000)}M tokens. Longest Example: {longest_example} tokens")
-
-    # data_collator = DataCollatorForSupervisedFineTuning(tokenizer=tokenizer)
-    # fix for tinyllama not detecting split properly
+    if IS_MASTER_PROCESS:
+        print(f"Train dataset has {int(tokens_in_train_set / 1000000)}M tokens. Longest Example: {longest_example} tokens")
+    
+    provided_prefix_ids = None
+    provided_suffix_ids = None
+    try:
+        if training_run_args.prefix_ids:
+            provided_prefix_ids = [ int(x) for x in training_run_args.prefix_ids.split(",") ]
+        if training_run_args.suffix_ids:
+            provided_suffix_ids = [ int(x) for x in training_run_args.suffix_ids.split(",") ]
+    except ValueError as ex:
+        print(f"Error parsing prefix_ids or suffix_ids: '{ex}'")
+        exit(-1)
+    
     data_collator = DataCollatorForSupervisedFineTuning(
         tokenizer=tokenizer,
-        prefix_ids=[29966, 29989, 465, 22137, 29989, 29958, 13],
-        suffix_ids=[2],
+        prefix_ids=provided_prefix_ids,
+        suffix_ids=provided_suffix_ids,
     )
 
     trainer = CustomSFTTrainer(
