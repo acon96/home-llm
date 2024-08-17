@@ -325,7 +325,23 @@ tokens with leading whitespace: [220, 128009, 128006, 78191, 128007, 271]
 tokens with leading newline: [198, 128009, 128006, 78191, 128007, 271]
 ```
 
-after that you shuld add extra parameters to you script for properly set those params. This is Supervised Fine Tuning params for correctly hide requests for the model. Few examples you can find below:
+after that you shuld add extra parameters to you script for properly set those params. This is Supervised Fine Tuning params for correctly hide requests for the model. You probably see several examples of tokens which script give you, it is worth looking for the indicated tokens in your log and checking which value will be correct (You should be able to find them). In case above the correct values is:
+
+```
+prefix_ids =  [128006, 78191, 128007, 271]
+suffix_ids = [128009, 128006, 78191, 128007, 271]
+```
+
+to run script you should use this params:
+
+```
+python3 train.py \
+    ...
+    --prefix_ids 128006,78191,128007,271 \
+    --suffix_ids 128009,128006,78191,128007,271
+```
+
+Few other examples you can find below:
 
 tinyllama:
 ```console
@@ -350,3 +366,9 @@ python3 train.py \
     --prefix_ids 43883,20255,13 \
     --suffix_ids 43882,29871,13
 ```
+
+## Worth reading:
+
+* [Fine-tune Llama 3.1 Ultra-Efficiently with Unsloth](https://mlabonne.github.io/blog/posts/2024-07-29_Finetune_Llama31.html)
+* [Fine-tune Mistral-7b with Direct Preference Optimization](https://mlabonne.github.io/blog/posts/Fine_tune_Mistral_7b_with_DPO.html)
+* [Quantize Llama models with GGUF and llama.cpp](https://mlabonne.github.io/blog/posts/Quantize_Llama_2_models_using_ggml.html)
