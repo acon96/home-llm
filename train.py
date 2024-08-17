@@ -303,15 +303,24 @@ class DataCollatorForSupervisedFineTuning(object):
     prefix_ids: list[int]
     suffix_ids: list[int]
 
-    def __init__(self, *, tokenizer: AutoTokenizer, prefix_ids = None, suffix_ids = None):
+    def __init__(self, *, tokenizer: AutoTokenizer, prefix_ids: Optional[list[int]] = None, suffix_ids: Optional[list[int]] = None):
         
         self.tokenizer = tokenizer
         if not prefix_ids and not suffix_ids:
             assistant_prompt = tokenizer.apply_chat_template(
                 conversation=[{"role": "assistant", "content":  r"%%%%%%%%%%%%%%%%"}], 
                 tokenize=False).split( r"%%%%%%%%%%%%%%%%")
+            
             self.response_prefix = assistant_prompt[0]
             self.response_suffix = assistant_prompt[1]
+
+            # check for inserted system prompt and remove it
+            if tokenizer.eos_token in self.response_prefix:
+                self.response_prefix = self.response_prefix.split(tokenizer.eos_token)[1].lstrip()
+
+            # some chat templates ALWAYS add the bos token
+            if tokenizer.bos_token in self.response_prefix:
+                self.response_prefix = self.response_prefix.replace(tokenizer.bos_token, "")
 
         if prefix_ids:
             self.prefix_ids = prefix_ids
@@ -553,10 +562,21 @@ if not training_run_args.dpo:
     if IS_MASTER_PROCESS:
         print(f"Train dataset has {int(tokens_in_train_set / 1000000)}M tokens. Longest Example: {longest_example} tokens")
     
+    provided_prefix_ids = None
+    provided_suffix_ids = None
+    try:
+        if training_run_args.prefix_ids:
+            provided_prefix_ids = [ int(x) for x in training_run_args.prefix_ids.split(",") ]
+        if training_run_args.suffix_ids:
+            provided_suffix_ids = [ int(x) for x in training_run_args.suffix_ids.split(",") ]
+    except ValueError as ex:
+        print(f"Error parsing prefix_ids or suffix_ids: '{ex}'")
+        exit(-1)
+    
     data_collator = DataCollatorForSupervisedFineTuning(
         tokenizer=tokenizer,
-        prefix_ids=training_run_args.prefix_ids.split(",") if training_run_args.prefix_ids else None,
-        suffix_ids=training_run_args.suffix_ids.split(",") if training_run_args.suffix_ids else None,
+        prefix_ids=provided_prefix_ids,
+        suffix_ids=provided_suffix_ids,
     )
 
     trainer = CustomSFTTrainer(
