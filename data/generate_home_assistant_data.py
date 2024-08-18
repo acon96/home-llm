@@ -371,6 +371,14 @@ BABEL_FORMAT = {
     "spanish": "H:m EEEE, d 'de' MMMM 'de' yyyy"
 }
 
+USER_INSTRUCTION_PROMPT = {
+    "english": "User instruction",
+    "german": "Benutzeranweisung",
+    "french": "Instruction de l'utilisateur ",
+    "spanish": "Instrucción del usuario",
+    "polish": "Instrukcja użytkownika"
+}
+
 
 class NoResponseAvailableException(Exception):
     pass
@@ -827,7 +835,7 @@ def generate_dpo_extra_service_call(template: dict, persona: str, max_devices: i
 def generate_dpo_incorrect_persona(template: dict, persona: str, max_devices: int = 32):
     pass
 
-def format_example_raw_chatml(example, persona, language):
+def format_example_raw_chatml(example, persona, language, use_system_role):
     """Don't use this one anymore"""
     sys_prompt = pile_of_system_prompts[persona]
     services_block = f"{SERVICES_PROMPT[language]}: " + ", ".join(sorted(example["available_services"]))
@@ -835,8 +843,13 @@ def format_example_raw_chatml(example, persona, language):
     question = example["question"]
     answers = " ".join(example["answers"])
 
-    system_block = "\n".join([ "<|im_start|>system", sys_prompt, services_block, states_block ]) + "<|im_end|>"
-    user_block = "\n".join([ "<|im_start|>user", question]) + "<|im_end|>"
+    if use_system_role:
+        system_block = "\n".join([ "<|im_start|>system", sys_prompt, services_block, states_block ]) + "<|im_end|>"
+        user_block = "\n".join([ "<|im_start|>user", question]) + "<|im_end|>"
+    else:
+        user_instruction_words = USER_INSTRUCTION_PROMPT[language] + ":"
+        system_block = ""
+        user_block = "\n".join([ "<|im_start|>user", sys_prompt, services_block, states_block, user_instruction_words, question]) + "<|im_end|>"
 
     assistant_block = "<|im_start|>assistant\n" + answers
     if len(example["service_calls"]) > 0:
@@ -855,7 +868,7 @@ def format_example_raw_chatml(example, persona, language):
     result = result.replace("garage_door.", "cover.")
     return { "text": result }
 
-def format_example_sharegpt(example, persona, language):
+def format_example_sharegpt(example, persona, language, use_system_role):
     sys_prompt = pile_of_system_prompts[persona]
     random_datetime = generate_random_datetime()
     translate_datetime = babel.dates.format_datetime(random_datetime, BABEL_FORMAT[language], locale=BABEL_LOCALE[language])
@@ -876,11 +889,18 @@ def format_example_sharegpt(example, persona, language):
     states_block = states_block.replace("blinds.", "cover.").replace("garage_door.", "cover.")
     services_block = services_block.replace("blinds.", "cover.").replace("garage_door.", "cover.")
 
-    conversation = [
-        { "from": "system", "value": "\n".join([ sys_prompt, time_block, services_block, states_block ])},
-        { "from": "user", "value": question },
-        { "from": "assistant", "value": assistant_block },
-    ]
+    if use_system_role:
+        conversation = [
+            { "from": "system", "value": "\n".join([ sys_prompt, time_block, services_block, states_block ])},
+            { "from": "user", "value": question },
+            { "from": "assistant", "value": assistant_block },
+        ]
+    else:
+        user_instruction_words = USER_INSTRUCTION_PROMPT[language] + ":"
+        conversation = [
+            { "from": "user", "value": "\n".join([ sys_prompt, time_block, services_block, states_block, user_instruction_words, question ]) },
+            { "from": "assistant", "value": assistant_block },
+        ]
     
     return { "conversations": conversation }
 
@@ -918,7 +938,7 @@ def format_example_dpo(example, persona, language):
         "rejected": rejected_assistant_block,
     }
 
-def generate_sft_file(filename: str, seed: int, format_func: Callable, personas: list[str], language: str, *, static_factor: int, template_factor: int, status_request_factor: int):
+def generate_sft_file(filename: str, seed: int, format_func: Callable, use_system_role: bool, personas: list[str], language: str, *, static_factor: int, template_factor: int, status_request_factor: int):
     random.seed(seed)
     np.random.seed(seed)
 
@@ -927,10 +947,10 @@ def generate_sft_file(filename: str, seed: int, format_func: Callable, personas:
     def run_factor_times(func, examples, data, persona, factor, language):
         if factor >= 1:
             for i in range(factor):
-                examples.append(format_func(func(data, persona), persona, language))
+                examples.append(format_func(func(data, persona), persona, language, use_system_role))
         else:
             if random.random() < factor:
-                examples.append(format_func(func(data, persona), persona, language))
+                examples.append(format_func(func(data, persona), persona, language, use_system_role))
     
     generated_examples = []
 
@@ -1139,6 +1159,7 @@ def main():
     parser.add_argument("--dpo", action="store_true", help="Set this flag to enable generation of the DPO dataset.")
     parser.add_argument("--merge", help="Set this flag to merge the generated datasets with the specified dataset.")
     parser.add_argument("--language", nargs="+", default=["english"], help="List of languages to generate: english, german, french, spanish, polish")
+    parser.add_argument("--no-system-role", action="store_true", help="Set this flag to disable the system role. It will be combined with the user role")
 
     train_size_group = parser.add_mutually_exclusive_group()
     train_size_group.add_argument('--small', action='store_const', const='small', dest='size')
@@ -1165,26 +1186,28 @@ def main():
     elif args.format == "sharegpt":
         format_func = format_example_sharegpt
 
+    use_system_role = not args.no_system_role
+
     for language in args.language:
         load_dataset_piles(language)
         personas = list(pile_of_system_prompts.keys())
         suffix = f"_{language}" if len(args.language) > 1 else ""
 
         if args.sample:
-            generate_sft_file(f"sample{suffix}", 42, format_func, personas, language, static_factor=1, template_factor=1, status_request_factor=1)
+            generate_sft_file(f"sample{suffix}", 42, format_func, use_system_role, personas, language, static_factor=1, template_factor=1, status_request_factor=1)
         if args.train:
             if args.size == "small":
-                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, personas, language, static_factor=1, template_factor=10, status_request_factor=8)
+                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, use_system_role, personas, language, static_factor=1, template_factor=10, status_request_factor=8)
             elif args.size == "medium":
-                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, personas, language, static_factor=5, template_factor=15, status_request_factor=12)
+                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, use_system_role, personas, language, static_factor=5, template_factor=15, status_request_factor=12)
             elif args.size == "large":
-                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, personas, language, static_factor=5, template_factor=20, status_request_factor=15)
+                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, use_system_role, personas, language, static_factor=5, template_factor=20, status_request_factor=15)
             elif args.size == "xl":
-                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, personas, language, static_factor=7, template_factor=25, status_request_factor=18)
+                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, use_system_role, personas, language, static_factor=7, template_factor=25, status_request_factor=18)
             else:
                 raise Exception(f"Unrecognized dataset size: {args.size}")
         if args.test:
-            generate_sft_file(f"home_assistant_test{suffix}", 12345, format_func, personas, language, static_factor=0.25, template_factor=1, status_request_factor=2)
+            generate_sft_file(f"home_assistant_test{suffix}", 12345, format_func, use_system_role, personas, language, static_factor=0.25, template_factor=1, status_request_factor=2)
 
     if len(args.language) > 1:
         if args.sample:
