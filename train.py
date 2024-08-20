@@ -308,12 +308,16 @@ class DataCollatorForSupervisedFineTuning(object):
         self.tokenizer = tokenizer
         if not prefix_ids and not suffix_ids:
             assistant_prompt = tokenizer.apply_chat_template(
-                conversation=[{"role": "assistant", "content":  r"%%%%%%%%%%%%%%%%"}], 
-                tokenize=False).split( r"%%%%%%%%%%%%%%%%")
-            
-            self.response_prefix = assistant_prompt[0]
-            self.response_suffix = assistant_prompt[1]
+                conversation=[
+                    {"role": "user", "content": r"HA_REQUEST"},
+                    {"role": "assistant", "content": r"HA_RESPONSE"}
+                ],
+                tokenize=False
+            )
 
+            self.response_prefix = assistant_prompt.split(r"HA_REQUEST")[1].split(r"HA_RESPONSE")[0]
+            self.response_suffix = assistant_prompt.split(r"HA_RESPONSE")[1]
+            
             # check for inserted system prompt and remove it
             if tokenizer.eos_token in self.response_prefix:
                 self.response_prefix = self.response_prefix.split(tokenizer.eos_token)[1].lstrip()

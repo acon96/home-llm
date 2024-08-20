@@ -13,13 +13,21 @@ suffix_ids = None
 tokenizer = AutoTokenizer.from_pretrained(model, trust_remote_code=True)
 
 assistant_prompt = tokenizer.apply_chat_template(
-    conversation=[{"role": "assistant", "content":  r"%%%%%%%%%%%%%%%%"}],
+    conversation=[
+        {"role": "user", "content": r"HA_REQUEST"},
+        {"role": "assistant", "content": r"HA_RESPONSE"}
+    ],
     tokenize=False,
     add_generation_prompt=False,
-).split( r"%%%%%%%%%%%%%%%%")
+)
 
-response_prefix = assistant_prompt[0]
-response_suffix = assistant_prompt[1]
+print("Chat template:")
+print("-" * 100)
+print(assistant_prompt)
+print("-" * 100)
+
+response_prefix = assistant_prompt.split(r"HA_REQUEST")[1].split(r"HA_RESPONSE")[0]
+response_suffix = assistant_prompt.split(r"HA_RESPONSE")[1]
 
 # check for inserted system prompt and remove it
 if tokenizer.eos_token in response_prefix:
