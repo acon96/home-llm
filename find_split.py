@@ -153,8 +153,8 @@ def check_range(label, name, prefix_ids, suffix_ids):
             print(f"'{name}' did not find the assistant response")
         else:
             print(f"'{name}' found the assistant response!")
-            print(f"\t--prefix-ids {','.join([str(x) for x in prefix_ids])}")
-            print(f"\t--suffix-ids {','.join([str(x) for x in suffix_ids])}")
+            print(f"\t--prefix_ids {','.join([str(x) for x in prefix_ids])}")
+            print(f"\t--suffix_ids {','.join([str(x) for x in suffix_ids])}")
             break
 
 print("---------------")
