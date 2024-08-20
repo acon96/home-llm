@@ -1,7 +1,7 @@
 {
   "domain": "llama_conversation",
   "name": "Local LLM Conversation",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "codeowners": ["@acon96"],
   "config_flow": true,
   "dependencies": ["conversation"],
