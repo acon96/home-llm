@@ -54,6 +54,17 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Verify version match
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          tag_version=$(echo ${{ github.ref }} | sed 's/refs\/tags\/v//')
+          component_version=$(jq -r '.version' custom_components/llama_conversation/manifest.json)
+
+          if [ "$tag_version" != "$component_version" ]; then
+            echo "The version in the GitHub tag ($tag_version) does not match the version in the Home Assistant custom component ($component_version)!"
+            exit 1
+          fi
         
       - name: Read llama-cpp-python version
         run: cat custom_components/llama_conversation/const.py | grep "EMBEDDED_LLAMA_CPP_PYTHON_VERSION" | tr -d ' ' | tr -d '"' >> $GITHUB_ENV
