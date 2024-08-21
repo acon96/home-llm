@@ -56,16 +56,24 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Verify version match
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.event.ref, 'refs/tags/v')
         run: |
           tag_version=$(echo ${{ github.ref }} | sed 's/refs\/tags\/v//')
-          component_version=$(jq -r '.version' custom_components/llama_conversation/manifest.json)
+          component_version_manifest=$(jq -r '.version' custom_components/llama_conversation/manifest.json)
+          component_version_const=$(cat custom_components/llama_conversation/const.py | grep "INTEGRATION_VERSION" | tr -d ' ' | tr -d '"' | tr -d 'INTEGRATION_VERSION=')
 
-          if [ "$tag_version" != "$component_version" ]; then
-            echo "The version in the GitHub tag ($tag_version) does not match the version in the Home Assistant custom component ($component_version)!"
+          if [ "$tag_version" != "$component_version_manifest" ]; then
+            echo "The version in the GitHub tag ($tag_version) does not match the version in the Home Assistant custom component manifest ($component_version_manifest)!"
             exit 1
           fi
-        
+
+          if [ "$tag_version" != "$component_version_const" ]; then
+            echo "The version in the GitHub tag ($tag_version) does not match the version in const.py ($component_version_const)!"
+            exit 1
+          fi
+
+          echo "All required versions match."
+
       - name: Read llama-cpp-python version
         run: cat custom_components/llama_conversation/const.py | grep "EMBEDDED_LLAMA_CPP_PYTHON_VERSION" | tr -d ' ' | tr -d '"' >> $GITHUB_ENV
 
@@ -120,7 +128,7 @@ jobs:
     name: Create Release
     needs: [ build_wheels ]
     runs-on: ubuntu-latest
-    if: "startsWith(github.event.ref, 'refs/tags/v')" # only create a release if this was run on a tag
+    if: startsWith(github.event.ref, 'refs/tags/v')
 
     steps:
       - name: Download artifacts
