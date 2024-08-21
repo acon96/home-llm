@@ -1165,6 +1165,11 @@ class LlamaCppAgent(LocalLLMAgent):
             )
 
             context_len = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
+            if len(input_tokens) >= context_len:
+                num_entities = len(self._async_get_exposed_entities()[0])
+                context_size = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
+                self._warn_context_size()
+                raise Exception(f"The model failed to produce a result because too many devices are exposed ({num_entities} devices) for the context size ({context_size} tokens)!")
             if len(input_tokens) + max_tokens >= context_len:
                 self._warn_context_size()
 
