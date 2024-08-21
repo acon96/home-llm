@@ -732,7 +732,7 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
             
         return examples
 
-    def _generate_system_prompt(self, prompt_template: str, llm_api: llm.APIInstance) -> str:
+    def _generate_system_prompt(self, prompt_template: str, llm_api: llm.APIInstance | None) -> str:
         """Generate the system prompt with current entity states"""
         entities_to_expose, domains = self._async_get_exposed_entities()
 
@@ -1076,7 +1076,7 @@ class LlamaCppAgent(LocalLLMAgent):
         refresh_end = time.time()
         _LOGGER.debug(f"cache refresh took {(refresh_end - refresh_start):.2f} sec")
 
-    def _cache_prompt(self, llm_api: llm.API) -> None:
+    def _cache_prompt(self, llm_api: llm.APIInstance | None) -> None:
         # if a refresh is already scheduled then exit
         if self.cache_refresh_after_cooldown:
             return
@@ -1165,6 +1165,11 @@ class LlamaCppAgent(LocalLLMAgent):
             )
 
             context_len = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
+            if len(input_tokens) >= context_len:
+                num_entities = len(self._async_get_exposed_entities()[0])
+                context_size = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
+                self._warn_context_size()
+                raise Exception(f"The model failed to produce a result because too many devices are exposed ({num_entities} devices) for the context size ({context_size} tokens)!")
             if len(input_tokens) + max_tokens >= context_len:
                 self._warn_context_size()
 
