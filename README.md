@@ -150,6 +150,7 @@ In order to facilitate running the project entirely on the system where Home Ass
 ## Version History
 | Version | Description                                                                                                                                                                                                          |
 |---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| v0.3.6  | Small llama.cpp backend fixes                                                                                                                                                                                        |
 | v0.3.5  | Fix for llama.cpp backend installation, Fix for Home LLM v1-3 API parameters, add Polish ICL examples                                                                                                                |
 | v0.3.4  | Significantly improved language support including full Polish translation, Update bundled llama-cpp-python to support new models, various bug fixes                                                                  |
 | v0.3.3  | Improvements to the Generic OpenAI Backend, improved area handling, fix issue using RGB colors, remove EOS token from responses, replace requests dependency with aiohttp included with Home Assistant               |
