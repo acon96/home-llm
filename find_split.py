@@ -14,6 +14,36 @@ prefix_ids = None
 suffix_ids = None
 tokenizer = AutoTokenizer.from_pretrained(model, trust_remote_code=True)
 
+test_prompt = tokenizer.apply_chat_template(
+    conversation=[
+        {"role": "user", "content": r"HA_REQUEST"},
+        {"role": "assistant", "content": r"HA_RESPONSE"}
+    ],
+    tokenize=False,
+    add_generation_prompt=False,
+)
+
+print("Chat template:")
+print("-" * 100)
+print(test_prompt)
+print("-" * 100)
+
+# Added real example to test the tokenizer
+test_prompt_tokens = tokenizer.apply_chat_template(
+    conversation=[
+        {"role": "system", "content": "this is a system prompt"},
+        {"role": "user", "content":  "a user request goes here"},
+        {"role": "assistant", "content":  "the response is in here"}
+    ],
+    tokenize=True,
+    add_generation_prompt=False
+)
+
+print("Chat template tokens:")
+print("-" * 100)
+print(test_prompt_tokens)
+print("-" * 100)
+
 try:
     assistant_prompt = tokenizer.apply_chat_template(
         conversation=[{"role": "assistant", "content":  r"%%%%%%%%%%%%%%%%"}],
@@ -69,7 +99,7 @@ print("tokens with leading whitespace:", prefix_ids2)
 print("tokens with leading newline:", prefix_ids3)
 print("tokens with stripped whitespace:", prefix_ids4)
 
-print("---------------")
+print("-" * 100)
 
 print("response suffix:")
 print(response_suffix)
@@ -169,12 +199,12 @@ def check_range(label, name, prefix_ids, suffix_ids):
 
     if found:
         print(f"'{name}' found the assistant response!")
-        print(f"\t--prefix-ids {','.join([str(x) for x in prefix_ids])}")
-        print(f"\t--suffix-ids {','.join([str(x) for x in suffix_ids])}")
+        print(f"\t--prefix_ids {','.join([str(x) for x in prefix_ids])}")
+        print(f"\t--suffix_ids {','.join([str(x) for x in suffix_ids])}")
     # else:
     #     print(f"'{decoded_string}' != '{expected_decoded_string}'")
 
-print("---------------")
+print("-" * 100)
 check_range(label, "no added whitespace", prefix_ids, suffix_ids)
 check_range(label, "leading space", prefix_ids2, suffix_ids2)
 check_range(label, "leading newline", prefix_ids3, suffix_ids3)
