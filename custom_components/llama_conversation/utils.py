@@ -6,6 +6,7 @@ import logging
 import multiprocessing
 import voluptuous as vol
 import webcolors
+from webcolors import CSS3
 from importlib.metadata import version
 
 from homeassistant.helpers import config_validation as cv
@@ -21,6 +22,12 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+CSS3_NAME_TO_RGB = {
+    name: webcolors.name_to_rgb(name, CSS3)
+    for name
+    in webcolors.names(CSS3)
+}
+
 class MissingQuantizationException(Exception):
     def __init__(self, missing_quant: str, available_quants: list[str]):
         self.missing_quant = missing_quant
@@ -28,8 +35,9 @@ class MissingQuantizationException(Exception):
 
 def closest_color(requested_color):
     min_colors = {}
-    for key, name in webcolors.CSS3_HEX_TO_NAMES.items():
-        r_c, g_c, b_c = webcolors.hex_to_rgb(key)
+    
+    for name, rgb in CSS3_NAME_TO_RGB.items():
+        r_c, g_c, b_c = rgb
         rd = (r_c - requested_color[0]) ** 2
         gd = (g_c - requested_color[1]) ** 2
         bd = (b_c - requested_color[2]) ** 2
