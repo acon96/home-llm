@@ -421,6 +421,7 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
                 response=intent_response, conversation_id=conversation_id
             )
 
+        tool_response = None
         # parse response
         to_say = service_call_pattern.sub("", response.strip())
         for block in service_call_pattern.findall(response.strip()):
