@@ -10,7 +10,7 @@
   "integration_type": "service",
   "iot_class": "local_polling",
   "requirements": [
-    "huggingface-hub==0.23.0",
-    "webcolors<=1.13"
+      "huggingface-hub>=0.23.0",
+      "webcolors>=24.8.0"
   ]
 }

@@ -14,9 +14,8 @@ langcodes
 babel==2.15.0
 
 # integration requirements
-requests>=2.31.0
-huggingface-hub==0.23.0
-webcolors==1.13
+huggingface-hub>=0.23.0
+webcolors>=24.8.0
 
 # types from Home Assistant
 homeassistant>=2024.6.1
