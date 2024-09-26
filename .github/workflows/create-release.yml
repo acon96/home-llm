@@ -29,32 +29,51 @@ jobs:
         - home_assistant_version: "2024.2.1"
           suffix: "-noavx"
           arch: "amd64"
-          extra_defines: "-DLLAMA_AVX=OFF -DLLAMA_AVX2=OFF -DLLAMA_FMA=OFF -DLLAMA_F16C=OFF"
+          extra_defines: "-DGGML_AVX=OFF -DGGML_AVX2=OFF -DGGML_FMA=OFF -DGGML_F16C=OFF"
         - home_assistant_version: "2024.2.1"
           arch: "i386"
           suffix: "-noavx"
-          extra_defines: "-DLLAMA_AVX=OFF -DLLAMA_AVX2=OFF -DLLAMA_FMA=OFF -DLLAMA_F16C=OFF"
+          extra_defines: "-DGGML_AVX=OFF -DGGML_AVX2=OFF -DGGML_FMA=OFF -DGGML_F16C=OFF"
 
         # AVX2 and AVX512
         - home_assistant_version: "2024.2.1"
           arch: "amd64"
-          extra_defines: "-DLLAMA_AVX=ON -DLLAMA_AVX2=ON -DLLAMA_FMA=ON -DLLAMA_F16C=ON"
+          extra_defines: "-DGGML_AVX=ON -DGGML_AVX2=ON -DGGML_FMA=ON -DGGML_F16C=ON"
         - home_assistant_version: "2024.2.1"
           arch: "amd64"
           suffix: "-avx512"
-          extra_defines: "-DLLAMA_AVX512=ON -DLLAMA_FMA=ON -DLLAMA_F16C=ON"
+          extra_defines: "-DGGML_AVX512=ON -DGGML_FMA=ON -DGGML_F16C=ON"
         - home_assistant_version: "2024.2.1"
           arch: "i386"
-          extra_defines: "-DLLAMA_AVX=ON -DLLAMA_AVX2=ON -DLLAMA_FMA=ON -DLLAMA_F16C=ON"
+          extra_defines: "-DGGML_AVX=ON -DGGML_AVX2=ON -DGGML_FMA=ON -DGGML_F16C=ON"
         - home_assistant_version: "2024.2.1"
           arch: "i386"
           suffix: "-avx512"
-          extra_defines: "-DLLAMA_AVX512=ON -DLLAMA_FMA=ON -DLLAMA_F16C=ON"
+          extra_defines: "-DGGML_AVX512=ON -DGGML_FMA=ON -DGGML_F16C=ON"
         
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
+      - name: Verify version match
+        if: startsWith(github.event.ref, 'refs/tags/v')
+        run: |
+          tag_version=$(echo ${{ github.ref }} | sed 's/refs\/tags\/v//')
+          component_version_manifest=$(jq -r '.version' custom_components/llama_conversation/manifest.json)
+          component_version_const=$(cat custom_components/llama_conversation/const.py | grep "INTEGRATION_VERSION" | tr -d ' ' | tr -d '"' | tr -d 'INTEGRATION_VERSION=')
+
+          if [ "$tag_version" != "$component_version_manifest" ]; then
+            echo "The version in the GitHub tag ($tag_version) does not match the version in the Home Assistant custom component manifest ($component_version_manifest)!"
+            exit 1
+          fi
+
+          if [ "$tag_version" != "$component_version_const" ]; then
+            echo "The version in the GitHub tag ($tag_version) does not match the version in const.py ($component_version_const)!"
+            exit 1
+          fi
+
+          echo "All required versions match."
+
       - name: Read llama-cpp-python version
         run: cat custom_components/llama_conversation/const.py | grep "EMBEDDED_LLAMA_CPP_PYTHON_VERSION" | tr -d ' ' | tr -d '"' >> $GITHUB_ENV
 
@@ -87,7 +106,7 @@ jobs:
             git clone --quiet --recurse-submodules https://github.com/abetlen/llama-cpp-python --branch "v${{ env.EMBEDDED_LLAMA_CPP_PYTHON_VERSION }}"
             cd llama-cpp-python
 
-            export CMAKE_ARGS="-DLLAVA_BUILD=OFF -DLLAMA_NATIVE=OFF ${{ matrix.extra_defines }}"
+            export CMAKE_ARGS="-DLLAVA_BUILD=OFF -DGGML_NATIVE=OFF ${{ matrix.extra_defines }}"
             python3 -m build --wheel
 
             ls -la ./dist/
@@ -109,7 +128,7 @@ jobs:
     name: Create Release
     needs: [ build_wheels ]
     runs-on: ubuntu-latest
-    if: "startsWith(github.event.ref, 'refs/tags/v')" # only create a release if this was run on a tag
+    if: startsWith(github.event.ref, 'refs/tags/v')
 
     steps:
       - name: Download artifacts

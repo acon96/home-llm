@@ -15,8 +15,8 @@ import time
 import voluptuous as vol
 from typing import Literal, Any, Callable
 
-from homeassistant.components.conversation import ConversationInput, ConversationResult, AbstractConversationAgent
-import homeassistant.components.conversation as ha_conversation
+from homeassistant.components.conversation import ConversationInput, ConversationResult, AbstractConversationAgent, ConversationEntity
+from homeassistant.components import assist_pipeline, conversation as ha_conversation
 from homeassistant.components.conversation.const import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.config_entries import ConfigEntry
@@ -25,10 +25,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryError, TemplateError, HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent, template, entity_registry as er, llm, \
     area_registry as ar, device_registry as dr
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_state_change, async_call_later
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.util import ulid, color
+
 
 import voluptuous_serialize
 
@@ -119,6 +121,14 @@ from .const import (
     TOOL_FORMAT_REDUCED,
     TOOL_FORMAT_MINIMAL,
     ALLOWED_SERVICE_CALL_ARGUMENTS,
+    CONF_BACKEND_TYPE,
+    DEFAULT_BACKEND_TYPE,
+    BACKEND_TYPE_LLAMA_HF,
+    BACKEND_TYPE_LLAMA_EXISTING,
+    BACKEND_TYPE_TEXT_GEN_WEBUI,
+    BACKEND_TYPE_GENERIC_OPENAI,
+    BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER,
+    BACKEND_TYPE_OLLAMA,
 )
 
 # make type checking work for llama-cpp-python without importing it directly at runtime
@@ -132,7 +142,50 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-class LocalLLMAgent(AbstractConversationAgent):
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
+    """Handle options update."""
+    hass.data[DOMAIN][entry.entry_id] = entry
+    
+    # call update handler
+    agent: LocalLLMAgent = ha_conversation.get_agent_manager(hass).async_get_agent(entry.entry_id)
+    await hass.async_add_executor_job(agent._update_options)
+
+    return True
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> bool:
+    """Set up Local LLM Conversation from a config entry."""
+
+    def create_agent(backend_type):
+        agent_cls = None
+
+        if backend_type in [ BACKEND_TYPE_LLAMA_HF, BACKEND_TYPE_LLAMA_EXISTING ]:
+            agent_cls = LlamaCppAgent
+        elif backend_type == BACKEND_TYPE_GENERIC_OPENAI:
+            agent_cls = GenericOpenAIAPIAgent
+        elif backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
+            agent_cls = TextGenerationWebuiAgent
+        elif backend_type == BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER:
+            agent_cls = LlamaCppPythonAPIAgent
+        elif backend_type == BACKEND_TYPE_OLLAMA:
+            agent_cls = OllamaAPIAgent
+        
+        return agent_cls(hass, entry)
+
+    # create the agent in an executor job because the constructor calls `open()`
+    backend_type = entry.data.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE)
+    agent = await hass.async_add_executor_job(create_agent, backend_type)
+
+    # call load model
+    await agent._async_load_model(entry)
+
+    # handle updates to the options
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
+    async_add_entities([agent])
+
+    return True
+
+class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
     """Base Local LLM conversation agent."""
 
     hass: HomeAssistant
@@ -140,8 +193,13 @@ class LocalLLMAgent(AbstractConversationAgent):
     history: dict[str, list[dict]]
     in_context_examples: list[dict]
 
+    _attr_has_entity_name = True
+
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the agent."""
+        self._attr_name = entry.title
+        self._attr_unique_id = entry.entry_id
+
         self.hass = hass
         self.entry_id = entry.entry_id
         self.history = {}
@@ -150,9 +208,27 @@ class LocalLLMAgent(AbstractConversationAgent):
             CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE
         )
 
+        if self.entry.options.get(CONF_LLM_HASS_API):
+            self._attr_supported_features = (
+                ha_conversation.ConversationEntityFeature.CONTROL
+            )
+
         self.in_context_examples = None
         if entry.options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES, DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES):
             self._load_icl_examples(entry.options.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE))
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to Home Assistant."""
+        await super().async_added_to_hass()
+        assist_pipeline.async_migrate_engine(
+            self.hass, "conversation", self.entry.entry_id, self.entity_id
+        )
+        ha_conversation.async_set_agent(self.hass, self.entry, self)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """When entity will be removed from Home Assistant."""
+        ha_conversation.async_unset_agent(self.hass, self.entry)
+        await super().async_will_remove_from_hass()
 
     def _load_icl_examples(self, filename: str):
         """Load info used for generating in context learning examples"""
@@ -175,6 +251,11 @@ class LocalLLMAgent(AbstractConversationAgent):
             self.in_context_examples = None
 
     def _update_options(self):
+        if self.entry.options.get(CONF_LLM_HASS_API):
+            self._attr_supported_features = (
+                ha_conversation.ConversationEntityFeature.CONTROL
+            )
+            
         if self.entry.options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES, DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES):
             self._load_icl_examples(self.entry.options.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE))
         else:
@@ -233,7 +314,7 @@ class LocalLLMAgent(AbstractConversationAgent):
         service_call_regex = self.entry.options.get(CONF_SERVICE_CALL_REGEX, DEFAULT_SERVICE_CALL_REGEX)
 
         try:
-            service_call_pattern = re.compile(service_call_regex)
+            service_call_pattern = re.compile(service_call_regex, flags=re.MULTILINE)
         except Exception as err:
             _LOGGER.exception("There was a problem compiling the service call regex")
             
@@ -340,6 +421,7 @@ class LocalLLMAgent(AbstractConversationAgent):
                 response=intent_response, conversation_id=conversation_id
             )
 
+        tool_response = None
         # parse response
         to_say = service_call_pattern.sub("", response.strip())
         for block in service_call_pattern.findall(response.strip()):
@@ -350,9 +432,9 @@ class LocalLLMAgent(AbstractConversationAgent):
                     vol.Required('service'): str,
                     vol.Required('target_device'): str,
                     vol.Optional('rgb_color'): str,
-                    vol.Optional('brightness'): float,
-                    vol.Optional('temperature'): float,
-                    vol.Optional('humidity'): float,
+                    vol.Optional('brightness'): vol.Coerce(float),
+                    vol.Optional('temperature'): vol.Coerce(float),
+                    vol.Optional('humidity'): vol.Coerce(float),
                     vol.Optional('fan_mode'): str,
                     vol.Optional('hvac_mode'): str,
                     vol.Optional('preset_mode'): str,
@@ -404,6 +486,7 @@ class LocalLLMAgent(AbstractConversationAgent):
                     tool_args=parsed_tool_call["arguments"],
                 )
 
+            tool_response = None
             try:
                 tool_response = await llm_api.async_call_tool(tool_input)
                 _LOGGER.debug("Tool response: %s", tool_response)
@@ -650,7 +733,7 @@ class LocalLLMAgent(AbstractConversationAgent):
             
         return examples
 
-    def _generate_system_prompt(self, prompt_template: str, llm_api: llm.APIInstance) -> str:
+    def _generate_system_prompt(self, prompt_template: str, llm_api: llm.APIInstance | None) -> str:
         """Generate the system prompt with current entity states"""
         entities_to_expose, domains = self._async_get_exposed_entities()
 
@@ -994,7 +1077,7 @@ class LlamaCppAgent(LocalLLMAgent):
         refresh_end = time.time()
         _LOGGER.debug(f"cache refresh took {(refresh_end - refresh_start):.2f} sec")
 
-    def _cache_prompt(self, llm_api: llm.API) -> None:
+    def _cache_prompt(self, llm_api: llm.APIInstance | None) -> None:
         # if a refresh is already scheduled then exit
         if self.cache_refresh_after_cooldown:
             return
@@ -1083,6 +1166,11 @@ class LlamaCppAgent(LocalLLMAgent):
             )
 
             context_len = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
+            if len(input_tokens) >= context_len:
+                num_entities = len(self._async_get_exposed_entities()[0])
+                context_size = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
+                self._warn_context_size()
+                raise Exception(f"The model failed to produce a result because too many devices are exposed ({num_entities} devices) for the context size ({context_size} tokens)!")
             if len(input_tokens) + max_tokens >= context_len:
                 self._warn_context_size()
 

@@ -5,6 +5,8 @@ This project provides the required "glue" components to control your Home Assist
 Please see the [Setup Guide](./docs/Setup.md) for more information on installation.
 
 ## Local LLM Conversation Integration
+**The latest version of this integration requires Home Assistant 2024.8.0 or newer**
+
 In order to integrate with Home Assistant, we provide a custom component that exposes the locally running LLM as a "conversation agent".
 
 This component can be interacted with in a few ways:  
@@ -90,10 +92,14 @@ The dataset is available on HuggingFace: https://huggingface.co/datasets/acon96/
 The source for the dataset is in the [data](/data) of this repository.
 
 ### Training
-The 3B model was trained as a full fine-tuning on 2x RTX 4090 (48GB). Training time took approximately 28 hours. It was trained on the `--large` dataset variant.
+
+If you want to prepare your own training environment, see the details on how to do it in the [Training Guide](./docs/Training.md) document.
 
 <details>
-<summary>Training Arguments</summary>
+
+<summary>Training Details</summary>
+
+The 3B model was trained as a full fine-tuning on 2x RTX 4090 (48GB). Training time took approximately 28 hours. It was trained on the `--large` dataset variant.
 
 ```console
 accelerate launch --config_file fsdp_config.yaml train.py \
@@ -101,18 +107,20 @@ accelerate launch --config_file fsdp_config.yaml train.py \
     --base_model stabilityai/stablelm-zephyr-3b \
     --bf16 \
     --train_dataset data/home_assistant_train.jsonl \
-    --learning_rate 1e-5 --batch_size 64 --epochs 1 \
-    --micro_batch_size 2 --gradient_checkpointing --group_by_length \
+    --learning_rate 1e-5 \
+    --batch_size 64 \
+    --epochs 1 \
+    --micro_batch_size 2 \
+    --gradient_checkpointing \
+    --group_by_length \
     --ctx_size 2048 \
-    --save_steps 50 --save_total_limit 10 --eval_steps 100 --logging_steps 2
+    --save_steps 50 \
+    --save_total_limit 10 \
+    --eval_steps 100 \
+    --logging_steps 2
 ```
 
-</details>
-
 The 1B model was trained as a full fine-tuning on an RTX 3090 (24GB). Training took approximately 2 hours. It was trained on the `--medium` dataset variant.
-
-<details>
-<summary>Training Arguments</summary>
 
 ```console
 python3 train.py \
@@ -121,13 +129,19 @@ python3 train.py \
     --bf16 \
     --train_dataset data/home_assistant_train.jsonl \
     --test_dataset data/home_assistant_test.jsonl \
-    --learning_rate 2e-5 --batch_size 32 \
-    --micro_batch_size 8 --gradient_checkpointing --group_by_length \
-    --ctx_size 2048 --save_steps 100 --save_total_limit 10
+    --learning_rate 2e-5 \
+    --batch_size 32 \
+    --micro_batch_size 8 \
+    --gradient_checkpointing \
+    --group_by_length \
+    --ctx_size 2048 \
+    --save_steps 100 \
+    --save_total_limit 10
+    --prefix_ids 29966,29989,465,22137,29989,29958,13 \
+    --suffix_ids 2
 ```
-
 </details>
-<br/>
+
 
 ## Home Assistant Addon
 In order to facilitate running the project entirely on the system where Home Assistant is installed, there is an experimental Home Assistant Add-on that runs the oobabooga/text-generation-webui to connect to using the "remote" backend options.  The addon can be found in the [addon/](./addon/README.md) directory.
@@ -136,6 +150,9 @@ In order to facilitate running the project entirely on the system where Home Ass
 ## Version History
 | Version | Description                                                                                                                                                                                                          |
 |---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| v0.3.6  | Small llama.cpp backend fixes                                                                                                                                                                                        |
+| v0.3.5  | Fix for llama.cpp backend installation, Fix for Home LLM v1-3 API parameters, add Polish ICL examples                                                                                                                |
+| v0.3.4  | Significantly improved language support including full Polish translation, Update bundled llama-cpp-python to support new models, various bug fixes                                                                  |
 | v0.3.3  | Improvements to the Generic OpenAI Backend, improved area handling, fix issue using RGB colors, remove EOS token from responses, replace requests dependency with aiohttp included with Home Assistant               |
 | v0.3.2  | Fix for exposed script entities causing errors, fix missing GBNF error, trim whitespace from model output                                                                                                            |
 | v0.3.1  | Adds basic area support in prompting, Fix for broken requirements, fix for issue with formatted tools, fix custom API not registering on startup properly                                                            |

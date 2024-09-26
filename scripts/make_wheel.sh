@@ -8,5 +8,7 @@ cd /tmp
 git clone --recurse-submodules https://github.com/abetlen/llama-cpp-python --branch $1
 cd llama-cpp-python
 pip3 install build
+
+export CMAKE_ARGS="-DLLAVA_BUILD=OFF -DGGML_NATIVE=ON"
 python3 -m build --wheel
 cp -f ./dist/*.whl /tmp/dist/

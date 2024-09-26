@@ -6,7 +6,7 @@ from typing import Final
 
 import homeassistant.components.conversation as ha_conversation
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, llm
@@ -14,24 +14,8 @@ from homeassistant.util.json import JsonObjectType
 
 import voluptuous as vol
 
-from .agent import (
-    LocalLLMAgent,
-    LlamaCppAgent,
-    GenericOpenAIAPIAgent,
-    TextGenerationWebuiAgent,
-    LlamaCppPythonAPIAgent,
-    OllamaAPIAgent,
-)
 
 from .const import (
-    CONF_BACKEND_TYPE,
-    DEFAULT_BACKEND_TYPE,
-    BACKEND_TYPE_LLAMA_HF,
-    BACKEND_TYPE_LLAMA_EXISTING,
-    BACKEND_TYPE_TEXT_GEN_WEBUI,
-    BACKEND_TYPE_GENERIC_OPENAI,
-    BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER,
-    BACKEND_TYPE_OLLAMA,
     ALLOWED_SERVICE_CALL_ARGUMENTS,
     DOMAIN,
     HOME_LLM_API_ID,
@@ -42,61 +26,26 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
-    """Handle options update."""
-    hass.data[DOMAIN][entry.entry_id] = entry
-    
-    # call update handler
-    agent: LocalLLMAgent = ha_conversation.get_agent_manager(hass).async_get_agent(entry.entry_id)
-    await hass.async_add_executor_job(agent._update_options)
+PLATFORMS = (Platform.CONVERSATION,)
 
-    return True
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Local LLM Conversation from a config entry."""
 
     # make sure the API is registered
     if not any([x.id == HOME_LLM_API_ID for x in llm.async_get_apis(hass)]):
         llm.async_register_api(hass, HomeLLMAPI(hass))
 
-    def create_agent(backend_type):
-        agent_cls = None
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry
 
-        if backend_type in [ BACKEND_TYPE_LLAMA_HF, BACKEND_TYPE_LLAMA_EXISTING ]:
-            agent_cls = LlamaCppAgent
-        elif backend_type == BACKEND_TYPE_GENERIC_OPENAI:
-            agent_cls = GenericOpenAIAPIAgent
-        elif backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
-            agent_cls = TextGenerationWebuiAgent
-        elif backend_type == BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER:
-            agent_cls = LlamaCppPythonAPIAgent
-        elif backend_type == BACKEND_TYPE_OLLAMA:
-            agent_cls = OllamaAPIAgent
-        
-        return agent_cls(hass, entry)
-
-    # create the agent in an executor job because the constructor calls `open()`
-    backend_type = entry.data.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE)
-    agent = await hass.async_add_executor_job(create_agent, backend_type)
-
-    # call load model
-    await agent._async_load_model(entry)
-
-    # handle updates to the options
-    entry.async_on_unload(entry.add_update_listener(update_listener))
-
-    ha_conversation.async_set_agent(hass, entry, agent)
-
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = entry
-
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload Local LLM."""
+    """Unload Ollama."""
+    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        return False
     hass.data[DOMAIN].pop(entry.entry_id)
-    ha_conversation.async_unset_agent(hass, entry)
     return True
 
 async def async_migrate_entry(hass, config_entry: ConfigEntry):
@@ -145,7 +94,11 @@ class HassServiceTool(llm.Tool):
         self, hass: HomeAssistant, tool_input: llm.ToolInput, llm_context: llm.LLMContext
     ) -> JsonObjectType:
         """Call the tool."""
-        domain, service = tuple(tool_input.tool_args["service"].split("."))
+        try:
+            domain, service = tuple(tool_input.tool_args["service"].split("."))
+        except ValueError:
+            return { "result": "unknown service" }
+        
         target_device = tool_input.tool_args["target_device"]
 
         if domain not in self.ALLOWED_DOMAINS or service not in self.ALLOWED_SERVICES:

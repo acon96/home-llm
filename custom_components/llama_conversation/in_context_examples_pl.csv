@@ -1,0 +1,20 @@
+type,request,tool,response
+fan,Włącz <name>,HassTurnOn,Włączam wentylator.
+fan,Włącz wentylatory w <area>,HassTurnOn,Włączam wentylatory w <area>.
+fan,Wyłącz <name>,HassTurnOff,Wyłączam wentylator tak jak prosiłeś.
+fan,Przełącz wentylator <name>,HassToggle,Przełączam stan wentylatora.
+light,Włącz światło <name>,HassTurnOn,Włączyłem światło.
+light,Wyłącz oświetlenie w <area>,HassTurnOff,Wyłączam oświetlenie zgodnie z Twoją prośbą w <area>.
+light,Przełącz światła w <area>,HassToggle,Przełączam światła w <area>.
+light,Ustaw jasność światła <name> na <brightness>,HassLightSet,Ustawiam teraz jasność światła <name>.
+light,Zmień kolor oświetlenia w <area> na <color>,HassLightSet,Zmieniłem kolor oświetlenia.
+media_player,Czy możesz włączyć <name>,HassTurnOn,Włączam odtwarzacz.
+media_player,<name> powinien być wyłączony,HassTurnOff,Wyłączam odtwarzacz.
+media_player,Czy możesz nacisnąć play na <name>,HassMediaUnpause,Rozpoczynam odtwarzanie na <name>.
+media_player,Wstrzymaj <name>,HassMediaPause,Wstrzymuję odtwarzanie.
+media_player,Odtwórz następny utwór na <name>,HassMediaNext,Przeskakuję do następnego utworu na <name>.
+switch,Włącz <name>,HassTurnOn,Włączam przełącznik.
+switch,Wyłącz przełączniki w <area>,HassTurnOff,Wyłączam urządzenia w <area>.
+switch,Przełącz przełącznik <name>,HassToggle,Przełączam przełącznik <name>.
+vacuum,Uruchom odkurzacz <name>,HassVacuumStart,Rozpoczynam odkurzanie na <name>.
+vacuum,Zatrzymaj odkurzacz <name>,HassVacuumReturnToBase,Zawracam odkurzacz do bazy.

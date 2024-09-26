@@ -6,6 +6,7 @@ import logging
 import multiprocessing
 import voluptuous as vol
 import webcolors
+from webcolors import CSS3
 from importlib.metadata import version
 
 from homeassistant.helpers import config_validation as cv
@@ -21,6 +22,12 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+CSS3_NAME_TO_RGB = {
+    name: webcolors.name_to_rgb(name, CSS3)
+    for name
+    in webcolors.names(CSS3)
+}
+
 class MissingQuantizationException(Exception):
     def __init__(self, missing_quant: str, available_quants: list[str]):
         self.missing_quant = missing_quant
@@ -28,8 +35,9 @@ class MissingQuantizationException(Exception):
 
 def closest_color(requested_color):
     min_colors = {}
-    for key, name in webcolors.CSS3_HEX_TO_NAMES.items():
-        r_c, g_c, b_c = webcolors.hex_to_rgb(key)
+    
+    for name, rgb in CSS3_NAME_TO_RGB.items():
+        r_c, g_c, b_c = rgb
         rd = (r_c - requested_color[0]) ** 2
         gd = (g_c - requested_color[1]) ** 2
         bd = (b_c - requested_color[2]) ** 2
@@ -73,6 +81,13 @@ def custom_custom_serializer(value):
             return { "type": "integer" }
     except Exception:
         pass
+
+    # this is throwing exceptions. I thought vol should handle this already
+    if isinstance(value, vol.In):
+        if isinstance(value.container, dict):
+            return { "enum": list(value.container.keys()) }
+        else:
+            return { "enum": list(value.container) }
     
     if isinstance(value, list):
         result = {}
@@ -180,7 +195,9 @@ def install_llama_cpp_python(config_dir: str):
         _LOGGER.debug(f"Wheel location: {latest_wheel}")
         return install_package(os.path.join(folder, latest_wheel), pip_kwargs(config_dir))
         
-    github_release_url = f"https://github.com/acon96/home-llm/releases/download/v{INTEGRATION_VERSION}/llama_cpp_python-{EMBEDDED_LLAMA_CPP_PYTHON_VERSION}-{runtime_version}-{runtime_version}-musllinux_1_2_{platform_suffix}{instruction_extensions_suffix}.whl"
+    # scikit-build-core v0.9.7+ doesn't recognize these builds as musllinux, and just tags them as generic linux
+    # github_release_url = f"https://github.com/acon96/home-llm/releases/download/v{INTEGRATION_VERSION}/llama_cpp_python-{EMBEDDED_LLAMA_CPP_PYTHON_VERSION}-{runtime_version}-{runtime_version}-musllinux_1_2_{platform_suffix}{instruction_extensions_suffix}.whl"
+    github_release_url = f"https://github.com/acon96/home-llm/releases/download/v{INTEGRATION_VERSION}/llama_cpp_python-{EMBEDDED_LLAMA_CPP_PYTHON_VERSION}-{runtime_version}-{runtime_version}-linux_{platform_suffix}{instruction_extensions_suffix}.whl"
     if install_package(github_release_url, pip_kwargs(config_dir)):
         _LOGGER.info("llama-cpp-python successfully installed from GitHub release")
         return True
