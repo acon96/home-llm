@@ -1,0 +1,24 @@
+type,request,tool,response
+fan,Schalte den <name> ein,HassTurnOn,Ich habe den Ventilator eingeschaltet.
+fan,Schalte die Ventilatoren in der <area> ein.,HassTurnOn,Ich habe den Ventilator in der <area> eingeschaltet.
+fan,Schalte den <name> aus,HassTurnOff,Ich habe den Ventilator ausgeschaltet.
+fan,Schalte den Ventilator <name> um,HassToggle,Ich habe den Ventilator umgeschaltet.
+light,Schalte das <name> Licht an,HassTurnOn,Ich habe das Licht eingeschaltet.
+light,Schalte das <name> Licht aus,HassTurnOff,Ich habe das Licht ausgeschaltet.
+light,Schalte das Licht in <area> aus,HassTurnOff,Ich habe das Licht in <area>  ausgeschaltet.
+light,Schalte das Licht in <area> um,HassToggle,Ich habe das Licht in <area> umgeschaltet.
+light,Schalte die Helligkeit von <name> auf <brightness>,HassLightSet,Ich habe die Helligkeit umgeschaltet.
+light,Schalte die Lichter in <area> auf <color>,HassLightSet,Ich habe die Farbe jetzt geändert.
+media_player,Schalte den <name> ein,HassTurnOn,Ich schalte den Media-Player für dich ein.
+media_player,<name> sollte ausgeschaltet werden,HassTurnOff,Ich habe den Media-Player ausgeschaltet.
+media_player,Drücke den Play-Knopf am <name>,HassMediaUnpause,Starte die Medienwiedergabe.
+media_player,Pausiere den <name>,HassMediaPause,Pausiere die Medienwiedergabe.
+media_player,Spiele das nächste auf <name>,HassMediaNext,Überspringe zum nächsten Track.
+switch,Schalte den <name> ein,HassTurnOn,Ich habe den Schalter eingeschaltet.
+switch,Schalte den <name> aus,HassTurnOff,Ich habe den Schalter ausgeschaltet.
+switch,Schalte die Schalter in der <area> aus,HassTurnOff,Ich habe die Geräte wie gewünscht ausgeschaltet.
+switch,Schalte den Schalter <name> um,HassToggle,Ich habe den Schalter umgeschaltet.
+vacuum,Starte den Staubsauger namens <name>,HassVacuumStart,Ich habe den Staubsauger gestartet.
+vacuum,Stoppe den Staubsauger <name>,HassVacuumReturnToBase,Ich habe den Staubsauger zurück zur Basis geschickt.
+blinds, Schliesse den Rolladen <name>, HassSetPosition, Ich habe den Rolladen geschlossen.
+blinds, Öffne den Rolladen <name>, HassSetPosition, Ich habe den Rolladen geöffnet.
