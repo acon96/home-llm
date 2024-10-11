@@ -58,32 +58,32 @@ DEFAULT_PROMPT_BASE = """<persona>
 <current_date>
 <tools>: {{ tools | to_json }}
 <devices>:
-{% for device in devices | selectattr('area_id', 'none'): %}
+{%- for device in devices | selectattr('area_id', 'none'): %}
 {{ device.entity_id }} '{{ device.name }}' = {{ device.state }}{{ ([""] + device.attributes) | join(";") }}
-{% endfor %}
-{% for area in devices | rejectattr('area_id', 'none') | groupby('area_name') %}
+{%- endfor %}
+{%- for area in devices | rejectattr('area_id', 'none') | groupby('area_name') %}
 ## <area>: {{ area.grouper }}
-{% for device in area.list %}
+{%- for device in area.list %}
 {{ device.entity_id }} '{{ device.name }}' = {{ device.state }};{{ device.attributes | join(";") }}
-{% endfor %}
-{% endfor %}"""
+{%- endfor %}
+{%- endfor %}"""
 DEFAULT_PROMPT_BASE_LEGACY = """<persona>
 <current_date>
 <services>: {{ formatted_tools }}
 <devices>:
 {{ formatted_devices }}"""
 ICL_EXTRAS = """
-{% for item in response_examples %}
+{%- for item in response_examples %}
 {{ item.request }}
 {{ item.response }}
 <functioncall> {{ item.tool | to_json }}
-{% endfor %}"""
+{%- endfor %}"""
 ICL_NO_SYSTEM_PROMPT_EXTRAS = """
-{% for item in response_examples %}
+{%- for item in response_examples %}
 {{ item.request }}
 {{ item.response }}
 <functioncall> {{ item.tool | to_json }}
-{% endfor %}
+{%- endfor %}
 <user_instruction>:"""
 DEFAULT_PROMPT = DEFAULT_PROMPT_BASE + ICL_EXTRAS
 CONF_CHAT_MODEL = "huggingface_model"
