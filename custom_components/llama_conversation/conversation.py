@@ -424,6 +424,7 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
         tool_response = None
         # parse response
         to_say = service_call_pattern.sub("", response.strip())
+        tool_response = None
         for block in service_call_pattern.findall(response.strip()):
             parsed_tool_call: dict = json.loads(block)
 
@@ -506,8 +507,11 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
                 )
 
         # handle models that generate a function call and wait for the result before providing a response
-        if self.entry.options.get(CONF_TOOL_MULTI_TURN_CHAT, DEFAULT_TOOL_MULTI_TURN_CHAT):
-            conversation.append({"role": "tool", "message": json.dumps(tool_response)})
+        if self.entry.options.get(CONF_TOOL_MULTI_TURN_CHAT, DEFAULT_TOOL_MULTI_TURN_CHAT) and tool_response is not None:
+            try:
+                conversation.append({"role": "tool", "message": json.dumps(tool_response)})
+            except:
+                conversation.append({"role": "tool", "message": "No tools were used in this response."})
 
             # generate a response based on the tool result
             try:
@@ -528,6 +532,7 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
                 )
 
             conversation.append({"role": "assistant", "message": response})
+            conversation.append({"role": "assistant", "message": to_say})
         
         # generate intent response to Home Assistant
         intent_response = intent.IntentResponse(language=user_input.language)
