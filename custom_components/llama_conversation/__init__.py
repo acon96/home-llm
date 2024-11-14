@@ -71,7 +71,6 @@ class HassServiceTool(llm.Tool):
     parameters = vol.Schema({
         vol.Required('service'): str,
         vol.Required('target_device'): str,
-        vol.Optional('rgb_color'): str,
         vol.Optional('brightness'): float,
         vol.Optional('temperature'): float,
         vol.Optional('humidity'): float,
