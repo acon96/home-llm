@@ -37,7 +37,7 @@ from homeassistant.helpers.selector import (
 from homeassistant.util.package import is_installed
 from importlib.metadata import version
 
-from .utils import download_model_from_hf, install_llama_cpp_python, format_url, MissingQuantizationException
+from .utils import download_model_from_hf, get_llama_cpp_python_version, install_llama_cpp_python, format_url, MissingQuantizationException
 from .const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -352,7 +352,9 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
             local_backend = is_local_backend(user_input[CONF_BACKEND_TYPE])
             self.model_config.update(user_input)
             if local_backend:
-                if is_installed("llama-cpp-python") and version("llama-cpp-python") == EMBEDDED_LLAMA_CPP_PYTHON_VERSION:
+                installed_version = await self.hass.async_add_executor_job(get_llama_cpp_python_version)
+                _LOGGER.debug(f"installed version: {installed_version}")
+                if installed_version == EMBEDDED_LLAMA_CPP_PYTHON_VERSION:
                     return await self.async_step_local_model()
                 else:
                     return await self.async_step_install_local_wheels()

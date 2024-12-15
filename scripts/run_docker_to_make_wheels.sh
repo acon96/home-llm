@@ -18,4 +18,4 @@ VERSION_TO_BUILD="v0.3.5"
 docker run -it --rm \
     --entrypoint bash \
     -v $(pwd):/tmp/dist \
-    homeassistant/home-assistant:2024.12 /tmp/dist/make_wheel.sh $VERSION_TO_BUILD
+    homeassistant/home-assistant:2024.12.3 /tmp/dist/make_wheel.sh $VERSION_TO_BUILD
