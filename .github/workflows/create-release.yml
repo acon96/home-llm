@@ -20,33 +20,33 @@ jobs:
       matrix:
         include:
         # ARM variants
-        - home_assistant_version: "2024.2.1"
+        - home_assistant_version: "2024.12"
           arch: "aarch64"
-        - home_assistant_version: "2024.2.1"
+        - home_assistant_version: "2024.12"
           arch: "armhf"
 
         # Base x86
-        - home_assistant_version: "2024.2.1"
+        - home_assistant_version: "2024.12"
           suffix: "-noavx"
           arch: "amd64"
           extra_defines: "-DGGML_AVX=OFF -DGGML_AVX2=OFF -DGGML_FMA=OFF -DGGML_F16C=OFF"
-        - home_assistant_version: "2024.2.1"
+        - home_assistant_version: "2024.12.1"
           arch: "i386"
           suffix: "-noavx"
           extra_defines: "-DGGML_AVX=OFF -DGGML_AVX2=OFF -DGGML_FMA=OFF -DGGML_F16C=OFF"
 
         # AVX2 and AVX512
-        - home_assistant_version: "2024.2.1"
+        - home_assistant_version: "2024.12"
           arch: "amd64"
           extra_defines: "-DGGML_AVX=ON -DGGML_AVX2=ON -DGGML_FMA=ON -DGGML_F16C=ON"
-        - home_assistant_version: "2024.2.1"
+        - home_assistant_version: "2024.12.1"
           arch: "amd64"
           suffix: "-avx512"
           extra_defines: "-DGGML_AVX512=ON -DGGML_FMA=ON -DGGML_F16C=ON"
-        - home_assistant_version: "2024.2.1"
+        - home_assistant_version: "2024.12"
           arch: "i386"
           extra_defines: "-DGGML_AVX=ON -DGGML_AVX2=ON -DGGML_FMA=ON -DGGML_F16C=ON"
-        - home_assistant_version: "2024.2.1"
+        - home_assistant_version: "2024.12"
           arch: "i386"
           suffix: "-avx512"
           extra_defines: "-DGGML_AVX512=ON -DGGML_FMA=ON -DGGML_F16C=ON"
