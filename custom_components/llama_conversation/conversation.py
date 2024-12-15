@@ -755,12 +755,14 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
 
                 value = attributes[attribute_name]
                 if value is not None:
-                    if attribute_name == "temperature":
-                        value = int(value)
-                        if value > 50:
-                            value = f"{value}F"
-                        else:
-                            value = f"{value}C"
+                    # try to apply unit if present
+                    unit_suffix = attributes.get(f"{attribute_name}_unit")
+                    if unit_suffix:
+                        value = f"{value} {unit_suffix}"
+                    elif attribute_name == "temperature":
+                        # try to get unit or guess otherwise
+                        suffix = "F" if value > 50 else "C"
+                        value = F"{int(value)} {suffix}"
                     elif attribute_name == "rgb_color":
                         value = F"{closest_color(value)} {value}"
                     elif attribute_name == "volume_level":
