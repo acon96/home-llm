@@ -421,8 +421,10 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
                 response=intent_response, conversation_id=conversation_id
             )
 
+        tool_response = None
         # parse response
         to_say = service_call_pattern.sub("", response.strip())
+        tool_response = None
         for block in service_call_pattern.findall(response.strip()):
             parsed_tool_call: dict = json.loads(block)
 
@@ -505,8 +507,11 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
                 )
 
         # handle models that generate a function call and wait for the result before providing a response
-        if self.entry.options.get(CONF_TOOL_MULTI_TURN_CHAT, DEFAULT_TOOL_MULTI_TURN_CHAT):
-            conversation.append({"role": "tool", "message": json.dumps(tool_response)})
+        if self.entry.options.get(CONF_TOOL_MULTI_TURN_CHAT, DEFAULT_TOOL_MULTI_TURN_CHAT) and tool_response is not None:
+            try:
+                conversation.append({"role": "tool", "message": json.dumps(tool_response)})
+            except:
+                conversation.append({"role": "tool", "message": "No tools were used in this response."})
 
             # generate a response based on the tool result
             try:
@@ -527,6 +532,7 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
                 )
 
             conversation.append({"role": "assistant", "message": response})
+            conversation.append({"role": "assistant", "message": to_say})
         
         # generate intent response to Home Assistant
         intent_response = intent.IntentResponse(language=user_input.language)
@@ -749,12 +755,14 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
 
                 value = attributes[attribute_name]
                 if value is not None:
-                    if attribute_name == "temperature":
-                        value = int(value)
-                        if value > 50:
-                            value = f"{value}F"
-                        else:
-                            value = f"{value}C"
+                    # try to apply unit if present
+                    unit_suffix = attributes.get(f"{attribute_name}_unit")
+                    if unit_suffix:
+                        value = f"{value} {unit_suffix}"
+                    elif attribute_name == "temperature":
+                        # try to get unit or guess otherwise
+                        suffix = "F" if value > 50 else "C"
+                        value = F"{int(value)} {suffix}"
                     elif attribute_name == "rgb_color":
                         value = F"{closest_color(value)} {value}"
                     elif attribute_name == "volume_level":

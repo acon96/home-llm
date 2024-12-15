@@ -1,11 +1,13 @@
 import time
 import os
+import re
 import sys
 import platform
 import logging
 import multiprocessing
 import voluptuous as vol
 import webcolors
+from webcolors import CSS3
 from importlib.metadata import version
 
 from homeassistant.helpers import config_validation as cv
@@ -21,6 +23,12 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+CSS3_NAME_TO_RGB = {
+    name: webcolors.name_to_rgb(name, CSS3)
+    for name
+    in webcolors.names(CSS3)
+}
+
 class MissingQuantizationException(Exception):
     def __init__(self, missing_quant: str, available_quants: list[str]):
         self.missing_quant = missing_quant
@@ -28,8 +36,9 @@ class MissingQuantizationException(Exception):
 
 def closest_color(requested_color):
     min_colors = {}
-    for key, name in webcolors.CSS3_HEX_TO_NAMES.items():
-        r_c, g_c, b_c = webcolors.hex_to_rgb(key)
+    
+    for name, rgb in CSS3_NAME_TO_RGB.items():
+        r_c, g_c, b_c = rgb
         rd = (r_c - requested_color[0]) ** 2
         gd = (g_c - requested_color[1]) ** 2
         bd = (b_c - requested_color[2]) ** 2
@@ -97,10 +106,13 @@ def download_model_from_hf(model_name: str, quantization_type: str, storage_fold
     
     fs = HfFileSystem()
     potential_files = [ f for f in fs.glob(f"{model_name}/*.gguf") ]
-    wanted_file = [f for f in potential_files if (f".{quantization_type.lower()}." in f or f".{quantization_type.upper()}." in f)]
+    wanted_file = [f for f in potential_files if (f"{quantization_type.lower()}.gguf" in f or f"{quantization_type.upper()}.gguf" in f)]
 
     if len(wanted_file) != 1:
-        available_quants = [file.split(".")[-2].upper() for file in potential_files]
+        available_quants = [
+            re.split(r"\.|-", file.removesuffix(".gguf"))[-1].upper()
+            for file in potential_files
+        ]
         raise MissingQuantizationException(quantization_type, available_quants)
     try:
         os.makedirs(storage_folder, exist_ok=True)
@@ -137,6 +149,11 @@ def validate_llama_cpp_python_installation():
 
     if process.exitcode != 0:
         raise Exception(f"Failed to properly initialize llama-cpp-python. (Exit code {process.exitcode}.)")
+
+def get_llama_cpp_python_version():
+    if not is_installed("llama-cpp-python"):
+        return None
+    return version("llama-cpp-python")
 
 def install_llama_cpp_python(config_dir: str):
 
