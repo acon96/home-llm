@@ -146,59 +146,69 @@ PROMPT_TEMPLATE_DESCRIPTIONS = {
         "user": { "prefix": "<|im_start|>user\n", "suffix": "<|im_end|>" },
         "assistant": { "prefix": "<|im_start|>assistant\n", "suffix": "<|im_end|>" },
         "tool": { "prefix": "<|im_start|>tool", "suffix": "<|im_end|>" },
+        "chain_of_thought": { "prefix": "<think>", "suffix": "</think>"},
         "generation_prompt": "<|im_start|>assistant"
     },
     PROMPT_TEMPLATE_COMMAND_R: {
         "system": { "prefix": "<|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|>", "suffix": "<|END_OF_TURN_TOKEN|>" },
         "user": { "prefix": "<|START_OF_TURN_TOKEN|><|USER_TOKEN|>", "suffix": "<|END_OF_TURN_TOKEN|>" },
         "assistant": { "prefix": "<|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>", "suffix": "<|END_OF_TURN_TOKEN|>" },
+        "chain_of_thought": { "prefix": "<think>", "suffix": "</think>"},
         "generation_prompt": "<|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>"
     },
     PROMPT_TEMPLATE_ALPACA: {
         "system": { "prefix": "", "suffix": "\n" },
         "user": { "prefix": "### Instruction:\n", "suffix": "\n" },
         "assistant": { "prefix": "### Response:\n", "suffix": "\n" },
+        "chain_of_thought": { "prefix": "<think>", "suffix": "</think>"},
         "generation_prompt": "### Response:"
     },
     PROMPT_TEMPLATE_VICUNA: {
         "system": { "prefix": "", "suffix": "\n" },
         "user": { "prefix": "USER: ", "suffix": "" },
         "assistant": { "prefix": "ASSISTANT: ", "suffix": "</s>" },
+        "chain_of_thought": { "prefix": "<think>", "suffix": "</think>"},
         "generation_prompt": "ASSISTANT:"
     },
     PROMPT_TEMPLATE_NONE: {
         "system": { "prefix": "", "suffix": "" },
         "user": { "prefix": "", "suffix": "" },
         "assistant": { "prefix": "", "suffix": "" },
+        "chain_of_thought": { "prefix": "", "suffix": ""},
         "generation_prompt": ""
     },
     PROMPT_TEMPLATE_MISTRAL: {
         "user": { "prefix": "<s>[INST] ", "suffix": " [/INST] " },
         "assistant": { "prefix": "", "suffix": "</s>" },
+        "chain_of_thought": { "prefix": "<think>", "suffix": "</think>"},
         "generation_prompt": ""
     },
     PROMPT_TEMPLATE_ZEPHYR: {
         "system": { "prefix": "<|system|>\n", "suffix": "<|endoftext|>" },
         "user": { "prefix": "<|user|>\n", "suffix": "<|endoftext|>" },
         "assistant": { "prefix": "<|assistant|>\n", "suffix": "<|endoftext|>" },
+        "chain_of_thought": { "prefix": "<think>", "suffix": "</think>"},
         "generation_prompt": "<|assistant|>\n"
     },
     PROMPT_TEMPLATE_ZEPHYR2: {
         "system": { "prefix": "<|system|>\n", "suffix": "</s>" },
         "user": { "prefix": "<|user|>\n", "suffix": "</s>" },
         "assistant": { "prefix": "<|assistant|>\n", "suffix": "</s>" },
+        "chain_of_thought": { "prefix": "<think>", "suffix": "</think>"},
         "generation_prompt": "<|assistant|>\n"
     },
     PROMPT_TEMPLATE_ZEPHYR3: {
         "system": { "prefix": "<|system|>\n", "suffix": "<|end|>" },
         "user": { "prefix": "<|user|>\n", "suffix": "<|end|>" },
         "assistant": { "prefix": "<|assistant|>\n", "suffix": "<|end|>" },
+        "chain_of_thought": { "prefix": "<think>", "suffix": "</think>"},
         "generation_prompt": "<|assistant|>\n"
     },
     PROMPT_TEMPLATE_LLAMA3: {
         "system": { "prefix": "<|start_header_id|>system<|end_header_id|>\n\n", "suffix": "<|eot_id|>"},
         "user": { "prefix": "<|start_header_id|>user<|end_header_id|>\n\n", "suffix": "<|eot_id|>"},
         "assistant": { "prefix": "<|start_header_id|>assistant<|end_header_id|>\n\n", "suffix": "<|eot_id|>"},
+        "chain_of_thought": { "prefix": "<think>", "suffix": "</think>"},
         "generation_prompt": "<|start_header_id|>assistant<|end_header_id|>\n\n"
     }
 }
