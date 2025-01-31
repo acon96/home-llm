@@ -406,6 +406,9 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
         # remove end of text token if it was returned
         response = response.replace(template_desc["assistant"]["suffix"], "")
 
+        # remove think blocks        
+        response = re.sub(rf"^.*?{template_desc["chain_of_thought"]["suffix"]}", "", response, flags=re.DOTALL)
+        
         conversation.append({"role": "assistant", "message": response})
         if remember_conversation:
             if remember_num_interactions and len(conversation) > (remember_num_interactions * 2) + 1:
