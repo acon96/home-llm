@@ -121,6 +121,8 @@ from .const import (
     TOOL_FORMAT_REDUCED,
     TOOL_FORMAT_MINIMAL,
     ALLOWED_SERVICE_CALL_ARGUMENTS,
+    SERVICE_TOOL_ALLOWED_SERVICES,
+    SERVICE_TOOL_ALLOWED_DOMAINS,
     CONF_BACKEND_TYPE,
     DEFAULT_BACKEND_TYPE,
     BACKEND_TYPE_LLAMA_HF,
@@ -816,6 +818,9 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
                 all_services = []
                 scripts_added = False
                 for domain in domains:
+                    if domain not in SERVICE_TOOL_ALLOWED_DOMAINS:
+                        continue
+                    
                     # scripts show up as individual services
                     if domain == "script" and not scripts_added:
                         all_services.extend([
@@ -828,6 +833,9 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
                         continue
                     
                     for name, service in service_dict.get(domain, {}).items():
+                        if name not in SERVICE_TOOL_ALLOWED_SERVICES:
+                            continue
+
                         args = flatten_vol_schema(service.schema)
                         args_to_expose = set(args).intersection(ALLOWED_SERVICE_CALL_ARGUMENTS)
                         service_schema = vol.Schema({

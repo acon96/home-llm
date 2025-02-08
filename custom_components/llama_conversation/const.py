@@ -4,6 +4,8 @@ import types, os
 DOMAIN = "llama_conversation"
 HOME_LLM_API_ID = "home-llm-service-api"
 SERVICE_TOOL_NAME = "HassCallService"
+SERVICE_TOOL_ALLOWED_SERVICES = ["turn_on", "turn_off", "toggle", "press", "increase_speed", "decrease_speed", "open_cover", "close_cover", "stop_cover", "lock", "unlock", "start", "stop", "return_to_base", "pause", "cancel", "add_item", "set_temperature", "set_humidity", "set_fan_mode", "set_hvac_mode", "set_preset_mode"]
+SERVICE_TOOL_ALLOWED_DOMAINS = ["light", "switch", "button", "fan", "cover", "lock", "media_player", "climate", "vacuum", "todo", "timer", "script"]
 CONF_PROMPT = "prompt"
 PERSONA_PROMPTS = {
     "en": "You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed with the information provided only.",

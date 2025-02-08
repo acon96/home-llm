@@ -20,6 +20,8 @@ from .const import (
     DOMAIN,
     HOME_LLM_API_ID,
     SERVICE_TOOL_NAME,
+    SERVICE_TOOL_ALLOWED_SERVICES,
+    SERVICE_TOOL_ALLOWED_DOMAINS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -82,13 +84,8 @@ class HassServiceTool(llm.Tool):
         vol.Optional('item'): str,
     })
 
-    ALLOWED_SERVICES: Final[list[str]] = [
-        "turn_on", "turn_off", "toggle", "press", "increase_speed", "decrease_speed", "open_cover", "close_cover", "stop_cover",
-        "lock", "unlock", "start", "stop", "return_to_base", "pause", "cancel", "add_item"
-    ]
-    ALLOWED_DOMAINS: Final[list[str]] = [
-        "light", "switch", "button", "fan", "cover", "lock", "media_player", "climate", "vacuum", "todo", "timer", "script",
-    ]
+    ALLOWED_SERVICES: Final[list[str]] = SERVICE_TOOL_ALLOWED_SERVICES
+    ALLOWED_DOMAINS: Final[list[str]] = SERVICE_TOOL_ALLOWED_DOMAINS
 
     async def async_call(
         self, hass: HomeAssistant, tool_input: llm.ToolInput, llm_context: llm.LLMContext
