@@ -1228,7 +1228,7 @@ class GenericOpenAIAPIAgent(LocalLLMAgent):
 
     def _chat_completion_params(self, conversation: dict) -> (str, dict):
         request_params = {}
-        api_base_path = self.entry.options.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
+        api_base_path = self.entry.data.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
 
         endpoint = f"/{api_base_path}/chat/completions"
         request_params["messages"] = [ { "role": x["role"], "content": x["message"] } for x in conversation ]
@@ -1237,7 +1237,7 @@ class GenericOpenAIAPIAgent(LocalLLMAgent):
 
     def _completion_params(self, conversation: dict) -> (str, dict):
         request_params = {}
-        api_base_path = self.entry.options.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
+        api_base_path = self.entry.data.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
 
         endpoint = f"/{api_base_path}/completions"
         request_params["prompt"] = self._format_prompt(conversation)
