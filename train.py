@@ -21,6 +21,7 @@ MULTI_GPU_WORLD_SIZE = int(os.environ.get("WORLD_SIZE", "1"))
 MULTI_GPU_RANK = int(os.environ.get("RANK", "0"))
 IS_MULTI_GPU = os.environ.get("RANK") != None
 IS_MASTER_PROCESS = MULTI_GPU_RANK == 0
+DATASET_PROCESSING_THREADS = 8
 
 @dataclass
 class TrainingRunArguments:
@@ -192,11 +193,11 @@ if "LOCAL_RANK" not in os.environ:
 
 model = AutoModelForCausalLM.from_pretrained(
     training_run_args.base_model,
-    trust_remote_code=True,
     max_memory=find_max_vram(),
+    token=os.environ.get("HF_TOKEN"),
     **model_kwargs
 )
-tokenizer = AutoTokenizer.from_pretrained(training_run_args.base_model, trust_remote_code=True)
+tokenizer = AutoTokenizer.from_pretrained(training_run_args.base_model, token=os.environ.get("HF_TOKEN"))
 
 if training_run_args.add_pad_token:
     tokenizer.add_special_tokens({'pad_token': '<|pad|>'})
@@ -552,7 +553,7 @@ if not training_run_args.dpo:
         raise Exception("Unknown dataset input format (not raw corpus or sharegpt)")
 
     tokenized_test_dataset = None
-    num_proc = os.cpu_count() // MULTI_GPU_WORLD_SIZE
+    num_proc = DATASET_PROCESSING_THREADS // MULTI_GPU_WORLD_SIZE
     tokenized_train_dataset = datasets["train"].map(tokenize_function, batched=True, num_proc=num_proc).remove_columns(columns_to_remove)
     if training_run_args.test_dataset:
         tokenized_test_dataset = datasets["test"].map(tokenize_function, batched=True, num_proc=num_proc).remove_columns(columns_to_remove)
