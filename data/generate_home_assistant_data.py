@@ -1151,7 +1151,7 @@ def load_dataset_piles(language):
 # TODO: answer questions about more than one thing in the state list at once
 # TODO: add examples for rooms/groups of devices. i.e. "turn off all the lights in the kitchen"
 # TODO: add time, weather, and calendar/reminders (next 3 events?)
-def main():
+def main(args=None):
     parser = argparse.ArgumentParser(description="Generate the full dataset from the CSV piles")
     parser.add_argument("--sample", action="store_true", help="Set this flag to enable generation of the train dataset.")
     parser.add_argument("--test", action="store_true", help="Set this flag to enable generation of the train dataset.")
@@ -1171,7 +1171,7 @@ def main():
     dataset_format_group.add_argument('--raw_corpus', action='store_const', const='raw', dest='format')
     dataset_format_group.add_argument('--sharegpt', action='store_const', const='sharegpt', dest='format')
 
-    args = parser.parse_args()
+    args = parser.parse_args(args=args)
 
     if not args.sample and not args.train and not args.test and not args.merge and not args.dpo:
         parser.print_usage()

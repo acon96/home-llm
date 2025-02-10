@@ -290,8 +290,8 @@ def load_model(model_name, is_lora, is_hf, load_in_8bit, checkpoint_name):
         top_k=40,
         top_p=1.0,
         repetition_penalty=1.15,
-        # eos_token_id=trained_model.config.eos_token_id,
-        eos_token_id=128009,
+        eos_token_id=trained_model.config.eos_token_id,
+        # eos_token_id=128009,
         pad_token_id=trained_model.config.pad_token_id if trained_model.config.pad_token_id else trained_model.config.eos_token_id,
     )
 
@@ -350,7 +350,7 @@ def main():
                     print(f"Evaluation already exists for {output_folder}. Skipping...")
                     continue
 
-            trained_model, trained_tokenizer = load_model(args.model, args.lora, ckpt, False)
+            trained_model, trained_tokenizer = load_model(args.model, args.lora, False, False, ckpt)
             evaluate(output_folder, trained_model, trained_tokenizer, dataset, batch_size, False)
 
 
