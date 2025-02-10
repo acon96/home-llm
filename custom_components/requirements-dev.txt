@@ -1,0 +1,9 @@
+# types from Home Assistant
+homeassistant>=2024.6.1
+hassil
+home-assistant-intents
+
+# testing requirements
+pytest
+pytest-asyncio
+pytest-homeassistant-custom-component

@@ -230,6 +230,22 @@ python3 train.py \
     --save_steps 50 --save_total_limit 10 --eval_steps 100 --logging_steps 2
 ```
 
+#### Llama 3.2 3B Instruct
+```
+python3 generate_home_assistant_data.py --train --test --large --sharegpt --language english german french spanish
+
+python3 train.py \
+    --run_name Home-Llama-3.2-3B-rev1 \
+    --base_model meta-llama/Llama-3.2-3B-Instruct \
+    --bf16 \
+    --train_dataset data/home_assistant_train.jsonl \
+    --test_dataset data/home_assistant_test.jsonl \
+    --learning_rate 1e-5 --learning_rate_warmup 0.03 --batch_size 64 --epochs 1 \
+    --micro_batch_size 2 \
+    --ctx_size 2048 \
+    --save_steps 200 --save_total_limit 3 --eval_steps 100 --logging_steps 2
+```
+
 ### Problems
 
 Training a model is not an easy thing. Therefore, we are not able to cover all the problems encountered during training. Here we will try to add known problems and solutions on how to deal with them.
