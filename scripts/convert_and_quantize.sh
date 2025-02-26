@@ -11,8 +11,7 @@ fi
 
 echo "Converting to GGUF..."
 if [ ! -f "./models/$MODEL_NAME/$MODEL_NAME.f16.gguf" ]; then
-    $LLAMA_CPP/convert.py --outfile ./models/$MODEL_NAME/$MODEL_NAME.f16.gguf --outtype f16 ./models/$MODEL_NAME/
-    # $LLAMA_CPP/convert-hf-to-gguf.py --outfile ./models/$MODEL_NAME/$MODEL_NAME.f16.gguf --outtype f16 ./models/$MODEL_NAME/
+    $LLAMA_CPP/convert_hf_to_gguf.py --outfile ./models/$MODEL_NAME/$MODEL_NAME.f16.gguf --outtype f16 ./models/$MODEL_NAME/
 else
     echo "Converted model for already exists. Skipping..."
 fi
@@ -23,7 +22,7 @@ for QUANT in "${DESIRED_QUANTS[@]}"
 do
     QUANT_LOWER=$(echo "$QUANT" | awk '{print tolower($0)}')
     if [ ! -f "./models/$MODEL_NAME/$MODEL_NAME.$QUANT_LOWER.gguf" ]; then
-        $LLAMA_CPP/build/bin/quantize ./models/$MODEL_NAME/$MODEL_NAME.f16.gguf ./models/$MODEL_NAME/$MODEL_NAME.$QUANT_LOWER.gguf $QUANT
+        $LLAMA_CPP/build/bin/llama-quantize ./models/$MODEL_NAME/$MODEL_NAME.f16.gguf ./models/$MODEL_NAME/$MODEL_NAME.$QUANT_LOWER.gguf $QUANT
     else
         echo "Quantized model for '$QUANT' already exists. Skipping..."
     fi

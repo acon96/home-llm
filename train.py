@@ -6,7 +6,7 @@ import torch
 import os
 import random
 import time
-import shutil
+import traceback
 from torch.utils.data import SequentialSampler, Subset, RandomSampler
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer, \
     HfArgumentParser, GPTQConfig, AutoConfig, TrainerCallback, BitsAndBytesConfig
@@ -21,7 +21,6 @@ MULTI_GPU_WORLD_SIZE = int(os.environ.get("WORLD_SIZE", "1"))
 MULTI_GPU_RANK = int(os.environ.get("RANK", "0"))
 IS_MULTI_GPU = os.environ.get("RANK") != None
 IS_MASTER_PROCESS = MULTI_GPU_RANK == 0
-DATASET_PROCESSING_THREADS = 8
 
 @dataclass
 class TrainingRunArguments:
@@ -29,6 +28,7 @@ class TrainingRunArguments:
     base_model: str = field(metadata={"help": "The base model to load for fine-tuning"})
     train_dataset: str = field(metadata={"help": "The JSON file containing the training dataset"})
     test_dataset: str = field(default=None, metadata={"help": "The JSON file containing the evaluation dataset"})
+    dataset_processing_threads: int = field(default=None, metadata={"help": "The number of threads to use to tokenize the dataset"})
     ctx_size: int = field(default=2048, metadata={"help": "The number of tokens to pad & truncate the input examples to"})
     bf16: bool = field(default=False, metadata={"help": "If set, the model will the loaded and trained in bf16 instead of fp32"})
     batch_size: int = field(default=8, metadata={"help": "The simulated 'batch size' that we will train on. will tweak gradient accumulations steps"})
@@ -38,7 +38,7 @@ class TrainingRunArguments:
     learning_rate_schedule: str = field(default="cosine", metadata={"help": "How fast the learning rate is reduced during training"})
     learning_rate_warmup: float = field(default=0.0, metadata={"help": "The starting learning rate (speed at which the model trains)"})
     weight_decay: float = field(default=0.1, metadata={"help": "Weight Decay rate for regularization. Rate to reduce all neuron weights towards zero."})
-    dropout: float = field(default=0.01, metadata={"help": "Dropout percent for regularization. Determines the fraction of neurons randomly deactivated during training."})
+    # dropout: float = field(default=0.01, metadata={"help": "Dropout percent for regularization. Determines the fraction of neurons randomly deactivated during training."})
     gradient_clip: float = field(default=1.0, metadata={"help": "Maximum gradient norm for clipping to prevent exploding gradients during training."})
     resume_from_checkpoint: str = field(default="", metadata={"help": "The name of the checkpoint to resume training from"})
     eval_steps: int = field(default=200, metadata={"help": "The number of steps in between evaluations of the model; set to -1 to evaluate every epoch"})
@@ -77,6 +77,7 @@ class TrainingRunArguments:
 
     # custom trainer tweaks
     sync_to_bucket: str = field(default=None, metadata={"help": "If set, checkpoints will be synced to the s3 bucket specified by this argument"})
+    bucket_save_limit: int = field(default=None, metadata={"help": "The number of recent checkpoints of the model to save in S3 (not including the final model)"})
     flops_baseline: str = field(default=None, metadata={"help": "The baseline flops for the GPUs used for the training run. Outputs MFU"})
 
 
@@ -89,10 +90,11 @@ class UploadToS3Callback(TrainerCallback):
         self.save_total_limit = save_total_limit
 
     def on_save(self, args, state, control, **kwargs):
-        output_dir = kwargs['output_dir']
-        checkpoint = os.path.basename(output_dir)
-        
+
         # Upload current checkpoint
+        checkpoint = f"checkpoint-{state.global_step}"
+        output_dir = f"{args.output_dir}/{checkpoint}"
+        
         for root, dirs, files in os.walk(output_dir):
             for file in files:
                 local_path = os.path.join(root, file)
@@ -100,7 +102,7 @@ class UploadToS3Callback(TrainerCallback):
                 self.s3_client.upload_file(local_path, self.s3_bucket, s3_path)
                 print(f"Uploaded {local_path} to s3://{self.s3_bucket}/{s3_path}")
 
-        # Manage checkpoints in S3
+        # Delete prior checkpoints from S3
         if self.save_total_limit:
             s3_checkpoints = self.list_s3_checkpoints()
             if len(s3_checkpoints) > self.save_total_limit:
@@ -109,18 +111,9 @@ class UploadToS3Callback(TrainerCallback):
                 for checkpoint in to_delete:
                     self.delete_checkpoint_from_s3(checkpoint)
 
-        # Clean local checkpoints, keeping only the most recent
-        all_checkpoints = [os.path.join(args.output_dir, d) for d in os.listdir(args.output_dir) if os.path.isdir(os.path.join(args.output_dir, d))]
-        if all_checkpoints:
-            latest_checkpoint = max(all_checkpoints, key=os.path.getmtime)
-            for checkpoint_dir in all_checkpoints:
-                if checkpoint_dir != latest_checkpoint:
-                    shutil.rmtree(checkpoint_dir)
-                    print(f"Deleted local checkpoint {checkpoint_dir}")
-
     def list_s3_checkpoints(self):
         paginator = self.s3_client.get_paginator('list_objects_v2')
-        page_iterator = paginator.paginate(Bucket=self.s3_bucket, Prefix=self.s3_prefix, Delimiter='/')
+        page_iterator = paginator.paginate(Bucket=self.s3_bucket, Prefix=self.s3_prefix + '/', Delimiter='/')
         return [prefix.get('Prefix').rstrip('/').split('/')[-1] for page in page_iterator for prefix in page.get('CommonPrefixes', [])]
 
     def delete_checkpoint_from_s3(self, checkpoint_name):
@@ -290,7 +283,7 @@ class DataCollatorForSupervisedFineTuning(object):
         )
 
 
-def tokenize_raw_example(batch, tokenizer=None):
+def tokenize_raw_example(batch, tokenizer=None, training_run_args=None):
     return tokenizer(
         text=batch["text"],
         max_length=training_run_args.ctx_size,
@@ -298,7 +291,7 @@ def tokenize_raw_example(batch, tokenizer=None):
         add_special_tokens=False,
     )
 
-def tokenize_sharegpt_example(batch, tokenizer=None):
+def tokenize_sharegpt_example(batch, tokenizer=None, training_run_args=None):
     # TODO: figure out how to properly batch this
     result = []
     for example in batch["conversations"]:
@@ -313,7 +306,7 @@ def tokenize_sharegpt_example(batch, tokenizer=None):
 
     return {"input_ids": result}
 
-def template_dpo_example(batch, tokenizer=None):
+def template_dpo_example(batch, tokenizer=None, training_run_args=None):
     # TODO: figure out how to properly batch this
     result = []
     for example in zip(batch["system"], batch["question"]):
@@ -412,7 +405,7 @@ def do_training_run(training_run_args: TrainingRunArguments):
         # auto detect 'best' format with fallback to fp32
         model_kwargs["torch_dtype"] = "auto"
 
-    model_kwargs["resid_pdrop"] = training_run_args.dropout
+    # model_kwargs["resid_pdrop"] = training_run_args.dropout
     model_kwargs["use_cache"] = False
 
     if not IS_DDP_ENABLED:
@@ -530,7 +523,7 @@ def do_training_run(training_run_args: TrainingRunArguments):
         training_callbacks.append(UploadToS3Callback(
             s3_bucket=training_run_args.sync_to_bucket,
             s3_prefix=training_run_args.run_name,
-            save_total_limit=training_run_args.save_total_limit
+            save_total_limit=training_run_args.bucket_save_limit if training_run_args.bucket_save_limit else training_run_args.save_total_limit
         ))
 
     if training_run_args.flops_baseline:
@@ -563,10 +556,12 @@ def do_training_run(training_run_args: TrainingRunArguments):
             raise Exception("Unknown dataset input format (not raw corpus or sharegpt)")
 
         tokenized_test_dataset = None
-        num_proc = DATASET_PROCESSING_THREADS // MULTI_GPU_WORLD_SIZE
-        tokenized_train_dataset = datasets["train"].map(tokenize_function, batched=True, num_proc=num_proc, fn_kwargs={"tokenizer": tokenizer}).remove_columns(columns_to_remove)
+        num_proc = None
+        if training_run_args.dataset_processing_threads:
+            num_proc = training_run_args.dataset_processing_threads // MULTI_GPU_WORLD_SIZE
+        tokenized_train_dataset = datasets["train"].map(tokenize_function, batched=True, num_proc=num_proc, fn_kwargs={"tokenizer": tokenizer, "training_run_args": training_run_args}).remove_columns(columns_to_remove)
         if training_run_args.test_dataset:
-            tokenized_test_dataset = datasets["test"].map(tokenize_function, batched=True, num_proc=num_proc).remove_columns(columns_to_remove)
+            tokenized_test_dataset = datasets["test"].map(tokenize_function, batched=True, num_proc=num_proc, fn_kwargs={"tokenizer": tokenizer, "training_run_args": training_run_args}).remove_columns(columns_to_remove)
 
         example_lengths = [ len(example) for example in tokenized_train_dataset["input_ids"] ]
         tokens_in_train_set, longest_example = sum(example_lengths), max(example_lengths)
@@ -640,7 +635,7 @@ def do_training_run(training_run_args: TrainingRunArguments):
         # )
 
     try:
-        trainer.train(resume_from_checkpoint=training_run_args.resume_from_checkpoint)
+        trainer.train(resume_from_checkpoint=training_run_args.resume_from_checkpoint if training_run_args.resume_from_checkpoint else None)
 
         if training_run_args.test_dataset:
             trainer.evaluate_all()
@@ -660,15 +655,28 @@ def do_training_run(training_run_args: TrainingRunArguments):
             trainer.save_model()
             tokenizer.save_pretrained(model_dir)
 
+        if training_run_args.sync_to_bucket:
+            import boto3
+            s3_client = boto3.client('s3')
+
+            for root, dirs, files in os.walk(model_dir):
+                for file in files:
+                    local_path = os.path.join(root, file)
+                    s3_path = os.path.join(training_run_args.run_name, os.path.relpath(local_path, start="."))
+                    s3_client.upload_file(local_path, training_run_args.sync_to_bucket, s3_path)
+                    print(f"Uploaded {local_path} to s3://{training_run_args.sync_to_bucket}/{s3_path}")
+
     except Exception as ex:
         if trainer.is_fsdp_enabled:
             raise ex # this doesn't play nice with FSDP so don't even try
         
-        if input("Something bad happened! Try and save it? (Y/n)").lower().startswith("y"):
+        traceback.print_exc()
+        
+        if input("Something bad happened! Try and save it? (Y/n) ").lower().startswith("y"):
             trainer._save_checkpoint(model, None)
             print("Saved Checkpoint!")
 
-        raise ex
+        exit(-1)
     
 if __name__ == "__main__":
     parser = HfArgumentParser([TrainingRunArguments])

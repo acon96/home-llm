@@ -83,7 +83,8 @@ def generate(model, tokenizer, prompts):
     return text
 
 def evaluate(output_folder, trained_model, trained_tokenizer, dataset, batch_size, use_icl):
-    split = trained_tokenizer.apply_chat_template(conversation=[{"role": "assistant", "content":  r"%%%%%%%%%%%%%%%%"}], tokenize=False).split( r"%%%%%%%%%%%%%%%%")[0].replace(trained_tokenizer.bos_token, "")
+    # split = trained_tokenizer.apply_chat_template(conversation=[{"role": "assistant", "content":  r"%%%%%%%%%%%%%%%%"}], tokenize=False).split( r"%%%%%%%%%%%%%%%%")[0].replace(trained_tokenizer.bos_token, "")
+    split = "<|start_header_id|>assistant<|end_header_id|>"
 
     print("Evaluating...")
     correct_answers = 0
@@ -138,7 +139,7 @@ def evaluate(output_folder, trained_model, trained_tokenizer, dataset, batch_siz
             output = generate(trained_model, trained_tokenizer, prompts)
 
             for model_output, expected_response in zip(output, expected_responses):
-                response = model_output.replace(trained_tokenizer.pad_token, "").replace(trained_tokenizer.eos_token, "").split(split)[1]
+                response = model_output.replace(trained_tokenizer.pad_token, "").replace(trained_tokenizer.eos_token, "").split(split)[1].strip()
 
                 expected_service_calls = []
 
@@ -279,8 +280,18 @@ def load_model(model_name, is_lora, is_hf, load_in_8bit, checkpoint_name):
             padding_side='left',
         )
 
+    eos_token_id_to_use = trained_model.config.eos_token_id
+    if len(eos_token_id_to_use) > 0:
+        eos_token_id_to_use = trained_model.config.eos_token_id[0]
+    
+    pad_token_id_to_use = trained_model.config.pad_token_id
     if not trained_tokenizer.pad_token:
         trained_tokenizer.pad_token = trained_tokenizer.eos_token
+
+        if len(trained_model.config.eos_token_id) > 0:
+            pad_token_id_to_use = trained_model.config.eos_token_id[0]
+        else:
+            pad_token_id_to_use = trained_model.config.eos_token_id
 
     trained_model.generation_config = GenerationConfig(
         max_new_tokens=128,
@@ -292,7 +303,7 @@ def load_model(model_name, is_lora, is_hf, load_in_8bit, checkpoint_name):
         repetition_penalty=1.15,
         eos_token_id=trained_model.config.eos_token_id,
         # eos_token_id=128009,
-        pad_token_id=trained_model.config.pad_token_id if trained_model.config.pad_token_id else trained_model.config.eos_token_id,
+        pad_token_id=pad_token_id_to_use,
     )
 
     return trained_model, trained_tokenizer
