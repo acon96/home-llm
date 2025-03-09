@@ -569,7 +569,7 @@ def generate_templated_example(template: dict, persona: str, max_devices: int = 
         )
 
         question = question_template.replace("<device_name>", chosen_devices[0]["description"])
-        answer = answer_template.replace("<device_name>", chosen_devices[0]["description"])
+        answer = [ answer_template.replace("<device_name>", chosen_devices[0]["description"]) ]
     else:        
         question = question_template
         answers = []
@@ -583,7 +583,7 @@ def generate_templated_example(template: dict, persona: str, max_devices: int = 
             )
             answers.append(answer.replace(f"<device_name>", chosen_devices[i]["description"]))
 
-        answer = []
+        answer: list[str] = []
         for word in and_words:
             answer.append(f" {word} ".join(answers))
 
