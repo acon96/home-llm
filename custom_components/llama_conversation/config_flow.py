@@ -687,6 +687,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         for key in OPTIONS_OVERRIDES.keys():
             if key in model_name:
                 selected_default_options.update(OPTIONS_OVERRIDES[key])
+                break
 
         persona = PERSONA_PROMPTS.get(self.selected_language, PERSONA_PROMPTS.get("en"))
         current_date = CURRENT_DATE_PROMPT.get(self.selected_language, CURRENT_DATE_PROMPT.get("en"))
@@ -765,15 +766,15 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         config_entry: config_entries.ConfigEntry,
     ) -> config_entries.OptionsFlow:
         """Create the options flow."""
-        return OptionsFlow(config_entry)
+        return OptionsFlow()
 
 
 class OptionsFlow(config_entries.OptionsFlow):
     """Local LLM config flow options handler."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
+    @property
+    def config_entry(self):
+        return self.hass.config_entries.async_get_entry(self.handler)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

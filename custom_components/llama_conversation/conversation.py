@@ -125,12 +125,6 @@ from .const import (
     SERVICE_TOOL_ALLOWED_DOMAINS,
     CONF_BACKEND_TYPE,
     DEFAULT_BACKEND_TYPE,
-    BACKEND_TYPE_LLAMA_HF,
-    BACKEND_TYPE_LLAMA_EXISTING,
-    BACKEND_TYPE_TEXT_GEN_WEBUI,
-    BACKEND_TYPE_GENERIC_OPENAI,
-    BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER,
-    BACKEND_TYPE_OLLAMA,
 )
 
 # make type checking work for llama-cpp-python without importing it directly at runtime
@@ -149,7 +143,7 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][entry.entry_id] = entry
     
     # call update handler
-    agent: LocalLLMAgent = ha_conversation.get_agent_manager(hass).async_get_agent(entry.entry_id)
+    agent: LocalLLMAgent = entry.runtime_data
     await hass.async_add_executor_job(agent._update_options)
 
     return True
@@ -157,33 +151,11 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> bool:
     """Set up Local LLM Conversation from a config entry."""
 
-    def create_agent(backend_type):
-        agent_cls = None
-
-        if backend_type in [ BACKEND_TYPE_LLAMA_HF, BACKEND_TYPE_LLAMA_EXISTING ]:
-            agent_cls = LlamaCppAgent
-        elif backend_type == BACKEND_TYPE_GENERIC_OPENAI:
-            agent_cls = GenericOpenAIAPIAgent
-        elif backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
-            agent_cls = TextGenerationWebuiAgent
-        elif backend_type == BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER:
-            agent_cls = LlamaCppPythonAPIAgent
-        elif backend_type == BACKEND_TYPE_OLLAMA:
-            agent_cls = OllamaAPIAgent
-        
-        return agent_cls(hass, entry)
-
-    # create the agent in an executor job because the constructor calls `open()`
-    backend_type = entry.data.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE)
-    agent = await hass.async_add_executor_job(create_agent, backend_type)
-
-    # call load model
-    await agent._async_load_model(entry)
-
     # handle updates to the options
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    async_add_entities([agent])
+    # register the agent entity
+    async_add_entities([entry.runtime_data])
 
     return True
 
