@@ -1,0 +1,6 @@
+datasets>=3.2.0
+webcolors>=1.13
+pandas>=2.2.3
+deep-translator>=1.11.4
+langcodes>=3.5.0
+babel==2.15.0

@@ -4,6 +4,8 @@ import types, os
 DOMAIN = "llama_conversation"
 HOME_LLM_API_ID = "home-llm-service-api"
 SERVICE_TOOL_NAME = "HassCallService"
+SERVICE_TOOL_ALLOWED_SERVICES = ["turn_on", "turn_off", "toggle", "press", "increase_speed", "decrease_speed", "open_cover", "close_cover", "stop_cover", "lock", "unlock", "start", "stop", "return_to_base", "pause", "cancel", "add_item", "set_temperature", "set_humidity", "set_fan_mode", "set_hvac_mode", "set_preset_mode"]
+SERVICE_TOOL_ALLOWED_DOMAINS = ["light", "switch", "button", "fan", "cover", "lock", "media_player", "climate", "vacuum", "todo", "timer", "script"]
 CONF_PROMPT = "prompt"
 PERSONA_PROMPTS = {
     "en": "You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed with the information provided only.",
@@ -13,7 +15,7 @@ PERSONA_PROMPTS = {
     "pl": "Jeste\u015b 'Al', pomocnym asystentem AI, kt\u00f3ry kontroluje urz\u0105dzenia w domu. Wykonaj poni\u017csze zadanie zgodnie z instrukcj\u0105 lub odpowiedz na poni\u017csze pytanie, korzystaj\u0105c wy\u0142\u0105cznie z podanych informacji."
 }
 CURRENT_DATE_PROMPT = {
-    "en": """The current time and date is {{ (as_timestamp(now()) | timestamp_custom("%I:%M %p on %A %B %d, %Y", "")) }}""",
+    "en": """The current time and date is {{ (as_timestamp(now()) | timestamp_custom("%I:%M %p on %A %B %d, %Y", True, "")) }}""",
     "de": """{% set day_name = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"] %}{% set month_name = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"] %}Die aktuelle Uhrzeit und das aktuelle Datum sind {{ (as_timestamp(now()) | timestamp_custom("%H:%M", local=True)) }} {{ day_name[now().weekday()] }}, {{ now().day }} {{ month_name[now().month -1]}} {{ now().year }}.""",
     "fr": """{% set day_name = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"] %}{% set month_name = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"] %} L'heure et la date actuelles sont {{ (as_timestamp(now()) | timestamp_custom("%H:%M", local=True)) }} {{ day_name[now().weekday()] }}, {{ now().day }} {{ month_name[now().month -1]}} {{ now().year }}.""",
     "es": """{% set day_name = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"] %}{% set month_name = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"] %}La hora y fecha actuales son {{ (as_timestamp(now()) | timestamp_custom("%H:%M", local=True)) }} {{ day_name[now().weekday()] }}, {{ now().day }} de {{ month_name[now().month -1]}} de {{ now().year }}.""",
@@ -146,59 +148,69 @@ PROMPT_TEMPLATE_DESCRIPTIONS = {
         "user": { "prefix": "<|im_start|>user\n", "suffix": "<|im_end|>" },
         "assistant": { "prefix": "<|im_start|>assistant\n", "suffix": "<|im_end|>" },
         "tool": { "prefix": "<|im_start|>tool", "suffix": "<|im_end|>" },
+        "chain_of_thought": { "prefix": "<think>", "suffix": "</think>"},
         "generation_prompt": "<|im_start|>assistant"
     },
     PROMPT_TEMPLATE_COMMAND_R: {
         "system": { "prefix": "<|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|>", "suffix": "<|END_OF_TURN_TOKEN|>" },
         "user": { "prefix": "<|START_OF_TURN_TOKEN|><|USER_TOKEN|>", "suffix": "<|END_OF_TURN_TOKEN|>" },
         "assistant": { "prefix": "<|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>", "suffix": "<|END_OF_TURN_TOKEN|>" },
+        "chain_of_thought": { "prefix": "<think>", "suffix": "</think>"},
         "generation_prompt": "<|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>"
     },
     PROMPT_TEMPLATE_ALPACA: {
         "system": { "prefix": "", "suffix": "\n" },
         "user": { "prefix": "### Instruction:\n", "suffix": "\n" },
         "assistant": { "prefix": "### Response:\n", "suffix": "\n" },
+        "chain_of_thought": { "prefix": "<think>", "suffix": "</think>"},
         "generation_prompt": "### Response:"
     },
     PROMPT_TEMPLATE_VICUNA: {
         "system": { "prefix": "", "suffix": "\n" },
         "user": { "prefix": "USER: ", "suffix": "" },
         "assistant": { "prefix": "ASSISTANT: ", "suffix": "</s>" },
+        "chain_of_thought": { "prefix": "<think>", "suffix": "</think>"},
         "generation_prompt": "ASSISTANT:"
     },
     PROMPT_TEMPLATE_NONE: {
         "system": { "prefix": "", "suffix": "" },
         "user": { "prefix": "", "suffix": "" },
         "assistant": { "prefix": "", "suffix": "" },
+        "chain_of_thought": { "prefix": "", "suffix": ""},
         "generation_prompt": ""
     },
     PROMPT_TEMPLATE_MISTRAL: {
         "user": { "prefix": "<s>[INST] ", "suffix": " [/INST] " },
         "assistant": { "prefix": "", "suffix": "</s>" },
+        "chain_of_thought": { "prefix": "<think>", "suffix": "</think>"},
         "generation_prompt": ""
     },
     PROMPT_TEMPLATE_ZEPHYR: {
         "system": { "prefix": "<|system|>\n", "suffix": "<|endoftext|>" },
         "user": { "prefix": "<|user|>\n", "suffix": "<|endoftext|>" },
         "assistant": { "prefix": "<|assistant|>\n", "suffix": "<|endoftext|>" },
+        "chain_of_thought": { "prefix": "<think>", "suffix": "</think>"},
         "generation_prompt": "<|assistant|>\n"
     },
     PROMPT_TEMPLATE_ZEPHYR2: {
         "system": { "prefix": "<|system|>\n", "suffix": "</s>" },
         "user": { "prefix": "<|user|>\n", "suffix": "</s>" },
         "assistant": { "prefix": "<|assistant|>\n", "suffix": "</s>" },
+        "chain_of_thought": { "prefix": "<think>", "suffix": "</think>"},
         "generation_prompt": "<|assistant|>\n"
     },
     PROMPT_TEMPLATE_ZEPHYR3: {
         "system": { "prefix": "<|system|>\n", "suffix": "<|end|>" },
         "user": { "prefix": "<|user|>\n", "suffix": "<|end|>" },
         "assistant": { "prefix": "<|assistant|>\n", "suffix": "<|end|>" },
+        "chain_of_thought": { "prefix": "<think>", "suffix": "</think>"},
         "generation_prompt": "<|assistant|>\n"
     },
     PROMPT_TEMPLATE_LLAMA3: {
         "system": { "prefix": "<|start_header_id|>system<|end_header_id|>\n\n", "suffix": "<|eot_id|>"},
         "user": { "prefix": "<|start_header_id|>user<|end_header_id|>\n\n", "suffix": "<|eot_id|>"},
         "assistant": { "prefix": "<|start_header_id|>assistant<|end_header_id|>\n\n", "suffix": "<|eot_id|>"},
+        "chain_of_thought": { "prefix": "<think>", "suffix": "</think>"},
         "generation_prompt": "<|start_header_id|>assistant<|end_header_id|>\n\n"
     }
 }
@@ -297,6 +309,14 @@ DEFAULT_OPTIONS = types.MappingProxyType(
 )
 
 OPTIONS_OVERRIDES = {
+    "home-llama-3.2": {
+        CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
+        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_LLAMA3,
+        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
+        CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
+        CONF_TOOL_FORMAT: TOOL_FORMAT_MINIMAL,
+        CONF_CONTEXT_LENGTH: 131072,
+    },
     "home-3b-v3": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
         CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR,
@@ -383,5 +403,5 @@ OPTIONS_OVERRIDES = {
     },
 }
 
-INTEGRATION_VERSION = "0.3.7"
+INTEGRATION_VERSION = "0.3.8"
 EMBEDDED_LLAMA_CPP_PYTHON_VERSION = "0.3.5"

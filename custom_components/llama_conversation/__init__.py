@@ -8,19 +8,31 @@ import homeassistant.components.conversation as ha_conversation
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, llm
 from homeassistant.util.json import JsonObjectType
 
 import voluptuous as vol
-
 
 from .const import (
     ALLOWED_SERVICE_CALL_ARGUMENTS,
     DOMAIN,
     HOME_LLM_API_ID,
     SERVICE_TOOL_NAME,
+    SERVICE_TOOL_ALLOWED_SERVICES,
+    SERVICE_TOOL_ALLOWED_DOMAINS,
+    CONF_BACKEND_TYPE,
+    DEFAULT_BACKEND_TYPE,
+    BACKEND_TYPE_LLAMA_HF,
+    BACKEND_TYPE_LLAMA_EXISTING,
+    BACKEND_TYPE_TEXT_GEN_WEBUI,
+    BACKEND_TYPE_GENERIC_OPENAI,
+    BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER,
+    BACKEND_TYPE_OLLAMA,
 )
+from .conversation import LlamaCppAgent, GenericOpenAIAPIAgent, TextGenerationWebuiAgent, \
+    LlamaCppPythonAPIAgent, OllamaAPIAgent, LocalLLMAgent
+
+type LocalLLMConfigEntry = ConfigEntry[LocalLLMAgent]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +41,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = (Platform.CONVERSATION,)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> bool:
 
     # make sure the API is registered
     if not any([x.id == HOME_LLM_API_ID for x in llm.async_get_apis(hass)]):
@@ -37,18 +49,43 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry
 
+    def create_agent(backend_type):
+        agent_cls = None
+
+        if backend_type in [ BACKEND_TYPE_LLAMA_HF, BACKEND_TYPE_LLAMA_EXISTING ]:
+            agent_cls = LlamaCppAgent
+        elif backend_type == BACKEND_TYPE_GENERIC_OPENAI:
+            agent_cls = GenericOpenAIAPIAgent
+        elif backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
+            agent_cls = TextGenerationWebuiAgent
+        elif backend_type == BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER:
+            agent_cls = LlamaCppPythonAPIAgent
+        elif backend_type == BACKEND_TYPE_OLLAMA:
+            agent_cls = OllamaAPIAgent
+        
+        return agent_cls(hass, entry)
+
+    # create the agent in an executor job because the constructor calls `open()`
+    backend_type = entry.data.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE)
+    entry.runtime_data = await hass.async_add_executor_job(create_agent, backend_type)
+
+    # call load model
+    await entry.runtime_data._async_load_model(entry)
+
+    # forward setup to platform to register the entity
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> bool:
     """Unload Ollama."""
     if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return False
     hass.data[DOMAIN].pop(entry.entry_id)
     return True
 
-async def async_migrate_entry(hass, config_entry: ConfigEntry):
+async def async_migrate_entry(hass: HomeAssistant, config_entry: LocalLLMConfigEntry):
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
@@ -82,13 +119,8 @@ class HassServiceTool(llm.Tool):
         vol.Optional('item'): str,
     })
 
-    ALLOWED_SERVICES: Final[list[str]] = [
-        "turn_on", "turn_off", "toggle", "press", "increase_speed", "decrease_speed", "open_cover", "close_cover", "stop_cover",
-        "lock", "unlock", "start", "stop", "return_to_base", "pause", "cancel", "add_item"
-    ]
-    ALLOWED_DOMAINS: Final[list[str]] = [
-        "light", "switch", "button", "fan", "cover", "lock", "media_player", "climate", "vacuum", "todo", "timer", "script",
-    ]
+    ALLOWED_SERVICES: Final[list[str]] = SERVICE_TOOL_ALLOWED_SERVICES
+    ALLOWED_DOMAINS: Final[list[str]] = SERVICE_TOOL_ALLOWED_DOMAINS
 
     async def async_call(
         self, hass: HomeAssistant, tool_input: llm.ToolInput, llm_context: llm.LLMContext

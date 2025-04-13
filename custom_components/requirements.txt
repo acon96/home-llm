@@ -1,0 +1,2 @@
+huggingface-hub>=0.23.0
+webcolors>=24.8.0

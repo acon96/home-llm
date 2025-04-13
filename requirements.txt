@@ -1,28 +1,13 @@
-# training + dataset requirements
-transformers
-tensorboard
-datasets
-peft
-bitsandbytes
-trl
-webcolors
-pandas
+transformers>=4.48.3
+tensorboard>=2.18.0
+datasets>=3.2.0
+peft>=0.14.0
+bitsandbytes>=0.45.2
+trl>=0.14.0
+webcolors>=1.13
+pandas>=2.2.3
 # flash-attn
-sentencepiece
-deep-translator
-langcodes
-babel==2.15.0
-
-# integration requirements
-huggingface-hub>=0.23.0
-webcolors>=24.8.0
-
-# types from Home Assistant
-homeassistant>=2024.6.1
-hassil
-home-assistant-intents
-
-# testing requirements
-pytest
-pytest-asyncio
-pytest-homeassistant-custom-component
+sentencepiece>=0.2.0
+deep-translator>=1.11.4
+langcodes>=3.5.0
+babel>=2.15.0

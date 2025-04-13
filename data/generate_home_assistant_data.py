@@ -569,7 +569,7 @@ def generate_templated_example(template: dict, persona: str, max_devices: int = 
         )
 
         question = question_template.replace("<device_name>", chosen_devices[0]["description"])
-        answer = answer_template.replace("<device_name>", chosen_devices[0]["description"])
+        answer = [ answer_template.replace("<device_name>", chosen_devices[0]["description"]) ]
     else:        
         question = question_template
         answers = []
@@ -583,7 +583,7 @@ def generate_templated_example(template: dict, persona: str, max_devices: int = 
             )
             answers.append(answer.replace(f"<device_name>", chosen_devices[i]["description"]))
 
-        answer = []
+        answer: list[str] = []
         for word in and_words:
             answer.append(f" {word} ".join(answers))
 
@@ -1151,7 +1151,7 @@ def load_dataset_piles(language):
 # TODO: answer questions about more than one thing in the state list at once
 # TODO: add examples for rooms/groups of devices. i.e. "turn off all the lights in the kitchen"
 # TODO: add time, weather, and calendar/reminders (next 3 events?)
-def main():
+def main(args=None):
     parser = argparse.ArgumentParser(description="Generate the full dataset from the CSV piles")
     parser.add_argument("--sample", action="store_true", help="Set this flag to enable generation of the train dataset.")
     parser.add_argument("--test", action="store_true", help="Set this flag to enable generation of the train dataset.")
@@ -1171,7 +1171,7 @@ def main():
     dataset_format_group.add_argument('--raw_corpus', action='store_const', const='raw', dest='format')
     dataset_format_group.add_argument('--sharegpt', action='store_const', const='sharegpt', dest='format')
 
-    args = parser.parse_args()
+    args = parser.parse_args(args=args)
 
     if not args.sample and not args.train and not args.test and not args.merge and not args.dpo:
         parser.print_usage()
