@@ -28,7 +28,7 @@ jobs:
         # Base x86
         - home_assistant_version: "2025.4.1"
           suffix: "-noavx"
-          arch: "amd64"
+          arch: "x86_64"
           extra_defines: "-DGGML_AVX=OFF -DGGML_AVX2=OFF -DGGML_FMA=OFF -DGGML_F16C=OFF"
         - home_assistant_version: "2025.4.1"
           arch: "i386"
@@ -37,10 +37,10 @@ jobs:
 
         # AVX2 and AVX512
         - home_assistant_version: "2025.4.1"
-          arch: "amd64"
+          arch: "x86_64"
           extra_defines: "-DGGML_AVX=ON -DGGML_AVX2=ON -DGGML_FMA=ON -DGGML_F16C=ON"
         - home_assistant_version: "2025.4.1"
-          arch: "amd64"
+          arch: "x86_64"
           suffix: "-avx512"
           extra_defines: "-DGGML_AVX512=ON -DGGML_FMA=ON -DGGML_F16C=ON"
         - home_assistant_version: "2025.4.1"

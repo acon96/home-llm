@@ -169,13 +169,13 @@ def install_llama_cpp_python(config_dir: str):
     # remap other names for architectures to the names we use
     if platform_suffix == "arm64":
         platform_suffix = "aarch64"
-    if platform_suffix == "i386" or platform_suffix == "x86_64":
-        platform_suffix = "amd64"
+    if platform_suffix == "i386" or platform_suffix == "amd64":
+        platform_suffix = "x86_64"
 
     runtime_version = f"cp{sys.version_info.major}{sys.version_info.minor}"
 
     instruction_extensions_suffix = ""
-    if platform_suffix == "amd64":
+    if platform_suffix == "x86_64":
         instruction_extensions_suffix = "-noavx"
 
         try:
