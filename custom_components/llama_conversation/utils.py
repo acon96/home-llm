@@ -234,4 +234,11 @@ def install_llama_cpp_python(config_dir: str):
         return True
 
 def format_url(*, hostname: str, port: str, ssl: bool, path: str):
-    return f"{'https' if ssl else 'http'}://{hostname}{ ':' + port if port else ''}{path}"
+    # Remove any existing protocol from hostname
+    if "://" in hostname:
+        hostname = hostname.split("://")[1]
+    
+    # Construct the URL with proper protocol and port
+    protocol = 'https' if ssl else 'http'
+    port_part = f":{port}" if port else ""
+    return f"{protocol}://{hostname}{port_part}{path}"
