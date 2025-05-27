@@ -150,6 +150,7 @@ In order to facilitate running the project entirely on the system where Home Ass
 ## Version History
 | Version | Description                                                                                                                                                                                                          |
 |---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| v0.3.9  | Update llama.cpp version, fix installation bugs, fix conversation history not working                                                                                                                                |
 | v0.3.8  | Update llama.cpp, remove think blocks from "thinking" models, fix wheel detection for some Intel CPUs, Fixes for compatibility with latest Home Assistant version (2025.4), other small bug fixes                    |
 | v0.3.7  | Update llama.cpp version to support newer models, Update minimum Home Assistant version to 2024.12.3, Add German In-Context Learning examples, Fix multi-turn use, Fix an issue with webcolors                       | 
 | v0.3.6  | Small llama.cpp backend fixes                                                                                                                                                                                        |
