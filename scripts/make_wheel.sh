@@ -9,6 +9,9 @@ git clone --recurse-submodules https://github.com/abetlen/llama-cpp-python --bra
 cd llama-cpp-python
 pip3 install build
 
+tag="homellm"
+sed -i -E "s/^(__version__ *= *\"[0-9]+\.[0-9]+\.[0-9]+)\"/\1+${tag}\"/" llama_cpp/__init__.py
+
 export CMAKE_ARGS="-DLLAVA_BUILD=OFF -DGGML_NATIVE=ON"
 python3 -m build --wheel
 cp -f ./dist/*.whl /tmp/dist/

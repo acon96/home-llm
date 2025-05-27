@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryError, TemplateError, HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent, template, entity_registry as er, llm, \
     area_registry as ar, device_registry as dr, chat_session
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_state_change, async_call_later
 from homeassistant.components.sensor import SensorEntity
@@ -148,7 +148,7 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
 
     return True
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddConfigEntryEntitiesCallback) -> bool:
     """Set up Local LLM Conversation from a config entry."""
 
     # handle updates to the options
@@ -198,6 +198,7 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
     in_context_examples: list[dict]
 
     _attr_has_entity_name = True
+    _attr_supports_streaming = False # TODO: add support for backends that can stream
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the agent."""
@@ -423,7 +424,7 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
             if remember_num_interactions and len(message_history) > (remember_num_interactions * 2) + 1:
                 for i in range(0,2):
                     message_history.pop(1)
-            # chat_log.content = [_convert_content_back(user_input.agent_id, message_history_entry) for message_history_entry in message_history ]
+            chat_log.content = [_convert_content_back(user_input.agent_id, message_history_entry) for message_history_entry in message_history ]
 
         if llm_api is None:
             # return the output without messing with it if there is no API exposed to the model

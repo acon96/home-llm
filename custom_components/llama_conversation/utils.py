@@ -169,14 +169,14 @@ def install_llama_cpp_python(config_dir: str):
     # remap other names for architectures to the names we use
     if platform_suffix == "arm64":
         platform_suffix = "aarch64"
-    if platform_suffix == "i386" or platform_suffix == "x86_64":
-        platform_suffix = "amd64"
+    if platform_suffix == "i386" or platform_suffix == "amd64":
+        platform_suffix = "x86_64"
 
     runtime_version = f"cp{sys.version_info.major}{sys.version_info.minor}"
 
     instruction_extensions_suffix = ""
-    if platform_suffix == "amd64":
-        instruction_extensions_suffix = "-noavx"
+    if platform_suffix == "x86_64":
+        instruction_extensions_suffix = "noavx"
 
         try:
             with open("/proc/cpuinfo") as f:
@@ -184,7 +184,7 @@ def install_llama_cpp_python(config_dir: str):
 
             _LOGGER.debug(cpu_features)
             if " avx512f " in cpu_features and " avx512bw " in cpu_features:
-                instruction_extensions_suffix = "-avx512"
+                instruction_extensions_suffix = "avx512"
             elif " avx2 " in cpu_features and \
                  " avx " in cpu_features and \
                  " f16c " in cpu_features and \
@@ -194,11 +194,15 @@ def install_llama_cpp_python(config_dir: str):
         except Exception as ex:
             _LOGGER.debug(f"Couldn't detect CPU features: {ex}")
             # default to the noavx build to avoid crashing home assistant
-            instruction_extensions_suffix = "-noavx"
+            instruction_extensions_suffix = "noavx"
     
     folder = os.path.dirname(__file__)
-    potential_wheels = sorted([ path for path in os.listdir(folder) if path.endswith(f"{platform_suffix}{instruction_extensions_suffix}.whl") ], reverse=True)
+    potential_wheels = sorted([ path for path in os.listdir(folder) if path.endswith(f"{platform_suffix}.whl") ], reverse=True)
     potential_wheels = [ wheel for wheel in potential_wheels if runtime_version in wheel ]
+    if instruction_extensions_suffix:
+        potential_wheels = [ wheel for wheel in potential_wheels if f"+homellm{instruction_extensions_suffix}" in wheel ]
+
+    _LOGGER.debug(f"{potential_wheels=}")
     if len(potential_wheels) > 0:
 
         latest_wheel = potential_wheels[0]
@@ -208,8 +212,8 @@ def install_llama_cpp_python(config_dir: str):
         return install_package(os.path.join(folder, latest_wheel), pip_kwargs(config_dir))
         
     # scikit-build-core v0.9.7+ doesn't recognize these builds as musllinux, and just tags them as generic linux
-    # github_release_url = f"https://github.com/acon96/home-llm/releases/download/v{INTEGRATION_VERSION}/llama_cpp_python-{EMBEDDED_LLAMA_CPP_PYTHON_VERSION}-{runtime_version}-{runtime_version}-musllinux_1_2_{platform_suffix}{instruction_extensions_suffix}.whl"
-    github_release_url = f"https://github.com/acon96/home-llm/releases/download/v{INTEGRATION_VERSION}/llama_cpp_python-{EMBEDDED_LLAMA_CPP_PYTHON_VERSION}-{runtime_version}-{runtime_version}-linux_{platform_suffix}{instruction_extensions_suffix}.whl"
+    # github_release_url = f"https://github.com/acon96/home-llm/releases/download/v{INTEGRATION_VERSION}/llama_cpp_python-{EMBEDDED_LLAMA_CPP_PYTHON_VERSION}+homellm{instruction_extensions_suffix}-{runtime_version}-{runtime_version}-musllinux_1_2_{platform_suffix}.whl"
+    github_release_url = f"https://github.com/acon96/home-llm/releases/download/v{INTEGRATION_VERSION}/llama_cpp_python-{EMBEDDED_LLAMA_CPP_PYTHON_VERSION}+homellm{instruction_extensions_suffix}-{runtime_version}-{runtime_version}-linux_{platform_suffix}.whl"
     if install_package(github_release_url, pip_kwargs(config_dir)):
         _LOGGER.info("llama-cpp-python successfully installed from GitHub release")
         return True
