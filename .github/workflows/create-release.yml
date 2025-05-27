@@ -29,27 +29,25 @@ jobs:
         - home_assistant_image: "amd64-homeassistant:2025.4.1"
           suffix: "noavx"
           arch: "x86_64"
-          extra_defines: "-DGGML_AVX=OFF -DGGML_AVX2=OFF -DGGML_FMA=OFF -DGGML_F16C=OFF"
-        - home_assistant_image: "i386-homeassistant:2025.4.1"
-          arch: "i386"
-          suffix: "noavx"
-          extra_defines: "-DGGML_AVX=OFF -DGGML_AVX2=OFF -DGGML_FMA=OFF -DGGML_F16C=OFF"
+          extra_defines: "-DGGML_SSE42=OFF -DGGML_AVX=OFF -DGGML_AVX2=OFF -DGGML_BMI2=OFF -DGGML_FMA=OFF -DGGML_F16C=OFF"
 
         # AVX2 and AVX512
         - home_assistant_image: "amd64-homeassistant:2025.4.1"
           arch: "x86_64"
-          extra_defines: "-DGGML_AVX=ON -DGGML_AVX2=ON -DGGML_FMA=ON -DGGML_F16C=ON"
+          extra_defines: "-DGGML_SSE42=ON -DGGML_AVX=ON -DGGML_AVX2=ON -DGGML_BMI2=ON -DGGML_FMA=ON -DGGML_F16C=ON"
         - home_assistant_image: "amd64-homeassistant:2025.4.1"
           arch: "x86_64"
           suffix: "avx512"
-          extra_defines: "-DGGML_AVX512=ON -DGGML_FMA=ON -DGGML_F16C=ON"
+          extra_defines: "-DGGML_SSE42=ON -DGGML_AVX=ON -DGGML_AVX2=ON -DGGML_BMI2=ON -DGGML_AVX512=ON -DGGML_FMA=ON -DGGML_F16C=ON"
+
+        # 32 bit for older processors, with and without AVX enabled
         - home_assistant_image: "i386-homeassistant:2025.4.1"
           arch: "i386"
-          extra_defines: "-DGGML_AVX=ON -DGGML_AVX2=ON -DGGML_FMA=ON -DGGML_F16C=ON"
+          suffix: "noavx"
+          extra_defines: "-DGGML_SSE42=OFF -DGGML_AVX=OFF -DGGML_AVX2=OFF -DGGML_BMI2=OFF -DGGML_FMA=OFF -DGGML_F16C=OFF"
         - home_assistant_image: "i386-homeassistant:2025.4.1"
           arch: "i386"
-          suffix: "avx512"
-          extra_defines: "-DGGML_AVX512=ON -DGGML_FMA=ON -DGGML_F16C=ON"
+          extra_defines: "-DGGML_SSE42=ON -DGGML_AVX=ON -DGGML_AVX2=OFF -DGGML_BMI2=OFF -DGGML_FMA=ON -DGGML_F16C=ON"
         
     steps:
       - name: Checkout code
