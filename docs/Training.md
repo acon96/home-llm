@@ -232,18 +232,18 @@ python3 train.py \
 
 #### Llama 3.2 3B Instruct
 ```
-python3 generate_home_assistant_data.py --train --test --large --sharegpt --language english german french spanish
+python3 generate_home_assistant_data.py --train --test --large --sharegpt --language english german french spanish polish
 
 python3 train.py \
-    --run_name Home-Llama-3.2-3B-rev1 \
+    --run_name Home-Llama-3.2-3B-rev2 \
     --base_model meta-llama/Llama-3.2-3B-Instruct \
     --bf16 \
-    --train_dataset data/home_assistant_train.jsonl \
+    --train_dataset data/home_assistant_train_large.jsonl \
     --test_dataset data/home_assistant_test.jsonl \
     --learning_rate 1e-5 --learning_rate_warmup 0.03 --batch_size 64 --epochs 1 \
-    --micro_batch_size 2 \
+    --micro_batch_size 1 \
     --ctx_size 2048 \
-    --save_steps 200 --save_total_limit 3 --eval_steps 100 --logging_steps 2
+    --save_steps 200 --save_total_limit 1 --eval_steps 100 --logging_steps 2
 ```
 
 ### Problems

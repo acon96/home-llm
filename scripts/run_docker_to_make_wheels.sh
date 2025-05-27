@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION_TO_BUILD="v0.3.5"
+VERSION_TO_BUILD="v0.3.9"
 
 # make python 11 wheels
 # docker run -it --rm \
