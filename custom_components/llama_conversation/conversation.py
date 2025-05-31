@@ -1343,6 +1343,69 @@ class GenericOpenAIResponsesAPIAgent(BaseOpenAICompatibleAPIAgent):
 
         return endpoint, request_params
 
+    def _validate_response_payload(self, response_json: dict) -> bool:
+        """
+        Validate that the payload given matches the expected structure for the Responses API.
+
+        API ref: https://platform.openai.com/docs/api-reference/responses/object
+
+        Returns True or raises an error
+        """
+        required_keys = ["object", "output", "status", ]
+        missing_keys = [key for key in required_keys if key not in response_json]
+        if missing_keys:
+            raise ValueError(f"Response JSON is missing required keys: {', '.join(missing_keys)}")
+
+        if response_json["object"] != "response":
+            raise ValueError(f"Response JSON object is not 'response', got {response_json['object']}")
+
+        if "error" in response_json and response_json["error"] is not None:
+            error = response_json["error"]
+            _LOGGER.error(f"Response received error payload.")
+            if "message" not in error:
+                raise ValueError("Response JSON error is missing 'message' key")
+            raise ValueError(f"Response JSON error: {error['message']}")
+
+        return True
+
+    def _check_response_status(self, response_json: dict) -> None:
+        """
+        Check the status of the response and logs a message if it is not 'succeeded'.
+
+        API ref: https://platform.openai.com/docs/api-reference/responses/object#responses_object-status
+        """
+        if response_json["status"] != "succeeded":
+            _LOGGER.warning(f"Response status is not 'succeeded', got {response_json['status']}. Details: {response_json.get('incomplete_details', 'No details provided')}")
+
+    def _extract_response(self, response_json: dict) -> str:
+        self._validate_response_payload(response_json)
+        self._check_response_status(response_json)
+
+        outputs = response_json["output"]
+
+        if len(outputs) > 1:
+            _LOGGER.warning("Received multiple outputs from the Responses API, returning the first one.")
+
+        output = outputs[0]
+
+        if not output["type"] == "message":
+            raise NotImplementedError(f"Response output type is not 'message', got {output['type']}")
+
+        if len(output["content"]) > 1:
+            _LOGGER.warning("Received multiple content items in the response output, returning the first one.")
+
+        content = output["content"][0]
+
+        output_type = content["type"]
+
+        if output_type == "refusal":
+            _LOGGER.info("Received a refusal from the Responses API.")
+            return content["refusal"]
+        elif output_type == "output_text":
+            return content["text"]
+        else:
+            raise ValueError(f"Response output content type is not expected, got {output_type}")
+
     async def _async_generate(self, conversation: dict) -> str:
         """Generate a response using the OpenAI-compatible Responses API"""
 
