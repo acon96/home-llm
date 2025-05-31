@@ -1241,6 +1241,16 @@ class BaseOpenAICompatibleAPIAgent(LocalLLMAgent):
         self.api_key = entry.data.get(CONF_OPENAI_API_KEY)
         self.model_name = entry.data.get(CONF_CHAT_MODEL)
 
+    def _extract_response(self, response_json: dict) -> str:
+        choices = response_json["choices"]
+        if choices[0]["finish_reason"] != "stop":
+            _LOGGER.warning("Model response did not end on a stop token (unfinished sentence)")
+
+        if response_json["object"] in ["chat.completion", "chat.completion.chunk"]:
+            return choices[0]["message"]["content"]
+        else:
+            return choices[0]["text"]
+
 class GenericOpenAIAPIAgent(BaseOpenAICompatibleAPIAgent):
     """Implements the OpenAPI-compatible text completion and chat completion API backends."""
 
@@ -1261,16 +1271,6 @@ class GenericOpenAIAPIAgent(BaseOpenAICompatibleAPIAgent):
         request_params["prompt"] = self._format_prompt(conversation)
 
         return endpoint, request_params
-
-    def _extract_response(self, response_json: dict) -> str:
-        choices = response_json["choices"]
-        if choices[0]["finish_reason"] != "stop":
-            _LOGGER.warning("Model response did not end on a stop token (unfinished sentence)")
-
-        if response_json["object"] in ["chat.completion", "chat.completion.chunk"]:
-            return choices[0]["message"]["content"]
-        else:
-            return choices[0]["text"]
 
     async def _async_generate(self, conversation: dict) -> str:
         max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
@@ -1332,16 +1332,6 @@ class GenericOpenAIResponsesAPIAgent(BaseOpenAICompatibleAPIAgent):
         request_params["prompt"] = self._format_prompt(conversation)
 
         return endpoint, request_params
-
-    def _extract_response(self, response_json: dict) -> str:
-        choices = response_json["choices"]
-        if choices[0]["finish_reason"] != "stop":
-            _LOGGER.warning("Model response did not end on a stop token (unfinished sentence)")
-
-        if response_json["object"] in ["chat.completion", "chat.completion.chunk"]:
-            return choices[0]["message"]["content"]
-        else:
-            return choices[0]["text"]
 
     async def _async_generate(self, conversation: dict) -> str:
         max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
