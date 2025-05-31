@@ -1065,7 +1065,7 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
                 mode=SelectSelectorMode.DROPDOWN,
             )),
         })
-    elif backend_type in [BACKEND_TYPE_GENERIC_OPENAI, BACKEND_TYPE_GENERIC_OPENAI_RESPONSES]:
+    elif backend_type in BACKEND_TYPE_GENERIC_OPENAI:
         result = insert_after_key(result, CONF_MAX_TOKENS, {
             vol.Required(
                 CONF_TEMPERATURE,
@@ -1087,6 +1087,24 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
                 description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
                 default=DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
             ): BooleanSelector(BooleanSelectorConfig()),
+        })
+    elif backend_type in BACKEND_TYPE_GENERIC_OPENAI_RESPONSES:
+        result = insert_after_key(result, CONF_MAX_TOKENS, {
+            vol.Required(
+                CONF_TEMPERATURE,
+                description={"suggested_value": options.get(CONF_TEMPERATURE)},
+                default=DEFAULT_TEMPERATURE,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=3, step=0.05)),
+            vol.Required(
+                CONF_TOP_P,
+                description={"suggested_value": options.get(CONF_TOP_P)},
+                default=DEFAULT_TOP_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Required(
+                CONF_REQUEST_TIMEOUT,
+                description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
+                default=DEFAULT_REQUEST_TIMEOUT,
+            ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
         })
     elif backend_type == BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER:
         result = insert_after_key(result, CONF_MAX_TOKENS, {
