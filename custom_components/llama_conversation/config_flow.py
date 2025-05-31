@@ -133,6 +133,7 @@ from .const import (
     BACKEND_TYPE_LLAMA_EXISTING,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
     BACKEND_TYPE_GENERIC_OPENAI,
+    BACKEND_TYPE_GENERIC_OPENAI_RESPONSES,
     BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER,
     BACKEND_TYPE_OLLAMA,
     PROMPT_TEMPLATE_DESCRIPTIONS,
@@ -164,10 +165,11 @@ def STEP_INIT_DATA_SCHEMA(backend_type=None):
                 CONF_BACKEND_TYPE,
                 default=backend_type if backend_type else DEFAULT_BACKEND_TYPE
             ): SelectSelector(SelectSelectorConfig(
-                options=[ 
+                options=[
                     BACKEND_TYPE_LLAMA_HF, BACKEND_TYPE_LLAMA_EXISTING,
                     BACKEND_TYPE_TEXT_GEN_WEBUI,
                     BACKEND_TYPE_GENERIC_OPENAI,
+                    BACKEND_TYPE_GENERIC_OPENAI_RESPONSES,
                     BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER,
                     BACKEND_TYPE_OLLAMA
                 ],
@@ -221,7 +223,7 @@ def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, ss
         default_port = "8000"
     elif backend_type == BACKEND_TYPE_OLLAMA:
         default_port = "11434"
-    elif backend_type == BACKEND_TYPE_GENERIC_OPENAI:
+    elif backend_type in [BACKEND_TYPE_GENERIC_OPENAI, BACKEND_TYPE_GENERIC_OPENAI_RESPONSES]:
         default_port = ""
         extra2[vol.Required(
             CONF_GENERIC_OPENAI_PATH,
@@ -644,9 +646,9 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                     error_message, ex, possible_models = await self._async_validate_text_generation_webui(user_input)
                 elif backend_type == BACKEND_TYPE_OLLAMA:
                     error_message, ex, possible_models = await self._async_validate_ollama(user_input)
-                elif backend_type == BACKEND_TYPE_GENERIC_OPENAI and \
+                elif backend_type in [BACKEND_TYPE_GENERIC_OPENAI, BACKEND_TYPE_GENERIC_OPENAI_RESPONSES] and \
                     user_input.get(CONF_GENERIC_OPENAI_VALIDATE_MODEL, DEFAULT_GENERIC_OPENAI_VALIDATE_MODEL):
-                     error_message, ex, possible_models = await self._async_validate_generic_openai(user_input)
+                    error_message, ex, possible_models = await self._async_validate_generic_openai(user_input)
                 else:
                     possible_models = []
 
@@ -1063,7 +1065,7 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
                 mode=SelectSelectorMode.DROPDOWN,
             )),
         })
-    elif backend_type == BACKEND_TYPE_GENERIC_OPENAI:
+    elif backend_type in [BACKEND_TYPE_GENERIC_OPENAI, BACKEND_TYPE_GENERIC_OPENAI_RESPONSES]:
         result = insert_after_key(result, CONF_MAX_TOKENS, {
             vol.Required(
                 CONF_TEMPERATURE,

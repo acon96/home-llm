@@ -110,6 +110,7 @@ BACKEND_TYPE_LLAMA_HF = "llama_cpp_hf"
 BACKEND_TYPE_LLAMA_EXISTING = "llama_cpp_existing"
 BACKEND_TYPE_TEXT_GEN_WEBUI = "text-generation-webui_api"
 BACKEND_TYPE_GENERIC_OPENAI = "generic_openai"
+BACKEND_TYPE_GENERIC_OPENAI_RESPONSES = "generic_openai_responses"
 BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER = "llama_cpp_python_server"
 BACKEND_TYPE_OLLAMA = "ollama"
 DEFAULT_BACKEND_TYPE = BACKEND_TYPE_LLAMA_HF
