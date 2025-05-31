@@ -26,11 +26,12 @@ from .const import (
     BACKEND_TYPE_LLAMA_EXISTING,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
     BACKEND_TYPE_GENERIC_OPENAI,
+    BACKEND_TYPE_GENERIC_OPENAI_RESPONSES,
     BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER,
     BACKEND_TYPE_OLLAMA,
 )
-from .conversation import LlamaCppAgent, GenericOpenAIAPIAgent, TextGenerationWebuiAgent, \
-    LlamaCppPythonAPIAgent, OllamaAPIAgent, LocalLLMAgent
+from .conversation import LlamaCppAgent, GenericOpenAIAPIAgent, GenericOpenAIResponsesAPIAgent, \
+    TextGenerationWebuiAgent, LlamaCppPythonAPIAgent, OllamaAPIAgent, LocalLLMAgent
 
 type LocalLLMConfigEntry = ConfigEntry[LocalLLMAgent]
 
@@ -56,6 +57,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> 
             agent_cls = LlamaCppAgent
         elif backend_type == BACKEND_TYPE_GENERIC_OPENAI:
             agent_cls = GenericOpenAIAPIAgent
+        elif backend_type == BACKEND_TYPE_GENERIC_OPENAI_RESPONSES:
+            agent_cls = GenericOpenAIResponsesAPIAgent
         elif backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
             agent_cls = TextGenerationWebuiAgent
         elif backend_type == BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER:

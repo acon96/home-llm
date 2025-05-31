@@ -1319,6 +1319,88 @@ class GenericOpenAIAPIAgent(LocalLLMAgent):
 
         return self._extract_response(result)
 
+class GenericOpenAIResponsesAPIAgent(LocalLLMAgent):
+    """Implements the OpenAPI-compatible Responses API backend."""
+    api_host: str
+    api_key: str
+    model_name: str
+
+    async def _async_load_model(self, entry: ConfigEntry) -> None:
+        self.api_host = format_url(
+            hostname=entry.data[CONF_HOST],
+            port=entry.data[CONF_PORT],
+            ssl=entry.data[CONF_SSL],
+            path=""
+        )
+
+        self.api_key = entry.data.get(CONF_OPENAI_API_KEY)
+        self.model_name = entry.data.get(CONF_CHAT_MODEL)
+
+    def _responses_params(self, conversation: dict) -> (str, dict):
+        request_params = {}
+        api_base_path = self.entry.data.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
+
+        endpoint = f"/{api_base_path}/responses"
+        request_params["prompt"] = self._format_prompt(conversation)
+
+        return endpoint, request_params
+
+    def _extract_response(self, response_json: dict) -> str:
+        choices = response_json["choices"]
+        if choices[0]["finish_reason"] != "stop":
+            _LOGGER.warning("Model response did not end on a stop token (unfinished sentence)")
+
+        if response_json["object"] in ["chat.completion", "chat.completion.chunk"]:
+            return choices[0]["message"]["content"]
+        else:
+            return choices[0]["text"]
+
+    async def _async_generate(self, conversation: dict) -> str:
+        max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
+        temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
+        top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
+        timeout = self.entry.options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
+        use_chat_api = self.entry.options.get(CONF_REMOTE_USE_CHAT_ENDPOINT, DEFAULT_REMOTE_USE_CHAT_ENDPOINT)
+
+
+        request_params = {
+            "model": self.model_name,
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+            "top_p": top_p,
+        }
+
+        endpoint, additional_params = self._responses_params(conversation)
+
+        request_params.update(additional_params)
+
+        headers = {}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+
+        session = async_get_clientsession(self.hass)
+        response = None
+        try:
+            async with session.post(
+                f"{self.api_host}{endpoint}",
+                json=request_params,
+                timeout=timeout,
+                headers=headers
+            ) as response:
+                response.raise_for_status()
+                result = await response.json()
+        except asyncio.TimeoutError:
+            return "The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities."
+        except aiohttp.ClientError as err:
+            _LOGGER.debug(f"Err was: {err}")
+            _LOGGER.debug(f"Request was: {request_params}")
+            _LOGGER.debug(f"Result was: {response}")
+            return f"Failed to communicate with the API! {err}"
+
+        _LOGGER.debug(result)
+
+        return self._extract_response(result)
+
 class TextGenerationWebuiAgent(GenericOpenAIAPIAgent):
     admin_key: str
 
