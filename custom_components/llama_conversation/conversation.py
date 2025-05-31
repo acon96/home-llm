@@ -1225,7 +1225,7 @@ class LlamaCppAgent(LocalLLMAgent):
 
         return result
 
-class GenericOpenAIAPIAgent(LocalLLMAgent):
+class BaseOpenAICompatibleAPIAgent(LocalLLMAgent):
     api_host: str
     api_key: str
     model_name: str
@@ -1241,6 +1241,8 @@ class GenericOpenAIAPIAgent(LocalLLMAgent):
         self.api_key = entry.data.get(CONF_OPENAI_API_KEY)
         self.model_name = entry.data.get(CONF_CHAT_MODEL)
 
+class GenericOpenAIAPIAgent(BaseOpenAICompatibleAPIAgent):
+    """Implements the OpenAPI-compatible text completion and chat completion API backends."""
 
     def _chat_completion_params(self, conversation: dict) -> (str, dict):
         request_params = {}
@@ -1319,22 +1321,8 @@ class GenericOpenAIAPIAgent(LocalLLMAgent):
 
         return self._extract_response(result)
 
-class GenericOpenAIResponsesAPIAgent(LocalLLMAgent):
+class GenericOpenAIResponsesAPIAgent(BaseOpenAICompatibleAPIAgent):
     """Implements the OpenAPI-compatible Responses API backend."""
-    api_host: str
-    api_key: str
-    model_name: str
-
-    async def _async_load_model(self, entry: ConfigEntry) -> None:
-        self.api_host = format_url(
-            hostname=entry.data[CONF_HOST],
-            port=entry.data[CONF_PORT],
-            ssl=entry.data[CONF_SSL],
-            path=""
-        )
-
-        self.api_key = entry.data.get(CONF_OPENAI_API_KEY)
-        self.model_name = entry.data.get(CONF_CHAT_MODEL)
 
     def _responses_params(self, conversation: dict) -> (str, dict):
         request_params = {}
