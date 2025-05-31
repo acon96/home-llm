@@ -119,8 +119,8 @@ CONF_SELECTED_LANGUAGE_OPTIONS = [ "en", "de", "fr", "es", "pl"]
 CONF_DOWNLOADED_MODEL_QUANTIZATION = "downloaded_model_quantization"
 CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS = [
     "Q4_0", "Q4_1", "Q5_0", "Q5_1", "IQ2_XXS", "IQ2_XS", "IQ2_S", "IQ2_M", "IQ1_S", "IQ1_M",
-    "Q2_K", "Q2_K_S", "IQ3_XXS", "IQ3_S", "IQ3_M", "Q3_K", "IQ3_XS", "Q3_K_S", "Q3_K_M", "Q3_K_L", 
-    "IQ4_NL", "IQ4_XS", "Q4_K", "Q4_K_S", "Q4_K_M", "Q5_K", "Q5_K_S", "Q5_K_M", "Q6_K", "Q8_0", 
+    "Q2_K", "Q2_K_S", "IQ3_XXS", "IQ3_S", "IQ3_M", "Q3_K", "IQ3_XS", "Q3_K_S", "Q3_K_M", "Q3_K_L",
+    "IQ4_NL", "IQ4_XS", "Q4_K", "Q4_K_S", "Q4_K_M", "Q5_K", "Q5_K_S", "Q5_K_M", "Q6_K", "Q8_0",
     "F16", "BF16", "F32"
 ]
 DEFAULT_DOWNLOADED_MODEL_QUANTIZATION = "Q4_K_M"
