@@ -1350,9 +1350,14 @@ class GenericOpenAIResponsesAPIAgent(BaseOpenAICompatibleAPIAgent):
         # Assign previous_response_id if relevant
         if self._last_response_id and self.entry.options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION):
             # If the last response was generated recently, use it as a context
-            configured_memory_time: datetime.timedelta = datetime.timedelta(self.entry.options.get(CONF_REMEMBER_CONVERSATION_TIME_MINUTES, DEFAULT_REMEMBER_CONVERSATION_TIME_MINUTES))
-            if (datetime.datetime.now() - self._last_response_id_time) < configured_memory_time:
+            configured_memory_time: datetime.timedelta = datetime.timedelta(minutes=self.entry.options.get(CONF_REMEMBER_CONVERSATION_TIME_MINUTES, DEFAULT_REMEMBER_CONVERSATION_TIME_MINUTES))
+            last_conversation_age: datetime.timedelta = datetime.datetime.now() - self._last_response_id_time
+            _LOGGER.debug(f"Conversation ID age: {last_conversation_age}")
+            if last_conversation_age < configured_memory_time:
+                _LOGGER.debug(f"Using previous response ID {self._last_response_id} for context")
                 request_params["previous_response_id"] = self._last_response_id
+            else:
+                _LOGGER.debug(f"Previous response ID {self._last_response_id} is too old, not using it for context")
 
         return endpoint, request_params
 
