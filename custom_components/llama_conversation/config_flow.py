@@ -65,6 +65,7 @@ from .const import (
     CONF_REFRESH_SYSTEM_PROMPT,
     CONF_REMEMBER_CONVERSATION,
     CONF_REMEMBER_NUM_INTERACTIONS,
+    CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
     CONF_PROMPT_CACHING_ENABLED,
     CONF_PROMPT_CACHING_INTERVAL,
     CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
@@ -1089,6 +1090,14 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
             ): BooleanSelector(BooleanSelectorConfig()),
         })
     elif backend_type in BACKEND_TYPE_GENERIC_OPENAI_RESPONSES:
+        del result[CONF_REMEMBER_NUM_INTERACTIONS]
+        result = insert_after_key(result, CONF_REMEMBER_CONVERSATION, {
+            vol.Required(
+                CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
+                description={"suggested_value": options.get(CONF_REMEMBER_CONVERSATION_TIME_MINUTES)},
+                default=DEFAULT_TOP_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=180, step=0.5, unit_of_measurement=UnitOfTime.MINUTES, mode=NumberSelectorMode.BOX)),
+        })
         result = insert_after_key(result, CONF_MAX_TOKENS, {
             vol.Required(
                 CONF_TEMPERATURE,
