@@ -65,6 +65,7 @@ from .const import (
     CONF_REFRESH_SYSTEM_PROMPT,
     CONF_REMEMBER_CONVERSATION,
     CONF_REMEMBER_NUM_INTERACTIONS,
+    CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
     CONF_PROMPT_CACHING_ENABLED,
     CONF_PROMPT_CACHING_INTERVAL,
     CONF_SERVICE_CALL_REGEX,
@@ -99,6 +100,7 @@ from .const import (
     DEFAULT_REFRESH_SYSTEM_PROMPT,
     DEFAULT_REMEMBER_CONVERSATION,
     DEFAULT_REMEMBER_NUM_INTERACTIONS,
+    DEFAULT_REMEMBER_CONVERSATION_TIME_MINUTES,
     DEFAULT_PROMPT_CACHING_ENABLED,
     DEFAULT_PROMPT_CACHING_INTERVAL,
     DEFAULT_SERVICE_CALL_REGEX,
@@ -1346,10 +1348,10 @@ class GenericOpenAIResponsesAPIAgent(BaseOpenAICompatibleAPIAgent):
         request_params["input"] = conversation[-1]["message"] # last message in the conversation is the user input
 
         # Assign previous_response_id if relevant
-        if self._last_response_id:
-            # If the last response was generated less than 5 minutes ago, use it as a context
-            # TODO: Make disposal time configurable
-            if (datetime.datetime.now() - self._last_response_id_time) < datetime.timedelta(minutes=5):
+        if self._last_response_id and self.entry.options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION):
+            # If the last response was generated recently, use it as a context
+            configured_memory_time: datetime.timedelta = datetime.timedelta(self.entry.options.get(CONF_REMEMBER_CONVERSATION_TIME_MINUTES, DEFAULT_REMEMBER_CONVERSATION_TIME_MINUTES))
+            if (datetime.datetime.now() - self._last_response_id_time) < configured_memory_time:
                 request_params["previous_response_id"] = self._last_response_id
 
         return endpoint, request_params
