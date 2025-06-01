@@ -4,6 +4,7 @@ from __future__ import annotations
 import aiohttp
 import asyncio
 import csv
+import datetime
 import importlib
 import json
 import logging
@@ -1334,12 +1335,22 @@ class GenericOpenAIAPIAgent(BaseOpenAICompatibleAPIAgent):
 class GenericOpenAIResponsesAPIAgent(BaseOpenAICompatibleAPIAgent):
     """Implements the OpenAPI-compatible Responses API backend."""
 
+    _last_response_id: str | None = None
+    _last_response_id_time: datetime.datetime = None
+
     def _responses_params(self, conversation: dict) -> (str, dict):
         request_params = {}
         api_base_path = self.entry.data.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
 
         endpoint = f"/{api_base_path}/responses"
-        request_params["prompt"] = self._format_prompt(conversation)
+        request_params["input"] = conversation[-1]["message"] # last message in the conversation is the user input
+
+        # Assign previous_response_id if relevant
+        if self._last_response_id:
+            # If the last response was generated less than 5 minutes ago, use it as a context
+            # TODO: Make disposal time configurable
+            if (datetime.datetime.now() - self._last_response_id_time) < datetime.timedelta(minutes=5):
+                request_params["previous_response_id"] = self._last_response_id
 
         return endpoint, request_params
 
@@ -1351,8 +1362,8 @@ class GenericOpenAIResponsesAPIAgent(BaseOpenAICompatibleAPIAgent):
 
         Returns True or raises an error
         """
-        required_keys = ["object", "output", "status", ]
-        missing_keys = [key for key in required_keys if key not in response_json]
+        required_response_keys = ["object", "output", "status", "id"]
+        missing_keys = [key for key in required_response_keys if key not in response_json]
         if missing_keys:
             raise ValueError(f"Response JSON is missing required keys: {', '.join(missing_keys)}")
 
@@ -1398,13 +1409,22 @@ class GenericOpenAIResponsesAPIAgent(BaseOpenAICompatibleAPIAgent):
 
         output_type = content["type"]
 
+        to_return: str | None = None
+
         if output_type == "refusal":
             _LOGGER.info("Received a refusal from the Responses API.")
-            return content["refusal"]
+            to_return = content["refusal"]
         elif output_type == "output_text":
-            return content["text"]
+            to_return = content["text"]
         else:
             raise ValueError(f"Response output content type is not expected, got {output_type}")
+
+        # Save the response_id and return the successful response.
+        response_id = response_json["id"]
+        self._last_response_id = response_id
+        self._last_response_id_time = datetime.datetime.now()
+
+        return to_return
 
     async def _async_generate(self, conversation: dict) -> str:
         """Generate a response using the OpenAI-compatible Responses API"""
