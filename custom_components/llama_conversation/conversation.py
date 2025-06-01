@@ -1388,12 +1388,12 @@ class GenericOpenAIResponsesAPIAgent(BaseOpenAICompatibleAPIAgent):
 
     def _check_response_status(self, response_json: dict) -> None:
         """
-        Check the status of the response and logs a message if it is not 'succeeded'.
+        Check the status of the response and logs a message if it is not 'completed'.
 
         API ref: https://platform.openai.com/docs/api-reference/responses/object#responses_object-status
         """
-        if response_json["status"] != "succeeded":
-            _LOGGER.warning(f"Response status is not 'succeeded', got {response_json['status']}. Details: {response_json.get('incomplete_details', 'No details provided')}")
+        if response_json["status"] != "completed":
+            _LOGGER.warning(f"Response status is not 'completed', got {response_json['status']}. Details: {response_json.get('incomplete_details', 'No details provided')}")
 
     def _extract_response(self, response_json: dict) -> str:
         self._validate_response_payload(response_json)
