@@ -26,11 +26,12 @@ from .const import (
     BACKEND_TYPE_LLAMA_EXISTING,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
     BACKEND_TYPE_GENERIC_OPENAI,
+    BACKEND_TYPE_GENERIC_OPENAI_RESPONSES,
     BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER,
     BACKEND_TYPE_OLLAMA,
 )
-from .conversation import LlamaCppAgent, GenericOpenAIAPIAgent, TextGenerationWebuiAgent, \
-    LlamaCppPythonAPIAgent, OllamaAPIAgent, LocalLLMAgent
+from .conversation import LlamaCppAgent, GenericOpenAIAPIAgent, GenericOpenAIResponsesAPIAgent, \
+    TextGenerationWebuiAgent, LlamaCppPythonAPIAgent, OllamaAPIAgent, LocalLLMAgent
 
 type LocalLLMConfigEntry = ConfigEntry[LocalLLMAgent]
 
@@ -56,13 +57,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> 
             agent_cls = LlamaCppAgent
         elif backend_type == BACKEND_TYPE_GENERIC_OPENAI:
             agent_cls = GenericOpenAIAPIAgent
+        elif backend_type == BACKEND_TYPE_GENERIC_OPENAI_RESPONSES:
+            agent_cls = GenericOpenAIResponsesAPIAgent
         elif backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
             agent_cls = TextGenerationWebuiAgent
         elif backend_type == BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER:
             agent_cls = LlamaCppPythonAPIAgent
         elif backend_type == BACKEND_TYPE_OLLAMA:
             agent_cls = OllamaAPIAgent
-        
+
         return agent_cls(hass, entry)
 
     # create the agent in an executor job because the constructor calls `open()`
@@ -74,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> 
 
     # forward setup to platform to register the entity
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    
+
     return True
 
 
@@ -130,12 +133,12 @@ class HassServiceTool(llm.Tool):
             domain, service = tuple(tool_input.tool_args["service"].split("."))
         except ValueError:
             return { "result": "unknown service" }
-        
+
         target_device = tool_input.tool_args["target_device"]
 
         if domain not in self.ALLOWED_DOMAINS or service not in self.ALLOWED_SERVICES:
             return { "result": "unknown service" }
-        
+
         if domain == "script" and service not in ["reload", "turn_on", "turn_off", "toggle"]:
             return { "result": "unknown service" }
 
@@ -153,12 +156,12 @@ class HassServiceTool(llm.Tool):
         except Exception:
             _LOGGER.exception("Failed to execute service for model")
             return { "result": "failed" }
-        
+
         return { "result": "success" }
 
 class HomeLLMAPI(llm.API):
     """
-    An API that allows calling Home Assistant services to maintain compatibility 
+    An API that allows calling Home Assistant services to maintain compatibility
     with the older (v3 and older) Home LLM models
     """
 
