@@ -1,4 +1,7 @@
 # TODO
+- [ ] proper tool calling support  
+- [ ] home assistant component text streaming support  
+- [ ] new models based on qwen3  
 - [x] support new LLM APIs  
     - rewrite how services are called  
     - handle no API selected  
