@@ -1,6 +1,6 @@
 {
     "name": "Local LLM Conversation",    
-    "homeassistant": "2025.4.1",
+    "homeassistant": "2025.7.0",
     "content_in_root": false,
     "render_readme": true
 } 
