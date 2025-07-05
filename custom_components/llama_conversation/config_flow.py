@@ -65,6 +65,7 @@ from .const import (
     CONF_REFRESH_SYSTEM_PROMPT,
     CONF_REMEMBER_CONVERSATION,
     CONF_REMEMBER_NUM_INTERACTIONS,
+    CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
     CONF_PROMPT_CACHING_ENABLED,
     CONF_PROMPT_CACHING_INTERVAL,
     CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
@@ -133,6 +134,7 @@ from .const import (
     BACKEND_TYPE_LLAMA_EXISTING,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
     BACKEND_TYPE_GENERIC_OPENAI,
+    BACKEND_TYPE_GENERIC_OPENAI_RESPONSES,
     BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER,
     BACKEND_TYPE_OLLAMA,
     PROMPT_TEMPLATE_DESCRIPTIONS,
@@ -164,10 +166,11 @@ def STEP_INIT_DATA_SCHEMA(backend_type=None):
                 CONF_BACKEND_TYPE,
                 default=backend_type if backend_type else DEFAULT_BACKEND_TYPE
             ): SelectSelector(SelectSelectorConfig(
-                options=[ 
+                options=[
                     BACKEND_TYPE_LLAMA_HF, BACKEND_TYPE_LLAMA_EXISTING,
                     BACKEND_TYPE_TEXT_GEN_WEBUI,
                     BACKEND_TYPE_GENERIC_OPENAI,
+                    BACKEND_TYPE_GENERIC_OPENAI_RESPONSES,
                     BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER,
                     BACKEND_TYPE_OLLAMA
                 ],
@@ -215,13 +218,13 @@ def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, ss
     extra1, extra2 = ({}, {})
     default_port = DEFAULT_PORT
 
-    if backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI: 
-        extra2[vol.Optional(CONF_TEXT_GEN_WEBUI_ADMIN_KEY)] = TextSelector(TextSelectorConfig(type="password"))        
+    if backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
+        extra2[vol.Optional(CONF_TEXT_GEN_WEBUI_ADMIN_KEY)] = TextSelector(TextSelectorConfig(type="password"))
     elif backend_type == BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER:
         default_port = "8000"
     elif backend_type == BACKEND_TYPE_OLLAMA:
         default_port = "11434"
-    elif backend_type == BACKEND_TYPE_GENERIC_OPENAI:
+    elif backend_type in [BACKEND_TYPE_GENERIC_OPENAI, BACKEND_TYPE_GENERIC_OPENAI_RESPONSES]:
         default_port = ""
         extra2[vol.Required(
             CONF_GENERIC_OPENAI_PATH,
@@ -257,7 +260,7 @@ def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, ss
 
 
 class BaseLlamaConversationConfigFlow(FlowHandler, ABC):
-    """Represent the base config flow for Z-Wave JS."""
+    """Represent the base config flow for Local LLM."""
 
     @property
     @abstractmethod
@@ -333,7 +336,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         """Handle the initial step."""
         self.model_config = {}
         self.options = {}
-        
+
         # make sure the API is registered
         if not any([x.id == HOME_LLM_API_ID for x in llm.async_get_apis(self.hass)]):
             llm.async_register_api(self.hass, HomeLLMAPI(self.hass))
@@ -382,7 +385,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                 step_id="install_local_wheels",
                 progress_action="install_local_wheels",
             )
-        
+
         if self.install_wheel_task and not self.install_wheel_task.done():
             return self.async_show_progress(
                 progress_task=self.install_wheel_task,
@@ -489,7 +492,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                 step_id="download",
                 progress_action="download",
             )
-        
+
         if self.download_task and not self.download_task.done():
             return self.async_show_progress(
                 progress_task=self.download_task,
@@ -508,7 +511,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
 
         self.download_task = None
         return self.async_show_progress_done(next_step_id=next_step)
-    
+
     async def _async_validate_generic_openai(self, user_input: dict) -> tuple:
         """
         Validates a connection to an OpenAI compatible API server and that the model exists on the remote server
@@ -585,7 +588,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         except Exception as ex:
             _LOGGER.info("Connection error was: %s", repr(ex))
             return "failed_to_connect", ex, []
-        
+
     async def _async_validate_ollama(self, user_input: dict) -> tuple:
         """
         Validates a connection to ollama and that the model exists on the remote server
@@ -617,7 +620,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                 model_name = self.model_config[CONF_CHAT_MODEL]
                 if model["name"] == model_name:
                     return (None, None, [])
-                
+
             return "missing_model_api", None, [x["name"] for x in models_result["models"]]
 
         except Exception as ex:
@@ -644,9 +647,9 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                     error_message, ex, possible_models = await self._async_validate_text_generation_webui(user_input)
                 elif backend_type == BACKEND_TYPE_OLLAMA:
                     error_message, ex, possible_models = await self._async_validate_ollama(user_input)
-                elif backend_type == BACKEND_TYPE_GENERIC_OPENAI and \
+                elif backend_type in [BACKEND_TYPE_GENERIC_OPENAI, BACKEND_TYPE_GENERIC_OPENAI_RESPONSES] and \
                     user_input.get(CONF_GENERIC_OPENAI_VALIDATE_MODEL, DEFAULT_GENERIC_OPENAI_VALIDATE_MODEL):
-                     error_message, ex, possible_models = await self._async_validate_generic_openai(user_input)
+                    error_message, ex, possible_models = await self._async_validate_generic_openai(user_input)
                 else:
                     possible_models = []
 
@@ -674,7 +677,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         return self.async_show_form(
             step_id="remote_model", data_schema=schema, errors=errors, description_placeholders=description_placeholders, last_step=False
         )
-    
+
     async def async_step_model_parameters(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -704,7 +707,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
         selected_default_options[CONF_PROMPT] = selected_default_options[CONF_PROMPT].replace("<tools>", tools)
         selected_default_options[CONF_PROMPT] = selected_default_options[CONF_PROMPT].replace("<area>", area)
         selected_default_options[CONF_PROMPT] = selected_default_options[CONF_PROMPT].replace("<user_instruction>", user_instruction)
-        
+
         schema = vol.Schema(local_llama_config_option_schema(self.hass, selected_default_options, backend_type))
 
         if user_input:
@@ -716,7 +719,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                 if not os.path.isfile(os.path.join(os.path.dirname(__file__), filename)):
                     errors["base"] = "missing_gbnf_file"
                     description_placeholders["filename"] = filename
-            
+
             if user_input.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES):
                 filename = user_input.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE)
                 if not os.path.isfile(os.path.join(os.path.dirname(__file__), filename)):
@@ -725,7 +728,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
 
             if user_input[CONF_LLM_HASS_API] == "none":
                 user_input.pop(CONF_LLM_HASS_API)
-            
+
             if len(errors) == 0:
                 try:
                     # validate input
@@ -792,7 +795,7 @@ class OptionsFlow(config_entries.OptionsFlow):
                 if not os.path.isfile(os.path.join(os.path.dirname(__file__), filename)):
                     errors["base"] = "missing_gbnf_file"
                     description_placeholders["filename"] = filename
-            
+
             if user_input.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES):
                 filename = user_input.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE)
                 if not os.path.isfile(os.path.join(os.path.dirname(__file__), filename)):
@@ -804,7 +807,7 @@ class OptionsFlow(config_entries.OptionsFlow):
 
             if len(errors) == 0:
                 return self.async_create_entry(title="Local LLM Conversation", data=user_input)
-            
+
         schema = local_llama_config_option_schema(
             self.hass,
             self.config_entry.options,
@@ -1063,7 +1066,7 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
                 mode=SelectSelectorMode.DROPDOWN,
             )),
         })
-    elif backend_type == BACKEND_TYPE_GENERIC_OPENAI:
+    elif backend_type in BACKEND_TYPE_GENERIC_OPENAI:
         result = insert_after_key(result, CONF_MAX_TOKENS, {
             vol.Required(
                 CONF_TEMPERATURE,
@@ -1085,6 +1088,32 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
                 description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
                 default=DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
             ): BooleanSelector(BooleanSelectorConfig()),
+        })
+    elif backend_type in BACKEND_TYPE_GENERIC_OPENAI_RESPONSES:
+        del result[CONF_REMEMBER_NUM_INTERACTIONS]
+        result = insert_after_key(result, CONF_REMEMBER_CONVERSATION, {
+            vol.Required(
+                CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
+                description={"suggested_value": options.get(CONF_REMEMBER_CONVERSATION_TIME_MINUTES)},
+                default=DEFAULT_TOP_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=180, step=0.5, unit_of_measurement=UnitOfTime.MINUTES, mode=NumberSelectorMode.BOX)),
+        })
+        result = insert_after_key(result, CONF_MAX_TOKENS, {
+            vol.Required(
+                CONF_TEMPERATURE,
+                description={"suggested_value": options.get(CONF_TEMPERATURE)},
+                default=DEFAULT_TEMPERATURE,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=3, step=0.05)),
+            vol.Required(
+                CONF_TOP_P,
+                description={"suggested_value": options.get(CONF_TOP_P)},
+                default=DEFAULT_TOP_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Required(
+                CONF_REQUEST_TIMEOUT,
+                description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
+                default=DEFAULT_REQUEST_TIMEOUT,
+            ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
         })
     elif backend_type == BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER:
         result = insert_after_key(result, CONF_MAX_TOKENS, {

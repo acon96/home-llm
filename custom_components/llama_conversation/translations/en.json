@@ -194,6 +194,7 @@
                 "llama_cpp_existing": "Llama.cpp (existing model)",
                 "text-generation-webui_api": "text-generation-webui API",
                 "generic_openai": "Generic OpenAI Compatible API",
+                "generic_openai_responses": "Generic OpenAPI Compatible Responses API",
                 "llama_cpp_python_server": "llama-cpp-python Server",
                 "ollama": "Ollama API"
 

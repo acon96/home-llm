@@ -1,0 +1,5 @@
+-r requirements.txt
+-r requirements-dev.txt
+-r custom_components/requirements.txt
+-r custom_components/requirements-dev.txt
+-r data/requirements.txt

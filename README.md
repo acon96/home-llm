@@ -5,7 +5,7 @@ This project provides the required "glue" components to control your Home Assist
 Please see the [Setup Guide](./docs/Setup.md) for more information on installation.
 
 ## Local LLM Conversation Integration
-**The latest version of this integration requires Home Assistant 2025.4.1 or newer**
+**The latest version of this integration requires Home Assistant 2025.7.0 or newer**
 
 In order to integrate with Home Assistant, we provide a custom component that exposes the locally running LLM as a "conversation agent".
 
@@ -24,24 +24,36 @@ The integration can either run the model in 2 different ways:
 ## Home LLM Model
 The "Home" models are a fine tuning of various Large Languages Models that are under 5B parameters.  The models are able to control devices in the user's house as well as perform basic question and answering.  The fine tuning dataset is a [custom synthetic dataset](./data) designed to teach the model function calling based on the device information in the context.
 
-The latest models can be found on HuggingFace:  
-3B v3 (Based on StableLM-Zephyr-3B): https://huggingface.co/acon96/Home-3B-v3-GGUF  (Zephyr prompt format)  
-1B v3 (Based on TinyLlama-1.1B): https://huggingface.co/acon96/Home-1B-v3-GGUF  (Zephyr prompt format)  
+The latest models can be found on HuggingFace:
 
-Non English experiments:  
-German, French, & Spanish (3B): https://huggingface.co/acon96/stablehome-multilingual-experimental  
-Polish (1B): https://huggingface.co/acon96/tinyhome-polish-experimental  
+**Llama 3.2**:  
+3B: https://huggingface.co/acon96/Home-Llama-3.2-3B  
+1B: TBD  
+
+**Qwen 3**:  
+0.6B: TBD  
+1.5B: TBD  
+
+**Gemma3**:  
+1B: TBD
 
 <details>
 
 <summary>Old Models</summary>  
 
+3B v3 (Based on StableLM-Zephyr-3B): https://huggingface.co/acon96/Home-3B-v3-GGUF  (Zephyr prompt format)  
+1B v3 (Based on TinyLlama-1.1B): https://huggingface.co/acon96/Home-1B-v3-GGUF  (Zephyr prompt format)  
 3B v2 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v2-GGUF  (ChatML prompt format)  
 1B v2 (Based on Phi-1.5): https://huggingface.co/acon96/Home-1B-v2-GGUF  (ChatML prompt format)  
 1B v1 (Based on Phi-1.5): https://huggingface.co/acon96/Home-1B-v1-GGUF  (ChatML prompt format)  
 
-NOTE: The models below are only compatible with version 0.2.17 and older!
+Non English experiments:  
+German, French, & Spanish (3B): https://huggingface.co/acon96/stablehome-multilingual-experimental  
+Polish (1B): https://huggingface.co/acon96/tinyhome-polish-experimental  
+
+NOTE: The models below are only compatible with version 0.2.17 and older!  
 3B v1 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v1-GGUF  (ChatML prompt format)  
+
 
 </details>
 
@@ -150,6 +162,7 @@ In order to facilitate running the project entirely on the system where Home Ass
 ## Version History
 | Version | Description                                                                                                                                                                                                          |
 |---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| v0.3.10 | Add support for the OpenAI "Responses" API endpoint, Update llama.cpp version, Fix for breaking change in HA version 2025.7.0                                                                                        |
 | v0.3.9  | Update llama.cpp version, fix installation bugs, fix conversation history not working                                                                                                                                |
 | v0.3.8  | Update llama.cpp, remove think blocks from "thinking" models, fix wheel detection for some Intel CPUs, Fixes for compatibility with latest Home Assistant version (2025.4), other small bug fixes                    |
 | v0.3.7  | Update llama.cpp version to support newer models, Update minimum Home Assistant version to 2024.12.3, Add German In-Context Learning examples, Fix multi-turn use, Fix an issue with webcolors                       | 
