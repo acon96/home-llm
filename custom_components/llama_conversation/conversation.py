@@ -591,7 +591,7 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
                 area_id = entity.area_id
 
             if area_id:
-                area = area_registry.async_get_area(entity.area_id)
+                area = area_registry.async_get_area(area_id)
                 if area:
                     attributes["area_id"] = area.id
                     attributes["area_name"] = area.name
