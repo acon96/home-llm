@@ -128,6 +128,7 @@ from .const import (
     SERVICE_TOOL_ALLOWED_DOMAINS,
     CONF_BACKEND_TYPE,
     DEFAULT_BACKEND_TYPE,
+    THINKING_TAGS
 )
 
 # make type checking work for llama-cpp-python without importing it directly at runtime
@@ -1313,10 +1314,14 @@ class GenericOpenAIAPIAgent(BaseOpenAICompatibleAPIAgent):
         if choices[0]["finish_reason"] != "stop":
             _LOGGER.warning("Model response did not end on a stop token (unfinished sentence)")
 
+        response = ""
         if response_json["object"] in ["chat.completion", "chat.completion.chunk"]:
-            return choices[0]["message"]["content"]
+            response = choices[0]["message"]["content"]
         else:
-            return choices[0]["text"]
+            response = choices[0]["text"]
+
+        response = THINKING_TAGS.sub("", response)
+        return response
 
     async def _async_generate(self, conversation: dict) -> str:
         use_chat_api = self.entry.options.get(CONF_REMOTE_USE_CHAT_ENDPOINT, DEFAULT_REMOTE_USE_CHAT_ENDPOINT)
@@ -1427,6 +1432,8 @@ class GenericOpenAIResponsesAPIAgent(BaseOpenAICompatibleAPIAgent):
         self._last_response_id = response_id
         self._last_response_id_time = datetime.datetime.now()
 
+        to_return = THINKING_TAGS.sub("", to_return)
+
         return to_return
 
     async def _async_generate(self, conversation: dict) -> str:
@@ -1527,10 +1534,14 @@ class TextGenerationWebuiAgent(GenericOpenAIAPIAgent):
             self._warn_context_size()
 
         # text-gen-webui has a typo where it is 'chat.completions' not 'chat.completion'
+        response = ""
         if response_json["object"] == "chat.completions":
-            return choices[0]["message"]["content"]
+            response = choices[0]["message"]["content"]
         else:
-            return choices[0]["text"]
+            response = choices[0]["text"]
+
+        response = THINKING_TAGS.sub("", response)
+        return response
 
 class LlamaCppPythonAPIAgent(GenericOpenAIAPIAgent):
     """https://llama-cpp-python.readthedocs.io/en/latest/server/"""
@@ -1636,10 +1647,14 @@ class OllamaAPIAgent(LocalLLMAgent):
         # if response_json["prompt_eval_count"] + max_tokens > context_len:
         #     self._warn_context_size()
 
+        response = ""
         if "response" in response_json:
-            return response_json["response"]
+            response = response_json["response"]
         else:
-            return response_json["message"]["content"]
+            response = response_json["message"]["content"]
+
+        response = THINKING_TAGS.sub("", response)
+        return response
 
     async def _async_generate(self, conversation: dict) -> str:
         context_length = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)

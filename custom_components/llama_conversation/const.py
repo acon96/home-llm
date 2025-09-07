@@ -1,5 +1,5 @@
 """Constants for the Local LLM Conversation integration."""
-import types, os
+import types, os, re
 
 DOMAIN = "llama_conversation"
 HOME_LLM_API_ID = "home-llm-service-api"
@@ -405,6 +405,8 @@ OPTIONS_OVERRIDES = {
         CONF_TOOL_FORMAT: TOOL_FORMAT_MINIMAL,
     },
 }
+
+THINKING_TAGS = re.compile(r"<think>([\s\S]*?)<\/think>")
 
 INTEGRATION_VERSION = "0.3.10"
 EMBEDDED_LLAMA_CPP_PYTHON_VERSION = "0.3.11"
