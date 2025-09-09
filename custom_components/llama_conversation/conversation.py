@@ -1320,7 +1320,7 @@ class GenericOpenAIAPIAgent(BaseOpenAICompatibleAPIAgent):
         else:
             response = choices[0]["text"]
 
-        response = re.sub("", response, flags=re.DOTALL | re.IGNORECASE)
+        response = re.sub(THINKING_TAGS, "", response, flags=re.DOTALL | re.IGNORECASE)
         response = response.strip()
         return response
 
