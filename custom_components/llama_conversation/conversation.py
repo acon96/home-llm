@@ -1320,7 +1320,7 @@ class GenericOpenAIAPIAgent(BaseOpenAICompatibleAPIAgent):
         else:
             response = choices[0]["text"]
 
-        response = THINKING_TAGS.sub("", response, flags=re.DOTALL | re.IGNORECASE)
+        response = re.sub("", response, flags=re.DOTALL | re.IGNORECASE)
         response = response.strip()
         return response
 
@@ -1433,7 +1433,7 @@ class GenericOpenAIResponsesAPIAgent(BaseOpenAICompatibleAPIAgent):
         self._last_response_id = response_id
         self._last_response_id_time = datetime.datetime.now()
 
-        to_return = THINKING_TAGS.sub("", to_return, flags=re.DOTALL | re.IGNORECASE)
+        to_return = re.sub(THINKING_TAGS, "", to_return, flags=re.DOTALL | re.IGNORECASE)
         to_return = to_return.strip()
         return to_return
 
@@ -1541,7 +1541,7 @@ class TextGenerationWebuiAgent(GenericOpenAIAPIAgent):
         else:
             response = choices[0]["text"]
 
-        response = THINKING_TAGS.sub("", response, flags=re.DOTALL | re.IGNORECASE)
+        response = re.sub(THINKING_TAGS, "", response, flags=re.DOTALL | re.IGNORECASE)
         response = response.strip()
         return response
 
@@ -1655,7 +1655,7 @@ class OllamaAPIAgent(LocalLLMAgent):
         else:
             response = response_json["message"]["content"]
 
-        response = THINKING_TAGS.sub("", response, flags=re.DOTALL | re.IGNORECASE)
+        response = re.sub(THINKING_TAGS, "", response, flags=re.DOTALL | re.IGNORECASE)
         response = response.strip()
         return response
 
