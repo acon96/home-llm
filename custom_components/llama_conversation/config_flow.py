@@ -57,6 +57,7 @@ from .const import (
     CONF_PROMPT_TEMPLATE,
     CONF_TOOL_FORMAT,
     CONF_TOOL_MULTI_TURN_CHAT,
+    CONF_REMOVE_THINKING_TAGS,
     CONF_ENABLE_FLASH_ATTENTION,
     CONF_USE_GBNF_GRAMMAR,
     CONF_GBNF_GRAMMAR_FILE,
@@ -107,6 +108,7 @@ from .const import (
     DEFAULT_PROMPT_TEMPLATE,
     DEFAULT_TOOL_FORMAT,
     DEFAULT_TOOL_MULTI_TURN_CHAT,
+    DEFAULT_REMOVE_THINKING_TAGS,
     DEFAULT_ENABLE_FLASH_ATTENTION,
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_GBNF_GRAMMAR_FILE,
@@ -887,6 +889,11 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
             CONF_TOOL_MULTI_TURN_CHAT,
             description={"suggested_value": options.get(CONF_TOOL_MULTI_TURN_CHAT)},
             default=DEFAULT_TOOL_MULTI_TURN_CHAT,
+        ): BooleanSelector(BooleanSelectorConfig()),
+        vol.Required(
+            CONF_REMOVE_THINKING_TAGS,
+            description={"suggested_value": options.get(CONF_REMOVE_THINKING_TAGS)},
+            default=DEFAULT_REMOVE_THINKING_TAGS,
         ): BooleanSelector(BooleanSelectorConfig()),
         vol.Required(
             CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,

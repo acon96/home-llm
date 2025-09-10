@@ -68,6 +68,7 @@
                     "top_p": "Top P",
                     "min_p": "Min P",
                     "typical_p": "Typical P",
+                    "remove_thinking_tags": "Usuń tagi myślenia",
                     "request_timeout": "Limit czasu żądania (sekundy)",
                     "ollama_keep_alive": "Limit czasu nieaktywności/utrzymania połączenia (minuty)",
                     "ollama_json_mode": "Tryb wyjścia JSON",
