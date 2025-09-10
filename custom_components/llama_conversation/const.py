@@ -406,7 +406,7 @@ OPTIONS_OVERRIDES = {
     },
 }
 
-THINKING_TAGS = r"<think>.*?<\/think>\s*\:"
+THINKING_TAGS = r"(<think>.*?<(.?|\/)think>(\s*\:|\s*))?"
 
 INTEGRATION_VERSION = "0.3.10"
 EMBEDDED_LLAMA_CPP_PYTHON_VERSION = "0.3.11"
