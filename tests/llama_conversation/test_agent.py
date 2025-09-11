@@ -565,7 +565,7 @@ async def test_text_generation_webui_agent(text_generation_webui_agent_fixture):
             "index": 0,
             "message": {
                 "role": "assistant",
-                "content": "<think>foo-bar</think> I am saying something!\n" + json.dumps({
+                "content": "I am saying something!\n" + json.dumps({
                     "name": "HassTurnOn",
                     "arguments": {
                         "name": "light.kitchen_light"
@@ -724,7 +724,7 @@ async def test_generic_openai_agent(generic_openai_agent_fixture):
         "model": "gpt-3.5-turbo-instruct",
         "system_fingerprint": "fp_44709d6fcb",
         "choices": [{
-            "text": "<think>foo bar</think> I am saying something!\n" + json.dumps({
+            "text": "I am saying something!\n" + json.dumps({
                 "name": "HassTurnOn",
                 "arguments": {
                     "name": "light.kitchen_light"
