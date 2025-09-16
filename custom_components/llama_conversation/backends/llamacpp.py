@@ -21,7 +21,7 @@ from homeassistant.helpers.event import async_track_state_change, async_call_lat
 
 from llama_cpp import CreateChatCompletionStreamResponse
 
-from custom_components.llama_conversation.utils import install_llama_cpp_python, validate_llama_cpp_python_installation, get_oai_formatted_messages, get_oai_formatted_tools
+from custom_components.llama_conversation.utils import install_llama_cpp_python, validate_llama_cpp_python_installation, get_oai_formatted_messages, get_oai_formatted_tools, parse_raw_tool_call
 from custom_components.llama_conversation.const import (
     CONF_THINKING_PREFIX,
     CONF_THINKING_SUFFIX,
@@ -222,13 +222,13 @@ class LlamaCppAgent(LocalLLMAgent):
         else:
             self._set_prompt_caching(enabled=False)
 
-    def _async_get_exposed_entities(self) -> tuple[dict[str, str], list[str]]:
+    def _async_get_exposed_entities(self) -> dict[str, str]:
         """Takes the super class function results and sorts the entities with the recently updated at the end"""
-        entities, domains = LocalLLMAgent._async_get_exposed_entities(self)
+        entities = LocalLLMAgent._async_get_exposed_entities(self)
 
         # ignore sorting if prompt caching is disabled
         if not self.entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED):
-            return entities, domains
+            return entities
 
         entity_order = { name: None for name in entities.keys() }
         entity_order.update(self.last_updated_entities)
@@ -250,7 +250,7 @@ class LlamaCppAgent(LocalLLMAgent):
         for item_name, _ in sorted_items:
             sorted_entities[item_name] = entities[item_name]
 
-        return sorted_entities, domains
+        return sorted_entities
 
     def _set_prompt_caching(self, *, enabled=True):
         if enabled and not self.remove_prompt_caching_listener:
@@ -361,7 +361,7 @@ class LlamaCppAgent(LocalLLMAgent):
         refresh_delay = self.entry.options.get(CONF_PROMPT_CACHING_INTERVAL, DEFAULT_PROMPT_CACHING_INTERVAL)
         async_call_later(self.hass, float(refresh_delay), refresh_if_requested)
 
-    async def _async_generate_completion(self, chat_completion: Iterator[CreateChatCompletionStreamResponse]) -> AsyncGenerator[TextGenerationResult, None]:
+    async def _async_generate_completion(self, llm_api: llm.APIInstance | None, chat_completion: Iterator[CreateChatCompletionStreamResponse]) -> AsyncGenerator[TextGenerationResult, None]:
         think_prefix = self.entry.options.get(CONF_THINKING_PREFIX, DEFAULT_THINKING_PREFIX)
         think_suffix = self.entry.options.get(CONF_THINKING_SUFFIX, DEFAULT_THINKING_SUFFIX)
         tool_prefix = self.entry.options.get(CONF_TOOL_CALL_PREFIX, DEFAULT_TOOL_CALL_PREFIX)
@@ -377,6 +377,7 @@ class LlamaCppAgent(LocalLLMAgent):
         in_thinking = False
         in_tool_call = False
         tool_content = ""
+        last_5_tokens = []
         while chunk := await self.hass.async_add_executor_job(next_token):
             content = chunk["choices"][0]["delta"].get("content")
             tool_calls = chunk["choices"][0]["delta"].get("tool_calls")
@@ -389,37 +390,44 @@ class LlamaCppAgent(LocalLLMAgent):
                 tool_calls=None
             )
             if content:
-                if think_prefix in content and not in_thinking:
-                    in_thinking = True
-                elif think_suffix in content and in_thinking:
-                    in_thinking = False
-                    content = content.replace(think_suffix, "").strip()
-                elif tool_prefix in content and not in_tool_call:
-                    in_tool_call = True
-                elif tool_suffix in content and in_tool_call:
-                    in_tool_call = False
-                    tool_call = json.loads(tool_content.strip().removeprefix(tool_prefix).removesuffix(tool_suffix))
-                    result.tool_calls = [
-                        llm.ToolInput(
-                            tool_name=tool_call["name"],
-                            tool_args=tool_call["arguments"]
-                        )
-                    ]
 
-                    content = None
+                last_5_tokens.append(content)
+                if len(last_5_tokens) > 5:
+                    last_5_tokens.pop(0)
 
-                result.response = content
+                potential_block = "".join(last_5_tokens)
 
                 if in_tool_call:
                     tool_content += content
+
+                if think_prefix in potential_block and not in_thinking:
+                    in_thinking = True
+                    last_5_tokens.clear()
+                elif think_suffix in potential_block and in_thinking:
+                    in_thinking = False
+                    content = content.replace(think_suffix, "").strip()
+                elif tool_prefix in potential_block and not in_tool_call:
+                    in_tool_call = True
+                    last_5_tokens.clear()
+                elif tool_suffix in potential_block and in_tool_call:
+                    in_tool_call = False
+                    _LOGGER.debug("Tool content: %s", tool_content)
+                    tool_call, to_say = parse_raw_tool_call(tool_content.strip().removeprefix(tool_prefix).removesuffix(tool_suffix), llm_api)
+
+                    if tool_call:
+                        result.tool_calls = [tool_call]
+                    if to_say:
+                        content = to_say
+                    else:
+                        content = None
+
+                result.response = content
             
             if tool_calls:
-                result.tool_calls = [
-                    llm.ToolInput(
-                        tool_name=str(tool_calls[0]["function"]["name"]),
-                        tool_args=json.loads(tool_calls[0]["function"]["arguments"])
-                    )
-                ]
+                result.tool_calls = [llm.ToolInput(
+                    tool_name=str(tool_call["function"]["name"]),
+                    tool_args=json.loads(tool_call["function"]["arguments"])
+                ) for tool_call in tool_calls ]
 
             if not in_thinking and not in_tool_call:
                 yield result
@@ -436,7 +444,6 @@ class LlamaCppAgent(LocalLLMAgent):
         _LOGGER.debug(f"Options: {self.entry.options}")
 
         # TODO: re-enable the context length check
-        # with self.model_lock:
         #     # FIXME: use the high level API so we can use the built-in prompt formatting
         #     input_tokens = self.llm.tokenize(
         #         prompt.encode(), add_bos=False
@@ -444,7 +451,7 @@ class LlamaCppAgent(LocalLLMAgent):
 
         #     context_len = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
         #     if len(input_tokens) >= context_len:
-        #         num_entities = len(self._async_get_exposed_entities()[0])
+        #         num_entities = len(self._async_get_exposed_entities())
         #         context_size = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
         #         self._warn_context_size()
         #         raise Exception(f"The model failed to produce a result because too many devices are exposed ({num_entities} devices) for the context size ({context_size} tokens)!")
@@ -456,11 +463,11 @@ class LlamaCppAgent(LocalLLMAgent):
         messages = get_oai_formatted_messages(conversation)
         tools = None
         if llm_api:
-            tools = get_oai_formatted_tools(llm_api)
+            tools = get_oai_formatted_tools(llm_api, self._async_get_all_exposed_domains())
 
         _LOGGER.debug(f"Generating completion with {len(messages)} messages and {len(tools) if tools else 0} tools...")
 
-        return self._async_generate_completion(self.llm.create_chat_completion(
+        return self._async_generate_completion(llm_api, self.llm.create_chat_completion(
             messages,
             tools=tools,
             temperature=temperature,

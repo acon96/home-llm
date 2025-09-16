@@ -24,6 +24,11 @@ from voluptuous_openapi import convert
 from .const import (
     INTEGRATION_VERSION,
     EMBEDDED_LLAMA_CPP_PYTHON_VERSION,
+    ALLOWED_SERVICE_CALL_ARGUMENTS,
+    SERVICE_TOOL_ALLOWED_SERVICES,
+    SERVICE_TOOL_ALLOWED_DOMAINS,
+    HOME_LLM_API_ID,
+    SERVICE_TOOL_NAME
 )
 
 from typing import TYPE_CHECKING
@@ -252,15 +257,25 @@ def install_llama_cpp_python(config_dir: str):
 def format_url(*, hostname: str, port: str, ssl: bool, path: str):
     return f"{'https' if ssl else 'http'}://{hostname}{ ':' + port if port else ''}{path}"
 
-def get_oai_formatted_tools(llm_api: llm.APIInstance) -> List[ChatCompletionTool]:
-    result: List[ChatCompletionTool] = [ {
-        "type": "function",
-        "function": {
-            "name": tool.name,
-            "description": tool.description or "",
-            "parameters": convert(tool.parameters, custom_serializer=llm_api.custom_serializer)
-        }
-    } for tool in llm_api.tools ]
+def get_oai_formatted_tools(llm_api: llm.APIInstance, domains: list[str]) -> List[ChatCompletionTool]:
+    if llm_api.api.id == HOME_LLM_API_ID:
+        result: List[ChatCompletionTool] = [ {
+            "type": "function",
+            "function": {
+                "name": tool["name"],
+                "parameters": convert(tool["arguments"], custom_serializer=llm_api.custom_serializer)
+            }
+        } for tool in get_home_llm_tools(llm_api, domains) ]
+    
+    else:
+        result: List[ChatCompletionTool] = [ {
+            "type": "function",
+            "function": {
+                "name": tool.name,
+                "description": tool.description or "",
+                "parameters": convert(tool.parameters, custom_serializer=llm_api.custom_serializer)
+            }
+        } for tool in llm_api.tools ]
 
     return result
 
@@ -307,3 +322,95 @@ def get_oai_formatted_messages(conversation: Sequence[conversation.Content], use
                 })
 
         return messages
+
+def get_home_llm_tools(llm_api: llm.APIInstance, domains: list[str]) -> List[Dict[str, Any]]:
+    service_dict = llm_api.api.hass.services.async_services()
+    all_services = []
+    scripts_added = False
+    for domain in domains:
+        if domain not in SERVICE_TOOL_ALLOWED_DOMAINS:
+            continue
+
+        # scripts show up as individual services
+        if domain == "script" and not scripts_added:
+            all_services.extend([
+                ("script.reload", vol.Schema({})),
+                ("script.turn_on", vol.Schema({})),
+                ("script.turn_off", vol.Schema({})),
+                ("script.toggle", vol.Schema({})),
+            ])
+            scripts_added = True
+            continue
+
+        for name, service in service_dict.get(domain, {}).items():
+            if name not in SERVICE_TOOL_ALLOWED_SERVICES:
+                continue
+
+            args = flatten_vol_schema(service.schema)
+            args_to_expose = set(args).intersection(ALLOWED_SERVICE_CALL_ARGUMENTS)
+            service_schema = vol.Schema({
+                vol.Optional(arg): str for arg in args_to_expose
+            })
+
+            all_services.append((f"{domain}.{name}", service_schema))
+
+    tools: List[Dict[str, Any]] = [
+        { "name": service[0], "arguments": service[1] } for service in all_services
+    ]
+
+    return tools
+
+def parse_raw_tool_call(raw_block: str, llm_api: llm.APIInstance) -> tuple[llm.ToolInput | None, str | None]:
+    parsed_tool_call: dict = json.loads(raw_block)
+
+    if llm_api.api.id == HOME_LLM_API_ID:
+        schema_to_validate = vol.Schema({
+            vol.Required('service'): str,
+            vol.Required('target_device'): str,
+            vol.Optional('rgb_color'): str,
+            vol.Optional('brightness'): vol.Coerce(float),
+            vol.Optional('temperature'): vol.Coerce(float),
+            vol.Optional('humidity'): vol.Coerce(float),
+            vol.Optional('fan_mode'): str,
+            vol.Optional('hvac_mode'): str,
+            vol.Optional('preset_mode'): str,
+            vol.Optional('duration'): str,
+            vol.Optional('item'): str,
+        })
+    else:
+        schema_to_validate = vol.Schema({
+            vol.Required("name"): str,
+            vol.Required("arguments"): dict,
+        })
+
+    try:
+        schema_to_validate(parsed_tool_call)
+    except vol.Error as ex:
+        _LOGGER.info(f"LLM produced an improperly formatted response: {repr(ex)}")
+        raise # re-raise exception for now to force the LLM to try again
+
+    # try to fix certain arguments
+    args_dict = parsed_tool_call if llm_api.api.id == HOME_LLM_API_ID else parsed_tool_call["arguments"]
+
+    # make sure brightness is 0-255 and not a percentage
+    if "brightness" in args_dict and 0.0 < args_dict["brightness"] <= 1.0:
+        args_dict["brightness"] = int(args_dict["brightness"] * 255)
+
+    # convert string "tuple" to a list for RGB colors
+    if "rgb_color" in args_dict and isinstance(args_dict["rgb_color"], str):
+        args_dict["rgb_color"] = [ int(x) for x in args_dict["rgb_color"][1:-1].split(",") ]
+
+    if llm_api.api.id == HOME_LLM_API_ID:
+        to_say = parsed_tool_call.pop("to_say", "")
+        tool_input = llm.ToolInput(
+            tool_name=SERVICE_TOOL_NAME,
+            tool_args=parsed_tool_call,
+        )
+    else:
+        to_say = ""
+        tool_input = llm.ToolInput(
+            tool_name=parsed_tool_call["name"],
+            tool_args=parsed_tool_call["arguments"],
+        )
+
+    return tool_input, to_say

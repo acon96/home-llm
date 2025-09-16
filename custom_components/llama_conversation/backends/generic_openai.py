@@ -14,7 +14,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import llm
 
-from custom_components.llama_conversation.utils import format_url, get_oai_formatted_messages, get_oai_formatted_tools
+from custom_components.llama_conversation.utils import format_url, get_oai_formatted_messages, get_oai_formatted_tools, parse_raw_tool_call
 from custom_components.llama_conversation.const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -33,7 +33,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_REMEMBER_CONVERSATION_TIME_MINUTES,
     DEFAULT_GENERIC_OPENAI_PATH,
 )
-from custom_components.llama_conversation.conversation import LocalLLMAgent, TextGenerationResult, parse_raw_tool_call
+from custom_components.llama_conversation.conversation import LocalLLMAgent, TextGenerationResult
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -154,7 +154,7 @@ class GenericOpenAIAPIAgent(BaseOpenAICompatibleAPIAgent):
         request_params["messages"] = get_oai_formatted_messages(conversation)
 
         if llm_api:
-            request_params["tools"] = get_oai_formatted_tools(llm_api)
+            request_params["tools"] = get_oai_formatted_tools(llm_api, self._async_get_all_exposed_domains())
 
         return self._async_generate_with_parameters(endpoint, True, request_params, llm_api, user_input)
 

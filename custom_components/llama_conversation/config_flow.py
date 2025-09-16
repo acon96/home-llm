@@ -67,6 +67,7 @@ from .const import (
     CONF_REMEMBER_CONVERSATION,
     CONF_REMEMBER_NUM_INTERACTIONS,
     CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
+    CONF_MAX_TOOL_CALL_ITERATIONS,
     CONF_PROMPT_CACHING_ENABLED,
     CONF_PROMPT_CACHING_INTERVAL,
     CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
@@ -113,6 +114,7 @@ from .const import (
     DEFAULT_REFRESH_SYSTEM_PROMPT,
     DEFAULT_REMEMBER_CONVERSATION,
     DEFAULT_REMEMBER_NUM_INTERACTIONS,
+    DEFAULT_MAX_TOOL_CALL_ITERATIONS,
     DEFAULT_PROMPT_CACHING_ENABLED,
     DEFAULT_PROMPT_CACHING_INTERVAL,
     DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
@@ -856,6 +858,11 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
             description={"suggested_value": options.get(CONF_PROMPT)},
             default=options[CONF_PROMPT],
         ): TemplateSelector(),
+        vol.Required(
+            CONF_MAX_TOOL_CALL_ITERATIONS,
+            description={"suggested_value": options.get(CONF_MAX_TOOL_CALL_ITERATIONS)},
+            default=DEFAULT_MAX_TOOL_CALL_ITERATIONS,
+        ): int,
         vol.Required(
             CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
             description={"suggested_value": options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES)},

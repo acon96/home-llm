@@ -40,6 +40,7 @@ from .const import (
     CONF_REFRESH_SYSTEM_PROMPT,
     CONF_REMEMBER_CONVERSATION,
     CONF_REMEMBER_NUM_INTERACTIONS,
+    CONF_MAX_TOOL_CALL_ITERATIONS,
     CONF_CONTEXT_LENGTH,
     DEFAULT_PROMPT,
     DEFAULT_BACKEND_TYPE,
@@ -50,13 +51,9 @@ from .const import (
     DEFAULT_REFRESH_SYSTEM_PROMPT,
     DEFAULT_REMEMBER_CONVERSATION,
     DEFAULT_REMEMBER_NUM_INTERACTIONS,
+    DEFAULT_MAX_TOOL_CALL_ITERATIONS,
     DEFAULT_CONTEXT_LENGTH,
     DOMAIN,
-    HOME_LLM_API_ID,
-    SERVICE_TOOL_NAME,
-    ALLOWED_SERVICE_CALL_ARGUMENTS,
-    SERVICE_TOOL_ALLOWED_SERVICES,
-    SERVICE_TOOL_ALLOWED_DOMAINS,
     CONF_BACKEND_TYPE,
     DEFAULT_BACKEND_TYPE,
 )
@@ -95,61 +92,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     async_add_entities([entry.runtime_data])
 
     return True
-
-def parse_raw_tool_call(raw_block: str, tool_name: str, tool_call_id: str, llm_api: llm.APIInstance, user_input: ConversationInput) -> tuple[bool, llm.ToolInput | None, str | None]:
-    parsed_tool_call: dict = json.loads(raw_block)
-
-    if llm_api.api.id == HOME_LLM_API_ID:
-        schema_to_validate = vol.Schema({
-            vol.Required('service'): str,
-            vol.Required('target_device'): str,
-            vol.Optional('rgb_color'): str,
-            vol.Optional('brightness'): vol.Coerce(float),
-            vol.Optional('temperature'): vol.Coerce(float),
-            vol.Optional('humidity'): vol.Coerce(float),
-            vol.Optional('fan_mode'): str,
-            vol.Optional('hvac_mode'): str,
-            vol.Optional('preset_mode'): str,
-            vol.Optional('duration'): str,
-            vol.Optional('item'): str,
-        })
-    else:
-        schema_to_validate = vol.Schema({
-            vol.Required("name"): str,
-            vol.Required("arguments"): dict,
-        })
-
-    try:
-        schema_to_validate(parsed_tool_call)
-    except vol.Error as ex:
-        _LOGGER.info(f"LLM produced an improperly formatted response: {repr(ex)}")
-        return False, None, f"I'm sorry, I didn't produce a correctly formatted tool call! Please see the logs for more info.",
-
-    # try to fix certain arguments
-    args_dict = parsed_tool_call if llm_api.api.id == HOME_LLM_API_ID else parsed_tool_call["arguments"]
-
-    # make sure brightness is 0-255 and not a percentage
-    if "brightness" in args_dict and 0.0 < args_dict["brightness"] <= 1.0:
-        args_dict["brightness"] = int(args_dict["brightness"] * 255)
-
-    # convert string "tuple" to a list for RGB colors
-    if "rgb_color" in args_dict and isinstance(args_dict["rgb_color"], str):
-        args_dict["rgb_color"] = [ int(x) for x in args_dict["rgb_color"][1:-1].split(",") ]
-
-    if llm_api.api.id == HOME_LLM_API_ID:
-        to_say = parsed_tool_call.pop("to_say", "")
-        tool_input = llm.ToolInput(
-            tool_name=SERVICE_TOOL_NAME,
-            tool_args=parsed_tool_call,
-        )
-    else:
-        to_say = ""
-        tool_input = llm.ToolInput(
-            tool_name=parsed_tool_call["name"],
-            tool_args=parsed_tool_call["arguments"],
-        )
-
-    return True, tool_input, to_say
 
 class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
     """Base Local LLM conversation agent."""
@@ -271,7 +213,7 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
         )
 
     def _warn_context_size(self):
-        num_entities = len(self._async_get_exposed_entities()[0])
+        num_entities = len(self._async_get_exposed_entities())
         context_size = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
         _LOGGER.error("There were too many entities exposed when attempting to generate a response for " +
                       f"{self.entry.data[CONF_CHAT_MODEL]} and it exceeded the context size for the model. " +
@@ -315,6 +257,7 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
         refresh_system_prompt = self.entry.options.get(CONF_REFRESH_SYSTEM_PROMPT, DEFAULT_REFRESH_SYSTEM_PROMPT)
         remember_conversation = self.entry.options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION)
         remember_num_interactions = self.entry.options.get(CONF_REMEMBER_NUM_INTERACTIONS, DEFAULT_REMEMBER_NUM_INTERACTIONS)
+        max_tool_call_iterations = self.entry.options.get(CONF_MAX_TOOL_CALL_ITERATIONS, DEFAULT_MAX_TOOL_CALL_ITERATIONS)
 
         llm_api: llm.APIInstance | None = None
         if self.entry.options.get(CONF_LLM_HASS_API):
@@ -368,9 +311,8 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
             else:
                 message_history[0] = system_prompt
 
-        MAX_TOOL_CALL_ITERATIONS = 3 # FIXME: move to config option
         tool_calls: List[Tuple[llm.ToolInput, Any]] = []
-        for _ in range(MAX_TOOL_CALL_ITERATIONS):
+        for _ in range(max_tool_call_iterations):
             try:
                 _LOGGER.debug(message_history)
                 generation_result = await self._async_generate(message_history, user_input, chat_log)
@@ -409,16 +351,28 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
                 content=f"Ran the following tools:\n{tools_str}"
             )
 
-        intent_response.async_set_speech(message_history[-1].content)
+        for i in range(1, len(message_history)):
+            cur_msg = message_history[-1 * i]
+            if isinstance(cur_msg, conversation.AssistantContent) and cur_msg.content:
+                intent_response.async_set_speech(cur_msg.content)
+                break
 
         return ConversationResult(
             response=intent_response, conversation_id=user_input.conversation_id
         )
+    
+    def _async_get_all_exposed_domains(self) -> list[str]:
+        """Gather all exposed domains"""
+        domains = set()
+        for state in self.hass.states.async_all():
+            if async_should_expose(self.hass, CONVERSATION_DOMAIN, state.entity_id):
+                domains.add(state.domain)
 
-    def _async_get_exposed_entities(self) -> tuple[dict[str, str], list[str]]:
+        return list(domains)
+
+    def _async_get_exposed_entities(self) -> dict[str, str]:
         """Gather exposed entity states"""
         entity_states = {}
-        domains = set()
         entity_registry = er.async_get(self.hass)
         device_registry = dr.async_get(self.hass)
         area_registry = ar.async_get(self.hass)
@@ -456,9 +410,8 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
                     attributes["area_name"] = area.name
 
             entity_states[state.entity_id] = attributes
-            domains.add(state.domain)
 
-        return entity_states, list(domains)
+        return entity_states
 
     def _generate_icl_examples(self, num_examples, entity_names):
         entity_names = entity_names[:]
@@ -529,7 +482,7 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
 
     def _generate_system_prompt(self, prompt_template: str, llm_api: llm.APIInstance | None) -> str:
         """Generate the system prompt with current entity states"""
-        entities_to_expose, domains = self._async_get_exposed_entities()
+        entities_to_expose = self._async_get_exposed_entities()
 
         extra_attributes_to_expose = self.entry.options \
             .get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE)
@@ -596,62 +549,9 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
                         "is_alias": True
                     })
 
-        # if llm_api:
-        #     if llm_api.api.id == HOME_LLM_API_ID:
-        #         service_dict = self.hass.services.async_services()
-        #         all_services = []
-        #         scripts_added = False
-        #         for domain in domains:
-        #             if domain not in SERVICE_TOOL_ALLOWED_DOMAINS:
-        #                 continue
-
-        #             # scripts show up as individual services
-        #             if domain == "script" and not scripts_added:
-        #                 all_services.extend([
-        #                     ("script.reload", vol.Schema({}), ""),
-        #                     ("script.turn_on", vol.Schema({}), ""),
-        #                     ("script.turn_off", vol.Schema({}), ""),
-        #                     ("script.toggle", vol.Schema({}), ""),
-        #                 ])
-        #                 scripts_added = True
-        #                 continue
-
-        #             for name, service in service_dict.get(domain, {}).items():
-        #                 if name not in SERVICE_TOOL_ALLOWED_SERVICES:
-        #                     continue
-
-        #                 args = flatten_vol_schema(service.schema)
-        #                 args_to_expose = set(args).intersection(ALLOWED_SERVICE_CALL_ARGUMENTS)
-        #                 service_schema = vol.Schema({
-        #                     vol.Optional(arg): str for arg in args_to_expose
-        #                 })
-
-        #                 all_services.append((f"{domain}.{name}", service_schema, ""))
-
-        #         tools = [
-        #             self._format_tool(*tool)
-        #             for tool in all_services
-        #         ]
-
-        #     else:
-        #         tools = [
-        #             self._format_tool(tool.name, tool.parameters, tool.description)
-        #             for tool in llm_api.tools
-        #         ]
-
-        #     if  self.entry.options.get(CONF_TOOL_FORMAT, DEFAULT_TOOL_FORMAT) == TOOL_FORMAT_MINIMAL:
-        #         formatted_tools = ", ".join(tools)
-        #     else:
-        #         formatted_tools = json.dumps(tools)
-        # else:
-        #     tools = ["No tools were provided. If the user requests you interact with a device, tell them you are unable to do so."]
-        #     formatted_tools = tools[0]
-
         render_variables = {
             "devices": devices,
             "formatted_devices": formatted_devices,
-            # "tools": tools,
-            # "formatted_tools": formatted_tools,
             "response_examples": []
         }
 
