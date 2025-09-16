@@ -169,8 +169,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
     
     def _chat_completion_params(self, entity_options: dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
         request_params = {}
-        api_base_path = entity_options.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
-        endpoint = f"/{api_base_path}/chat/completions"
+        endpoint = "/chat/completions"
         return endpoint, request_params
 
     def _extract_response(self, response_json: dict, llm_api: llm.APIInstance | None) -> Tuple[Optional[str], Optional[List]]:

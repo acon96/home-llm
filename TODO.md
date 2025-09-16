@@ -6,6 +6,7 @@
 - [ ] new model based on gemma3 270m  
 - [ ] support AI task API  
 - [ ] move llamacpp to a separate process because of all the crashing  
+- [ ] optional sampling parameters in options panel (don't pass to backend if not set)  
 - [x] support new LLM APIs  
     - rewrite how services are called  
     - handle no API selected  

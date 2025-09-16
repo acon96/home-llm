@@ -130,6 +130,16 @@ class LocalLLMClient:
         await self.hass.async_add_executor_job(
             self._load_model, entity_options
         )
+
+    def _unload_model(self, entity_options: dict[str, Any]) -> None:
+        """Unload the model to free up space on the backend. Implemented by sub-classes"""
+        pass
+
+    async def _async_unload_model(self, entity_options: dict[str, Any]) -> None:
+        """Default implementation is to call _unload_model() which probably does blocking stuff"""
+        await self.hass.async_add_executor_job(
+            self._unload_model, entity_options
+        )
     
     def _generate_stream(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None, user_input: conversation.ConversationInput, entity_options: dict[str, Any]) -> AsyncGenerator[TextGenerationResult, None]:
         """Async generator for streaming responses. Subclasses should implement."""
@@ -632,10 +642,6 @@ class LocalLLMEntity(entity.Entity):
         self.subentry_id = subentry.subentry_id
         self.client = client
 
-        if subentry.data.get(CONF_LLM_HASS_API):
-            self._attr_supported_features = (
-                conversation.ConversationEntityFeature.CONTROL
-            )
 
     def handle_reload(self):
         self.client._update_options(self.runtime_options)

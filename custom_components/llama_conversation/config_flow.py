@@ -138,8 +138,6 @@ from .const import (
     DEFAULT_LLAMACPP_BATCH_SIZE,
     DEFAULT_LLAMACPP_THREAD_COUNT,
     DEFAULT_LLAMACPP_BATCH_THREAD_COUNT,
-    BACKEND_TYPE_LLAMA_HF_SETUP,
-    BACKEND_TYPE_LLAMA_EXISTING_SETUP,
     BACKEND_TYPE_LLAMA_CPP,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
     BACKEND_TYPE_GENERIC_OPENAI,
@@ -165,7 +163,7 @@ from .backends.ollama import OllamaAPIClient
 _LOGGER = logging.getLogger(__name__)
 
 def is_local_backend(backend):
-    return backend in [BACKEND_TYPE_LLAMA_EXISTING_SETUP, BACKEND_TYPE_LLAMA_HF_SETUP, BACKEND_TYPE_LLAMA_CPP]
+    return backend == BACKEND_TYPE_LLAMA_CPP
 
 def pick_backend_schema(backend_type=None, selected_language=None):
     return vol.Schema(
@@ -442,23 +440,17 @@ class OptionsFlow(BaseOptionsFlow):
         )
     
 
-def STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA(model_file=None):
+def STEP_LOCAL_MODEL_SELECTION_DATA_SCHEMA(model_file=None, chat_model=None, downloaded_model_quantization=None, available_quantizations=None):
     return vol.Schema(
         {
-            vol.Required(CONF_DOWNLOADED_MODEL_FILE, default=model_file if model_file else ""): str,
-        }
-    )
-
-def STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(*, chat_model=None, downloaded_model_quantization=None, available_quantizations=None):
-    return vol.Schema(
-        {
-            vol.Required(CONF_CHAT_MODEL, default=chat_model if chat_model else DEFAULT_CHAT_MODEL): SelectSelector(SelectSelectorConfig(
+            vol.Optional(CONF_CHAT_MODEL, default=chat_model if chat_model else DEFAULT_CHAT_MODEL): SelectSelector(SelectSelectorConfig(
                 options=RECOMMENDED_CHAT_MODELS,
                 custom_value=True,
                 multiple=False,
                 mode=SelectSelectorMode.DROPDOWN,
             )),
-            vol.Required(CONF_DOWNLOADED_MODEL_QUANTIZATION, default=downloaded_model_quantization if downloaded_model_quantization else DEFAULT_DOWNLOADED_MODEL_QUANTIZATION): vol.In(available_quantizations if available_quantizations else CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS),
+            vol.Optional(CONF_DOWNLOADED_MODEL_QUANTIZATION, default=downloaded_model_quantization if downloaded_model_quantization else DEFAULT_DOWNLOADED_MODEL_QUANTIZATION): vol.In(available_quantizations if available_quantizations else CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS),
+            vol.Optional(CONF_DOWNLOADED_MODEL_FILE, default=model_file if model_file else ""): str,
         }
     )
 
@@ -852,7 +844,7 @@ def local_llama_config_option_schema(
         CONF_TEMPERATURE,
         CONF_TOP_P,
         CONF_MIN_P,
-        CONF_TYPICAL_P
+        CONF_TYPICAL_P,
         CONF_TOP_K,
         # tool calling/reasoning
         CONF_THINKING_PREFIX,
@@ -927,10 +919,8 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
             self.model_config = {}
 
         backend_type = entry.options.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE)
-        if backend_type == BACKEND_TYPE_LLAMA_HF_SETUP:
-            schema = STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA()
-        elif backend_type == BACKEND_TYPE_LLAMA_EXISTING_SETUP:
-            schema = STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA()
+        if backend_type == BACKEND_TYPE_LLAMA_CPP:
+            schema = STEP_LOCAL_MODEL_SELECTION_DATA_SCHEMA()
         else:
             schema = STEP_REMOTE_MODEL_SELECTION_DATA_SCHEMA(await entry.runtime_data.async_get_available_models())
 
@@ -940,7 +930,7 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
 
                 if len(available_quants) == 0:
                     errors["base"] = "no_supported_ggufs"
-                    schema = STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(
+                    schema = STEP_LOCAL_MODEL_SELECTION_DATA_SCHEMA(
                         chat_model=self.model_config[CONF_CHAT_MODEL],
                         downloaded_model_quantization=self.model_config[CONF_DOWNLOADED_MODEL_QUANTIZATION],
                     )
@@ -949,7 +939,7 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
                     description_placeholders["missing"] = self.download_error.missing_quant
                     description_placeholders["available"] = ", ".join(self.download_error.available_quants)
 
-                    schema = STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(
+                    schema = STEP_LOCAL_MODEL_SELECTION_DATA_SCHEMA(
                         chat_model=self.model_config[CONF_CHAT_MODEL],
                         downloaded_model_quantization=self.download_error.available_quants[0],
                         available_quantizations=available_quants,
@@ -957,7 +947,7 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
             else:
                 errors["base"] = "download_failed"
                 description_placeholders["exception"] = str(self.download_error)
-                schema = STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(
+                schema = STEP_LOCAL_MODEL_SELECTION_DATA_SCHEMA(
                     chat_model=self.model_config[CONF_CHAT_MODEL],
                     downloaded_model_quantization=self.model_config[CONF_DOWNLOADED_MODEL_QUANTIZATION],
                 )
@@ -966,17 +956,24 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
 
             self.model_config.update(user_input)
 
-            if backend_type == BACKEND_TYPE_LLAMA_HF_SETUP:
-                return await self.async_step_download(entry)
-            elif backend_type == BACKEND_TYPE_LLAMA_EXISTING_SETUP:
-                model_file = self.model_config[CONF_DOWNLOADED_MODEL_FILE]
+            if backend_type == BACKEND_TYPE_LLAMA_CPP:
+                model_file = self.model_config.get(CONF_DOWNLOADED_MODEL_FILE, "")
+                if not model_file:
+                    model_name = self.model_config.get(CONF_CHAT_MODEL)
+                    if model_name:
+                        return await self.async_step_download(entry)
+                    else:
+                        errors["base"] = "no_model_name_or_file"
+                
                 if os.path.exists(model_file):
                     self.model_config[CONF_CHAT_MODEL] = os.path.basename(model_file)
+                    self.internal_step = "model_parameters"
                     return await self.async_step_model_parameters(None, entry)
                 else:
                     errors["base"] = "missing_model_file"
-                    schema = STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA(model_file)
+                    schema = STEP_LOCAL_MODEL_SELECTION_DATA_SCHEMA(model_file)
             else:
+                self.internal_step = "model_parameters"
                 return await self.async_step_model_parameters(None, entry)
 
         return self.async_show_form(
@@ -1017,12 +1014,15 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
             _LOGGER.info("Failed to download model: %s", repr(download_exception))
             self.download_error = download_exception
             self.internal_step = "select_local_model"
+
+            self.download_task = None
+            return self.async_show_progress_done(next_step_id="failed")
         else:
             self.model_config[CONF_DOWNLOADED_MODEL_FILE] = self.download_task.result()
             self.internal_step = "model_parameters"
 
-        self.download_task = None
-        return self.async_show_progress_done(next_step_id="finish")
+            self.download_task = None
+            return self.async_show_progress_done(next_step_id="model_parameters")
 
     async def async_step_model_parameters(
         self, user_input: dict[str, Any] | None,
@@ -1082,9 +1082,7 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
                 try:
                     # validate input
                     schema(user_input)
-
                     self.model_config.update(user_input)
-
                     return await self.async_step_finish()
                 except Exception:
                     _LOGGER.exception("An unknown error has occurred!")

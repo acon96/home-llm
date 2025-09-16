@@ -13,7 +13,7 @@ from homeassistant.components.conversation.const import DOMAIN as CONVERSATION_D
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LLM_HASS_API
-from homeassistant.core import callback
+from homeassistant.core import callback, HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.helpers.event import async_track_state_change, async_call_later
@@ -81,7 +81,7 @@ def snapshot_settings(options: dict[str, Any]) -> dict[str, Any]:
 
 
 class LlamaCppClient(LocalLLMClient):
-    llama_cpp_module: Any
+    llama_cpp_module: Any | None
 
     models: dict[str, LlamaType]
     grammars: dict[str, Any]
@@ -96,12 +96,30 @@ class LlamaCppClient(LocalLLMClient):
 
     _attr_supports_streaming = True
 
+    def __init__(self, hass: HomeAssistant, client_options: dict[str, Any]) -> None:
+        super().__init__(hass, client_options)
+
+        self.llama_cpp_module = None
+        self.models = {}
+        self.grammars = {}
+        self.loaded_model_settings = {}
+
+        self.remove_prompt_caching_listener = None
+        self.last_cache_prime = 0.0 
+        self.last_updated_entities = {}
+        self.cache_refresh_after_cooldown = False
+        self.model_lock = threading.Lock()
+
     async def async_get_available_models(self) -> List[str]:
         return [] # TODO: copy from config_flow.py
 
     def _load_model(self, entity_options: dict[str, Any]) -> None:
         model_name = entity_options.get(CONF_CHAT_MODEL, "")
         model_path = entity_options.get(CONF_DOWNLOADED_MODEL_FILE, "")
+
+        if model_name in self.models:
+            _LOGGER.info("Model %s is already loaded", model_name)
+            return
 
         _LOGGER.info("Using model file '%s'", model_path)
 
@@ -144,13 +162,6 @@ class LlamaCppClient(LocalLLMClient):
         #     cache_dir=os.path.join(self.hass.config.media_dirs.get("local", self.hass.config.path("media")), "kv_cache")
         # ))
 
-        self.remove_prompt_caching_listener = None
-        self.last_cache_prime = 0.0 
-        self.last_updated_entities = {}
-        self.cache_refresh_after_cooldown = False
-        self.model_lock = threading.Lock()
-
-        
         if model_settings[CONF_PROMPT_CACHING_ENABLED]:
             @callback
             async def enable_caching_after_startup(_now) -> None:
@@ -222,10 +233,10 @@ class LlamaCppClient(LocalLLMClient):
 
         if entity_options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
             current_grammar = entity_options.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE)
-            if not self.grammar or self.loaded_model_settings[CONF_GBNF_GRAMMAR_FILE] != current_grammar:
+            if model_name not in self.grammars or self.loaded_model_settings[CONF_GBNF_GRAMMAR_FILE] != current_grammar:
                 self._load_grammar(model_name, current_grammar)
         else:
-            self.grammar = None
+            self.grammars[model_name] = None
 
         if entity_options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED):
             self._set_prompt_caching(entity_options, enabled=True)
@@ -342,17 +353,17 @@ class LlamaCppClient(LocalLLMClient):
             if llm_api:
                 tools = get_oai_formatted_tools(llm_api, self._async_get_all_exposed_domains())
 
+            model_name = entity_options.get(CONF_CHAT_MODEL, "")
             temperature = entity_options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
             top_k = int(entity_options.get(CONF_TOP_K, DEFAULT_TOP_K))
             top_p = entity_options.get(CONF_TOP_P, DEFAULT_TOP_P)
             min_p = entity_options.get(CONF_MIN_P, DEFAULT_MIN_P)
             typical_p = entity_options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)
-            grammar = self.grammar if entity_options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR) else None
+            grammar = self.grammars.get(model_name) if entity_options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR) else None
 
             _LOGGER.debug("Priming model cache via chat completion API...")
-
             try:
-                model_name = entity_options.get(CONF_CHAT_MODEL, "")
+                
                 # avoid strict typing issues from the llama-cpp-python bindings
                 self.models[model_name].create_chat_completion(
                     messages,
@@ -406,6 +417,7 @@ class LlamaCppClient(LocalLLMClient):
         top_p = entity_options.get(CONF_TOP_P, DEFAULT_TOP_P)
         min_p = entity_options.get(CONF_MIN_P, DEFAULT_MIN_P)
         typical_p = entity_options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)
+        grammar = self.grammars.get(model_name) if entity_options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR) else None
 
         _LOGGER.debug(f"Options: {entity_options}")
 
@@ -442,7 +454,7 @@ class LlamaCppClient(LocalLLMClient):
             min_p=min_p,
             typical_p=typical_p,
             max_tokens=max_tokens,
-            grammar=self.grammar,
+            grammar=grammar,
             stream=True,
         )
 
