@@ -55,7 +55,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_LLAMACPP_BATCH_THREAD_COUNT,
     DOMAIN,
 )
-from custom_components.llama_conversation.conversation import LocalLLMAgent, TextGenerationResult
+from custom_components.llama_conversation.entity import LocalLLMClient, TextGenerationResult
 
 # make type checking work for llama-cpp-python without importing it directly at runtime
 from typing import TYPE_CHECKING
@@ -67,7 +67,7 @@ else:
 _LOGGER = logging.getLogger(__name__)
 
 
-class LlamaCppAgent(LocalLLMAgent):
+class LlamaCppClient(LocalLLMClient):
     model_path: str
     llm: LlamaType
     grammar: Any
@@ -146,8 +146,8 @@ class LlamaCppAgent(LocalLLMAgent):
         if self.loaded_model_settings[CONF_PROMPT_CACHING_ENABLED]:
             @callback
             async def enable_caching_after_startup(_now) -> None:
-                self._set_prompt_caching(enabled=True)
-                await self._async_cache_prompt(None, None, None)
+                self._set_prompt_caching(entry.options, enabled=True)
+                await self._async_cache_prompt(None, None, None, entry.options)
             async_call_later(self.hass, 5.0, enable_caching_after_startup)
 
     def _load_grammar(self, filename: str):
@@ -163,22 +163,22 @@ class LlamaCppAgent(LocalLLMAgent):
             _LOGGER.exception("Failed to load grammar!")
             self.grammar = None
 
-    def _update_options(self):
-        LocalLLMAgent._update_options(self)
+    def _update_options(self, entity_options: dict[str, Any]):
+        LocalLLMClient._update_options(self, entity_options)
 
         model_reloaded = False
-        if self.loaded_model_settings[CONF_CONTEXT_LENGTH] != self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH) or \
-            self.loaded_model_settings[CONF_LLAMACPP_BATCH_SIZE] != self.entry.options.get(CONF_LLAMACPP_BATCH_SIZE, DEFAULT_LLAMACPP_BATCH_SIZE) or \
-            self.loaded_model_settings[CONF_LLAMACPP_THREAD_COUNT] != self.entry.options.get(CONF_LLAMACPP_THREAD_COUNT, DEFAULT_LLAMACPP_THREAD_COUNT) or \
-            self.loaded_model_settings[CONF_LLAMACPP_BATCH_THREAD_COUNT] != self.entry.options.get(CONF_LLAMACPP_BATCH_THREAD_COUNT, DEFAULT_LLAMACPP_BATCH_THREAD_COUNT) or \
-            self.loaded_model_settings[CONF_LLAMACPP_ENABLE_FLASH_ATTENTION] != self.entry.options.get(CONF_LLAMACPP_ENABLE_FLASH_ATTENTION, DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION):
+        if self.loaded_model_settings[CONF_CONTEXT_LENGTH] != entity_options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH) or \
+            self.loaded_model_settings[CONF_LLAMACPP_BATCH_SIZE] != entity_options.get(CONF_LLAMACPP_BATCH_SIZE, DEFAULT_LLAMACPP_BATCH_SIZE) or \
+            self.loaded_model_settings[CONF_LLAMACPP_THREAD_COUNT] != entity_options.get(CONF_LLAMACPP_THREAD_COUNT, DEFAULT_LLAMACPP_THREAD_COUNT) or \
+            self.loaded_model_settings[CONF_LLAMACPP_BATCH_THREAD_COUNT] != entity_options.get(CONF_LLAMACPP_BATCH_THREAD_COUNT, DEFAULT_LLAMACPP_BATCH_THREAD_COUNT) or \
+            self.loaded_model_settings[CONF_LLAMACPP_ENABLE_FLASH_ATTENTION] != entity_options.get(CONF_LLAMACPP_ENABLE_FLASH_ATTENTION, DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION):
 
             _LOGGER.debug(f"Reloading model '{self.model_path}'...")
-            self.loaded_model_settings[CONF_CONTEXT_LENGTH] = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
-            self.loaded_model_settings[CONF_LLAMACPP_BATCH_SIZE] = self.entry.options.get(CONF_LLAMACPP_BATCH_SIZE, DEFAULT_LLAMACPP_BATCH_SIZE)
-            self.loaded_model_settings[CONF_LLAMACPP_THREAD_COUNT] = self.entry.options.get(CONF_LLAMACPP_THREAD_COUNT, DEFAULT_LLAMACPP_THREAD_COUNT)
-            self.loaded_model_settings[CONF_LLAMACPP_BATCH_THREAD_COUNT] = self.entry.options.get(CONF_LLAMACPP_BATCH_THREAD_COUNT, DEFAULT_LLAMACPP_BATCH_THREAD_COUNT)
-            self.loaded_model_settings[CONF_LLAMACPP_ENABLE_FLASH_ATTENTION] = self.entry.options.get(CONF_LLAMACPP_ENABLE_FLASH_ATTENTION, DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION)
+            self.loaded_model_settings[CONF_CONTEXT_LENGTH] = entity_options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
+            self.loaded_model_settings[CONF_LLAMACPP_BATCH_SIZE] = entity_options.get(CONF_LLAMACPP_BATCH_SIZE, DEFAULT_LLAMACPP_BATCH_SIZE)
+            self.loaded_model_settings[CONF_LLAMACPP_THREAD_COUNT] = entity_options.get(CONF_LLAMACPP_THREAD_COUNT, DEFAULT_LLAMACPP_THREAD_COUNT)
+            self.loaded_model_settings[CONF_LLAMACPP_BATCH_THREAD_COUNT] = entity_options.get(CONF_LLAMACPP_BATCH_THREAD_COUNT, DEFAULT_LLAMACPP_BATCH_THREAD_COUNT)
+            self.loaded_model_settings[CONF_LLAMACPP_ENABLE_FLASH_ATTENTION] = entity_options.get(CONF_LLAMACPP_ENABLE_FLASH_ATTENTION, DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION)
 
             Llama = getattr(self.llama_cpp_module, "Llama")
             self.llm = Llama(
@@ -192,33 +192,29 @@ class LlamaCppAgent(LocalLLMAgent):
             _LOGGER.debug("Model loaded")
             model_reloaded = True
 
-        if self.entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
-            current_grammar = self.entry.options.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE)
+        if entity_options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
+            current_grammar = entity_options.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE)
             if not self.grammar or self.loaded_model_settings[CONF_GBNF_GRAMMAR_FILE] != current_grammar:
                 self._load_grammar(current_grammar)
         else:
             self.grammar = None
 
-        if self.entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED):
-            self._set_prompt_caching(enabled=True)
+        if entity_options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED):
+            self._set_prompt_caching(entity_options, enabled=True)
 
-            if self.loaded_model_settings[CONF_PROMPT_CACHING_ENABLED] != self.entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED) or \
+            if self.loaded_model_settings[CONF_PROMPT_CACHING_ENABLED] != entity_options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED) or \
                 model_reloaded:
-                self.loaded_model_settings[CONF_PROMPT_CACHING_ENABLED] = self.entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED)
+                self.loaded_model_settings[CONF_PROMPT_CACHING_ENABLED] = entity_options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED)
 
                 async def cache_current_prompt(_now):
-                    await self._async_cache_prompt(None, None, None)
+                    await self._async_cache_prompt(None, None, None, entity_options)
                 async_call_later(self.hass, 1.0, cache_current_prompt)
         else:
-            self._set_prompt_caching(enabled=False)
+            self._set_prompt_caching(entity_options, enabled=False)
 
     def _async_get_exposed_entities(self) -> dict[str, dict[str, str]]:
         """Takes the super class function results and sorts the entities with the recently updated at the end"""
-        entities = LocalLLMAgent._async_get_exposed_entities(self)
-
-        # ignore sorting if prompt caching is disabled
-        if not self.entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED):
-            return entities
+        entities = LocalLLMClient._async_get_exposed_entities(self)
 
         entity_order: dict[str, Optional[float]] = { name: None for name in entities.keys() }
         entity_order.update(self.last_updated_entities)
@@ -242,7 +238,7 @@ class LlamaCppAgent(LocalLLMAgent):
 
         return sorted_entities
 
-    def _set_prompt_caching(self, *, enabled=True):
+    def _set_prompt_caching(self, entity_options: dict[str, Any], *, enabled=True):
         if enabled and not self.remove_prompt_caching_listener:
             _LOGGER.info("enabling prompt caching...")
 
@@ -253,14 +249,14 @@ class LlamaCppAgent(LocalLLMAgent):
 
             _LOGGER.debug(f"watching entities: {entity_ids}")
 
-            self.remove_prompt_caching_listener = async_track_state_change(self.hass, entity_ids, self._async_cache_prompt)
+            self.remove_prompt_caching_listener = async_track_state_change(self.hass, entity_ids, lambda x, y, z: self._async_cache_prompt(x, y, z, entity_options))
 
         elif not enabled and self.remove_prompt_caching_listener:
             _LOGGER.info("disabling prompt caching...")
             self.remove_prompt_caching_listener()
 
     @callback
-    async def _async_cache_prompt(self, entity, old_state, new_state):
+    async def _async_cache_prompt(self, entity, old_state, new_state, entity_options: dict[str, Any]):
         refresh_start = time.time()
 
         # track last update time so we can sort the context efficiently
@@ -268,10 +264,10 @@ class LlamaCppAgent(LocalLLMAgent):
             self.last_updated_entities[entity] = refresh_start
 
         llm_api: llm.APIInstance | None = None
-        if self.entry.options.get(CONF_LLM_HASS_API):
+        if entity_options.get(CONF_LLM_HASS_API):
             try:
                 llm_api = await llm.async_get_api(
-                    self.hass, self.entry.options[CONF_LLM_HASS_API],
+                    self.hass, entity_options[CONF_LLM_HASS_API],
                     llm_context=llm.LLMContext(DOMAIN, context=None, language=None, assistant=None, device_id=None)
                 )
             except HomeAssistantError:
@@ -279,19 +275,19 @@ class LlamaCppAgent(LocalLLMAgent):
                 return
 
         _LOGGER.debug(f"refreshing cached prompt because {entity} changed...")
-        await self.hass.async_add_executor_job(self._cache_prompt, llm_api)
+        await self.hass.async_add_executor_job(self._cache_prompt, llm_api, entity_options)
 
         refresh_end = time.time()
         _LOGGER.debug(f"cache refresh took {(refresh_end - refresh_start):.2f} sec")
 
-    def _cache_prompt(self, llm_api: llm.APIInstance | None) -> None:
+    def _cache_prompt(self, llm_api: llm.APIInstance | None, entity_options: dict[str, Any]) -> None:
         # if a refresh is already scheduled then exit
         if self.cache_refresh_after_cooldown:
             return
 
         # if we are inside the cooldown period, request a refresh and exit
         current_time = time.time()
-        fastest_prime_interval = self.entry.options.get(CONF_PROMPT_CACHING_INTERVAL, DEFAULT_PROMPT_CACHING_INTERVAL)
+        fastest_prime_interval = entity_options.get(CONF_PROMPT_CACHING_INTERVAL, DEFAULT_PROMPT_CACHING_INTERVAL)
         if self.last_cache_prime and current_time - self.last_cache_prime < fastest_prime_interval:
             self.cache_refresh_after_cooldown = True
             return
@@ -307,8 +303,8 @@ class LlamaCppAgent(LocalLLMAgent):
             # the model. We request only a single token (max_tokens=1) and
             # discard the result. This avoids implementing any streaming logic
             # while still priming the KV cache with the system prompt.
-            raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
-            system_prompt = self._generate_system_prompt(raw_prompt, llm_api)
+            raw_prompt = entity_options.get(CONF_PROMPT, DEFAULT_PROMPT)
+            system_prompt = self._generate_system_prompt(raw_prompt, llm_api, entity_options)
 
             messages = get_oai_formatted_messages([
                 conversation.SystemContent(content=system_prompt),
@@ -318,12 +314,12 @@ class LlamaCppAgent(LocalLLMAgent):
             if llm_api:
                 tools = get_oai_formatted_tools(llm_api, self._async_get_all_exposed_domains())
 
-            temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
-            top_k = int(self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K))
-            top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
-            min_p = self.entry.options.get(CONF_MIN_P, DEFAULT_MIN_P)
-            typical_p = self.entry.options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)
-            grammar = self.grammar if self.entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR) else None
+            temperature = entity_options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
+            top_k = int(entity_options.get(CONF_TOP_K, DEFAULT_TOP_K))
+            top_p = entity_options.get(CONF_TOP_P, DEFAULT_TOP_P)
+            min_p = entity_options.get(CONF_MIN_P, DEFAULT_MIN_P)
+            typical_p = entity_options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)
+            grammar = self.grammar if entity_options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR) else None
 
             _LOGGER.debug("Priming model cache via chat completion API...")
 
@@ -359,24 +355,29 @@ class LlamaCppAgent(LocalLLMAgent):
 
                 refresh_start = time.time()
                 _LOGGER.debug(f"refreshing cached prompt after cooldown...")
-                await self.hass.async_add_executor_job(self._cache_prompt, llm_api)
+                await self.hass.async_add_executor_job(self._cache_prompt, llm_api, entity_options)
 
                 refresh_end = time.time()
                 _LOGGER.debug(f"cache refresh took {(refresh_end - refresh_start):.2f} sec")
 
-        refresh_delay = self.entry.options.get(CONF_PROMPT_CACHING_INTERVAL, DEFAULT_PROMPT_CACHING_INTERVAL)
+        refresh_delay = entity_options.get(CONF_PROMPT_CACHING_INTERVAL, DEFAULT_PROMPT_CACHING_INTERVAL)
         async_call_later(self.hass, float(refresh_delay), refresh_if_requested)
 
-    def _generate_stream(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None, user_input: conversation.ConversationInput) -> AsyncGenerator[TextGenerationResult, None]:
+    def _generate_stream(self, 
+                         conversation: List[conversation.Content],
+                         llm_api: llm.APIInstance | None,
+                         user_input: conversation.ConversationInput,
+                         entity_options: dict[str, Any],
+                        ) -> AsyncGenerator[TextGenerationResult, None]:
         """Async generator that yields TextGenerationResult as tokens are produced."""
-        max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
-        temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
-        top_k = int(self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K))
-        top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
-        min_p = self.entry.options.get(CONF_MIN_P, DEFAULT_MIN_P)
-        typical_p = self.entry.options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)
+        max_tokens = entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
+        temperature = entity_options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
+        top_k = int(entity_options.get(CONF_TOP_K, DEFAULT_TOP_K))
+        top_p = entity_options.get(CONF_TOP_P, DEFAULT_TOP_P)
+        min_p = entity_options.get(CONF_MIN_P, DEFAULT_MIN_P)
+        typical_p = entity_options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)
 
-        _LOGGER.debug(f"Options: {self.entry.options}")
+        _LOGGER.debug(f"Options: {entity_options}")
 
         # TODO: re-enable the context length check
         #     # FIXME: use the high level API so we can use the built-in prompt formatting
@@ -425,5 +426,5 @@ class LlamaCppAgent(LocalLLMAgent):
                     tool_calls = chunk["choices"][0]["delta"].get("tool_calls")
                     yield content, tool_calls
 
-        return self._async_parse_completion(llm_api, next_token=next_token())
+        return self._async_parse_completion(llm_api, entity_options, next_token=next_token())
 

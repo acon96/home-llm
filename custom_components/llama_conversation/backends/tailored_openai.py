@@ -32,12 +32,11 @@ from custom_components.llama_conversation.const import (
     TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT,
 )
-from custom_components.llama_conversation.conversation import TextGenerationResult
-from custom_components.llama_conversation.backends.generic_openai import GenericOpenAIAPIAgent
+from custom_components.llama_conversation.backends.generic_openai import GenericOpenAIAPIClient
 
 _LOGGER = logging.getLogger(__name__)
 
-class TextGenerationWebuiAgent(GenericOpenAIAPIAgent):
+class TextGenerationWebuiClient(GenericOpenAIAPIClient):
     admin_key: str
 
     async def _async_load_model(self, entry: ConfigEntry) -> None:
@@ -80,25 +79,25 @@ class TextGenerationWebuiAgent(GenericOpenAIAPIAgent):
             _LOGGER.debug("Connection error was: %s", repr(ex))
             raise ConfigEntryNotReady("There was a problem connecting to the remote server") from ex
 
-    def _chat_completion_params(self) -> Tuple[str, Dict[str, Any]]:
-        preset = self.entry.options.get(CONF_TEXT_GEN_WEBUI_PRESET)
-        chat_mode = self.entry.options.get(CONF_TEXT_GEN_WEBUI_CHAT_MODE, DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE)
+    def _chat_completion_params(self, entity_options: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
+        preset = entity_options.get(CONF_TEXT_GEN_WEBUI_PRESET)
+        chat_mode = entity_options.get(CONF_TEXT_GEN_WEBUI_CHAT_MODE, DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE)
 
-        endpoint, request_params = super()._chat_completion_params()
+        endpoint, request_params = super()._chat_completion_params(entity_options)
 
         request_params["mode"] = chat_mode
         if chat_mode == TEXT_GEN_WEBUI_CHAT_MODE_CHAT or chat_mode == TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT:
             if preset:
                 request_params["character"] = preset
 
-        request_params["truncation_length"] = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
-        request_params["top_k"] = self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K)
-        request_params["min_p"] = self.entry.options.get(CONF_MIN_P, DEFAULT_MIN_P)
-        request_params["typical_p"] = self.entry.options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)
+        request_params["truncation_length"] = entity_options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
+        request_params["top_k"] = entity_options.get(CONF_TOP_K, DEFAULT_TOP_K)
+        request_params["min_p"] = entity_options.get(CONF_MIN_P, DEFAULT_MIN_P)
+        request_params["typical_p"] = entity_options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)
 
         return endpoint, request_params
 
-class LlamaCppServerAgent(GenericOpenAIAPIAgent):
+class LlamaCppServerClient(GenericOpenAIAPIClient):
     grammar: str
 
     async def _async_load_model(self, entry: ConfigEntry):
@@ -112,13 +111,13 @@ class LlamaCppServerAgent(GenericOpenAIAPIAgent):
         with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), DEFAULT_GBNF_GRAMMAR_FILE)) as f:
             self.grammar = "".join(f.readlines())
     
-    def _chat_completion_params(self) -> Tuple[str, Dict[str, Any]]:
-        top_k = int(self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K))
-        endpoint, request_params = super()._chat_completion_params()
+    def _chat_completion_params(self, entity_options: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
+        top_k = int(entity_options.get(CONF_TOP_K, DEFAULT_TOP_K))
+        endpoint, request_params = super()._chat_completion_params(entity_options)
 
         request_params["top_k"] = top_k
 
-        if self.entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
+        if entity_options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
             request_params["grammar"] = self.grammar
 
         return endpoint, request_params

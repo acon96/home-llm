@@ -39,12 +39,12 @@ from custom_components.llama_conversation.const import (
     DEFAULT_CONTEXT_LENGTH,
 )
 
-from custom_components.llama_conversation.conversation import LocalLLMAgent, TextGenerationResult
+from custom_components.llama_conversation.entity import LocalLLMClient, TextGenerationResult
 
 _LOGGER = logging.getLogger(__name__)
 
 @deprecated("Use the built-in Ollama integration instead")
-class OllamaAPIAgent(LocalLLMAgent):
+class OllamaAPIClient(LocalLLMClient):
     api_host: str
     api_key: Optional[str]
     model_name: Optional[str]
@@ -133,16 +133,16 @@ class OllamaAPIAgent(LocalLLMAgent):
             _LOGGER.debug(f"Result was: {response}")
             yield TextGenerationResult(raise_error=True, error_msg=f"Failed to communicate with the API! {err}")
 
-    def _generate_stream(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None, user_input: conversation.ConversationInput) -> AsyncGenerator[TextGenerationResult, None]:
-        context_length = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
-        max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
-        temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
-        top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
-        top_k = self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K)
-        typical_p = self.entry.options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)
-        timeout = self.entry.options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
-        keep_alive = self.entry.options.get(CONF_OLLAMA_KEEP_ALIVE_MIN, DEFAULT_OLLAMA_KEEP_ALIVE_MIN)
-        json_mode = self.entry.options.get(CONF_OLLAMA_JSON_MODE, DEFAULT_OLLAMA_JSON_MODE)
+    def _generate_stream(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None, user_input: conversation.ConversationInput, entity_options: Dict[str, Any]) -> AsyncGenerator[TextGenerationResult, None]:
+        context_length = entity_options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
+        max_tokens = entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
+        temperature = entity_options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
+        top_p = entity_options.get(CONF_TOP_P, DEFAULT_TOP_P)
+        top_k = entity_options.get(CONF_TOP_K, DEFAULT_TOP_K)
+        typical_p = entity_options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)
+        timeout = entity_options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
+        keep_alive = entity_options.get(CONF_OLLAMA_KEEP_ALIVE_MIN, DEFAULT_OLLAMA_KEEP_ALIVE_MIN)
+        json_mode = entity_options.get(CONF_OLLAMA_JSON_MODE, DEFAULT_OLLAMA_JSON_MODE)
 
         request_params = {
             "model": self.model_name,

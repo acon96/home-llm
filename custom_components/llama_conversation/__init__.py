@@ -20,7 +20,11 @@ from .const import (
     SERVICE_TOOL_ALLOWED_SERVICES,
     SERVICE_TOOL_ALLOWED_DOMAINS,
     CONF_BACKEND_TYPE,
+    CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
+    CONF_IN_CONTEXT_EXAMPLES_FILE,
     DEFAULT_BACKEND_TYPE,
+    DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
+    DEFAULT_IN_CONTEXT_EXAMPLES_FILE,
     BACKEND_TYPE_LLAMA_HF,
     BACKEND_TYPE_LLAMA_EXISTING,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
@@ -29,13 +33,13 @@ from .const import (
     BACKEND_TYPE_LLAMA_CPP_SERVER,
     BACKEND_TYPE_OLLAMA,
 )
-from custom_components.llama_conversation.conversation import LocalLLMAgent
-from custom_components.llama_conversation.backends.llamacpp import LlamaCppAgent
-from custom_components.llama_conversation.backends.generic_openai import GenericOpenAIAPIAgent, GenericOpenAIResponsesAPIAgent
-from custom_components.llama_conversation.backends.tailored_openai import TextGenerationWebuiAgent, LlamaCppServerAgent
-from custom_components.llama_conversation.backends.ollama import OllamaAPIAgent
+from custom_components.llama_conversation.entity import LocalLLMClient
+from custom_components.llama_conversation.backends.llamacpp import LlamaCppClient
+from custom_components.llama_conversation.backends.generic_openai import GenericOpenAIAPIClient, GenericOpenAIResponsesAPIClient
+from custom_components.llama_conversation.backends.tailored_openai import TextGenerationWebuiClient, LlamaCppServerClient
+from custom_components.llama_conversation.backends.ollama import OllamaAPIClient
 
-type LocalLLMConfigEntry = ConfigEntry[LocalLLMAgent]
+type LocalLLMConfigEntry = ConfigEntry[LocalLLMClient]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,23 +56,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> 
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry
 
+    icl_examples_filename = None
+    if entry.options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES, DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES):
+        icl_examples_filename = entry.options.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE)
+
     def create_agent(backend_type):
         agent_cls = None
 
         if backend_type in [ BACKEND_TYPE_LLAMA_HF, BACKEND_TYPE_LLAMA_EXISTING ]:
-            agent_cls = LlamaCppAgent
+            agent_cls = LlamaCppClient
         elif backend_type == BACKEND_TYPE_GENERIC_OPENAI:
-            agent_cls = GenericOpenAIAPIAgent
+            agent_cls = GenericOpenAIAPIClient
         elif backend_type == BACKEND_TYPE_GENERIC_OPENAI_RESPONSES:
-            agent_cls = GenericOpenAIResponsesAPIAgent
+            agent_cls = GenericOpenAIResponsesAPIClient
         elif backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
-            agent_cls = TextGenerationWebuiAgent
+            agent_cls = TextGenerationWebuiClient
         elif backend_type == BACKEND_TYPE_LLAMA_CPP_SERVER:
-            agent_cls = LlamaCppServerAgent
+            agent_cls = LlamaCppServerClient
         elif backend_type == BACKEND_TYPE_OLLAMA:
-            agent_cls = OllamaAPIAgent
+            agent_cls = OllamaAPIClient
 
-        return agent_cls(hass, entry)
+        if agent_cls is None:
+            raise ValueError(f"Unknown backend type {backend_type}")
+        return agent_cls(hass, icl_examples_filename)
 
     # create the agent in an executor job because the constructor calls `open()`
     backend_type = entry.data.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE)

@@ -36,11 +36,11 @@ from custom_components.llama_conversation.const import (
     DEFAULT_GENERIC_OPENAI_PATH,
     DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
 )
-from custom_components.llama_conversation.conversation import LocalLLMAgent, TextGenerationResult
+from custom_components.llama_conversation.entity import TextGenerationResult, LocalLLMClient
 
 _LOGGER = logging.getLogger(__name__)
 
-class GenericOpenAIAPIAgent(LocalLLMAgent):
+class GenericOpenAIAPIClient(LocalLLMClient):
     """Implements the OpenAPI-compatible text completion and chat completion API backends."""
 
     api_host: str
@@ -60,14 +60,18 @@ class GenericOpenAIAPIAgent(LocalLLMAgent):
         self.api_key = entry.data.get(CONF_OPENAI_API_KEY, "")
         self.model_name = entry.data.get(CONF_CHAT_MODEL, "")
 
-    def _generate_stream(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None, user_input: conversation.ConversationInput) -> AsyncGenerator[TextGenerationResult, None]:
-        max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
-        temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
-        top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
-        timeout = self.entry.options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
-        enable_legacy_tool_calling = self.entry.options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
+    def _generate_stream(self, 
+                         conversation: List[conversation.Content],
+                         llm_api: llm.APIInstance | None,
+                         user_input: conversation.ConversationInput,
+                         entity_options: dict[str, Any]) -> AsyncGenerator[TextGenerationResult, None]:
+        max_tokens = entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
+        temperature = entity_options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
+        top_p = entity_options.get(CONF_TOP_P, DEFAULT_TOP_P)
+        timeout = entity_options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
+        enable_legacy_tool_calling = entity_options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
 
-        endpoint, additional_params = self._chat_completion_params()
+        endpoint, additional_params = self._chat_completion_params(entity_options)
         messages = get_oai_formatted_messages(conversation)
 
         request_params = {
@@ -122,11 +126,11 @@ class GenericOpenAIAPIAgent(LocalLLMAgent):
             except aiohttp.ClientError as err:
                 raise HomeAssistantError(f"Failed to communicate with the API! {err}") from err
 
-        return self._async_parse_completion(llm_api, anext_token=anext_token())
+        return self._async_parse_completion(llm_api, entity_options, anext_token=anext_token())
     
-    def _chat_completion_params(self) -> Tuple[str, Dict[str, Any]]:
+    def _chat_completion_params(self, entity_options: dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
         request_params = {}
-        api_base_path = self.entry.data.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
+        api_base_path = entity_options.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
         endpoint = f"/{api_base_path}/chat/completions"
         return endpoint, request_params
 
@@ -164,7 +168,7 @@ class GenericOpenAIAPIAgent(LocalLLMAgent):
         return response_text, tool_calls
 
 
-class GenericOpenAIResponsesAPIAgent(LocalLLMAgent):
+class GenericOpenAIResponsesAPIClient(LocalLLMClient):
     """Implements the OpenAPI-compatible Responses API backend."""
 
     api_host: str
@@ -187,7 +191,7 @@ class GenericOpenAIResponsesAPIAgent(LocalLLMAgent):
         self.api_key = entry.data.get(CONF_OPENAI_API_KEY, "")
         self.model_name = entry.data.get(CONF_CHAT_MODEL, "")
 
-    def _responses_params(self, conversation: List[conversation.Content]) -> Tuple[str, Dict[str, Any]]:
+    def _responses_params(self, conversation: List[conversation.Content], api_base_path: str) -> Tuple[str, Dict[str, Any]]:
         request_params = {}
         api_base_path = self.entry.data.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
 
@@ -294,12 +298,15 @@ class GenericOpenAIResponsesAPIAgent(LocalLLMAgent):
 
         return to_return
 
-    async def _generate(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None, user_input: conversation.ConversationInput) -> TextGenerationResult:
+    async def _generate(self, 
+                        conversation: List[conversation.Content],
+                        llm_api: llm.APIInstance | None,
+                        user_input: conversation.ConversationInput,
+                        entity_options: dict[str, Any]) -> TextGenerationResult:
         """Generate a response using the OpenAI-compatible Responses API (non-streaming endpoint wrapped as a single-chunk stream)."""
 
-        timeout = self.entry.options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
-
-        endpoint, additional_params = self._responses_params(conversation)
+        timeout = entity_options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
+        endpoint, additional_params = self._responses_params(conversation, api_base_path=entity_options.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH))
 
         request_params: Dict[str, Any] = {
             "model": self.model_name,
