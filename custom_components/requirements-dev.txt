@@ -1,9 +1,9 @@
 # types from Home Assistant
-homeassistant>=2024.6.1
+homeassistant>=2024.7.0
 hassil
 home-assistant-intents
 
 # testing requirements
 pytest
 pytest-asyncio
-pytest-homeassistant-custom-component
+pytest-homeassistant-custom-component==0.13.260

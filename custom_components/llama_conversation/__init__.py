@@ -4,7 +4,6 @@ from __future__ import annotations
 import logging
 from typing import Final
 
-import homeassistant.components.conversation as ha_conversation
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -30,8 +29,11 @@ from .const import (
     BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER,
     BACKEND_TYPE_OLLAMA,
 )
-from .conversation import LlamaCppAgent, GenericOpenAIAPIAgent, GenericOpenAIResponsesAPIAgent, \
-    TextGenerationWebuiAgent, LlamaCppPythonAPIAgent, OllamaAPIAgent, LocalLLMAgent
+from custom_components.llama_conversation.conversation import LocalLLMAgent
+from custom_components.llama_conversation.backends.llamacpp import LlamaCppAgent
+from custom_components.llama_conversation.backends.generic_openai import GenericOpenAIAPIAgent, GenericOpenAIResponsesAPIAgent
+from custom_components.llama_conversation.backends.tailored_openai import TextGenerationWebuiAgent, LlamaCppPythonAPIAgent
+from custom_components.llama_conversation.backends.ollama import OllamaAPIAgent
 
 type LocalLLMConfigEntry = ConfigEntry[LocalLLMAgent]
 
