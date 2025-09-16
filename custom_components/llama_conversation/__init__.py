@@ -21,19 +21,13 @@ from .const import (
     SERVICE_TOOL_ALLOWED_SERVICES,
     SERVICE_TOOL_ALLOWED_DOMAINS,
     CONF_BACKEND_TYPE,
-    CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
-    CONF_IN_CONTEXT_EXAMPLES_FILE,
     DEFAULT_BACKEND_TYPE,
-    DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
-    DEFAULT_IN_CONTEXT_EXAMPLES_FILE,
     BACKEND_TYPE_LLAMA_CPP,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
     BACKEND_TYPE_GENERIC_OPENAI,
     BACKEND_TYPE_GENERIC_OPENAI_RESPONSES,
     BACKEND_TYPE_LLAMA_CPP_SERVER,
     BACKEND_TYPE_OLLAMA,
-    CONF_CHAT_MODEL,
-    CONF_DOWNLOADED_MODEL_FILE,
 )
 from .entity import LocalLLMClient, LocalLLMConfigEntry
 from .backends.llamacpp import LlamaCppClient
@@ -46,6 +40,15 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS = (Platform.CONVERSATION,)
+
+BACKEND_TO_CLS: dict[str, type[LocalLLMClient]] = {
+    BACKEND_TYPE_LLAMA_CPP: LlamaCppClient,
+    BACKEND_TYPE_GENERIC_OPENAI: GenericOpenAIAPIClient,
+    BACKEND_TYPE_GENERIC_OPENAI_RESPONSES: GenericOpenAIResponsesAPIClient,
+    BACKEND_TYPE_TEXT_GEN_WEBUI: TextGenerationWebuiClient, 
+    BACKEND_TYPE_LLAMA_CPP_SERVER: LlamaCppServerClient,
+    BACKEND_TYPE_OLLAMA: OllamaAPIClient,
+}
 
 async def update_listener(hass: HomeAssistant, entry: LocalLLMConfigEntry):
     """Handle options update."""
@@ -64,26 +67,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry
 
     def create_client(backend_type):
-        client_cls = None
-
         _LOGGER.debug("Creating Local LLM client of type %s", backend_type)
-
-        if backend_type == BACKEND_TYPE_LLAMA_CPP:
-            client_cls = LlamaCppClient
-        elif backend_type == BACKEND_TYPE_GENERIC_OPENAI:
-            client_cls = GenericOpenAIAPIClient
-        elif backend_type == BACKEND_TYPE_GENERIC_OPENAI_RESPONSES:
-            client_cls = GenericOpenAIResponsesAPIClient
-        elif backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
-            client_cls = TextGenerationWebuiClient
-        elif backend_type == BACKEND_TYPE_LLAMA_CPP_SERVER:
-            client_cls = LlamaCppServerClient
-        elif backend_type == BACKEND_TYPE_OLLAMA:
-            client_cls = OllamaAPIClient
-
-        if client_cls is None:
-            raise ValueError(f"Unknown backend type {backend_type}")
-        return client_cls(hass, dict(entry.options))
+        return BACKEND_TO_CLS[backend_type](hass, dict(entry.options))
 
     # create the agent in an executor job because the constructor calls `open()`
     backend_type = entry.data.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE)
@@ -96,7 +81,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
-
 
 async def async_unload_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> bool:
     """Unload Ollama."""

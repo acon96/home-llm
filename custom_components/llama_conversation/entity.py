@@ -69,7 +69,6 @@ class TextGenerationResult:
     raise_error: bool = False
     error_msg: Optional[str] = None
 
-# TODO: each client needs to support calling multiple models without re-creating the client (llama.cpp will need the most work)
 class LocalLLMClient:
     """Base Local LLM conversation agent."""
 

@@ -210,47 +210,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
                 _LOGGER.warning("Model response did not end on a stop token (unfinished sentence)")
 
         return response_text, tool_calls
-    
 
-async def _async_validate_generic_openai(self, user_input: dict) -> tuple:
-    """
-    Validates a connection to an OpenAI compatible API server and that the model exists on the remote server
-
-    :param user_input: the input dictionary used to build the connection
-    :return: a tuple of (error message name, exception detail); both can be None
-    """
-    try:
-        headers = {}
-        api_key = user_input.get(CONF_TEXT_GEN_WEBUI_ADMIN_KEY, user_input.get(CONF_OPENAI_API_KEY))
-        api_base_path = user_input.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
-        if api_key:
-            headers["Authorization"] = f"Bearer {api_key}"
-
-        session = async_get_clientsession(self.hass)
-        async with session.get(
-            format_url(
-                hostname=self.model_config[CONF_HOST],
-                port=self.model_config[CONF_PORT],
-                ssl=self.model_config[CONF_SSL],
-                path=f"/{api_base_path}/models"
-            ),
-            timeout=5, # quick timeout
-            headers=headers
-        ) as response:
-            response.raise_for_status()
-            models_result = await response.json()
-
-        models = [ model["id"] for model in models_result["data"] ]
-
-        for model in models:
-            if model == self.model_config[CONF_CHAT_MODEL]:
-                return None, None, []
-
-        return "missing_model_api", None, models
-
-    except Exception as ex:
-        _LOGGER.info("Connection error was: %s", repr(ex))
-        return "failed_to_connect", ex, []
 
 # FIXME: this class is mostly broken
 class GenericOpenAIResponsesAPIClient(LocalLLMClient):

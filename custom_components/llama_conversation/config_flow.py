@@ -3,19 +3,15 @@ from __future__ import annotations
 
 import logging
 import os
-from abc import ABC, abstractmethod
 from types import MappingProxyType
-from typing import Any, cast
+from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_LLM_HASS_API, UnitOfTime
 from homeassistant.data_entry_flow import (
     AbortFlow,
-    FlowHandler,
-    FlowManager,
-    FlowResult,
 )
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -28,7 +24,6 @@ from homeassistant.config_entries import (
     ConfigEntryState,
 )
 from homeassistant.helpers import llm
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -155,15 +150,10 @@ from .const import (
     EMBEDDED_LLAMA_CPP_PYTHON_VERSION
 )
 
-from . import HomeLLMAPI, LocalLLMConfigEntry, LocalLLMClient
-from .backends.generic_openai import GenericOpenAIAPIClient, GenericOpenAIResponsesAPIClient
-from .backends.tailored_openai import TextGenerationWebuiClient, LlamaCppServerClient
-from .backends.ollama import OllamaAPIClient
+from . import HomeLLMAPI, LocalLLMConfigEntry, LocalLLMClient, BACKEND_TO_CLS
 
 _LOGGER = logging.getLogger(__name__)
 
-def is_local_backend(backend):
-    return backend == BACKEND_TYPE_LLAMA_CPP
 
 def pick_backend_schema(backend_type=None, selected_language=None):
     return vol.Schema(
@@ -263,9 +253,9 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
             )
         elif self.internal_step == "pick_backend":
             if user_input:
-                local_backend = is_local_backend(user_input[CONF_BACKEND_TYPE])
+                backend = user_input[CONF_BACKEND_TYPE]
                 self.client_config.update(user_input)
-                if local_backend:
+                if backend == BACKEND_TYPE_LLAMA_CPP:
                     self.installed_version = await self.hass.async_add_executor_job(get_llama_cpp_python_version)
                     _LOGGER.debug(f"installed version: {self.installed_version}")
                     if self.installed_version == EMBEDDED_LLAMA_CPP_PYTHON_VERSION:
@@ -301,7 +291,10 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
                     selected_language=self.client_config.get(CONF_SELECTED_LANGUAGE)
                 ), errors=errors, last_step=False)
         elif self.internal_step == "install_local_wheels":
-            if self.install_wheel_task and not self.install_wheel_task.done():
+            if not self.install_wheel_task:
+                return self.async_abort(reason="unknown")
+            
+            if not self.install_wheel_task.done():
                 return self.async_show_progress(
                     progress_task=self.install_wheel_task,
                     step_id="user",
@@ -330,16 +323,7 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
                 self.client_config.update(user_input)
 
                 # validate remote connections
-                connect_err = True
-                backend = self.client_config[CONF_BACKEND_TYPE]
-                if backend == BACKEND_TYPE_GENERIC_OPENAI:
-                    connect_err = await GenericOpenAIAPIClient.async_validate_connection(self.hass, self.client_config)
-                elif backend == BACKEND_TYPE_GENERIC_OPENAI_RESPONSES:
-                    connect_err = await GenericOpenAIResponsesAPIClient.async_validate_connection(self.hass, self.client_config)
-                elif backend == BACKEND_TYPE_TEXT_GEN_WEBUI:
-                    connect_err = await TextGenerationWebuiClient.async_validate_connection(self.hass, self.client_config)
-                elif backend == BACKEND_TYPE_OLLAMA:
-                    connect_err = await OllamaAPIClient.async_validate_connection(self.hass, self.client_config)
+                connect_err = await BACKEND_TO_CLS[self.client_config[CONF_BACKEND_TYPE]].async_validate_connection(self.hass, self.client_config)
 
                 if not connect_err:
                     return await self.async_step_finish()
@@ -376,7 +360,7 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
 
         backend = self.client_config[CONF_BACKEND_TYPE]
         title = "Generic AI Provider"
-        if is_local_backend(backend):
+        if backend == BACKEND_TYPE_LLAMA_CPP:
             title = f"LLama.cpp (llama-cpp-python v{self.installed_version})"
         else:
             host = self.client_config[CONF_HOST]
@@ -409,7 +393,7 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
     
     @classmethod
     def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
-        return not is_local_backend(config_entry.options.get(CONF_BACKEND_TYPE))
+        return config_entry.options.get(CONF_BACKEND_TYPE) != BACKEND_TYPE_LLAMA_CPP
 
     @staticmethod
     def async_get_options_flow(
@@ -440,23 +424,29 @@ class OptionsFlow(BaseOptionsFlow):
         errors = {}
         description_placeholders = {}
 
+        backend_type = self.config_entry.data.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE)
+        client_config = dict(self.config_entry.options)
+
         if user_input is not None:
-            if user_input[CONF_LLM_HASS_API] == "none":
-                user_input.pop(CONF_LLM_HASS_API)
+            client_config.update(user_input)
 
-            # FIXME: invoke the static function on the appropriate llm client class
-            # self.config_entry.runtime_data.validate_connection(user_input) # is this correct?
+            # validate remote connections
+            connect_err = await BACKEND_TO_CLS[backend_type].async_validate_connection(self.hass, client_config)
 
-            if len(errors) == 0:
-                return self.async_create_entry(title="Local LLM Conversation", data=user_input)
+            if not connect_err:
+                return self.async_create_entry(data=client_config)
+            else:
+                errors["base"] = "failed_to_connect"
+                description_placeholders["exception"] = str(connect_err)
 
         schema = remote_connection_schema(
-            backend_type=self.config_entry.options[CONF_BACKEND_TYPE],
-            host=self.config_entry.options.get(CONF_HOST),
-            port=self.config_entry.options.get(CONF_PORT),
-            ssl=self.config_entry.options.get(CONF_SSL),
-            selected_path=self.config_entry.options.get(CONF_GENERIC_OPENAI_PATH)
+            backend_type=backend_type,
+            host=client_config.get(CONF_HOST),
+            port=client_config.get(CONF_PORT),
+            ssl=client_config.get(CONF_SSL),
+            selected_path=client_config.get(CONF_GENERIC_OPENAI_PATH)
         )
+
         return self.async_show_form(
             step_id="init",
             data_schema=schema,
@@ -513,20 +503,13 @@ def build_prompt_template(selected_language: str, prompt_template_template: str)
 
 def local_llama_config_option_schema(
     hass: HomeAssistant,
-    parent_options: MappingProxyType[str, Any],
-    options: MappingProxyType[str, Any],
+    language: str,
+    options: dict[str, Any],
     backend_type: str, 
     subentry_type: str,
 ) -> dict:
-    if not options:
-        options = DEFAULT_OPTIONS
 
-    default_prompt = build_prompt_template(parent_options[CONF_SELECTED_LANGUAGE], DEFAULT_PROMPT)
-
-    # TODO: we need to make this the "model config" i.e. each subentry defines all of the things to define
-    # the model and the parent entry just defines the "connection options" (or llama-cpp-python version)
-
-    # will also need to move the model download steps to the config sub-entry
+    default_prompt = build_prompt_template(language, DEFAULT_PROMPT)
 
     result: dict = {
         vol.Optional(
@@ -586,7 +569,7 @@ def local_llama_config_option_schema(
         ): str
     }
 
-    if is_local_backend(backend_type):
+    if backend_type == BACKEND_TYPE_LLAMA_CPP:
         result.update({
             vol.Required(
                 CONF_TOP_K,
@@ -919,7 +902,6 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
         self.model_config: dict[str, Any] = {}
         self.download_task = None
         self.download_error = None
-        self.internal_step = "pick_model"
 
     @property
     def _is_new(self) -> bool:
@@ -933,15 +915,12 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
         return entry.runtime_data
 
     async def async_step_pick_model(
-        self, user_input: dict[str, Any] | None,
-        entry: LocalLLMConfigEntry
+        self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         schema = vol.Schema({})
         errors = {}
         description_placeholders = {}
-
-        if not self.model_config:
-            self.model_config = {}
+        entry = self._get_entry()
 
         backend_type = entry.options.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE)
         if backend_type == BACKEND_TYPE_LLAMA_CPP:
@@ -986,23 +965,21 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
                 if not model_file:
                     model_name = self.model_config.get(CONF_CHAT_MODEL)
                     if model_name:
-                        return await self.async_step_download(entry)
+                        return await self.async_step_download()
                     else:
                         errors["base"] = "no_model_name_or_file"
                 
                 if os.path.exists(model_file):
                     self.model_config[CONF_CHAT_MODEL] = os.path.basename(model_file)
-                    self.internal_step = "model_parameters"
-                    return await self.async_step_model_parameters(None, entry)
+                    return await self.async_step_model_parameters()
                 else:
                     errors["base"] = "missing_model_file"
                     schema = STEP_LOCAL_MODEL_SELECTION_DATA_SCHEMA(model_file)
             else:
-                self.internal_step = "model_parameters"
-                return await self.async_step_model_parameters(None, entry)
+                return await self.async_step_model_parameters()
 
         return self.async_show_form(
-            step_id="init",
+            step_id="pick_model",
             data_schema=schema,
             errors=errors,
             description_placeholders=description_placeholders,
@@ -1010,27 +987,32 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
         )
 
     async def async_step_download(
-        self, entry: LocalLLMConfigEntry
+        self, user_input: dict[str, Any] | None = None,
     ) -> SubentryFlowResult:
         if not self.download_task:
             model_name = self.model_config[CONF_CHAT_MODEL]
             quantization_type = self.model_config[CONF_DOWNLOADED_MODEL_QUANTIZATION]
 
             storage_folder = os.path.join(self.hass.config.media_dirs.get("local", self.hass.config.path("media")), "models")
-            self.download_task = self.hass.async_add_executor_job(
-                download_model_from_hf, model_name, quantization_type, storage_folder
-            )
+
+            async def download_task():
+                await self.hass.async_add_executor_job(
+                    download_model_from_hf, model_name, quantization_type, storage_folder
+                )
+
+            self.download_task = self.hass.async_create_background_task(
+                download_task(), name="model_download_task")
 
             return self.async_show_progress(
                 progress_task=self.download_task,
-                step_id="user",
+                step_id="download",
                 progress_action="download",
             )
 
         if self.download_task and not self.download_task.done():
             return self.async_show_progress(
                 progress_task=self.download_task,
-                step_id="user",
+                step_id="download",
                 progress_action="download",
             )
 
@@ -1038,47 +1020,48 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
         if download_exception:
             _LOGGER.info("Failed to download model: %s", repr(download_exception))
             self.download_error = download_exception
-            self.internal_step = "select_local_model"
 
             self.download_task = None
-            return self.async_show_progress_done(next_step_id="failed")
+            return self.async_show_progress_done(next_step_id="pick_model")
         else:
             self.model_config[CONF_DOWNLOADED_MODEL_FILE] = self.download_task.result()
-            self.internal_step = "model_parameters"
 
             self.download_task = None
             return self.async_show_progress_done(next_step_id="model_parameters")
 
     async def async_step_model_parameters(
-        self, user_input: dict[str, Any] | None,
-        entry: LocalLLMConfigEntry,
+        self, user_input: dict[str, Any] | None = None,
     ) -> SubentryFlowResult:
         errors = {}
         description_placeholders = {}
+        entry = self._get_entry()
         backend_type = entry.options[CONF_BACKEND_TYPE]
 
-        # determine selected language from model config or parent options
-        selected_language = self.model_config.get(
-            CONF_SELECTED_LANGUAGE, entry.options.get(CONF_SELECTED_LANGUAGE, "en")
-        )
-        model_name = self.model_config.get(CONF_CHAT_MODEL, "").lower()
+        if not self.model_config:
+            # determine selected language from model config or parent options
+            selected_language = self.model_config.get(
+                CONF_SELECTED_LANGUAGE, entry.options.get(CONF_SELECTED_LANGUAGE, "en")
+            )
+            model_name = self.model_config.get(CONF_CHAT_MODEL, "").lower()
 
-        selected_default_options = {**DEFAULT_OPTIONS}
-        for key in OPTIONS_OVERRIDES.keys():
-            if key in model_name:
-                selected_default_options.update(OPTIONS_OVERRIDES[key])
-                break
+            selected_default_options = {**DEFAULT_OPTIONS}
+            for key in OPTIONS_OVERRIDES.keys():
+                if key in model_name:
+                    selected_default_options.update(OPTIONS_OVERRIDES[key])
+                    break
 
-        # Build prompt template using the selected language
-        selected_default_options[CONF_PROMPT] = build_prompt_template(
-            selected_language, selected_default_options.get(CONF_PROMPT, DEFAULT_PROMPT)
-        )
+            # Build prompt template using the selected language
+            selected_default_options[CONF_PROMPT] = build_prompt_template(
+                selected_language, str(selected_default_options.get(CONF_PROMPT, DEFAULT_PROMPT))
+            )
+
+            self.model_config = selected_default_options
 
         schema = vol.Schema(
             local_llama_config_option_schema(
                 self.hass,
-                entry.options,
-                MappingProxyType(selected_default_options),
+                entry.options[CONF_SELECTED_LANGUAGE],
+                self.model_config,
                 backend_type,
                 self._subentry_type,
             )
@@ -1114,17 +1097,11 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
                     errors["base"] = "unknown"
 
         return self.async_show_form(
-            step_id="user",
+            step_id="model_parameters",
             data_schema=schema,
             errors=errors,
             description_placeholders=description_placeholders,
         )
-    
-    async def async_step_failed(
-        self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
-        """Step after model downloading has failed."""
-        return self.async_abort(reason="download_failed")
 
     async def async_step_finish(
         self, user_input: dict[str, Any] | None = None
@@ -1146,23 +1123,21 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Handle model selection and configuration step."""
-        entry: LocalLLMConfigEntry = self._get_entry()
 
         # Ensure the parent entry is loaded before allowing subentry edits
-        if entry.state != ConfigEntryState.LOADED:
+        if self._get_entry().state != ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
-
-        if self.internal_step == "pick_model":
-            return await self.async_step_pick_model(user_input, entry)
-        elif self.internal_step == "download":
-            return await self.async_step_download(entry)
-        elif self.internal_step == "model_parameters":
-            return await self.async_step_model_parameters(user_input, entry)
-        else:
-            return self.async_abort(reason="unknown_internal_step")
+        
+        if not self.model_config:
+            self.model_config = {}
+        
+        return await self.async_step_pick_model(user_input)
+    
+    async_step_init = async_step_user
         
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None):
-        return await self.async_step_model_parameters(user_input, self._get_entry())
+        if not self.model_config:
+            self.model_config = dict(self._get_reconfigure_subentry().data)
 
-    async_step_init = async_step_user
+        return await self.async_step_model_parameters(user_input)

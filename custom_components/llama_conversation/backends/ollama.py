@@ -79,7 +79,7 @@ class OllamaAPIClient(LocalLLMClient):
                     ssl=user_input[CONF_SSL],
                     path=f"/{api_base_path}/api/tags"
                 ),
-                timeout=5, # quick timeout
+                timeout=aiohttp.ClientTimeout(total=5), # quick timeout
                 headers=headers
             ) as response:
                 if response.ok:
@@ -97,7 +97,7 @@ class OllamaAPIClient(LocalLLMClient):
         session = async_get_clientsession(self.hass)
         async with session.get(
             f"{self.api_host}/api/tags",
-            timeout=5, # quick timeout
+            timeout=aiohttp.ClientTimeout(total=5), # quick timeout
             headers=headers
         ) as response:
             response.raise_for_status()
@@ -135,7 +135,7 @@ class OllamaAPIClient(LocalLLMClient):
             async with session.post(
                 f"{self.api_host}{endpoint}",
                 json=request_params,
-                timeout=timeout,
+                timeout=aiohttp.ClientTimeout(total=timeout),
                 headers=headers
             ) as response:
                 response.raise_for_status()

@@ -60,10 +60,12 @@ from custom_components.llama_conversation.entity import LocalLLMClient, TextGene
 
 # make type checking work for llama-cpp-python without importing it directly at runtime
 from typing import TYPE_CHECKING
+from types import ModuleType
 if TYPE_CHECKING:
-    from llama_cpp import Llama as LlamaType
+    from llama_cpp import Llama as LlamaType, LlamaGrammar as LlamaGrammarType
 else:
     LlamaType = Any
+    LlamaGrammarType = Any
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,7 +83,7 @@ def snapshot_settings(options: dict[str, Any]) -> dict[str, Any]:
 
 
 class LlamaCppClient(LocalLLMClient):
-    llama_cpp_module: Any | None
+    llama_cpp_module: ModuleType | None
 
     models: dict[str, LlamaType]
     grammars: dict[str, Any]
@@ -111,7 +113,7 @@ class LlamaCppClient(LocalLLMClient):
         self.model_lock = threading.Lock()
 
     async def async_get_available_models(self) -> List[str]:
-        return [] # TODO: copy from config_flow.py
+        return [] # TODO: find available "huggingface_hub" models that have been downloaded
 
     def _load_model(self, entity_options: dict[str, Any]) -> None:
         model_name = entity_options.get(CONF_CHAT_MODEL, "")
@@ -141,7 +143,7 @@ class LlamaCppClient(LocalLLMClient):
                 validate_llama_cpp_python_installation()
                 self.llama_cpp_module = importlib.import_module("llama_cpp")
 
-        Llama = getattr(self.llama_cpp_module, "Llama")
+        Llama: type[LlamaType] = getattr(self.llama_cpp_module, "Llama")
 
         _LOGGER.debug(f"Loading model '{model_path}'...")
         model_settings = snapshot_settings(entity_options)
@@ -178,7 +180,7 @@ class LlamaCppClient(LocalLLMClient):
 
 
     def _load_grammar(self, model_name: str, filename: str) -> Any:
-        LlamaGrammar = getattr(self.llama_cpp_module, "LlamaGrammar")
+        LlamaGrammar: type[LlamaGrammarType] = getattr(self.llama_cpp_module, "LlamaGrammar")
         _LOGGER.debug(f"Loading grammar {filename}...")
         try:
             with open(os.path.join(os.path.dirname(__file__), filename)) as f:
@@ -217,7 +219,7 @@ class LlamaCppClient(LocalLLMClient):
             _LOGGER.debug(f"Reloading model '{model_path}'...")
             model_settings = snapshot_settings(entity_options)
 
-            Llama = getattr(self.llama_cpp_module, "Llama")
+            Llama: type[LlamaType] = getattr(self.llama_cpp_module, "Llama")
             llm = Llama(
                 model_path=model_path,
                 n_ctx=int(model_settings[CONF_CONTEXT_LENGTH]),
