@@ -107,37 +107,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     async_add_entities([entry.runtime_data])
 
     return True
-
-def _convert_content(
-    chat_content: conversation.Content
-) -> dict[str, str]:
-    """Create tool response content."""
-    role_name = None
-    if isinstance(chat_content, conversation.ToolResultContent):
-        role_name = "tool"
-    elif isinstance(chat_content, conversation.AssistantContent):
-        role_name = "assistant"
-    elif isinstance(chat_content, conversation.UserContent):
-        role_name = "user"
-    elif isinstance(chat_content, conversation.SystemContent):
-        role_name = "system"
-    else:
-        raise ValueError(f"Unexpected content type: {type(chat_content)}")
-
-    return { "role": role_name, "message": chat_content.content }
-
-def _convert_content_back(
-    agent_id: str,
-    message_history_entry: dict[str, str]
-) -> Optional[conversation.Content]:
-    if message_history_entry["role"] == "tool":
-        return conversation.ToolResultContent(agent_id=agent_id, content=message_history_entry["message"])
-    if message_history_entry["role"] == "assistant":
-        return conversation.AssistantContent(agent_id=agent_id, content=message_history_entry["message"])
-    if message_history_entry["role"] == "user":
-        return conversation.UserContent(content=message_history_entry["message"])
-    if message_history_entry["role"] == "system":
-        return conversation.SystemContent(content=message_history_entry["message"])
     
 def _parse_raw_tool_call(raw_block: str, llm_api: llm.APIInstance, user_input: ConversationInput) -> tuple[bool, ConversationResult | llm.ToolInput, str | None]:
     parsed_tool_call: dict = json.loads(raw_block)
@@ -298,21 +267,29 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
             self._load_model, entry
         )
     
-    def _generate_stream(self, conversation: List[Dict[str, str]]) -> TextGenerationResult:
+    def _generate_stream(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None) -> AsyncGenerator[TextGenerationResult, None]:
+        """Async generator for streaming responses. Subclasses should implement."""
         raise NotImplementedError()
 
-    def _generate(self, conversation: List[Dict[str, str]]) -> TextGenerationResult:
+    async def _generate(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None) -> TextGenerationResult:
         """Call the backend to generate a response from the conversation. Implemented by sub-classes"""
         raise NotImplementedError()
 
-    async def _async_generate(self, conversation: List[Dict[str, str]]) -> TextGenerationResult:
-        """Default implementation is to call _generate() which probably does blocking stuff"""
+    async def _async_generate(self, conv: List[conversation.Content], user_input: ConversationInput, chat_log: conversation.chat_log.ChatLog):
+        """Default implementation: if streaming is supported, consume the async generator and return the full result."""
         if hasattr(self, '_generate_stream'):
-            return await self.hass.async_add_executor_job(
-                self._generate_stream, conversation
+            # Try to stream and collect the full response
+            return await self._transform_result_stream(self._generate_stream(conv, chat_log.llm_api), user_input, chat_log)
+        
+        # Fallback to "blocking" generate
+        blocking_result = await self._generate(conv, chat_log.llm_api)
+
+        return chat_log.async_add_assistant_content(
+            conversation.AssistantContent(
+                agent_id=user_input.agent_id,
+                content=blocking_result.response,
+                tool_calls=blocking_result.tool_calls
             )
-        return await self.hass.async_add_executor_job(
-            self._generate, conversation
         )
 
     def _warn_context_size(self):
@@ -322,7 +299,7 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
                       f"{self.entry.data[CONF_CHAT_MODEL]} and it exceeded the context size for the model. " +
                       f"Please reduce the number of entities exposed ({num_entities}) or increase the model's context size ({int(context_size)})")
         
-    def _transform_result_stream(
+    async def _transform_result_stream(
         self,
         result: AsyncIterator[TextGenerationResult],
         user_input: ConversationInput,
@@ -335,8 +312,7 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
                     tool_calls=input_chunk.tool_calls
                 )
         
-        
-        chat_log.async_add_delta_content_stream(user_input.agent_id, stream=async_iterator())
+        return chat_log.async_add_delta_content_stream(user_input.agent_id, stream=async_iterator())
 
     async def async_process(
         self, user_input: ConversationInput
@@ -405,7 +381,7 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
                 )
 
         if remember_conversation:
-            message_history = [ _convert_content(content) for content in chat_log.content ]
+            message_history = chat_log.content[:]
         else:
             message_history = []
 
@@ -436,16 +412,14 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
 
         multi_turn_enabled = self.entry.options.get(CONF_TOOL_MULTI_TURN_CHAT, DEFAULT_TOOL_MULTI_TURN_CHAT)
         MAX_TOOL_CALL_ITERATIONS = 3 if multi_turn_enabled else 1
+        tool_calls: List[Tuple[llm.ToolInput, Any]] = []
         for _ in range(MAX_TOOL_CALL_ITERATIONS):
-            # generate a response
             try:
                 _LOGGER.debug(message_history)
-                generation_result = await self._async_generate(message_history)
+                generation_result = await self._async_generate(message_history, user_input, chat_log)
                 _LOGGER.debug(generation_result)
-
             except Exception as err:
                 _LOGGER.exception("There was a problem talking to the backend")
-
                 intent_response = intent.IntentResponse(language=user_input.language)
                 intent_response.async_set_error(
                     intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
@@ -455,67 +429,28 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
                     response=intent_response, conversation_id=user_input.conversation_id
                 )
 
-            response = generation_result.response or ""
+            last_message_had_tool_calls = False
+            async for message in generation_result:
+                message_history.append(message)
+                if message.role == "assistant":
+                    if message.tool_calls and len(message.tool_calls) > 0:
+                        last_message_had_tool_calls = True
+                    else:
+                        last_message_had_tool_calls = False
 
-            # remove think blocks
-            response = re.sub(rf"^.*?{template_desc["chain_of_thought"]["suffix"]}", "", response, flags=re.DOTALL)
-
-            message_history.append({"role": "assistant", "message": response})
-            if llm_api is None or (generation_result.tool_calls and len(generation_result.tool_calls) == 0):
-                if not generation_result.response_streamed:
-                    chat_log.async_add_assistant_content_without_tools(conversation.AssistantContent(
-                        agent_id=user_input.agent_id,
-                        content=response,
-                    ))
-
-                # return the output without messing with it if there is no API exposed to the model
-                intent_response = intent.IntentResponse(language=user_input.language)
-                return ConversationResult(
-                    response=intent_response, conversation_id=user_input.conversation_id
-                )
-
-            # execute the tool calls
-            tool_calls: List[Tuple[llm.ToolInput, Any]] = []
-            for tool_input in generation_result.tool_calls or []:
-                tool_response = None
-                try:
-                    tool_response = llm_api.async_call_tool(tool_input)
-                    _LOGGER.debug("Tool response: %s", tool_response)
-
-                    tool_calls.append((tool_input, tool_response))
-                except (HomeAssistantError, vol.Invalid) as e:
-                    tool_response = {"error": type(e).__name__}
-                    if str(e):
-                        tool_response["error_text"] = str(e)
-                    _LOGGER.debug("Tool response: %s", tool_response)
-
-                    intent_response = intent.IntentResponse(language=user_input.language)
-                    intent_response.async_set_error(
-                        intent.IntentResponseErrorCode.NO_INTENT_MATCH,
-                        f"I'm sorry! I encountered an error calling the tool. See the logs for more info.",
-                    )
-                    return ConversationResult(
-                        response=intent_response, conversation_id=user_input.conversation_id
-                    )
-                
-                if tool_response and multi_turn_enabled:
-                    async for tool_result in chat_log.async_add_assistant_content(
-                        conversation.AssistantContent(
-                            agent_id=user_input.agent_id,
-                            content=response,
-                            tool_calls=generation_result.tool_calls,
-                        ),
-                        tool_call_tasks={ x[0].tool_name: x[1] for x in tool_calls}
-                    ):
-                        message_history.append({"role": "tool", "content": json.dumps(tool_result.tool_result) })
+            # If not multi-turn, break after first tool call
+            # also break if no tool calls were made
+            if not multi_turn_enabled or not last_message_had_tool_calls:
+                break
 
         # generate intent response to Home Assistant
         intent_response = intent.IntentResponse(language=user_input.language)
         if len(tool_calls) > 0:
-            str_tools = [f"{input.tool_name}({', '.join(input.tool_args.values())})" for input, response in tool_calls]
+            str_tools = [f"{input.tool_name}({', '.join(str(x) for x in input.tool_args.values())})" for input, response in tool_calls]
+            tools_str = '\n'.join(str_tools)
             intent_response.async_set_card(
                 title="Changes",
-                content=f"Ran the following tools:\n{'\n'.join(str_tools)}"
+                content=f"Ran the following tools:\n{tools_str}"
             )
         return ConversationResult(
             response=intent_response, conversation_id=user_input.conversation_id

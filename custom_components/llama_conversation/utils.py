@@ -7,11 +7,13 @@ import logging
 import multiprocessing
 import voluptuous as vol
 import webcolors
+from typing import Any, Dict, List, Sequence
 from webcolors import CSS3
 from importlib.metadata import version
 
+from homeassistant.components import conversation
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import intent
+from homeassistant.helpers import intent, llm
 from homeassistant.requirements import pip_kwargs
 from homeassistant.util import color
 from homeassistant.util.package import install_package, is_installed
@@ -20,6 +22,13 @@ from .const import (
     INTEGRATION_VERSION,
     EMBEDDED_LLAMA_CPP_PYTHON_VERSION,
 )
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from llama_cpp.llama_types import ChatCompletionRequestMessage, ChatCompletionTool
+else:
+    ChatCompletionRequestMessage = Any
+    ChatCompletionTool = Any
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -239,3 +248,51 @@ def install_llama_cpp_python(config_dir: str):
 
 def format_url(*, hostname: str, port: str, ssl: bool, path: str):
     return f"{'https' if ssl else 'http'}://{hostname}{ ':' + port if port else ''}{path}"
+
+def get_oai_formatted_tools(llm_api: llm.APIInstance) -> List[ChatCompletionTool]:
+    return [ {
+        "type": "function",
+        "function": {
+            "name": tool.name,
+            "description": tool.description or "",
+            "parameters": tool.parameters.schema
+        }
+    } for tool in llm_api.tools ]
+
+def get_oai_formatted_messages(conversation: Sequence[conversation.Content]) -> List[ChatCompletionRequestMessage]:
+        messages = []
+        for message in conversation:
+            if message.role == "system":
+                messages.append({
+                    "role": "system",
+                    "content": message.content
+                })
+            elif message.role == "user":
+                messages.append({
+                    "role": "user",
+                    "content": [{ "type": "text", "text": message.content }]
+                })
+            elif message.role == "assistant":
+                if message.tool_calls:
+                    messages.append({
+                        "role": "assistant",
+                        "content": message.content,
+                        "tool_calls": [
+                            {
+                                "type" : "function",
+                                "id": t.id,
+                                "function":  {
+                                    "arguments": t.tool_args,
+                                    "name": t.tool_name,
+                                }
+                            } for t in message.tool_calls
+                        ]
+                    })
+            elif message.role == "tool_result":
+                messages.append({
+                    "role": "tool",
+                    "content": message.tool_result,
+                    "tool_call_id": message.tool_call_id
+                })
+
+        return messages

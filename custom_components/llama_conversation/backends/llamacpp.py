@@ -6,7 +6,7 @@ import logging
 import os
 import threading
 import time
-from typing import Any, Callable, Generator, Optional, List, Dict, AsyncIterable
+from typing import Any, Callable, Generator, Optional, List, Dict, AsyncIterable, AsyncGenerator, Sequence
 
 from homeassistant.components import conversation as conversation
 from homeassistant.components.conversation.const import DOMAIN as CONVERSATION_DOMAIN
@@ -18,7 +18,7 @@ from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.helpers.event import async_track_state_change, async_call_later
 
-from custom_components.llama_conversation.utils import install_llama_cpp_python, validate_llama_cpp_python_installation
+from custom_components.llama_conversation.utils import install_llama_cpp_python, validate_llama_cpp_python_installation, get_oai_formatted_messages, get_oai_formatted_tools
 from custom_components.llama_conversation.const import (
     CONF_MAX_TOKENS,
     CONF_PROMPT,
@@ -64,6 +64,7 @@ else:
     LlamaType = Any
 
 _LOGGER = logging.getLogger(__name__)
+
 
 class LlamaCppAgent(LocalLLMAgent):
     model_path: str
@@ -351,10 +352,20 @@ class LlamaCppAgent(LocalLLMAgent):
         refresh_delay = self.entry.options.get(CONF_PROMPT_CACHING_INTERVAL, DEFAULT_PROMPT_CACHING_INTERVAL)
         async_call_later(self.hass, float(refresh_delay), refresh_if_requested)
 
+    async def _async_generate_completion(self, chat_completion) -> AsyncGenerator[TextGenerationResult, None]:        
+        for token in chat_completion:
+            if isinstance(token, str):
+                yield TextGenerationResult(
+                    response=token,
+                    response_streamed=True
+                )
+            else:
+                token["choices"][0]["delta"].get("tool_calls")
 
-    def _generate_stream(self, conversation: List[Dict[str, str]], user_input: conversation.ConversationInput, chat_log: conversation.ChatLog) -> TextGenerationResult:
-        prompt = self._format_prompt(conversation)
-        
+
+    def _generate_stream(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None) -> AsyncGenerator[TextGenerationResult, None]:
+        """Async generator that yields TextGenerationResult as tokens are produced."""
+        # prompt = self._format_prompt(conversation)
         max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
         temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
         top_k = int(self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K))
@@ -364,49 +375,37 @@ class LlamaCppAgent(LocalLLMAgent):
 
         _LOGGER.debug(f"Options: {self.entry.options}")
 
-        with self.model_lock:
-            input_tokens = self.llm.tokenize(
-                prompt.encode(), add_bos=False
-            )
+        # with self.model_lock:
+        #     # FIXME: use the high level API so we can use the built-in prompt formatting
+        #     input_tokens = self.llm.tokenize(
+        #         prompt.encode(), add_bos=False
+        #     )
 
-            context_len = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
-            if len(input_tokens) >= context_len:
-                num_entities = len(self._async_get_exposed_entities()[0])
-                context_size = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
-                self._warn_context_size()
-                raise Exception(f"The model failed to produce a result because too many devices are exposed ({num_entities} devices) for the context size ({context_size} tokens)!")
-            if len(input_tokens) + max_tokens >= context_len:
-                self._warn_context_size()
+        #     context_len = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
+        #     if len(input_tokens) >= context_len:
+        #         num_entities = len(self._async_get_exposed_entities()[0])
+        #         context_size = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
+        #         self._warn_context_size()
+        #         raise Exception(f"The model failed to produce a result because too many devices are exposed ({num_entities} devices) for the context size ({context_size} tokens)!")
+        #     if len(input_tokens) + max_tokens >= context_len:
+        #         self._warn_context_size()
 
-            _LOGGER.debug(f"Processing {len(input_tokens)} input tokens...")
-            output_tokens = self.llm.generate(
-                input_tokens,
-                temp=temperature,
-                top_k=top_k,
-                top_p=top_p,
-                min_p=min_p,
-                typical_p=typical_p,
-                grammar=self.grammar
-            )
+        #     _LOGGER.debug(f"Processing {len(input_tokens)} input tokens...")
 
-        result_tokens = []
-        async def async_iterator():
-            num_tokens = 0
-            for token in output_tokens:
-                result_tokens.append(token)
-                yield TextGenerationResult(response=self.llm.detokenize([token]).decode(), response_streamed=True)
+        messages = get_oai_formatted_messages(conversation)
+        tools = None
+        if llm_api:
+            tools = get_oai_formatted_tools(llm_api)
 
-                if token == self.llm.token_eos():
-                    break
+        return self._async_generate_completion(self.llm.create_chat_completion(
+            messages,
+            tools=tools,
+            temperature=temperature,
+            top_k=top_k,
+            top_p=top_p,
+            min_p=min_p,
+            typical_p=typical_p,
+            max_tokens=max_tokens,
+            grammar=self.grammar
+        ))
 
-                if len(result_tokens) >= max_tokens:
-                    break
-
-                num_tokens += 1
-
-        self._transform_result_stream(async_iterator(), user_input=user_input, chat_log=chat_log)
-
-        response = TextGenerationResult(
-            response=self.llm.detokenize(result_tokens).decode(),
-            response_streamed=True,
-        )

@@ -1,5 +1,6 @@
 """Defines the ollama compatible agent"""
 from __future__ import annotations
+from warnings import deprecated
 
 import aiohttp
 import asyncio
@@ -43,6 +44,7 @@ from custom_components.llama_conversation.conversation import LocalLLMAgent, Tex
 
 _LOGGER = logging.getLogger(__name__)
 
+@deprecated("Use the built-in Ollama integration instead")
 class OllamaAPIAgent(LocalLLMAgent):
     api_host: str
     api_key: Optional[str]
