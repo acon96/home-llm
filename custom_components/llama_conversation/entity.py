@@ -69,18 +69,21 @@ class TextGenerationResult:
     raise_error: bool = False
     error_msg: Optional[str] = None
 
+# TODO: each client needs to support calling multiple models without re-creating the client (llama.cpp will need the most work)
 class LocalLLMClient:
     """Base Local LLM conversation agent."""
 
     hass: HomeAssistant
     in_context_examples: Optional[List[Dict[str, str]]]
 
-    def __init__(self, hass: HomeAssistant, icl_examples_filename: Optional[str]) -> None:
+    def __init__(self, hass: HomeAssistant, client_options: dict[str, Any]) -> None:
         self.hass = hass
 
         self.in_context_examples = None
-        if icl_examples_filename:
-            self._load_icl_examples(icl_examples_filename)
+        if client_options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES, DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES):
+            icl_examples_filename = client_options.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE)
+            if icl_examples_filename:
+                self._load_icl_examples(icl_examples_filename)
 
     def _load_icl_examples(self, filename: str):
         """Load info used for generating in context learning examples"""
@@ -113,14 +116,19 @@ class LocalLLMClient:
         else:
             self.in_context_examples = None
 
-    def _load_model(self, entry: ConfigEntry) -> None:
-        """Load the model on the backend. Implemented by sub-classes"""
-        raise NotImplementedError()
+    @staticmethod
+    async def async_validate_connection(hass: HomeAssistant, user_input: Dict[str, Any]) -> bool:
+        """Validate connection to the backend. Implemented by sub-classes"""
+        return True
 
-    async def _async_load_model(self, entry: ConfigEntry) -> None:
+    def _load_model(self, entity_options: dict[str, Any]) -> None:
+        """Load the model on the backend. Implemented by sub-classes"""
+        pass
+
+    async def _async_load_model(self, entity_options: dict[str, Any]) -> None:
         """Default implementation is to call _load_model() which probably does blocking stuff"""
         await self.hass.async_add_executor_job(
-            self._load_model, entry
+            self._load_model, entity_options
         )
     
     def _generate_stream(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None, user_input: conversation.ConversationInput, entity_options: dict[str, Any]) -> AsyncGenerator[TextGenerationResult, None]:
@@ -147,6 +155,10 @@ class LocalLLMClient:
                 tool_calls=blocking_result.tool_calls
             )
         )
+    
+    async def async_get_available_models(self) -> List[str]:
+        """Return a list of available models. Implemented by sub-classes"""
+        raise NotImplementedError()
 
     def _warn_context_size(self, model: str, context_size: int):
         num_entities = len(self._async_get_exposed_entities())

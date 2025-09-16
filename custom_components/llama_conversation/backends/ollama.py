@@ -8,6 +8,7 @@ import json
 import logging
 from typing import Optional, Tuple, Dict, List, Any, AsyncGenerator
 
+from homeassistant.core import HomeAssistant
 from homeassistant.components import conversation as conversation
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
@@ -47,42 +48,38 @@ _LOGGER = logging.getLogger(__name__)
 class OllamaAPIClient(LocalLLMClient):
     api_host: str
     api_key: Optional[str]
-    model_name: Optional[str]
 
-    async def _async_load_model(self, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, client_options: dict[str, Any]) -> None:
+        super().__init__(hass, client_options)
         self.api_host = format_url(
-            hostname=entry.data[CONF_HOST],
-            port=entry.data[CONF_PORT],
-            ssl=entry.data[CONF_SSL],
-            path=""
+            hostname=client_options[CONF_HOST],
+            port=client_options[CONF_PORT],
+            ssl=client_options[CONF_SSL],
+            path=client_options.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_OLLAMA_PATH)
         )
-        self.api_key = entry.data.get(CONF_OPENAI_API_KEY)
-        self.model_name = entry.data.get(CONF_CHAT_MODEL)
 
-        # ollama handles loading for us so just make sure the model is available
-        try:
-            headers = {}
-            session = async_get_clientsession(self.hass)
-            if self.api_key:
-                headers["Authorization"] = f"Bearer {self.api_key}"
+        self.api_key = client_options.get(CONF_OPENAI_API_KEY, "")
 
-            async with session.get(
-                f"{self.api_host}/api/tags",
-                headers=headers,
-            ) as response:
-                response.raise_for_status()
-                currently_downloaded_result = await response.json()
+    @staticmethod
+    async def async_validate_connection(hass: HomeAssistant, user_input: Dict[str, Any]) -> bool:
+        # FIXME: validate the connection properly
+        return True
+    
+    async def async_get_available_models(self) -> List[str]:
+        headers = {}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
 
-        except Exception as ex:
-            _LOGGER.debug("Connection error was: %s", repr(ex))
-            raise ConfigEntryNotReady("There was a problem connecting to the remote server") from ex
+        session = async_get_clientsession(self.hass)
+        async with session.get(
+            f"{self.api_host}/api/tags",
+            timeout=5, # quick timeout
+            headers=headers
+        ) as response:
+            response.raise_for_status()
+            models_result = await response.json()
 
-        model_names = [ x["name"] for x in currently_downloaded_result["models"] ]
-        if ":" in self.model_name:
-            if not any([ name == self.model_name for name in model_names]):
-                raise ConfigEntryNotReady(f"Ollama server does not have the provided model: {self.model_name}")
-        elif not any([ name.split(":")[0] == self.model_name for name in model_names ]):
-            raise ConfigEntryNotReady(f"Ollama server does not have the provided model: {self.model_name}")
+        return [x["name"] for x in models_result["models"]]
 
     def _extract_response(self, response_json: Dict) -> TextGenerationResult:
         # TODO: this doesn't work because ollama caches prompts and doesn't always return the full prompt length
@@ -134,6 +131,7 @@ class OllamaAPIClient(LocalLLMClient):
             yield TextGenerationResult(raise_error=True, error_msg=f"Failed to communicate with the API! {err}")
 
     def _generate_stream(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None, user_input: conversation.ConversationInput, entity_options: Dict[str, Any]) -> AsyncGenerator[TextGenerationResult, None]:
+        model_name = entity_options.get(CONF_CHAT_MODEL, "")
         context_length = entity_options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
         max_tokens = entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
         temperature = entity_options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
@@ -145,7 +143,7 @@ class OllamaAPIClient(LocalLLMClient):
         json_mode = entity_options.get(CONF_OLLAMA_JSON_MODE, DEFAULT_OLLAMA_JSON_MODE)
 
         request_params = {
-            "model": self.model_name,
+            "model": model_name,
             "stream": True,
             "keep_alive": f"{keep_alive}m", # prevent ollama from unloading the model
             "options": {

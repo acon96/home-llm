@@ -5,11 +5,10 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from types import MappingProxyType
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_LLM_HASS_API, UnitOfTime
 from homeassistant.data_entry_flow import (
@@ -20,8 +19,13 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigFlow as BaseConfigFlow,
+    ConfigFlowResult,
     ConfigSubentryFlow,
     SubentryFlowResult,
+    ConfigEntriesFlowManager,
+    OptionsFlow as BaseOptionsFlow,
+    ConfigEntryState,
 )
 from homeassistant.helpers import llm
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -36,6 +40,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
     TextSelector,
     TextSelectorConfig,
+    TextSelectorType,
     BooleanSelector,
     BooleanSelectorConfig,
 )
@@ -83,7 +88,6 @@ from .const import (
     CONF_OLLAMA_KEEP_ALIVE_MIN,
     CONF_OLLAMA_JSON_MODE,
     CONF_GENERIC_OPENAI_PATH,
-    CONF_GENERIC_OPENAI_VALIDATE_MODEL,
     CONF_CONTEXT_LENGTH,
     CONF_LLAMACPP_BATCH_SIZE,
     CONF_LLAMACPP_THREAD_COUNT,
@@ -99,6 +103,7 @@ from .const import (
     TOOLS_PROMPT,
     AREA_PROMPT,
     USER_INSTRUCTION,
+    DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
@@ -129,13 +134,13 @@ from .const import (
     DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
     DEFAULT_OLLAMA_JSON_MODE,
     DEFAULT_GENERIC_OPENAI_PATH,
-    DEFAULT_GENERIC_OPENAI_VALIDATE_MODEL,
     DEFAULT_CONTEXT_LENGTH,
     DEFAULT_LLAMACPP_BATCH_SIZE,
     DEFAULT_LLAMACPP_THREAD_COUNT,
     DEFAULT_LLAMACPP_BATCH_THREAD_COUNT,
-    BACKEND_TYPE_LLAMA_HF,
-    BACKEND_TYPE_LLAMA_EXISTING,
+    BACKEND_TYPE_LLAMA_HF_SETUP,
+    BACKEND_TYPE_LLAMA_EXISTING_SETUP,
+    BACKEND_TYPE_LLAMA_CPP,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
     BACKEND_TYPE_GENERIC_OPENAI,
     BACKEND_TYPE_GENERIC_OPENAI_RESPONSES,
@@ -152,14 +157,17 @@ from .const import (
     EMBEDDED_LLAMA_CPP_PYTHON_VERSION
 )
 
-from . import HomeLLMAPI
+from . import HomeLLMAPI, LocalLLMConfigEntry, LocalLLMClient
+from .backends.generic_openai import GenericOpenAIAPIClient, GenericOpenAIResponsesAPIClient
+from .backends.tailored_openai import TextGenerationWebuiClient, LlamaCppServerClient
+from .backends.ollama import OllamaAPIClient
 
 _LOGGER = logging.getLogger(__name__)
 
 def is_local_backend(backend):
-    return backend in [BACKEND_TYPE_LLAMA_EXISTING, BACKEND_TYPE_LLAMA_HF]
+    return backend in [BACKEND_TYPE_LLAMA_EXISTING_SETUP, BACKEND_TYPE_LLAMA_HF_SETUP, BACKEND_TYPE_LLAMA_CPP]
 
-def STEP_INIT_DATA_SCHEMA(backend_type=None):
+def pick_backend_schema(backend_type=None, selected_language=None):
     return vol.Schema(
         {
             vol.Required(
@@ -167,7 +175,7 @@ def STEP_INIT_DATA_SCHEMA(backend_type=None):
                 default=backend_type if backend_type else DEFAULT_BACKEND_TYPE
             ): SelectSelector(SelectSelectorConfig(
                 options=[
-                    BACKEND_TYPE_LLAMA_HF, BACKEND_TYPE_LLAMA_EXISTING,
+                    BACKEND_TYPE_LLAMA_CPP,
                     BACKEND_TYPE_TEXT_GEN_WEBUI,
                     BACKEND_TYPE_GENERIC_OPENAI,
                     BACKEND_TYPE_GENERIC_OPENAI_RESPONSES,
@@ -177,14 +185,7 @@ def STEP_INIT_DATA_SCHEMA(backend_type=None):
                 translation_key=CONF_BACKEND_TYPE,
                 multiple=False,
                 mode=SelectSelectorMode.DROPDOWN,
-            ))
-        }
-    )
-
-def STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA(model_file=None, selected_language=None):
-    return vol.Schema(
-        {
-            vol.Required(CONF_DOWNLOADED_MODEL_FILE, default=model_file if model_file else ""): str,
+            )),
             vol.Required(CONF_SELECTED_LANGUAGE, default=selected_language if selected_language else "en"): SelectSelector(SelectSelectorConfig(
                 options=CONF_SELECTED_LANGUAGE_OPTIONS,
                 translation_key=CONF_SELECTED_LANGUAGE,
@@ -194,7 +195,261 @@ def STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA(model_file=None, selected_language=Non
         }
     )
 
-def STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(*, chat_model=None, downloaded_model_quantization=None, selected_language=None, available_quantizations=None):
+def remote_connection_schema(backend_type: str, *, host=None, port=None, ssl=None, selected_path=None):
+
+    extra = {}
+    default_port = DEFAULT_PORT
+
+    if backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
+        extra[vol.Optional(CONF_TEXT_GEN_WEBUI_ADMIN_KEY)] = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
+    elif backend_type == BACKEND_TYPE_LLAMA_CPP_SERVER:
+        default_port = "8000"
+    elif backend_type == BACKEND_TYPE_OLLAMA:
+        default_port = "11434"
+    elif backend_type in [BACKEND_TYPE_GENERIC_OPENAI, BACKEND_TYPE_GENERIC_OPENAI_RESPONSES]:
+        default_port = ""
+
+    return vol.Schema(
+        {
+            vol.Required(CONF_HOST, default=host if host else ""): str,
+            vol.Optional(CONF_PORT, default=port if port else default_port): str,
+            vol.Required(CONF_SSL, default=ssl if ssl else DEFAULT_SSL): bool,
+            vol.Optional(CONF_OPENAI_API_KEY): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
+            vol.Required(
+                CONF_GENERIC_OPENAI_PATH,
+                default=selected_path if selected_path else DEFAULT_GENERIC_OPENAI_PATH
+            ): TextSelector(TextSelectorConfig(prefix="/")),
+            **extra
+        }
+    )
+
+class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Local LLM Conversation."""
+
+    VERSION = 3
+
+    install_wheel_task = None
+    install_wheel_error = None
+    installed_version = None
+    client_config: dict[str, Any]
+    internal_step: str = "init"
+
+    @property
+    def flow_manager(self) -> ConfigEntriesFlowManager:
+        """Return the correct flow manager."""
+        return self.hass.config_entries.flow
+
+    def async_remove(self) -> None:
+        if self.install_wheel_task:
+            self.install_wheel_task.cancel()
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the initial step."""
+        errors = {}
+
+        if self.internal_step == "init":
+            self.client_config = {}
+
+            # make sure the API is registered
+            if not any([x.id == HOME_LLM_API_ID for x in llm.async_get_apis(self.hass)]):
+                llm.async_register_api(self.hass, HomeLLMAPI(self.hass))
+
+            self.internal_step = "pick_backend"
+            return self.async_show_form(
+                step_id="user", data_schema=pick_backend_schema(), last_step=False
+            )
+        elif self.internal_step == "pick_backend":
+            if user_input:
+                local_backend = is_local_backend(user_input[CONF_BACKEND_TYPE])
+                self.client_config.update(user_input)
+                if local_backend:
+                    self.installed_version = await self.hass.async_add_executor_job(get_llama_cpp_python_version)
+                    _LOGGER.debug(f"installed version: {self.installed_version}")
+                    if self.installed_version == EMBEDDED_LLAMA_CPP_PYTHON_VERSION:
+                        return await self.async_step_finish()
+                    else:
+                        self.internal_step = "install_local_wheels"
+                        _LOGGER.debug("Queuing install task...")
+                        async def install_task():
+                            await self.hass.async_add_executor_job(
+                                install_llama_cpp_python, self.hass.config.config_dir
+                            )
+
+                        self.install_wheel_task = self.hass.async_create_background_task(
+                            install_task(), name="llama_cpp_python_installation")
+
+                        return self.async_show_progress(
+                            progress_task=self.install_wheel_task,
+                            step_id="user",
+                            progress_action="install_local_wheels",
+                        )
+                else:
+                    self.internal_step = "configure_connection"
+                    return self.async_show_form(
+                        step_id="user", data_schema=remote_connection_schema(self.client_config[CONF_BACKEND_TYPE]), last_step=True
+                    )
+            elif self.install_wheel_error:
+                errors["base"] = str(self.install_wheel_error)
+                self.install_wheel_error = None
+            
+            return self.async_show_form(
+                step_id="user", data_schema=pick_backend_schema(
+                    backend_type=self.client_config.get(CONF_BACKEND_TYPE),
+                    selected_language=self.client_config.get(CONF_SELECTED_LANGUAGE)
+                ), errors=errors, last_step=False)
+        elif self.internal_step == "install_local_wheels":
+            if self.install_wheel_task and not self.install_wheel_task.done():
+                return self.async_show_progress(
+                    progress_task=self.install_wheel_task,
+                    step_id="user",
+                    progress_action="install_local_wheels",
+                )
+
+            install_exception = self.install_wheel_task.exception()
+            if install_exception:
+                _LOGGER.warning("Failed to install wheel: %s", repr(install_exception))
+                self.install_wheel_error = "pip_wheel_error"
+                next_step = "pick_backend"
+            else:
+                wheel_install_result = self.install_wheel_task.result()
+                if not wheel_install_result:
+                    self.install_wheel_error = "pip_wheel_error"
+                    next_step = "pick_backend"
+                else:
+                    _LOGGER.debug(f"Finished install: {wheel_install_result}")
+                    next_step = "finish"
+
+            self.install_wheel_task = None
+            self.internal_step = next_step
+            return self.async_show_progress_done(next_step_id="finish")
+        elif self.internal_step == "configure_connection":
+            if user_input:
+                self.client_config.update(user_input)
+
+                # validate remote connections
+                is_valid = True
+                backend = self.client_config[CONF_BACKEND_TYPE]
+                if backend == BACKEND_TYPE_GENERIC_OPENAI:
+                    is_valid = await GenericOpenAIAPIClient.async_validate_connection(self.hass, self.client_config)
+                elif backend == BACKEND_TYPE_GENERIC_OPENAI_RESPONSES:
+                    is_valid = await GenericOpenAIResponsesAPIClient.async_validate_connection(self.hass, self.client_config)
+                elif backend == BACKEND_TYPE_TEXT_GEN_WEBUI:
+                    is_valid = await TextGenerationWebuiClient.async_validate_connection(self.hass, self.client_config)
+                elif backend == BACKEND_TYPE_OLLAMA:
+                    is_valid = await OllamaAPIClient.async_validate_connection(self.hass, self.client_config)
+
+                if is_valid:
+                    return await self.async_step_finish()
+            else:
+                return self.async_show_form(
+                    step_id="user", data_schema=remote_connection_schema(self.client_config[CONF_BACKEND_TYPE],
+                        host=self.client_config.get(CONF_HOST),
+                        port=self.client_config.get(CONF_PORT),
+                        ssl=self.client_config.get(CONF_SSL),
+                        selected_path=self.client_config.get(CONF_GENERIC_OPENAI_PATH)
+                    ), last_step=True)
+        else:
+            raise AbortFlow("Unknown internal step")
+
+    async def async_step_finish(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+
+        backend = self.client_config[CONF_BACKEND_TYPE]
+        title = "Generic AI Provider"
+        if is_local_backend(backend):
+            title = f"LLama.cpp (llama-cpp-python v{self.installed_version})"
+        else:
+            host = self.client_config[CONF_HOST]
+            port = self.client_config[CONF_PORT]
+            ssl = self.client_config[CONF_SSL]
+            path = "/" + self.client_config[CONF_GENERIC_OPENAI_PATH]
+            if backend == BACKEND_TYPE_GENERIC_OPENAI or backend == BACKEND_TYPE_GENERIC_OPENAI_RESPONSES:
+                title = f"Generic OpenAI at '{format_url(hostname=host, port=port, ssl=ssl, path=path)}'"
+            elif backend == BACKEND_TYPE_TEXT_GEN_WEBUI:
+                title = f"Text-Gen WebUI at '{format_url(hostname=host, port=port, ssl=ssl, path=path)}'"
+            elif backend == BACKEND_TYPE_OLLAMA:
+                title = f"Ollama at '{format_url(hostname=host, port=port, ssl=ssl, path=path)}'"
+            elif backend == BACKEND_TYPE_LLAMA_CPP_SERVER:
+                title = f"LLama.cpp Server at '{format_url(hostname=host, port=port, ssl=ssl, path=path)}'"
+
+        _LOGGER.debug(f"creating provider with config: {self.client_config}")
+
+        return self.async_create_entry(
+            title=title,
+            description="A Large Language Model Chat Agent",
+            data={CONF_BACKEND_TYPE: backend},
+            options=self.client_config,
+        )
+    
+    @classmethod
+    def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
+        return not is_local_backend(config_entry.options.get(CONF_BACKEND_TYPE))
+
+    @staticmethod
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> BaseOptionsFlow:
+        """Create the options flow."""
+        return OptionsFlow()
+    
+    @classmethod
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentries supported by this integration."""
+        return {
+            "conversation": LocalLLMSubentryFlowHandler,
+        }
+
+
+class OptionsFlow(BaseOptionsFlow):
+    """Local LLM config flow options handler."""
+
+    model_config: dict[str, Any] | None = None
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        errors = {}
+        description_placeholders = {}
+
+        if user_input is not None:
+            if user_input[CONF_LLM_HASS_API] == "none":
+                user_input.pop(CONF_LLM_HASS_API)
+
+            # FIXME: invoke the static function on the appropriate llm client class
+            # self.config_entry.runtime_data.validate_connection(user_input) # is this correct?
+
+            if len(errors) == 0:
+                return self.async_create_entry(title="Local LLM Conversation", data=user_input)
+
+        schema = remote_connection_schema(
+            backend_type=self.config_entry.options[CONF_BACKEND_TYPE],
+            host=self.config_entry.options.get(CONF_HOST),
+            port=self.config_entry.options.get(CONF_PORT),
+            ssl=self.config_entry.options.get(CONF_SSL),
+            selected_path=self.config_entry.options.get(CONF_GENERIC_OPENAI_PATH)
+        )
+        return self.async_show_form(
+            step_id="init",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders=description_placeholders,
+        )
+    
+
+def STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA(model_file=None):
+    return vol.Schema(
+        {
+            vol.Required(CONF_DOWNLOADED_MODEL_FILE, default=model_file if model_file else ""): str,
+        }
+    )
+
+def STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(*, chat_model=None, downloaded_model_quantization=None, available_quantizations=None):
     return vol.Schema(
         {
             vol.Required(CONF_CHAT_MODEL, default=chat_model if chat_model else DEFAULT_CHAT_MODEL): SelectSelector(SelectSelectorConfig(
@@ -204,651 +459,69 @@ def STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(*, chat_model=None, downloaded_model_q
                 mode=SelectSelectorMode.DROPDOWN,
             )),
             vol.Required(CONF_DOWNLOADED_MODEL_QUANTIZATION, default=downloaded_model_quantization if downloaded_model_quantization else DEFAULT_DOWNLOADED_MODEL_QUANTIZATION): vol.In(available_quantizations if available_quantizations else CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS),
-            vol.Required(CONF_SELECTED_LANGUAGE, default=selected_language if selected_language else "en"): SelectSelector(SelectSelectorConfig(
-                options=CONF_SELECTED_LANGUAGE_OPTIONS,
-                translation_key=CONF_SELECTED_LANGUAGE,
-                multiple=False,
-                mode=SelectSelectorMode.DROPDOWN,
-            )),
         }
     )
 
-def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, ssl=None, chat_model=None, available_chat_models=[], selected_language=None, selected_path=None):
-
-    extra1, extra2 = ({}, {})
-    default_port = DEFAULT_PORT
-
-    if backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
-        extra2[vol.Optional(CONF_TEXT_GEN_WEBUI_ADMIN_KEY)] = TextSelector(TextSelectorConfig(type="password"))
-    elif backend_type == BACKEND_TYPE_LLAMA_CPP_SERVER:
-        default_port = "8000"
-    elif backend_type == BACKEND_TYPE_OLLAMA:
-        default_port = "11434"
-    elif backend_type in [BACKEND_TYPE_GENERIC_OPENAI, BACKEND_TYPE_GENERIC_OPENAI_RESPONSES]:
-        default_port = ""
-        extra2[vol.Required(
-            CONF_GENERIC_OPENAI_PATH,
-            default=selected_path if selected_path else DEFAULT_GENERIC_OPENAI_PATH
-        )] = TextSelector(TextSelectorConfig(prefix="/"))
-        extra1[vol.Required(
-            CONF_GENERIC_OPENAI_VALIDATE_MODEL,
-            default=DEFAULT_GENERIC_OPENAI_VALIDATE_MODEL
-        )] = BooleanSelector(BooleanSelectorConfig())
-
+def STEP_REMOTE_MODEL_SELECTION_DATA_SCHEMA(available_models: list[str], chat_model: str | None = None):
+    _LOGGER.debug(f"available models: {available_models}")
     return vol.Schema(
         {
-            vol.Required(CONF_HOST, default=host if host else ""): str,
-            vol.Optional(CONF_PORT, default=port if port else default_port): str,
-            vol.Required(CONF_SSL, default=ssl if ssl else DEFAULT_SSL): bool,
-            vol.Required(CONF_CHAT_MODEL, default=chat_model if chat_model else DEFAULT_CHAT_MODEL): SelectSelector(SelectSelectorConfig(
-                options=available_chat_models,
+            vol.Required(CONF_CHAT_MODEL, default=chat_model if chat_model else available_models[0]): SelectSelector(SelectSelectorConfig(
+                options=available_models,
                 custom_value=True,
                 multiple=False,
                 mode=SelectSelectorMode.DROPDOWN,
             )),
-            **extra1,
-            vol.Required(CONF_SELECTED_LANGUAGE, default=selected_language if selected_language else "en"): SelectSelector(SelectSelectorConfig(
-                options=CONF_SELECTED_LANGUAGE_OPTIONS,
-                translation_key=CONF_SELECTED_LANGUAGE,
-                multiple=False,
-                mode=SelectSelectorMode.DROPDOWN,
-            )),
-            vol.Optional(CONF_OPENAI_API_KEY): TextSelector(TextSelectorConfig(type="password")),
-            **extra2
         }
     )
 
-
-class BaseLlamaConversationConfigFlow(FlowHandler, ABC):
-    """Represent the base config flow for Local LLM."""
-
-    @property
-    @abstractmethod
-    def flow_manager(self) -> FlowManager:
-        """Return the flow manager of the flow."""
-
-    @abstractmethod
-    async def async_step_pick_backend(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """ Select backend """
-
-    @abstractmethod
-    async def async_step_install_local_wheels(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """ Install pre-built wheels """
-
-    @abstractmethod
-    async def async_step_local_model(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """ Configure a local model """
-
-    @abstractmethod
-    async def async_step_remote_model(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """ Configure a remote model """
-
-    @abstractmethod
-    async def async_step_model_parameters(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """ Configure a remote model """
-
-    @abstractmethod
-    async def async_step_download(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """ Download a model from HF """
-
-    @abstractmethod
-    async def async_step_finish(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """ Finish configuration """
-
-class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Local LLM Conversation."""
-
-    VERSION = 3
-
-    @classmethod
-    @callback
-    def async_get_supported_subentry_types(
-        cls, config_entry: config_entries.ConfigEntry
-    ) -> dict[str, type[config_entries.ConfigSubentryFlow]]:
-        """Return subentries supported by this integration."""
-        return {
-            "conversation": LocalLLMSubentryFlowHandler,
-        }
-    install_wheel_task = None
-    install_wheel_error = None
-    download_task = None
-    download_error = None
-    model_config: dict[str, Any]
-    options: dict[str, Any]
-    selected_language: str
-
-    @property
-    def flow_manager(self) -> config_entries.ConfigEntriesFlowManager:
-        """Return the correct flow manager."""
-        return self.hass.config_entries.flow
-
-    def async_remove(self) -> None:
-        if self.download_task:
-            self.download_task.cancel()
-
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle the initial step."""
-        self.model_config = {}
-        self.options = {}
-
-        # make sure the API is registered
-        if not any([x.id == HOME_LLM_API_ID for x in llm.async_get_apis(self.hass)]):
-            llm.async_register_api(self.hass, HomeLLMAPI(self.hass))
-
-        return await self.async_step_pick_backend()
-
-    async def async_step_pick_backend(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle the initial step."""
-        errors = {}
-
-        schema = STEP_INIT_DATA_SCHEMA()
-
-        if user_input:
-            local_backend = is_local_backend(user_input[CONF_BACKEND_TYPE])
-            self.model_config.update(user_input)
-            if local_backend:
-                installed_version = await self.hass.async_add_executor_job(get_llama_cpp_python_version)
-                _LOGGER.debug(f"installed version: {installed_version}")
-                if installed_version == EMBEDDED_LLAMA_CPP_PYTHON_VERSION:
-                    return await self.async_step_local_model()
-                else:
-                    return await self.async_step_install_local_wheels()
-            else:
-                return await self.async_step_remote_model()
-        elif self.install_wheel_error:
-            errors["base"] = str(self.install_wheel_error)
-            self.install_wheel_error = None
-
-        return self.async_show_form(
-            step_id="pick_backend", data_schema=schema, errors=errors, last_step=False
-        )
-
-    async def async_step_install_local_wheels(
-      self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        if not self.install_wheel_task:
-            _LOGGER.debug("Queuing install task...")
-            self.install_wheel_task = self.hass.async_add_executor_job(
-                install_llama_cpp_python, self.hass.config.config_dir
-            )
-
-            return self.async_show_progress(
-                progress_task=self.install_wheel_task,
-                step_id="install_local_wheels",
-                progress_action="install_local_wheels",
-            )
-
-        if self.install_wheel_task and not self.install_wheel_task.done():
-            return self.async_show_progress(
-                progress_task=self.install_wheel_task,
-                step_id="install_local_wheels",
-                progress_action="install_local_wheels",
-            )
-
-        install_exception = self.install_wheel_task.exception()
-        if install_exception:
-            _LOGGER.warning("Failed to install wheel: %s", repr(install_exception))
-            self.install_wheel_error = "pip_wheel_error"
-            next_step = "pick_backend"
-        else:
-            wheel_install_result = self.install_wheel_task.result()
-            if not wheel_install_result:
-                self.install_wheel_error = "pip_wheel_error"
-                next_step = "pick_backend"
-            else:
-                _LOGGER.debug(f"Finished install: {wheel_install_result}")
-                next_step = "local_model"
-
-        self.install_wheel_task = None
-        return self.async_show_progress_done(next_step_id=next_step)
-
-    async def async_step_local_model(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        errors = {}
-        description_placeholders = {}
-
-        backend_type = self.model_config[CONF_BACKEND_TYPE]
-        if backend_type == BACKEND_TYPE_LLAMA_HF:
-            schema = STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA()
-        elif backend_type == BACKEND_TYPE_LLAMA_EXISTING:
-            schema = STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA()
-        else:
-            raise ValueError()
-
-        if self.download_error:
-            if isinstance(self.download_error, MissingQuantizationException):
-                available_quants = list(set(self.download_error.available_quants).intersection(set(CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS)))
-
-                if len(available_quants) == 0:
-                    errors["base"] = "no_supported_ggufs"
-                    schema = STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(
-                        chat_model=self.model_config[CONF_CHAT_MODEL],
-                        downloaded_model_quantization=self.model_config[CONF_DOWNLOADED_MODEL_QUANTIZATION],
-                        selected_language=self.selected_language
-                    )
-                else:
-                    errors["base"] = "missing_quantization"
-                    description_placeholders["missing"] = self.download_error.missing_quant
-                    description_placeholders["available"] = ", ".join(self.download_error.available_quants)
-
-                    schema = STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(
-                        chat_model=self.model_config[CONF_CHAT_MODEL],
-                        downloaded_model_quantization=self.download_error.available_quants[0],
-                        selected_language=self.selected_language,
-                        available_quantizations=available_quants,
-                    )
-            else:
-                errors["base"] = "download_failed"
-                description_placeholders["exception"] = str(self.download_error)
-                schema = STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(
-                    chat_model=self.model_config[CONF_CHAT_MODEL],
-                    downloaded_model_quantization=self.model_config[CONF_DOWNLOADED_MODEL_QUANTIZATION],
-                    selected_language=self.selected_language
-                )
-
-        if user_input and "result" not in user_input:
-            self.selected_language = user_input.pop(CONF_SELECTED_LANGUAGE, self.hass.config.language)
-
-            self.model_config.update(user_input)
-
-            if backend_type == BACKEND_TYPE_LLAMA_HF:
-                return await self.async_step_download()
-            else:
-                model_file = self.model_config[CONF_DOWNLOADED_MODEL_FILE]
-                if os.path.exists(model_file):
-                    self.model_config[CONF_CHAT_MODEL] = os.path.basename(model_file)
-                    return await self.async_step_model_parameters()
-                else:
-                    errors["base"] = "missing_model_file"
-                    schema = STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA(model_file, self.selected_language)
-
-        return self.async_show_form(
-            step_id="local_model", data_schema=schema, errors=errors, description_placeholders=description_placeholders, last_step=False
-        )
-
-    async def async_step_download(
-      self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        if not self.download_task:
-            model_name = self.model_config[CONF_CHAT_MODEL]
-            quantization_type = self.model_config[CONF_DOWNLOADED_MODEL_QUANTIZATION]
-
-            storage_folder = os.path.join(self.hass.config.media_dirs.get("local", self.hass.config.path("media")), "models")
-            self.download_task = self.hass.async_add_executor_job(
-                download_model_from_hf, model_name, quantization_type, storage_folder
-            )
-
-            return self.async_show_progress(
-                progress_task=self.download_task,
-                step_id="download",
-                progress_action="download",
-            )
-
-        if self.download_task and not self.download_task.done():
-            return self.async_show_progress(
-                progress_task=self.download_task,
-                step_id="download",
-                progress_action="download",
-            )
-
-        download_exception = self.download_task.exception()
-        if download_exception:
-            _LOGGER.info("Failed to download model: %s", repr(download_exception))
-            self.download_error = download_exception
-            next_step = "local_model"
-        else:
-            self.model_config[CONF_DOWNLOADED_MODEL_FILE] = self.download_task.result()
-            next_step = "model_parameters"
-
-        self.download_task = None
-        return self.async_show_progress_done(next_step_id=next_step)
-
-    async def _async_validate_generic_openai(self, user_input: dict) -> tuple:
-        """
-        Validates a connection to an OpenAI compatible API server and that the model exists on the remote server
-
-        :param user_input: the input dictionary used to build the connection
-        :return: a tuple of (error message name, exception detail); both can be None
-        """
-        try:
-            headers = {}
-            api_key = user_input.get(CONF_TEXT_GEN_WEBUI_ADMIN_KEY, user_input.get(CONF_OPENAI_API_KEY))
-            api_base_path = user_input.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
-            if api_key:
-                headers["Authorization"] = f"Bearer {api_key}"
-
-            session = async_get_clientsession(self.hass)
-            async with session.get(
-                format_url(
-                    hostname=self.model_config[CONF_HOST],
-                    port=self.model_config[CONF_PORT],
-                    ssl=self.model_config[CONF_SSL],
-                    path=f"/{api_base_path}/models"
-                ),
-                timeout=5, # quick timeout
-                headers=headers
-            ) as response:
-                response.raise_for_status()
-                models_result = await response.json()
-
-            models = [ model["id"] for model in models_result["data"] ]
-
-            for model in models:
-                if model == self.model_config[CONF_CHAT_MODEL]:
-                    return None, None, []
-
-            return "missing_model_api", None, models
-
-        except Exception as ex:
-            _LOGGER.info("Connection error was: %s", repr(ex))
-            return "failed_to_connect", ex, []
-
-    async def _async_validate_text_generation_webui(self, user_input: dict) -> tuple:
-        """
-        Validates a connection to text-generation-webui and that the model exists on the remote server
-
-        :param user_input: the input dictionary used to build the connection
-        :return: a tuple of (error message name, exception detail); both can be None
-        """
-        try:
-            headers = {}
-            api_key = user_input.get(CONF_TEXT_GEN_WEBUI_ADMIN_KEY, user_input.get(CONF_OPENAI_API_KEY))
-            if api_key:
-                headers["Authorization"] = f"Bearer {api_key}"
-
-            session = async_get_clientsession(self.hass)
-            async with session.get(
-                format_url(
-                    hostname=self.model_config[CONF_HOST],
-                    port=self.model_config[CONF_PORT],
-                    ssl=self.model_config[CONF_SSL],
-                    path="/v1/internal/model/list"
-                ),
-                timeout=5, # quick timeout
-                headers=headers
-            ) as response:
-                response.raise_for_status()
-                models = await response.json()
-
-            for model in models["model_names"]:
-                if model == self.model_config[CONF_CHAT_MODEL].replace("/", "_"):
-                    return None, None, []
-
-            return "missing_model_api", None, models["model_names"]
-
-        except Exception as ex:
-            _LOGGER.info("Connection error was: %s", repr(ex))
-            return "failed_to_connect", ex, []
-
-    async def _async_validate_ollama(self, user_input: dict) -> tuple:
-        """
-        Validates a connection to ollama and that the model exists on the remote server
-
-        :param user_input: the input dictionary used to build the connection
-        :return: a tuple of (error message name, exception detail); both can be None
-        """
-        try:
-            headers = {}
-            api_key = user_input.get(CONF_OPENAI_API_KEY)
-            if api_key:
-                headers["Authorization"] = f"Bearer {api_key}"
-
-            session = async_get_clientsession(self.hass)
-            async with session.get(
-                format_url(
-                    hostname=self.model_config[CONF_HOST],
-                    port=self.model_config[CONF_PORT],
-                    ssl=self.model_config[CONF_SSL],
-                    path="/api/tags"
-                ),
-                timeout=5, # quick timeout
-                headers=headers
-            ) as response:
-                response.raise_for_status()
-                models_result = await response.json()
-
-            for model in models_result["models"]:
-                model_name = self.model_config[CONF_CHAT_MODEL]
-                if model["name"] == model_name:
-                    return (None, None, [])
-
-            return "missing_model_api", None, [x["name"] for x in models_result["models"]]
-
-        except Exception as ex:
-            _LOGGER.info("Connection error was: %s", repr(ex))
-            return "failed_to_connect", ex, []
-
-    async def async_step_remote_model(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        errors = {}
-        description_placeholders = {}
-        backend_type = self.model_config[CONF_BACKEND_TYPE]
-        schema = STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type)
-
-        if user_input:
-            try:
-                self.selected_language = user_input.pop(CONF_SELECTED_LANGUAGE, self.hass.config.language)
-
-                self.model_config.update(user_input)
-                error_message = None
-
-                # validate and load when using text-generation-webui or ollama
-                if backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
-                    error_message, ex, possible_models = await self._async_validate_text_generation_webui(user_input)
-                elif backend_type == BACKEND_TYPE_OLLAMA:
-                    error_message, ex, possible_models = await self._async_validate_ollama(user_input)
-                elif backend_type in [BACKEND_TYPE_GENERIC_OPENAI, BACKEND_TYPE_GENERIC_OPENAI_RESPONSES] and \
-                    user_input.get(CONF_GENERIC_OPENAI_VALIDATE_MODEL, DEFAULT_GENERIC_OPENAI_VALIDATE_MODEL):
-                    error_message, ex, possible_models = await self._async_validate_generic_openai(user_input)
-                else:
-                    possible_models = []
-
-                if error_message:
-                    errors["base"] = error_message
-                    if ex:
-                        description_placeholders["exception"] = str(ex)
-                    schema = STEP_REMOTE_SETUP_DATA_SCHEMA(
-                        backend_type,
-                        host=user_input[CONF_HOST],
-                        port=user_input[CONF_PORT],
-                        ssl=user_input[CONF_SSL],
-                        chat_model=user_input[CONF_CHAT_MODEL],
-                        available_chat_models=possible_models,
-                        selected_language=self.selected_language,
-                        selected_path=user_input.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH),
-                    )
-                else:
-                    return await self.async_step_model_parameters()
-
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-
-        return self.async_show_form(
-            step_id="remote_model", data_schema=schema, errors=errors, description_placeholders=description_placeholders, last_step=False
-        )
-
-    async def async_step_model_parameters(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        errors = {}
-        description_placeholders = {}
-        backend_type = self.model_config[CONF_BACKEND_TYPE]
-        model_name = self.model_config[CONF_CHAT_MODEL].lower()
-
-        selected_default_options = { **DEFAULT_OPTIONS }
-        for key in OPTIONS_OVERRIDES.keys():
-            if key in model_name:
-                selected_default_options.update(OPTIONS_OVERRIDES[key])
-                break
-
-        persona = PERSONA_PROMPTS.get(self.selected_language, PERSONA_PROMPTS.get("en"))
-        current_date = CURRENT_DATE_PROMPT.get(self.selected_language, CURRENT_DATE_PROMPT.get("en"))
-        devices = DEVICES_PROMPT.get(self.selected_language, DEVICES_PROMPT.get("en"))
-        services = SERVICES_PROMPT.get(self.selected_language, SERVICES_PROMPT.get("en"))
-        tools = TOOLS_PROMPT.get(self.selected_language, TOOLS_PROMPT.get("en"))
-        area = AREA_PROMPT.get(self.selected_language, AREA_PROMPT.get("en"))
-        user_instruction = USER_INSTRUCTION.get(self.selected_language, USER_INSTRUCTION.get("en"))
-
-        selected_default_options[CONF_PROMPT] = selected_default_options[CONF_PROMPT].replace("<persona>", persona)
-        selected_default_options[CONF_PROMPT] = selected_default_options[CONF_PROMPT].replace("<current_date>", current_date)
-        selected_default_options[CONF_PROMPT] = selected_default_options[CONF_PROMPT].replace("<devices>", devices)
-        selected_default_options[CONF_PROMPT] = selected_default_options[CONF_PROMPT].replace("<services>", services)
-        selected_default_options[CONF_PROMPT] = selected_default_options[CONF_PROMPT].replace("<tools>", tools)
-        selected_default_options[CONF_PROMPT] = selected_default_options[CONF_PROMPT].replace("<area>", area)
-        selected_default_options[CONF_PROMPT] = selected_default_options[CONF_PROMPT].replace("<user_instruction>", user_instruction)
-
-        schema = vol.Schema(local_llama_config_option_schema(self.hass, selected_default_options, backend_type))
-
-        if user_input:
-            if not user_input.get(CONF_REFRESH_SYSTEM_PROMPT) and user_input.get(CONF_PROMPT_CACHING_ENABLED):
-                errors["base"] = "sys_refresh_caching_enabled"
-
-            if user_input.get(CONF_USE_GBNF_GRAMMAR):
-                filename = user_input.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE)
-                if not os.path.isfile(os.path.join(os.path.dirname(__file__), filename)):
-                    errors["base"] = "missing_gbnf_file"
-                    description_placeholders["filename"] = filename
-
-            if user_input.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES):
-                filename = user_input.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE)
-                if not os.path.isfile(os.path.join(os.path.dirname(__file__), filename)):
-                    errors["base"] = "missing_icl_file"
-                    description_placeholders["filename"] = filename
-
-            if user_input[CONF_LLM_HASS_API] == "none":
-                user_input.pop(CONF_LLM_HASS_API)
-
-            if len(errors) == 0:
-                try:
-                    # validate input
-                    schema(user_input)
-
-                    self.options = user_input
-                    return await self.async_step_finish()
-                except Exception as ex:
-                    _LOGGER.exception("An unknown error has occurred!")
-                    errors["base"] = "unknown"
-
-        return self.async_show_form(
-            step_id="model_parameters", data_schema=schema, errors=errors, description_placeholders=description_placeholders,
-        )
-
-    async def async_step_finish(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-
-        model_name = self.model_config.get(CONF_CHAT_MODEL)
-        backend = self.model_config[CONF_BACKEND_TYPE]
-        if backend == BACKEND_TYPE_LLAMA_EXISTING:
-            model_name = os.path.basename(self.model_config.get(CONF_DOWNLOADED_MODEL_FILE))
-        location = "llama.cpp" if is_local_backend(backend) else "remote"
-
-        _LOGGER.debug(f"creating model with config: {self.model_config}")
-        _LOGGER.debug(f"options: {self.options}")
-
-        return self.async_create_entry(
-            title=f"LLM Model '{model_name}' ({location})",
-            description="A Large Language Model Chat Agent",
-            data=self.model_config,
-            options=self.options,
-        )
-
-    @staticmethod
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
-        """Create the options flow."""
-        return OptionsFlow()
-
-
-class OptionsFlow(config_entries.OptionsFlow):
-    """Local LLM config flow options handler."""
-
-    @property
-    def config_entry(self):
-        return self.hass.config_entries.async_get_entry(self.handler)
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Manage the options."""
-        errors = {}
-        description_placeholders = {}
-
-        if user_input is not None:
-            if not user_input.get(CONF_REFRESH_SYSTEM_PROMPT) and user_input.get(CONF_PROMPT_CACHING_ENABLED):
-                errors["base"] = "sys_refresh_caching_enabled"
-
-            if user_input.get(CONF_USE_GBNF_GRAMMAR):
-                filename = user_input.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE)
-                if not os.path.isfile(os.path.join(os.path.dirname(__file__), filename)):
-                    errors["base"] = "missing_gbnf_file"
-                    description_placeholders["filename"] = filename
-
-            if user_input.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES):
-                filename = user_input.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE)
-                if not os.path.isfile(os.path.join(os.path.dirname(__file__), filename)):
-                    errors["base"] = "missing_icl_file"
-                    description_placeholders["filename"] = filename
-
-            if user_input[CONF_LLM_HASS_API] == "none":
-                user_input.pop(CONF_LLM_HASS_API)
-
-            if len(errors) == 0:
-                return self.async_create_entry(title="Local LLM Conversation", data=user_input)
-
-        schema = local_llama_config_option_schema(
-            self.hass,
-            self.config_entry.options,
-            self.config_entry.data[CONF_BACKEND_TYPE],
-        )
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(schema),
-            errors=errors,
-            description_placeholders=description_placeholders,
-        )
-
-
-
-
-def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyType[str, Any], backend_type: str) -> dict:
-    """Return a schema for Local LLM completion options."""
+def build_prompt_template(selected_language: str, prompt_template_template: str):
+    persona = PERSONA_PROMPTS.get(selected_language, PERSONA_PROMPTS["en"])
+    current_date = CURRENT_DATE_PROMPT.get(selected_language, CURRENT_DATE_PROMPT["en"])
+    devices = DEVICES_PROMPT.get(selected_language, DEVICES_PROMPT["en"])
+    services = SERVICES_PROMPT.get(selected_language, SERVICES_PROMPT["en"])
+    tools = TOOLS_PROMPT.get(selected_language, TOOLS_PROMPT["en"])
+    area = AREA_PROMPT.get(selected_language, AREA_PROMPT["en"])
+    user_instruction = USER_INSTRUCTION.get(selected_language, USER_INSTRUCTION["en"])
+
+    prompt_template_template = prompt_template_template.replace("<persona>", persona)
+    prompt_template_template = prompt_template_template.replace("<current_date>", current_date)
+    prompt_template_template = prompt_template_template.replace("<devices>", devices)
+    prompt_template_template = prompt_template_template.replace("<services>", services)
+    prompt_template_template = prompt_template_template.replace("<tools>", tools)
+    prompt_template_template = prompt_template_template.replace("<area>", area)
+    prompt_template_template = prompt_template_template.replace("<user_instruction>", user_instruction)
+
+    return prompt_template_template
+
+def local_llama_config_option_schema(
+    hass: HomeAssistant,
+    parent_options: MappingProxyType[str, Any],
+    options: MappingProxyType[str, Any],
+    backend_type: str, 
+    subentry_type: str,
+) -> dict:
     if not options:
         options = DEFAULT_OPTIONS
 
-    result = {
-        vol.Required(
+    default_prompt = build_prompt_template(parent_options[CONF_SELECTED_LANGUAGE], DEFAULT_PROMPT)
+
+    # TODO: we need to make this the "model config" i.e. each subentry defines all of the things to define
+    # the model and the parent entry just defines the "connection options" (or llama-cpp-python version)
+
+    # will also need to move the model download steps to the config sub-entry
+
+    result: dict = {
+        vol.Optional(
             CONF_PROMPT,
-            description={"suggested_value": options.get(CONF_PROMPT)},
-            default=options[CONF_PROMPT],
+            description={"suggested_value": options.get(CONF_PROMPT, default_prompt)},
+            default=options.get(CONF_PROMPT, default_prompt),
         ): TemplateSelector(),
-        vol.Required(
-            CONF_MAX_TOOL_CALL_ITERATIONS,
-            description={"suggested_value": options.get(CONF_MAX_TOOL_CALL_ITERATIONS)},
-            default=DEFAULT_MAX_TOOL_CALL_ITERATIONS,
-        ): int,
+        vol.Optional(
+            CONF_TEMPERATURE,
+            description={"suggested_value": options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)},
+            default=options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE),
+        ): NumberSelector(NumberSelectorConfig(min=0.0, max=2.0, step=0.05, mode=NumberSelectorMode.BOX)),
         vol.Required(
             CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
             description={"suggested_value": options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES)},
@@ -893,22 +566,7 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
             CONF_TOOL_CALL_SUFFIX,
             description={"suggested_value": options.get(CONF_TOOL_CALL_SUFFIX)},
             default=DEFAULT_TOOL_CALL_SUFFIX,
-        ): str,
-        vol.Required(
-            CONF_REFRESH_SYSTEM_PROMPT,
-            description={"suggested_value": options.get(CONF_REFRESH_SYSTEM_PROMPT)},
-            default=DEFAULT_REFRESH_SYSTEM_PROMPT,
-        ): BooleanSelector(BooleanSelectorConfig()),
-        vol.Required(
-            CONF_REMEMBER_CONVERSATION,
-            description={"suggested_value": options.get(CONF_REMEMBER_CONVERSATION)},
-            default=DEFAULT_REMEMBER_CONVERSATION,
-        ): BooleanSelector(BooleanSelectorConfig()),
-        vol.Optional(
-            CONF_REMEMBER_NUM_INTERACTIONS,
-            description={"suggested_value": options.get(CONF_REMEMBER_NUM_INTERACTIONS)},
-            default=DEFAULT_REMEMBER_NUM_INTERACTIONS,
-        ): int,
+        ): str
     }
 
     if is_local_backend(backend_type):
@@ -918,11 +576,6 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
                 description={"suggested_value": options.get(CONF_TOP_K)},
                 default=DEFAULT_TOP_K,
             ): NumberSelector(NumberSelectorConfig(min=1, max=256, step=1)),
-            vol.Required(
-                CONF_TEMPERATURE,
-                description={"suggested_value": options.get(CONF_TEMPERATURE)},
-                default=DEFAULT_TEMPERATURE,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=3, step=0.05)),
             vol.Required(
                 CONF_TOP_P,
                 description={"suggested_value": options.get(CONF_TOP_P)},
@@ -998,11 +651,6 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
                 default=DEFAULT_TOP_K,
             ): NumberSelector(NumberSelectorConfig(min=1, max=256, step=1)),
             vol.Required(
-                CONF_TEMPERATURE,
-                description={"suggested_value": options.get(CONF_TEMPERATURE)},
-                default=DEFAULT_TEMPERATURE,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=3, step=0.05)),
-            vol.Required(
                 CONF_TOP_P,
                 description={"suggested_value": options.get(CONF_TOP_P)},
                 default=DEFAULT_TOP_P,
@@ -1039,11 +687,6 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
         })
     elif backend_type in BACKEND_TYPE_GENERIC_OPENAI:
         result.update({
-            vol.Required(
-                CONF_TEMPERATURE,
-                description={"suggested_value": options.get(CONF_TEMPERATURE)},
-                default=DEFAULT_TEMPERATURE,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=3, step=0.05)),
             vol.Required(
                 CONF_TOP_P,
                 description={"suggested_value": options.get(CONF_TOP_P)},
@@ -1092,11 +735,6 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
                 default=DEFAULT_TOP_K,
             ): NumberSelector(NumberSelectorConfig(min=1, max=256, step=1)),
             vol.Required(
-                CONF_TEMPERATURE,
-                description={"suggested_value": options.get(CONF_TEMPERATURE)},
-                default=DEFAULT_TEMPERATURE,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=3, step=0.05)),
-            vol.Required(
                 CONF_TOP_P,
                 description={"suggested_value": options.get(CONF_TOP_P)},
                 default=DEFAULT_TOP_P,
@@ -1125,20 +763,10 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
     elif backend_type == BACKEND_TYPE_OLLAMA:
         result.update({
             vol.Required(
-                CONF_CONTEXT_LENGTH,
-                description={"suggested_value": options.get(CONF_CONTEXT_LENGTH)},
-                default=DEFAULT_CONTEXT_LENGTH,
-            ): NumberSelector(NumberSelectorConfig(min=512, max=32768, step=1)),
-            vol.Required(
                 CONF_TOP_K,
                 description={"suggested_value": options.get(CONF_TOP_K)},
                 default=DEFAULT_TOP_K,
             ): NumberSelector(NumberSelectorConfig(min=1, max=256, step=1)),
-            vol.Required(
-                CONF_TEMPERATURE,
-                description={"suggested_value": options.get(CONF_TEMPERATURE)},
-                default=DEFAULT_TEMPERATURE,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=3, step=0.05)),
             vol.Required(
                 CONF_TOP_P,
                 description={"suggested_value": options.get(CONF_TOP_P)},
@@ -1166,6 +794,53 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
             ): NumberSelector(NumberSelectorConfig(min=-1, max=1440, step=1, unit_of_measurement=UnitOfTime.MINUTES, mode=NumberSelectorMode.BOX)),
         })
 
+    if subentry_type == "conversation":
+        apis: list[SelectOptionDict] = [
+            SelectOptionDict(
+                label="No control",
+                value="none",
+            )
+        ]
+        apis.extend(
+            SelectOptionDict(
+                label=api.name,
+                value=api.id,
+            )
+            for api in llm.async_get_apis(hass)
+        )
+        result.update({
+            vol.Optional(
+                CONF_LLM_HASS_API,
+                description={"suggested_value": options.get(CONF_LLM_HASS_API)},
+                default="none",
+            ): SelectSelector(SelectSelectorConfig(options=apis)),
+            vol.Optional(
+                CONF_REFRESH_SYSTEM_PROMPT,
+                description={"suggested_value": options.get(CONF_REFRESH_SYSTEM_PROMPT, DEFAULT_REFRESH_SYSTEM_PROMPT)},
+                default=options.get(CONF_REFRESH_SYSTEM_PROMPT, DEFAULT_REFRESH_SYSTEM_PROMPT),
+            ): BooleanSelector(BooleanSelectorConfig()),
+            vol.Optional(
+                CONF_REMEMBER_CONVERSATION,
+                description={"suggested_value": options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION)},
+                default=options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION),
+            ): BooleanSelector(BooleanSelectorConfig()),
+            vol.Optional(
+                CONF_REMEMBER_NUM_INTERACTIONS,
+                description={"suggested_value": options.get(CONF_REMEMBER_NUM_INTERACTIONS, DEFAULT_REMEMBER_NUM_INTERACTIONS)},
+                default=options.get(CONF_REMEMBER_NUM_INTERACTIONS, DEFAULT_REMEMBER_NUM_INTERACTIONS),
+            ): NumberSelector(NumberSelectorConfig(min=0, max=100, mode=NumberSelectorMode.BOX)),
+            vol.Optional(
+                CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
+                description={"suggested_value": options.get(CONF_REMEMBER_CONVERSATION_TIME_MINUTES, DEFAULT_REMEMBER_CONVERSATION)},
+                default=options.get(CONF_REMEMBER_CONVERSATION_TIME_MINUTES, DEFAULT_REMEMBER_CONVERSATION),
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1440, mode=NumberSelectorMode.BOX)),
+            vol.Required(
+                CONF_MAX_TOOL_CALL_ITERATIONS,
+                description={"suggested_value": options.get(CONF_MAX_TOOL_CALL_ITERATIONS)},
+                default=DEFAULT_MAX_TOOL_CALL_ITERATIONS,
+            ): int,
+        })
+
     # sort the options
     global_order = [
         # general
@@ -1173,14 +848,12 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
         CONF_PROMPT,
         CONF_CONTEXT_LENGTH,
         CONF_MAX_TOKENS,
-        CONF_OPENAI_API_KEY,
-        CONF_REQUEST_TIMEOUT,
         # sampling parameters
         CONF_TEMPERATURE,
-        CONF_TOP_K,
         CONF_TOP_P,
         CONF_MIN_P,
-        CONF_TYPICAL_P,
+        CONF_TYPICAL_P
+        CONF_TOP_K,
         # tool calling/reasoning
         CONF_THINKING_PREFIX,
         CONF_THINKING_SUFFIX,
@@ -1225,150 +898,248 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
         """Initialize the subentry flow."""
         super().__init__()
 
-        self._name = None
-        self._config_data = None
+        # state for subentry flow
+        self.model_config: dict[str, Any] = {}
+        self.download_task = None
+        self.download_error = None
+        self.internal_step = "pick_model"
 
     @property
     def _is_new(self) -> bool:
         """Return if this is a new subentry."""
         return self.source == "user"
 
-    async def async_step_init(
+    @property
+    def _client(self) -> LocalLLMClient:
+        """Return the Ollama client."""
+        entry: LocalLLMConfigEntry = self._get_entry()
+        return entry.runtime_data
+
+    async def async_step_pick_model(
+        self, user_input: dict[str, Any] | None,
+        entry: LocalLLMConfigEntry
+    ) -> SubentryFlowResult:
+        schema = vol.Schema({})
+        errors = {}
+        description_placeholders = {}
+
+        if not self.model_config:
+            self.model_config = {}
+
+        backend_type = entry.options.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE)
+        if backend_type == BACKEND_TYPE_LLAMA_HF_SETUP:
+            schema = STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA()
+        elif backend_type == BACKEND_TYPE_LLAMA_EXISTING_SETUP:
+            schema = STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA()
+        else:
+            schema = STEP_REMOTE_MODEL_SELECTION_DATA_SCHEMA(await entry.runtime_data.async_get_available_models())
+
+        if self.download_error:
+            if isinstance(self.download_error, MissingQuantizationException):
+                available_quants = list(set(self.download_error.available_quants).intersection(set(CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS)))
+
+                if len(available_quants) == 0:
+                    errors["base"] = "no_supported_ggufs"
+                    schema = STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(
+                        chat_model=self.model_config[CONF_CHAT_MODEL],
+                        downloaded_model_quantization=self.model_config[CONF_DOWNLOADED_MODEL_QUANTIZATION],
+                    )
+                else:
+                    errors["base"] = "missing_quantization"
+                    description_placeholders["missing"] = self.download_error.missing_quant
+                    description_placeholders["available"] = ", ".join(self.download_error.available_quants)
+
+                    schema = STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(
+                        chat_model=self.model_config[CONF_CHAT_MODEL],
+                        downloaded_model_quantization=self.download_error.available_quants[0],
+                        available_quantizations=available_quants,
+                    )
+            else:
+                errors["base"] = "download_failed"
+                description_placeholders["exception"] = str(self.download_error)
+                schema = STEP_LOCAL_SETUP_DOWNLOAD_DATA_SCHEMA(
+                    chat_model=self.model_config[CONF_CHAT_MODEL],
+                    downloaded_model_quantization=self.model_config[CONF_DOWNLOADED_MODEL_QUANTIZATION],
+                )
+
+        if user_input and "result" not in user_input:
+
+            self.model_config.update(user_input)
+
+            if backend_type == BACKEND_TYPE_LLAMA_HF_SETUP:
+                return await self.async_step_download(entry)
+            elif backend_type == BACKEND_TYPE_LLAMA_EXISTING_SETUP:
+                model_file = self.model_config[CONF_DOWNLOADED_MODEL_FILE]
+                if os.path.exists(model_file):
+                    self.model_config[CONF_CHAT_MODEL] = os.path.basename(model_file)
+                    return await self.async_step_model_parameters(None, entry)
+                else:
+                    errors["base"] = "missing_model_file"
+                    schema = STEP_LOCAL_SETUP_EXISTING_DATA_SCHEMA(model_file)
+            else:
+                return await self.async_step_model_parameters(None, entry)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders=description_placeholders,
+            last_step=False,
+        )
+
+    async def async_step_download(
+        self, entry: LocalLLMConfigEntry
+    ) -> SubentryFlowResult:
+        if not self.download_task:
+            model_name = self.model_config[CONF_CHAT_MODEL]
+            quantization_type = self.model_config[CONF_DOWNLOADED_MODEL_QUANTIZATION]
+
+            storage_folder = os.path.join(self.hass.config.media_dirs.get("local", self.hass.config.path("media")), "models")
+            self.download_task = self.hass.async_add_executor_job(
+                download_model_from_hf, model_name, quantization_type, storage_folder
+            )
+
+            return self.async_show_progress(
+                progress_task=self.download_task,
+                step_id="user",
+                progress_action="download",
+            )
+
+        if self.download_task and not self.download_task.done():
+            return self.async_show_progress(
+                progress_task=self.download_task,
+                step_id="user",
+                progress_action="download",
+            )
+
+        download_exception = self.download_task.exception()
+        if download_exception:
+            _LOGGER.info("Failed to download model: %s", repr(download_exception))
+            self.download_error = download_exception
+            self.internal_step = "select_local_model"
+        else:
+            self.model_config[CONF_DOWNLOADED_MODEL_FILE] = self.download_task.result()
+            self.internal_step = "model_parameters"
+
+        self.download_task = None
+        return self.async_show_progress_done(next_step_id="finish")
+
+    async def async_step_model_parameters(
+        self, user_input: dict[str, Any] | None,
+        entry: LocalLLMConfigEntry,
+    ) -> SubentryFlowResult:
+        errors = {}
+        description_placeholders = {}
+        backend_type = entry.options[CONF_BACKEND_TYPE]
+
+        # determine selected language from model config or parent options
+        selected_language = self.model_config.get(
+            CONF_SELECTED_LANGUAGE, entry.options.get(CONF_SELECTED_LANGUAGE, "en")
+        )
+        model_name = self.model_config.get(CONF_CHAT_MODEL, "").lower()
+
+        selected_default_options = {**DEFAULT_OPTIONS}
+        for key in OPTIONS_OVERRIDES.keys():
+            if key in model_name:
+                selected_default_options.update(OPTIONS_OVERRIDES[key])
+                break
+
+        # Build prompt template using the selected language
+        selected_default_options[CONF_PROMPT] = build_prompt_template(
+            selected_language, selected_default_options.get(CONF_PROMPT, DEFAULT_PROMPT)
+        )
+
+        schema = vol.Schema(
+            local_llama_config_option_schema(
+                self.hass,
+                entry.options,
+                MappingProxyType(selected_default_options),
+                backend_type,
+                self._subentry_type,
+            )
+        )
+
+        if user_input:
+            if not user_input.get(CONF_REFRESH_SYSTEM_PROMPT) and user_input.get(CONF_PROMPT_CACHING_ENABLED):
+                errors["base"] = "sys_refresh_caching_enabled"
+
+            if user_input.get(CONF_USE_GBNF_GRAMMAR):
+                filename = user_input.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE)
+                if not os.path.isfile(os.path.join(os.path.dirname(__file__), filename)):
+                    errors["base"] = "missing_gbnf_file"
+                    description_placeholders["filename"] = filename
+
+            if user_input.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES):
+                filename = user_input.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE)
+                if not os.path.isfile(os.path.join(os.path.dirname(__file__), filename)):
+                    errors["base"] = "missing_icl_file"
+                    description_placeholders["filename"] = filename
+
+            if user_input[CONF_LLM_HASS_API] == "none":
+                user_input.pop(CONF_LLM_HASS_API)
+
+            if len(errors) == 0:
+                try:
+                    # validate input
+                    schema(user_input)
+
+                    self.model_config.update(user_input)
+
+                    return await self.async_step_finish()
+                except Exception:
+                    _LOGGER.exception("An unknown error has occurred!")
+                    errors["base"] = "unknown"
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders=description_placeholders,
+        )
+    
+    async def async_step_failed(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Step after model downloading has failed."""
+        return self.async_abort(reason="download_failed")
+
+    async def async_step_finish(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Step after model downloading has succeeded."""
+
+        # Model download completed, create/update the entry with stored config
+        if self._is_new:
+            return self.async_create_entry(
+                title=self.model_config.get(CONF_CHAT_MODEL, "Model"),
+                data=self.model_config,
+            )
+        else:
+            return self.async_update_and_abort(
+                self._get_entry(), self._get_reconfigure_subentry(), data=self.model_config
+            )
+
+    async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Handle model selection and configuration step."""
+        entry: LocalLLMConfigEntry = self._get_entry()
+
         # Ensure the parent entry is loaded before allowing subentry edits
-        if self._get_entry().state != config_entries.ConfigEntryState.LOADED:
+        if entry.state != ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
-        if user_input is not None:
-            if not user_input:
-                if self._is_new:
-                    return self.async_abort(reason="no_changes")
-                # No changes submitted -> return existing subentry data
-                return self.async_create_entry(data=dict(self._get_reconfigure_subentry().data))
-
-            # Create a new subentry or update an existing one
-            if self._is_new:
-                return self.async_create_entry(data=user_input)
-
-            return self.async_update_and_abort(
-                self._get_entry(), self._get_reconfigure_subentry(), data=user_input
-            )
-
-        # Generate schema with only the configurable parameters for subentries
-        if self._is_new:
-            options: dict[str, Any] = {}
+        if self.internal_step == "pick_model":
+            return await self.async_step_pick_model(user_input, entry)
+        elif self.internal_step == "download":
+            return await self.async_step_download(entry)
+        elif self.internal_step == "model_parameters":
+            return await self.async_step_model_parameters(user_input, entry)
         else:
-            options = dict(self._get_reconfigure_subentry().data)
+            return self.async_abort(reason="unknown_internal_step")
+        
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None):
+        return await self.async_step_model_parameters(user_input, self._get_entry())
 
-        backend_type = self._get_entry().data[CONF_BACKEND_TYPE]
-        schema = vol.Schema(local_llama_config_subentry_schema(self.hass, MappingProxyType(options), backend_type, self._subentry_type))
-
-        return self.async_show_form(step_id="init", data_schema=schema)
-
-    async_step_user = async_step_init
-    async_step_reconfigure = async_step_init
-
-def local_llama_config_subentry_schema(
-    hass: HomeAssistant,
-    data: MappingProxyType[str, Any],
-    backend_type: str, 
-    subentry_type: str
-) -> dict:
-    """Return a schema dict for subentry (conversation) options.
-
-    This intentionally only exposes prompt + sampling parameters for subentries.
-    """
-    options = dict(data) if data else {}
-
-    # TODO: only expose options that are relevant to the backend_type
-    # TODO: remove the options from the main config flow
-    # TODO: sort entries properly using global order
-
-    result: dict = {
-        vol.Optional(
-            CONF_PROMPT,
-            description={"suggested_value": options.get(CONF_PROMPT, "")},
-            default=options.get(CONF_PROMPT, ""),
-        ): TemplateSelector(),
-        vol.Optional(
-            CONF_TEMPERATURE,
-            description={"suggested_value": options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)},
-            default=options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE),
-        ): NumberSelector(NumberSelectorConfig(min=0.0, max=2.0, step=0.05, mode=NumberSelectorMode.BOX)),
-        vol.Optional(
-            CONF_TOP_K,
-            description={"suggested_value": options.get(CONF_TOP_K, DEFAULT_TOP_K)},
-            default=options.get(CONF_TOP_K, DEFAULT_TOP_K),
-        ): NumberSelector(NumberSelectorConfig(min=1, max=500, mode=NumberSelectorMode.BOX)),
-        vol.Optional(
-            CONF_TOP_P,
-            description={"suggested_value": options.get(CONF_TOP_P, DEFAULT_TOP_P)},
-            default=options.get(CONF_TOP_P, DEFAULT_TOP_P),
-        ): NumberSelector(NumberSelectorConfig(min=0.0, max=1.0, step=0.05, mode=NumberSelectorMode.BOX)),
-        vol.Optional(
-            CONF_MIN_P,
-            description={"suggested_value": options.get(CONF_MIN_P, DEFAULT_MIN_P)},
-            default=options.get(CONF_MIN_P, DEFAULT_MIN_P),
-        ): NumberSelector(NumberSelectorConfig(min=0.0, max=1.0, step=0.05, mode=NumberSelectorMode.BOX)),
-        vol.Optional(
-            CONF_TYPICAL_P,
-            description={"suggested_value": options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)},
-            default=options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P),
-        ): NumberSelector(NumberSelectorConfig(min=0.0, max=1.0, step=0.05, mode=NumberSelectorMode.BOX)),
-        vol.Optional(
-            CONF_REFRESH_SYSTEM_PROMPT,
-            description={"suggested_value": options.get(CONF_REFRESH_SYSTEM_PROMPT, DEFAULT_REFRESH_SYSTEM_PROMPT)},
-            default=options.get(CONF_REFRESH_SYSTEM_PROMPT, DEFAULT_REFRESH_SYSTEM_PROMPT),
-        ): BooleanSelector(BooleanSelectorConfig()),
-        vol.Optional(
-            CONF_REMEMBER_CONVERSATION,
-            description={"suggested_value": options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION)},
-            default=options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION),
-        ): BooleanSelector(BooleanSelectorConfig()),
-        vol.Optional(
-            CONF_REMEMBER_NUM_INTERACTIONS,
-            description={"suggested_value": options.get(CONF_REMEMBER_NUM_INTERACTIONS, DEFAULT_REMEMBER_NUM_INTERACTIONS)},
-            default=options.get(CONF_REMEMBER_NUM_INTERACTIONS, DEFAULT_REMEMBER_NUM_INTERACTIONS),
-        ): NumberSelector(NumberSelectorConfig(min=0, max=100, mode=NumberSelectorMode.BOX)),
-        vol.Optional(
-            CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
-            description={"suggested_value": options.get(CONF_REMEMBER_CONVERSATION_TIME_MINUTES, DEFAULT_REMEMBER_CONVERSATION)},
-            default=options.get(CONF_REMEMBER_CONVERSATION_TIME_MINUTES, DEFAULT_REMEMBER_CONVERSATION),
-        ): NumberSelector(NumberSelectorConfig(min=0, max=1440, mode=NumberSelectorMode.BOX)),
-    }
-
-    if subentry_type == "conversation":
-        apis: list[SelectOptionDict] = [
-            SelectOptionDict(
-                label="No control",
-                value="none",
-            )
-        ]
-        apis.extend(
-            SelectOptionDict(
-                label=api.name,
-                value=api.id,
-            )
-            for api in llm.async_get_apis(hass)
-        )
-        result.update({
-            vol.Optional(
-                CONF_LLM_HASS_API,
-                description={"suggested_value": options.get(CONF_LLM_HASS_API)},
-                default="none",
-            ): SelectSelector(SelectSelectorConfig(options=apis)),
-            vol.Optional(
-                CONF_REMEMBER_CONVERSATION,
-                description={"suggested_value": options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION)},
-                default=options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION),
-            ): BooleanSelector(BooleanSelectorConfig()),
-            vol.Optional(
-                CONF_REMEMBER_NUM_INTERACTIONS,
-                description={"suggested_value": options.get(CONF_REMEMBER_NUM_INTERACTIONS, DEFAULT_REMEMBER_NUM_INTERACTIONS)},
-                default=options.get(CONF_REMEMBER_NUM_INTERACTIONS, DEFAULT_REMEMBER_NUM_INTERACTIONS),
-            ): int,
-        })
-
-    return result
+    async_step_init = async_step_user

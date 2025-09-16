@@ -108,6 +108,17 @@
             }
         }
     },
+    "config_subentries": {
+        "conversation": {
+            "initiate_flow": {
+                "user": "Add conversation agent",
+                "reconfigure": "Reconfigure conversation agent"
+            },
+            "entry_type": "Conversation agent",
+            "step": {
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

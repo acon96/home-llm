@@ -170,7 +170,7 @@ def validate_llama_cpp_python_installation():
 def get_llama_cpp_python_version():
     if not is_installed("llama-cpp-python"):
         return None
-    return version("llama-cpp-python")
+    return version("llama-cpp-python").split("+")[0]
 
 def install_llama_cpp_python(config_dir: str):
 

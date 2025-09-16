@@ -20,6 +20,7 @@ from homeassistant.helpers.event import async_track_state_change, async_call_lat
 
 from custom_components.llama_conversation.utils import install_llama_cpp_python, validate_llama_cpp_python_installation, get_oai_formatted_messages, get_oai_formatted_tools, parse_raw_tool_call
 from custom_components.llama_conversation.const import (
+    CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_TEMPERATURE,
@@ -66,69 +67,76 @@ else:
 
 _LOGGER = logging.getLogger(__name__)
 
+def snapshot_settings(options: dict[str, Any]) -> dict[str, Any]:
+    return {
+        CONF_DOWNLOADED_MODEL_FILE: options.get(CONF_DOWNLOADED_MODEL_FILE, ""),
+        CONF_CONTEXT_LENGTH: options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH),
+        CONF_LLAMACPP_BATCH_SIZE: options.get(CONF_LLAMACPP_BATCH_SIZE, DEFAULT_LLAMACPP_BATCH_SIZE),
+        CONF_LLAMACPP_THREAD_COUNT: options.get(CONF_LLAMACPP_THREAD_COUNT, DEFAULT_LLAMACPP_THREAD_COUNT),
+        CONF_LLAMACPP_BATCH_THREAD_COUNT: options.get(CONF_LLAMACPP_BATCH_THREAD_COUNT, DEFAULT_LLAMACPP_BATCH_THREAD_COUNT),
+        CONF_LLAMACPP_ENABLE_FLASH_ATTENTION: options.get(CONF_LLAMACPP_ENABLE_FLASH_ATTENTION, DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION),
+        CONF_GBNF_GRAMMAR_FILE: options.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE),
+        CONF_PROMPT_CACHING_ENABLED: options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED),
+    }
+
 
 class LlamaCppClient(LocalLLMClient):
-    model_path: str
-    llm: LlamaType
-    grammar: Any
     llama_cpp_module: Any
-    remove_prompt_caching_listener: Optional[Callable]
+
+    models: dict[str, LlamaType]
+    grammars: dict[str, Any]
+    loaded_model_settings: dict[str, dict[str, Any]]
+
+    # caching properties
     model_lock: threading.Lock
+    remove_prompt_caching_listener: Optional[Callable]
     last_cache_prime: float
     last_updated_entities: dict[str, float]
     cache_refresh_after_cooldown: bool
-    loaded_model_settings: dict[str, Any]
 
     _attr_supports_streaming = True
 
-    def _load_model(self, entry: ConfigEntry) -> None:
-        self.model_path = entry.data.get(CONF_DOWNLOADED_MODEL_FILE, "")
+    async def async_get_available_models(self) -> List[str]:
+        return [] # TODO: copy from config_flow.py
 
-        _LOGGER.info(
-            "Using model file '%s'", self.model_path
-        )
+    def _load_model(self, entity_options: dict[str, Any]) -> None:
+        model_name = entity_options.get(CONF_CHAT_MODEL, "")
+        model_path = entity_options.get(CONF_DOWNLOADED_MODEL_FILE, "")
 
-        if not self.model_path:
-            raise Exception(f"Model was not found at '{self.model_path}'!")
+        _LOGGER.info("Using model file '%s'", model_path)
 
-        validate_llama_cpp_python_installation()
+        if not model_path or not os.path.isfile(model_path):
+            raise Exception(f"Model was not found at '{model_path}'!")
 
-        # don't import it until now because the wheel is installed by config_flow.py
-        try:
-            self.llama_cpp_module = importlib.import_module("llama_cpp")
-        except ModuleNotFoundError:
-            # attempt to re-install llama-cpp-python if it was uninstalled for some reason
-            install_result = install_llama_cpp_python(self.hass.config.config_dir)
-            if not install_result == True:
-                raise ConfigEntryError("llama-cpp-python was not installed on startup and re-installing it led to an error!")
-
+        if not self.llama_cpp_module:
             validate_llama_cpp_python_installation()
-            self.llama_cpp_module = importlib.import_module("llama_cpp")
+
+            # don't import it until now because the wheel is installed by config_flow.py
+            try:
+                self.llama_cpp_module = importlib.import_module("llama_cpp")
+            except ModuleNotFoundError:
+                # attempt to re-install llama-cpp-python if it was uninstalled for some reason
+                install_result = install_llama_cpp_python(self.hass.config.config_dir)
+                if not install_result == True:
+                    raise ConfigEntryError("llama-cpp-python was not installed on startup and re-installing it led to an error!")
+
+                validate_llama_cpp_python_installation()
+                self.llama_cpp_module = importlib.import_module("llama_cpp")
 
         Llama = getattr(self.llama_cpp_module, "Llama")
 
-        _LOGGER.debug(f"Loading model '{self.model_path}'...")
-        self.loaded_model_settings = {}
-        self.loaded_model_settings[CONF_CONTEXT_LENGTH] = entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
-        self.loaded_model_settings[CONF_LLAMACPP_BATCH_SIZE] = entry.options.get(CONF_LLAMACPP_BATCH_SIZE, DEFAULT_LLAMACPP_BATCH_SIZE)
-        self.loaded_model_settings[CONF_LLAMACPP_THREAD_COUNT] = entry.options.get(CONF_LLAMACPP_THREAD_COUNT, DEFAULT_LLAMACPP_THREAD_COUNT)
-        self.loaded_model_settings[CONF_LLAMACPP_BATCH_THREAD_COUNT] = entry.options.get(CONF_LLAMACPP_BATCH_THREAD_COUNT, DEFAULT_LLAMACPP_BATCH_THREAD_COUNT)
-        self.loaded_model_settings[CONF_LLAMACPP_ENABLE_FLASH_ATTENTION] = entry.options.get(CONF_LLAMACPP_ENABLE_FLASH_ATTENTION, DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION)
+        _LOGGER.debug(f"Loading model '{model_path}'...")
+        model_settings = snapshot_settings(entity_options)
 
-        self.llm = Llama(
-            model_path=self.model_path,
-            n_ctx=int(self.loaded_model_settings[CONF_CONTEXT_LENGTH]),
-            n_batch=int(self.loaded_model_settings[CONF_LLAMACPP_BATCH_SIZE]),
-            n_threads=int(self.loaded_model_settings[CONF_LLAMACPP_THREAD_COUNT]),
-            n_threads_batch=int(self.loaded_model_settings[CONF_LLAMACPP_BATCH_THREAD_COUNT]),
-            flash_attn=self.loaded_model_settings[CONF_LLAMACPP_ENABLE_FLASH_ATTENTION],
+        llm = Llama(
+            model_path=model_path,
+            n_ctx=int(model_settings[CONF_CONTEXT_LENGTH]),
+            n_batch=int(model_settings[CONF_LLAMACPP_BATCH_SIZE]),
+            n_threads=int(model_settings[CONF_LLAMACPP_THREAD_COUNT]),
+            n_threads_batch=int(model_settings[CONF_LLAMACPP_BATCH_THREAD_COUNT]),
+            flash_attn=model_settings[CONF_LLAMACPP_ENABLE_FLASH_ATTENTION],
         )
         _LOGGER.debug("Model loaded")
-
-        self.grammar = None
-        if entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
-            self._load_grammar(entry.options.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE))
-
 
         # TODO: check about disk caching
         # self.llm.set_cache(self.llama_cpp_module.LlamaDiskCache(
@@ -142,60 +150,80 @@ class LlamaCppClient(LocalLLMClient):
         self.cache_refresh_after_cooldown = False
         self.model_lock = threading.Lock()
 
-        self.loaded_model_settings[CONF_PROMPT_CACHING_ENABLED] = entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED)
-        if self.loaded_model_settings[CONF_PROMPT_CACHING_ENABLED]:
+        
+        if model_settings[CONF_PROMPT_CACHING_ENABLED]:
             @callback
             async def enable_caching_after_startup(_now) -> None:
-                self._set_prompt_caching(entry.options, enabled=True)
-                await self._async_cache_prompt(None, None, None, entry.options)
+                self._set_prompt_caching(entity_options, enabled=True)
+                await self._async_cache_prompt(None, None, None, entity_options)
             async_call_later(self.hass, 5.0, enable_caching_after_startup)
 
-    def _load_grammar(self, filename: str):
+        self.loaded_model_settings[model_name] = model_settings
+        self.models[model_name] = llm
+
+        self.grammars[model_name] = None
+        if entity_options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
+            self._load_grammar(model_name, entity_options.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE))
+
+
+    def _load_grammar(self, model_name: str, filename: str) -> Any:
         LlamaGrammar = getattr(self.llama_cpp_module, "LlamaGrammar")
         _LOGGER.debug(f"Loading grammar {filename}...")
         try:
             with open(os.path.join(os.path.dirname(__file__), filename)) as f:
                 grammar_str = "".join(f.readlines())
-            self.grammar = LlamaGrammar.from_string(grammar_str)
-            self.loaded_model_settings[CONF_GBNF_GRAMMAR_FILE] = filename
+            self.grammars[model_name] = LlamaGrammar.from_string(grammar_str)
+            self.loaded_model_settings[model_name][CONF_GBNF_GRAMMAR_FILE] = filename
             _LOGGER.debug("Loaded grammar")
         except Exception:
             _LOGGER.exception("Failed to load grammar!")
-            self.grammar = None
+            self.grammars[model_name] = None
 
     def _update_options(self, entity_options: dict[str, Any]):
         LocalLLMClient._update_options(self, entity_options)
 
-        model_reloaded = False
-        if self.loaded_model_settings[CONF_CONTEXT_LENGTH] != entity_options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH) or \
-            self.loaded_model_settings[CONF_LLAMACPP_BATCH_SIZE] != entity_options.get(CONF_LLAMACPP_BATCH_SIZE, DEFAULT_LLAMACPP_BATCH_SIZE) or \
-            self.loaded_model_settings[CONF_LLAMACPP_THREAD_COUNT] != entity_options.get(CONF_LLAMACPP_THREAD_COUNT, DEFAULT_LLAMACPP_THREAD_COUNT) or \
-            self.loaded_model_settings[CONF_LLAMACPP_BATCH_THREAD_COUNT] != entity_options.get(CONF_LLAMACPP_BATCH_THREAD_COUNT, DEFAULT_LLAMACPP_BATCH_THREAD_COUNT) or \
-            self.loaded_model_settings[CONF_LLAMACPP_ENABLE_FLASH_ATTENTION] != entity_options.get(CONF_LLAMACPP_ENABLE_FLASH_ATTENTION, DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION):
+        loaded_options = self.loaded_model_settings.get(entity_options.get(CONF_CHAT_MODEL, ""), None)
 
-            _LOGGER.debug(f"Reloading model '{self.model_path}'...")
-            self.loaded_model_settings[CONF_CONTEXT_LENGTH] = entity_options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
-            self.loaded_model_settings[CONF_LLAMACPP_BATCH_SIZE] = entity_options.get(CONF_LLAMACPP_BATCH_SIZE, DEFAULT_LLAMACPP_BATCH_SIZE)
-            self.loaded_model_settings[CONF_LLAMACPP_THREAD_COUNT] = entity_options.get(CONF_LLAMACPP_THREAD_COUNT, DEFAULT_LLAMACPP_THREAD_COUNT)
-            self.loaded_model_settings[CONF_LLAMACPP_BATCH_THREAD_COUNT] = entity_options.get(CONF_LLAMACPP_BATCH_THREAD_COUNT, DEFAULT_LLAMACPP_BATCH_THREAD_COUNT)
-            self.loaded_model_settings[CONF_LLAMACPP_ENABLE_FLASH_ATTENTION] = entity_options.get(CONF_LLAMACPP_ENABLE_FLASH_ATTENTION, DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION)
+        should_reload = False
+        if not loaded_options:
+            should_reload = True
+        elif loaded_options[CONF_CONTEXT_LENGTH] != entity_options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH):
+            should_reload = True
+        elif loaded_options[CONF_LLAMACPP_BATCH_SIZE] != entity_options.get(CONF_LLAMACPP_BATCH_SIZE, DEFAULT_LLAMACPP_BATCH_SIZE):
+            should_reload = True
+        elif loaded_options[CONF_LLAMACPP_THREAD_COUNT] != entity_options.get(CONF_LLAMACPP_THREAD_COUNT, DEFAULT_LLAMACPP_THREAD_COUNT):
+            should_reload = True
+        elif loaded_options[CONF_LLAMACPP_BATCH_THREAD_COUNT] != entity_options.get(CONF_LLAMACPP_BATCH_THREAD_COUNT, DEFAULT_LLAMACPP_BATCH_THREAD_COUNT):
+            should_reload = True
+        elif loaded_options[CONF_LLAMACPP_ENABLE_FLASH_ATTENTION] != entity_options.get(CONF_LLAMACPP_ENABLE_FLASH_ATTENTION, DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION):
+            should_reload = True
+
+        model_path = entity_options.get(CONF_DOWNLOADED_MODEL_FILE, "")
+        model_name = entity_options.get(CONF_CHAT_MODEL, "")
+
+        if should_reload:
+
+            _LOGGER.debug(f"Reloading model '{model_path}'...")
+            model_settings = snapshot_settings(entity_options)
 
             Llama = getattr(self.llama_cpp_module, "Llama")
-            self.llm = Llama(
-                model_path=self.model_path,
-                n_ctx=int(self.loaded_model_settings[CONF_CONTEXT_LENGTH]),
-                n_batch=int(self.loaded_model_settings[CONF_LLAMACPP_BATCH_SIZE]),
-                n_threads=int(self.loaded_model_settings[CONF_LLAMACPP_THREAD_COUNT]),
-                n_threads_batch=int(self.loaded_model_settings[CONF_LLAMACPP_BATCH_THREAD_COUNT]),
-                flash_attn=self.loaded_model_settings[CONF_LLAMACPP_ENABLE_FLASH_ATTENTION],
+            llm = Llama(
+                model_path=model_path,
+                n_ctx=int(model_settings[CONF_CONTEXT_LENGTH]),
+                n_batch=int(model_settings[CONF_LLAMACPP_BATCH_SIZE]),
+                n_threads=int(model_settings[CONF_LLAMACPP_THREAD_COUNT]),
+                n_threads_batch=int(model_settings[CONF_LLAMACPP_BATCH_THREAD_COUNT]),
+                flash_attn=model_settings[CONF_LLAMACPP_ENABLE_FLASH_ATTENTION],
             )
             _LOGGER.debug("Model loaded")
-            model_reloaded = True
+
+            self.loaded_model_settings[model_name] = model_settings
+            self.models[model_name] = llm
 
         if entity_options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
             current_grammar = entity_options.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE)
             if not self.grammar or self.loaded_model_settings[CONF_GBNF_GRAMMAR_FILE] != current_grammar:
-                self._load_grammar(current_grammar)
+                self._load_grammar(model_name, current_grammar)
         else:
             self.grammar = None
 
@@ -203,7 +231,7 @@ class LlamaCppClient(LocalLLMClient):
             self._set_prompt_caching(entity_options, enabled=True)
 
             if self.loaded_model_settings[CONF_PROMPT_CACHING_ENABLED] != entity_options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED) or \
-                model_reloaded:
+                should_reload:
                 self.loaded_model_settings[CONF_PROMPT_CACHING_ENABLED] = entity_options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED)
 
                 async def cache_current_prompt(_now):
@@ -324,8 +352,9 @@ class LlamaCppClient(LocalLLMClient):
             _LOGGER.debug("Priming model cache via chat completion API...")
 
             try:
+                model_name = entity_options.get(CONF_CHAT_MODEL, "")
                 # avoid strict typing issues from the llama-cpp-python bindings
-                self.llm.create_chat_completion(
+                self.models[model_name].create_chat_completion(
                     messages,
                     tools=tools,
                     temperature=temperature,
@@ -370,6 +399,7 @@ class LlamaCppClient(LocalLLMClient):
                          entity_options: dict[str, Any],
                         ) -> AsyncGenerator[TextGenerationResult, None]:
         """Async generator that yields TextGenerationResult as tokens are produced."""
+        model_name = entity_options.get(CONF_CHAT_MODEL, "")
         max_tokens = entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
         temperature = entity_options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
         top_k = int(entity_options.get(CONF_TOP_K, DEFAULT_TOP_K))
@@ -403,7 +433,7 @@ class LlamaCppClient(LocalLLMClient):
 
         _LOGGER.debug(f"Generating completion with {len(messages)} messages and {len(tools) if tools else 0} tools...")
 
-        chat_completion = self.llm.create_chat_completion(
+        chat_completion = self.models[model_name].create_chat_completion(
             messages,
             tools=tools,
             temperature=temperature,

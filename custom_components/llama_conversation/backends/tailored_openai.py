@@ -96,6 +96,44 @@ class TextGenerationWebuiClient(GenericOpenAIAPIClient):
         request_params["typical_p"] = entity_options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)
 
         return endpoint, request_params
+    
+
+async def _async_validate_text_generation_webui(self, user_input: dict) -> tuple:
+    """
+    Validates a connection to text-generation-webui and that the model exists on the remote server
+
+    :param user_input: the input dictionary used to build the connection
+    :return: a tuple of (error message name, exception detail); both can be None
+    """
+    try:
+        headers = {}
+        api_key = user_input.get(CONF_TEXT_GEN_WEBUI_ADMIN_KEY, user_input.get(CONF_OPENAI_API_KEY))
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+
+        session = async_get_clientsession(self.hass)
+        async with session.get(
+            format_url(
+                hostname=self.model_config[CONF_HOST],
+                port=self.model_config[CONF_PORT],
+                ssl=self.model_config[CONF_SSL],
+                path="/v1/internal/model/list"
+            ),
+            timeout=5, # quick timeout
+            headers=headers
+        ) as response:
+            response.raise_for_status()
+            models = await response.json()
+
+        for model in models["model_names"]:
+            if model == self.model_config[CONF_CHAT_MODEL].replace("/", "_"):
+                return None, None, []
+
+        return "missing_model_api", None, models["model_names"]
+
+    except Exception as ex:
+        _LOGGER.info("Connection error was: %s", repr(ex))
+        return "failed_to_connect", ex, []
 
 class LlamaCppServerClient(GenericOpenAIAPIClient):
     grammar: str

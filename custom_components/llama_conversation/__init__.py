@@ -26,8 +26,7 @@ from .const import (
     DEFAULT_BACKEND_TYPE,
     DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
     DEFAULT_IN_CONTEXT_EXAMPLES_FILE,
-    BACKEND_TYPE_LLAMA_HF,
-    BACKEND_TYPE_LLAMA_EXISTING,
+    BACKEND_TYPE_LLAMA_CPP,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
     BACKEND_TYPE_GENERIC_OPENAI,
     BACKEND_TYPE_GENERIC_OPENAI_RESPONSES,
@@ -64,14 +63,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> 
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry
 
-    icl_examples_filename = None
-    if entry.options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES, DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES):
-        icl_examples_filename = entry.options.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE)
-
     def create_client(backend_type):
         client_cls = None
 
-        if backend_type in [ BACKEND_TYPE_LLAMA_HF, BACKEND_TYPE_LLAMA_EXISTING ]:
+        _LOGGER.debug("Creating Local LLM client of type %s", backend_type)
+
+        if backend_type == BACKEND_TYPE_LLAMA_CPP:
             client_cls = LlamaCppClient
         elif backend_type == BACKEND_TYPE_GENERIC_OPENAI:
             client_cls = GenericOpenAIAPIClient
@@ -86,7 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> 
 
         if client_cls is None:
             raise ValueError(f"Unknown backend type {backend_type}")
-        return client_cls(hass, icl_examples_filename)
+        return client_cls(hass, dict(entry.options))
 
     # create the agent in an executor job because the constructor calls `open()`
     backend_type = entry.data.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE)
@@ -94,9 +91,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> 
 
     # handle updates to the options
     entry.async_on_unload(entry.add_update_listener(update_listener))
-
-    # call load model
-    await entry.runtime_data._async_load_model(entry)
 
     # forward setup to platform to register the entity
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

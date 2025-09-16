@@ -8,6 +8,7 @@ import datetime
 import logging
 from typing import List, Dict, Tuple, AsyncGenerator, Any, Optional
 
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry
@@ -44,27 +45,65 @@ class GenericOpenAIAPIClient(LocalLLMClient):
     """Implements the OpenAPI-compatible text completion and chat completion API backends."""
 
     api_host: str
+    api_base_path: str
     api_key: str
-    model_name: str
 
     _attr_supports_streaming = True
 
-    async def _async_load_model(self, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, client_options: dict[str, Any]) -> None:
+        super().__init__(hass, client_options)
         self.api_host = format_url(
-            hostname=entry.data[CONF_HOST],
-            port=entry.data[CONF_PORT],
-            ssl=entry.data[CONF_SSL],
-            path=""
+            hostname=client_options[CONF_HOST],
+            port=client_options[CONF_PORT],
+            ssl=client_options[CONF_SSL],
+            path="/" + client_options.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
         )
 
-        self.api_key = entry.data.get(CONF_OPENAI_API_KEY, "")
-        self.model_name = entry.data.get(CONF_CHAT_MODEL, "")
+        self.api_key = client_options.get(CONF_OPENAI_API_KEY, "")
+    
+    @staticmethod
+    async def async_validate_connection(hass: HomeAssistant, user_input: Dict[str, Any]) -> bool:
+        headers = {}
+        api_key = user_input.get(CONF_OPENAI_API_KEY)
+        api_base_path = user_input.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+
+        session = async_get_clientsession(hass)
+        async with session.get(
+            format_url(
+                hostname=user_input[CONF_HOST],
+                port=user_input[CONF_PORT],
+                ssl=user_input[CONF_SSL],
+                path=f"/{api_base_path}/models"
+            ),
+            timeout=5, # quick timeout
+            headers=headers
+        ) as response:
+            return response.ok
+
+    async def async_get_available_models(self) -> List[str]:
+        headers = {}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+
+        session = async_get_clientsession(self.hass)
+        async with session.get(
+            f"{self.api_host}/models",
+            timeout=5, # quick timeout
+            headers=headers
+        ) as response:
+            response.raise_for_status()
+            models_result = await response.json()
+            
+        return [ model["id"] for model in models_result["data"] ]
 
     def _generate_stream(self, 
                          conversation: List[conversation.Content],
                          llm_api: llm.APIInstance | None,
                          user_input: conversation.ConversationInput,
                          entity_options: dict[str, Any]) -> AsyncGenerator[TextGenerationResult, None]:
+        model_name = entity_options[CONF_CHAT_MODEL]
         max_tokens = entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
         temperature = entity_options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
         top_p = entity_options.get(CONF_TOP_P, DEFAULT_TOP_P)
@@ -75,7 +114,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         messages = get_oai_formatted_messages(conversation)
 
         request_params = {
-            "model": self.model_name,
+            "model": model_name,
             "stream": True,
             "max_tokens": max_tokens,
             "temperature": temperature,
@@ -166,14 +205,54 @@ class GenericOpenAIAPIClient(LocalLLMClient):
                 _LOGGER.warning("Model response did not end on a stop token (unfinished sentence)")
 
         return response_text, tool_calls
+    
 
+async def _async_validate_generic_openai(self, user_input: dict) -> tuple:
+    """
+    Validates a connection to an OpenAI compatible API server and that the model exists on the remote server
 
+    :param user_input: the input dictionary used to build the connection
+    :return: a tuple of (error message name, exception detail); both can be None
+    """
+    try:
+        headers = {}
+        api_key = user_input.get(CONF_TEXT_GEN_WEBUI_ADMIN_KEY, user_input.get(CONF_OPENAI_API_KEY))
+        api_base_path = user_input.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+
+        session = async_get_clientsession(self.hass)
+        async with session.get(
+            format_url(
+                hostname=self.model_config[CONF_HOST],
+                port=self.model_config[CONF_PORT],
+                ssl=self.model_config[CONF_SSL],
+                path=f"/{api_base_path}/models"
+            ),
+            timeout=5, # quick timeout
+            headers=headers
+        ) as response:
+            response.raise_for_status()
+            models_result = await response.json()
+
+        models = [ model["id"] for model in models_result["data"] ]
+
+        for model in models:
+            if model == self.model_config[CONF_CHAT_MODEL]:
+                return None, None, []
+
+        return "missing_model_api", None, models
+
+    except Exception as ex:
+        _LOGGER.info("Connection error was: %s", repr(ex))
+        return "failed_to_connect", ex, []
+
+# FIXME: this class is mostly broken
 class GenericOpenAIResponsesAPIClient(LocalLLMClient):
     """Implements the OpenAPI-compatible Responses API backend."""
 
     api_host: str
     api_key: str
-    model_name: str
 
     _attr_supports_streaming = False
 
@@ -189,7 +268,6 @@ class GenericOpenAIResponsesAPIClient(LocalLLMClient):
         )
 
         self.api_key = entry.data.get(CONF_OPENAI_API_KEY, "")
-        self.model_name = entry.data.get(CONF_CHAT_MODEL, "")
 
     def _responses_params(self, conversation: List[conversation.Content], api_base_path: str) -> Tuple[str, Dict[str, Any]]:
         request_params = {}
