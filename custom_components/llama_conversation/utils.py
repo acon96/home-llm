@@ -263,6 +263,7 @@ def get_oai_formatted_tools(llm_api: llm.APIInstance, domains: list[str]) -> Lis
             "type": "function",
             "function": {
                 "name": tool["name"],
+                "description": f"Call the Home Assistant service '{tool['name']}'",
                 "parameters": convert(tool["arguments"], custom_serializer=llm_api.custom_serializer)
             }
         } for tool in get_home_llm_tools(llm_api, domains) ]
@@ -360,8 +361,11 @@ def get_home_llm_tools(llm_api: llm.APIInstance, domains: list[str]) -> List[Dic
 
     return tools
 
-def parse_raw_tool_call(raw_block: str, llm_api: llm.APIInstance) -> tuple[llm.ToolInput | None, str | None]:
-    parsed_tool_call: dict = json.loads(raw_block)
+def parse_raw_tool_call(raw_block: str | dict, llm_api: llm.APIInstance) -> tuple[llm.ToolInput | None, str | None]:
+    if isinstance(raw_block, dict):
+        parsed_tool_call = raw_block
+    else:
+        parsed_tool_call: dict = json.loads(raw_block)
 
     if llm_api.api.id == HOME_LLM_API_ID:
         schema_to_validate = vol.Schema({

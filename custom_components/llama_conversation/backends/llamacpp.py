@@ -361,7 +361,7 @@ class LlamaCppAgent(LocalLLMAgent):
         refresh_delay = self.entry.options.get(CONF_PROMPT_CACHING_INTERVAL, DEFAULT_PROMPT_CACHING_INTERVAL)
         async_call_later(self.hass, float(refresh_delay), refresh_if_requested)
 
-    async def _async_generate_completion(self, llm_api: llm.APIInstance | None, chat_completion: Iterator[CreateChatCompletionStreamResponse]) -> AsyncGenerator[TextGenerationResult, None]:
+    async def _async_parse_completion(self, llm_api: llm.APIInstance | None, chat_completion: Iterator[CreateChatCompletionStreamResponse]) -> AsyncGenerator[TextGenerationResult, None]:
         think_prefix = self.entry.options.get(CONF_THINKING_PREFIX, DEFAULT_THINKING_PREFIX)
         think_suffix = self.entry.options.get(CONF_THINKING_SUFFIX, DEFAULT_THINKING_SUFFIX)
         tool_prefix = self.entry.options.get(CONF_TOOL_CALL_PREFIX, DEFAULT_TOOL_CALL_PREFIX)
@@ -377,7 +377,7 @@ class LlamaCppAgent(LocalLLMAgent):
         in_thinking = False
         in_tool_call = False
         tool_content = ""
-        last_5_tokens = []
+        last_5_tokens = [] # FIXME: this still returns the first few tokens of the tool call if the prefix is split across chunks
         while chunk := await self.hass.async_add_executor_job(next_token):
             content = chunk["choices"][0]["delta"].get("content")
             tool_calls = chunk["choices"][0]["delta"].get("tool_calls")
@@ -409,6 +409,7 @@ class LlamaCppAgent(LocalLLMAgent):
                 elif tool_prefix in potential_block and not in_tool_call:
                     in_tool_call = True
                     last_5_tokens.clear()
+
                 elif tool_suffix in potential_block and in_tool_call:
                     in_tool_call = False
                     _LOGGER.debug("Tool content: %s", tool_content)
@@ -467,7 +468,7 @@ class LlamaCppAgent(LocalLLMAgent):
 
         _LOGGER.debug(f"Generating completion with {len(messages)} messages and {len(tools) if tools else 0} tools...")
 
-        return self._async_generate_completion(llm_api, self.llm.create_chat_completion(
+        return self._async_parse_completion(llm_api, self.llm.create_chat_completion(
             messages,
             tools=tools,
             temperature=temperature,

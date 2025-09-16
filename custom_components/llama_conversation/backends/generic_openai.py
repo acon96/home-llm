@@ -89,7 +89,10 @@ class BaseOpenAICompatibleAPIAgent(LocalLLMAgent):
                 response.raise_for_status()
                 if stream:
                     async for line_bytes in response.content:
-                        chunk = line_bytes.decode("utf-8").strip()
+                        chunk = line_bytes.decode("utf-8").strip().removeprefix("data: ")
+                        if not chunk.strip():
+                            break
+                        
                         yield self._extract_response(json.loads(chunk), llm_api, user_input)
                 else:
                     response_json = await response.json()
@@ -119,13 +122,10 @@ class GenericOpenAIAPIAgent(BaseOpenAICompatibleAPIAgent):
             if "tool_calls" in choice["delta"]:
                 tool_calls = []
                 for call in choice["delta"]["tool_calls"]:
-                    success, tool_args, to_say = parse_raw_tool_call(
-                        call["function"]["arguments"], 
-                        call["function"]["name"],
-                        call["id"],
-                        llm_api, user_input)
+                    tool_args, to_say = parse_raw_tool_call(
+                        call["function"], llm_api)
                     
-                    if success and tool_args:
+                    if tool_args:
                         tool_calls.append(tool_args)
                         
                     if to_say:
@@ -138,6 +138,8 @@ class GenericOpenAIAPIAgent(BaseOpenAICompatibleAPIAgent):
         if not streamed or streamed and choice["finish_reason"]:
             if choice["finish_reason"] == "length" or choice["finish_reason"] == "content_filter":
                 _LOGGER.warning("Model response did not end on a stop token (unfinished sentence)")
+
+        _LOGGER.debug("Model chunk '%s'", response_text)
 
         return TextGenerationResult(
             response=response_text,
