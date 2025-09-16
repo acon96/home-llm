@@ -107,8 +107,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     async_add_entities([entry.runtime_data])
 
     return True
-    
-def _parse_raw_tool_call(raw_block: str, llm_api: llm.APIInstance, user_input: ConversationInput) -> tuple[bool, ConversationResult | llm.ToolInput, str | None]:
+
+def parse_raw_tool_call(raw_block: str, tool_name: str, tool_call_id: str, llm_api: llm.APIInstance, user_input: ConversationInput) -> tuple[bool, llm.ToolInput | None, str | None]:
     parsed_tool_call: dict = json.loads(raw_block)
 
     if llm_api.api.id == HOME_LLM_API_ID:
@@ -135,15 +135,7 @@ def _parse_raw_tool_call(raw_block: str, llm_api: llm.APIInstance, user_input: C
         schema_to_validate(parsed_tool_call)
     except vol.Error as ex:
         _LOGGER.info(f"LLM produced an improperly formatted response: {repr(ex)}")
-
-        intent_response = intent.IntentResponse(language=user_input.language)
-        intent_response.async_set_error(
-            intent.IntentResponseErrorCode.NO_INTENT_MATCH,
-            f"I'm sorry, I didn't produce a correctly formatted tool call! Please see the logs for more info.",
-        )
-        return False, ConversationResult(
-            response=intent_response, conversation_id=user_input.conversation_id
-        ), ""
+        return False, None, f"I'm sorry, I didn't produce a correctly formatted tool call! Please see the logs for more info.",
 
     # try to fix certain arguments
     args_dict = parsed_tool_call if llm_api.api.id == HOME_LLM_API_ID else parsed_tool_call["arguments"]
@@ -267,11 +259,11 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
             self._load_model, entry
         )
     
-    def _generate_stream(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None) -> AsyncGenerator[TextGenerationResult, None]:
+    def _generate_stream(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None, user_input: conversation.ConversationInput) -> AsyncGenerator[TextGenerationResult, None]:
         """Async generator for streaming responses. Subclasses should implement."""
         raise NotImplementedError()
 
-    async def _generate(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None) -> TextGenerationResult:
+    async def _generate(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None, user_input: conversation.ConversationInput) -> TextGenerationResult:
         """Call the backend to generate a response from the conversation. Implemented by sub-classes"""
         raise NotImplementedError()
 
@@ -279,10 +271,10 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
         """Default implementation: if streaming is supported, consume the async generator and return the full result."""
         if hasattr(self, '_generate_stream'):
             # Try to stream and collect the full response
-            return await self._transform_result_stream(self._generate_stream(conv, chat_log.llm_api), user_input, chat_log)
+            return await self._transform_result_stream(self._generate_stream(conv, chat_log.llm_api, user_input), user_input, chat_log)
         
         # Fallback to "blocking" generate
-        blocking_result = await self._generate(conv, chat_log.llm_api)
+        blocking_result = await self._generate(conv, chat_log.llm_api, user_input)
 
         return chat_log.async_add_assistant_content(
             conversation.AssistantContent(
