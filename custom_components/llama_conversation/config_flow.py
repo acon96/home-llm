@@ -57,7 +57,7 @@ from .const import (
     CONF_TOOL_CALL_PREFIX,
     CONF_TOOL_CALL_SUFFIX,
     CONF_ENABLE_LEGACY_TOOL_CALLING,
-    CONF_ENABLE_FLASH_ATTENTION,
+    CONF_LLAMACPP_ENABLE_FLASH_ATTENTION,
     CONF_USE_GBNF_GRAMMAR,
     CONF_GBNF_GRAMMAR_FILE,
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
@@ -80,9 +80,9 @@ from .const import (
     CONF_GENERIC_OPENAI_PATH,
     CONF_GENERIC_OPENAI_VALIDATE_MODEL,
     CONF_CONTEXT_LENGTH,
-    CONF_BATCH_SIZE,
-    CONF_THREAD_COUNT,
-    CONF_BATCH_THREAD_COUNT,
+    CONF_LLAMACPP_BATCH_SIZE,
+    CONF_LLAMACPP_THREAD_COUNT,
+    CONF_LLAMACPP_BATCH_THREAD_COUNT,
     DEFAULT_CHAT_MODEL,
     DEFAULT_PORT,
     DEFAULT_SSL,
@@ -107,7 +107,7 @@ from .const import (
     DEFAULT_TOOL_CALL_PREFIX,
     DEFAULT_TOOL_CALL_SUFFIX,
     DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
-    DEFAULT_ENABLE_FLASH_ATTENTION,
+    DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION,
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_GBNF_GRAMMAR_FILE,
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
@@ -126,9 +126,9 @@ from .const import (
     DEFAULT_GENERIC_OPENAI_PATH,
     DEFAULT_GENERIC_OPENAI_VALIDATE_MODEL,
     DEFAULT_CONTEXT_LENGTH,
-    DEFAULT_BATCH_SIZE,
-    DEFAULT_THREAD_COUNT,
-    DEFAULT_BATCH_THREAD_COUNT,
+    DEFAULT_LLAMACPP_BATCH_SIZE,
+    DEFAULT_LLAMACPP_THREAD_COUNT,
+    DEFAULT_LLAMACPP_BATCH_THREAD_COUNT,
     BACKEND_TYPE_LLAMA_HF,
     BACKEND_TYPE_LLAMA_EXISTING,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
@@ -882,7 +882,7 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
             CONF_MAX_TOKENS,
             description={"suggested_value": options.get(CONF_MAX_TOKENS)},
             default=DEFAULT_MAX_TOKENS,
-        ): int,
+        ): NumberSelector(NumberSelectorConfig(min=1, max=8192, step=1)),
         vol.Required(
             CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
             description={"suggested_value": options.get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE)},
@@ -926,7 +926,7 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
     }
 
     if is_local_backend(backend_type):
-        result = insert_after_key(result, CONF_MAX_TOKENS, {
+        result.update({
             vol.Required(
                 CONF_TOP_K,
                 description={"suggested_value": options.get(CONF_TOP_K)},
@@ -969,24 +969,24 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
                 default=DEFAULT_CONTEXT_LENGTH,
             ): NumberSelector(NumberSelectorConfig(min=512, max=32768, step=1)),
             vol.Required(
-                CONF_BATCH_SIZE,
-                description={"suggested_value": options.get(CONF_BATCH_SIZE)},
-                default=DEFAULT_BATCH_SIZE,
+                CONF_LLAMACPP_BATCH_SIZE,
+                description={"suggested_value": options.get(CONF_LLAMACPP_BATCH_SIZE)},
+                default=DEFAULT_LLAMACPP_BATCH_SIZE,
             ): NumberSelector(NumberSelectorConfig(min=1, max=8192, step=1)),
             vol.Required(
-                CONF_THREAD_COUNT,
-                description={"suggested_value": options.get(CONF_THREAD_COUNT)},
-                default=DEFAULT_THREAD_COUNT,
+                CONF_LLAMACPP_THREAD_COUNT,
+                description={"suggested_value": options.get(CONF_LLAMACPP_THREAD_COUNT)},
+                default=DEFAULT_LLAMACPP_THREAD_COUNT,
             ): NumberSelector(NumberSelectorConfig(min=1, max=(os.cpu_count() * 2), step=1)),
             vol.Required(
-                CONF_BATCH_THREAD_COUNT,
-                description={"suggested_value": options.get(CONF_BATCH_THREAD_COUNT)},
-                default=DEFAULT_BATCH_THREAD_COUNT,
+                CONF_LLAMACPP_BATCH_THREAD_COUNT,
+                description={"suggested_value": options.get(CONF_LLAMACPP_BATCH_THREAD_COUNT)},
+                default=DEFAULT_LLAMACPP_BATCH_THREAD_COUNT,
             ): NumberSelector(NumberSelectorConfig(min=1, max=(os.cpu_count() * 2), step=1)),
             vol.Required(
-                CONF_ENABLE_FLASH_ATTENTION,
-                description={"suggested_value": options.get(CONF_ENABLE_FLASH_ATTENTION)},
-                default=DEFAULT_ENABLE_FLASH_ATTENTION,
+                CONF_LLAMACPP_ENABLE_FLASH_ATTENTION,
+                description={"suggested_value": options.get(CONF_LLAMACPP_ENABLE_FLASH_ATTENTION)},
+                default=DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION,
             ): BooleanSelector(BooleanSelectorConfig()),
             vol.Required(
                 CONF_USE_GBNF_GRAMMAR,
@@ -1000,7 +1000,7 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
             ): str
         })
     elif backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
-        result = insert_after_key(result, CONF_MAX_TOKENS, {
+        result.update({
             vol.Required(
                 CONF_CONTEXT_LENGTH,
                 description={"suggested_value": options.get(CONF_CONTEXT_LENGTH)},
@@ -1052,7 +1052,7 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
             )),
         })
     elif backend_type in BACKEND_TYPE_GENERIC_OPENAI:
-        result = insert_after_key(result, CONF_MAX_TOKENS, {
+        result.update({
             vol.Required(
                 CONF_TEMPERATURE,
                 description={"suggested_value": options.get(CONF_TEMPERATURE)},
@@ -1076,7 +1076,7 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
         })
     elif backend_type in BACKEND_TYPE_GENERIC_OPENAI_RESPONSES:
         del result[CONF_REMEMBER_NUM_INTERACTIONS]
-        result = insert_after_key(result, CONF_REMEMBER_CONVERSATION, {
+        result.update({
             vol.Required(
                 CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
                 description={"suggested_value": options.get(CONF_REMEMBER_CONVERSATION_TIME_MINUTES)},
@@ -1101,7 +1101,7 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
             ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
         })
     elif backend_type == BACKEND_TYPE_LLAMA_CPP_SERVER:
-        result = insert_after_key(result, CONF_MAX_TOKENS, {
+        result.update({
             vol.Required(
                 CONF_TOP_K,
                 description={"suggested_value": options.get(CONF_TOP_K)},
@@ -1139,7 +1139,7 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
             ): bool,
         })
     elif backend_type == BACKEND_TYPE_OLLAMA:
-        result = insert_after_key(result, CONF_MAX_TOKENS, {
+        result.update({
             vol.Required(
                 CONF_CONTEXT_LENGTH,
                 description={"suggested_value": options.get(CONF_CONTEXT_LENGTH)},
@@ -1181,5 +1181,54 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
                 default=DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
             ): NumberSelector(NumberSelectorConfig(min=-1, max=1440, step=1, unit_of_measurement=UnitOfTime.MINUTES, mode=NumberSelectorMode.BOX)),
         })
+
+    # sort the options
+    global_order = [
+        # general
+        CONF_LLM_HASS_API,
+        CONF_PROMPT,
+        CONF_CONTEXT_LENGTH,
+        CONF_MAX_TOKENS,
+        CONF_OPENAI_API_KEY,
+        CONF_REQUEST_TIMEOUT,
+        # sampling parameters
+        CONF_TEMPERATURE,
+        CONF_TOP_K,
+        CONF_TOP_P,
+        CONF_MIN_P,
+        CONF_TYPICAL_P,
+        # tool calling/reasoning
+        CONF_THINKING_PREFIX,
+        CONF_THINKING_SUFFIX,
+        CONF_TOOL_CALL_PREFIX,
+        CONF_TOOL_CALL_SUFFIX,
+        CONF_MAX_TOOL_CALL_ITERATIONS,
+        CONF_ENABLE_LEGACY_TOOL_CALLING,
+        CONF_USE_GBNF_GRAMMAR,
+        CONF_GBNF_GRAMMAR_FILE,
+        # integration specific options
+        CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
+        CONF_REFRESH_SYSTEM_PROMPT,
+        CONF_REMEMBER_CONVERSATION,
+        CONF_REMEMBER_NUM_INTERACTIONS,
+        CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
+        CONF_PROMPT_CACHING_ENABLED,
+        CONF_PROMPT_CACHING_INTERVAL,
+        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
+        CONF_IN_CONTEXT_EXAMPLES_FILE,
+        CONF_NUM_IN_CONTEXT_EXAMPLES,
+        # backend specific options
+        CONF_LLAMACPP_BATCH_SIZE,
+        CONF_LLAMACPP_THREAD_COUNT,
+        CONF_LLAMACPP_BATCH_THREAD_COUNT,
+        CONF_LLAMACPP_ENABLE_FLASH_ATTENTION,
+        CONF_TEXT_GEN_WEBUI_ADMIN_KEY,
+        CONF_TEXT_GEN_WEBUI_PRESET,
+        CONF_TEXT_GEN_WEBUI_CHAT_MODE,
+        CONF_OLLAMA_KEEP_ALIVE_MIN,
+        CONF_OLLAMA_JSON_MODE,
+    ]
+
+    result = { k: v for k, v in sorted(result.items(), key=lambda item: global_order.index(item[0]) if item[0] in global_order else 9999) }
 
     return result

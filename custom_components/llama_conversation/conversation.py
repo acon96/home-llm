@@ -466,7 +466,7 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
 
         return list(domains)
 
-    def _async_get_exposed_entities(self) -> dict[str, dict]:
+    def _async_get_exposed_entities(self) -> dict[str, dict[str, Any]]:
         """Gather exposed entity states"""
         entity_states: dict[str, dict] = {}
         entity_registry = er.async_get(self.hass)

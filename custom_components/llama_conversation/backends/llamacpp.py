@@ -6,7 +6,7 @@ import logging
 import os
 import threading
 import time
-from typing import Any, Callable, List, Generator, AsyncGenerator, Optional
+from typing import Any, Callable, List, Generator, AsyncGenerator, Optional, cast
 
 from homeassistant.components import conversation as conversation
 from homeassistant.components.conversation.const import DOMAIN as CONVERSATION_DOMAIN
@@ -28,15 +28,15 @@ from custom_components.llama_conversation.const import (
     CONF_TYPICAL_P,
     CONF_MIN_P,
     CONF_DOWNLOADED_MODEL_FILE,
-    CONF_ENABLE_FLASH_ATTENTION,
+    CONF_LLAMACPP_ENABLE_FLASH_ATTENTION,
     CONF_USE_GBNF_GRAMMAR,
     CONF_GBNF_GRAMMAR_FILE,
     CONF_PROMPT_CACHING_ENABLED,
     CONF_PROMPT_CACHING_INTERVAL,
     CONF_CONTEXT_LENGTH,
-    CONF_BATCH_SIZE,
-    CONF_THREAD_COUNT,
-    CONF_BATCH_THREAD_COUNT,
+    CONF_LLAMACPP_BATCH_SIZE,
+    CONF_LLAMACPP_THREAD_COUNT,
+    CONF_LLAMACPP_BATCH_THREAD_COUNT,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
@@ -44,15 +44,16 @@ from custom_components.llama_conversation.const import (
     DEFAULT_TOP_P,
     DEFAULT_MIN_P,
     DEFAULT_TYPICAL_P,
-    DEFAULT_ENABLE_FLASH_ATTENTION,
+    DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION,
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_GBNF_GRAMMAR_FILE,
     DEFAULT_PROMPT_CACHING_ENABLED,
     DEFAULT_PROMPT_CACHING_INTERVAL,
     DEFAULT_CONTEXT_LENGTH,
-    DEFAULT_BATCH_SIZE,
-    DEFAULT_THREAD_COUNT,
-    DEFAULT_BATCH_THREAD_COUNT,
+    DEFAULT_LLAMACPP_BATCH_SIZE,
+    DEFAULT_LLAMACPP_THREAD_COUNT,
+    DEFAULT_LLAMACPP_BATCH_THREAD_COUNT,
+    DOMAIN,
 )
 from custom_components.llama_conversation.conversation import LocalLLMAgent, TextGenerationResult
 
@@ -71,7 +72,7 @@ class LlamaCppAgent(LocalLLMAgent):
     llm: LlamaType
     grammar: Any
     llama_cpp_module: Any
-    remove_prompt_caching_listener: Callable
+    remove_prompt_caching_listener: Optional[Callable]
     model_lock: threading.Lock
     last_cache_prime: float
     last_updated_entities: dict[str, float]
@@ -81,7 +82,7 @@ class LlamaCppAgent(LocalLLMAgent):
     _attr_supports_streaming = True
 
     def _load_model(self, entry: ConfigEntry) -> None:
-        self.model_path = entry.data.get(CONF_DOWNLOADED_MODEL_FILE)
+        self.model_path = entry.data.get(CONF_DOWNLOADED_MODEL_FILE, "")
 
         _LOGGER.info(
             "Using model file '%s'", self.model_path
@@ -109,18 +110,18 @@ class LlamaCppAgent(LocalLLMAgent):
         _LOGGER.debug(f"Loading model '{self.model_path}'...")
         self.loaded_model_settings = {}
         self.loaded_model_settings[CONF_CONTEXT_LENGTH] = entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
-        self.loaded_model_settings[CONF_BATCH_SIZE] = entry.options.get(CONF_BATCH_SIZE, DEFAULT_BATCH_SIZE)
-        self.loaded_model_settings[CONF_THREAD_COUNT] = entry.options.get(CONF_THREAD_COUNT, DEFAULT_THREAD_COUNT)
-        self.loaded_model_settings[CONF_BATCH_THREAD_COUNT] = entry.options.get(CONF_BATCH_THREAD_COUNT, DEFAULT_BATCH_THREAD_COUNT)
-        self.loaded_model_settings[CONF_ENABLE_FLASH_ATTENTION] = entry.options.get(CONF_ENABLE_FLASH_ATTENTION, DEFAULT_ENABLE_FLASH_ATTENTION)
+        self.loaded_model_settings[CONF_LLAMACPP_BATCH_SIZE] = entry.options.get(CONF_LLAMACPP_BATCH_SIZE, DEFAULT_LLAMACPP_BATCH_SIZE)
+        self.loaded_model_settings[CONF_LLAMACPP_THREAD_COUNT] = entry.options.get(CONF_LLAMACPP_THREAD_COUNT, DEFAULT_LLAMACPP_THREAD_COUNT)
+        self.loaded_model_settings[CONF_LLAMACPP_BATCH_THREAD_COUNT] = entry.options.get(CONF_LLAMACPP_BATCH_THREAD_COUNT, DEFAULT_LLAMACPP_BATCH_THREAD_COUNT)
+        self.loaded_model_settings[CONF_LLAMACPP_ENABLE_FLASH_ATTENTION] = entry.options.get(CONF_LLAMACPP_ENABLE_FLASH_ATTENTION, DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION)
 
         self.llm = Llama(
             model_path=self.model_path,
             n_ctx=int(self.loaded_model_settings[CONF_CONTEXT_LENGTH]),
-            n_batch=int(self.loaded_model_settings[CONF_BATCH_SIZE]),
-            n_threads=int(self.loaded_model_settings[CONF_THREAD_COUNT]),
-            n_threads_batch=int(self.loaded_model_settings[CONF_BATCH_THREAD_COUNT]),
-            flash_attn=self.loaded_model_settings[CONF_ENABLE_FLASH_ATTENTION],
+            n_batch=int(self.loaded_model_settings[CONF_LLAMACPP_BATCH_SIZE]),
+            n_threads=int(self.loaded_model_settings[CONF_LLAMACPP_THREAD_COUNT]),
+            n_threads_batch=int(self.loaded_model_settings[CONF_LLAMACPP_BATCH_THREAD_COUNT]),
+            flash_attn=self.loaded_model_settings[CONF_LLAMACPP_ENABLE_FLASH_ATTENTION],
         )
         _LOGGER.debug("Model loaded")
 
@@ -136,7 +137,7 @@ class LlamaCppAgent(LocalLLMAgent):
         # ))
 
         self.remove_prompt_caching_listener = None
-        self.last_cache_prime = None
+        self.last_cache_prime = 0.0 
         self.last_updated_entities = {}
         self.cache_refresh_after_cooldown = False
         self.model_lock = threading.Lock()
@@ -167,26 +168,26 @@ class LlamaCppAgent(LocalLLMAgent):
 
         model_reloaded = False
         if self.loaded_model_settings[CONF_CONTEXT_LENGTH] != self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH) or \
-            self.loaded_model_settings[CONF_BATCH_SIZE] != self.entry.options.get(CONF_BATCH_SIZE, DEFAULT_BATCH_SIZE) or \
-            self.loaded_model_settings[CONF_THREAD_COUNT] != self.entry.options.get(CONF_THREAD_COUNT, DEFAULT_THREAD_COUNT) or \
-            self.loaded_model_settings[CONF_BATCH_THREAD_COUNT] != self.entry.options.get(CONF_BATCH_THREAD_COUNT, DEFAULT_BATCH_THREAD_COUNT) or \
-            self.loaded_model_settings[CONF_ENABLE_FLASH_ATTENTION] != self.entry.options.get(CONF_ENABLE_FLASH_ATTENTION, DEFAULT_ENABLE_FLASH_ATTENTION):
+            self.loaded_model_settings[CONF_LLAMACPP_BATCH_SIZE] != self.entry.options.get(CONF_LLAMACPP_BATCH_SIZE, DEFAULT_LLAMACPP_BATCH_SIZE) or \
+            self.loaded_model_settings[CONF_LLAMACPP_THREAD_COUNT] != self.entry.options.get(CONF_LLAMACPP_THREAD_COUNT, DEFAULT_LLAMACPP_THREAD_COUNT) or \
+            self.loaded_model_settings[CONF_LLAMACPP_BATCH_THREAD_COUNT] != self.entry.options.get(CONF_LLAMACPP_BATCH_THREAD_COUNT, DEFAULT_LLAMACPP_BATCH_THREAD_COUNT) or \
+            self.loaded_model_settings[CONF_LLAMACPP_ENABLE_FLASH_ATTENTION] != self.entry.options.get(CONF_LLAMACPP_ENABLE_FLASH_ATTENTION, DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION):
 
             _LOGGER.debug(f"Reloading model '{self.model_path}'...")
             self.loaded_model_settings[CONF_CONTEXT_LENGTH] = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
-            self.loaded_model_settings[CONF_BATCH_SIZE] = self.entry.options.get(CONF_BATCH_SIZE, DEFAULT_BATCH_SIZE)
-            self.loaded_model_settings[CONF_THREAD_COUNT] = self.entry.options.get(CONF_THREAD_COUNT, DEFAULT_THREAD_COUNT)
-            self.loaded_model_settings[CONF_BATCH_THREAD_COUNT] = self.entry.options.get(CONF_BATCH_THREAD_COUNT, DEFAULT_BATCH_THREAD_COUNT)
-            self.loaded_model_settings[CONF_ENABLE_FLASH_ATTENTION] = self.entry.options.get(CONF_ENABLE_FLASH_ATTENTION, DEFAULT_ENABLE_FLASH_ATTENTION)
+            self.loaded_model_settings[CONF_LLAMACPP_BATCH_SIZE] = self.entry.options.get(CONF_LLAMACPP_BATCH_SIZE, DEFAULT_LLAMACPP_BATCH_SIZE)
+            self.loaded_model_settings[CONF_LLAMACPP_THREAD_COUNT] = self.entry.options.get(CONF_LLAMACPP_THREAD_COUNT, DEFAULT_LLAMACPP_THREAD_COUNT)
+            self.loaded_model_settings[CONF_LLAMACPP_BATCH_THREAD_COUNT] = self.entry.options.get(CONF_LLAMACPP_BATCH_THREAD_COUNT, DEFAULT_LLAMACPP_BATCH_THREAD_COUNT)
+            self.loaded_model_settings[CONF_LLAMACPP_ENABLE_FLASH_ATTENTION] = self.entry.options.get(CONF_LLAMACPP_ENABLE_FLASH_ATTENTION, DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION)
 
             Llama = getattr(self.llama_cpp_module, "Llama")
             self.llm = Llama(
                 model_path=self.model_path,
                 n_ctx=int(self.loaded_model_settings[CONF_CONTEXT_LENGTH]),
-                n_batch=int(self.loaded_model_settings[CONF_BATCH_SIZE]),
-                n_threads=int(self.loaded_model_settings[CONF_THREAD_COUNT]),
-                n_threads_batch=int(self.loaded_model_settings[CONF_BATCH_THREAD_COUNT]),
-                flash_attn=self.loaded_model_settings[CONF_ENABLE_FLASH_ATTENTION],
+                n_batch=int(self.loaded_model_settings[CONF_LLAMACPP_BATCH_SIZE]),
+                n_threads=int(self.loaded_model_settings[CONF_LLAMACPP_THREAD_COUNT]),
+                n_threads_batch=int(self.loaded_model_settings[CONF_LLAMACPP_BATCH_THREAD_COUNT]),
+                flash_attn=self.loaded_model_settings[CONF_LLAMACPP_ENABLE_FLASH_ATTENTION],
             )
             _LOGGER.debug("Model loaded")
             model_reloaded = True
@@ -211,7 +212,7 @@ class LlamaCppAgent(LocalLLMAgent):
         else:
             self._set_prompt_caching(enabled=False)
 
-    def _async_get_exposed_entities(self) -> dict[str, str]:
+    def _async_get_exposed_entities(self) -> dict[str, dict[str, str]]:
         """Takes the super class function results and sorts the entities with the recently updated at the end"""
         entities = LocalLLMAgent._async_get_exposed_entities(self)
 
@@ -219,7 +220,7 @@ class LlamaCppAgent(LocalLLMAgent):
         if not self.entry.options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED):
             return entities
 
-        entity_order = { name: None for name in entities.keys() }
+        entity_order: dict[str, Optional[float]] = { name: None for name in entities.keys() }
         entity_order.update(self.last_updated_entities)
 
         def sort_key(item):
@@ -235,7 +236,7 @@ class LlamaCppAgent(LocalLLMAgent):
 
         _LOGGER.debug(f"sorted_items: {sorted_items}")
 
-        sorted_entities = {}
+        sorted_entities: dict[str, dict[str, str]] = {}
         for item_name, _ in sorted_items:
             sorted_entities[item_name] = entities[item_name]
 
@@ -271,6 +272,7 @@ class LlamaCppAgent(LocalLLMAgent):
             try:
                 llm_api = await llm.async_get_api(
                     self.hass, self.entry.options[CONF_LLM_HASS_API],
+                    llm_context=llm.LLMContext(DOMAIN, context=None, language=None, assistant=None, device_id=None)
                 )
             except HomeAssistantError:
                 _LOGGER.exception("Failed to get LLM API when caching prompt!")
@@ -301,33 +303,48 @@ class LlamaCppAgent(LocalLLMAgent):
             return
 
         try:
+            # Build system/user messages and use the chat-completion API to prime
+            # the model. We request only a single token (max_tokens=1) and
+            # discard the result. This avoids implementing any streaming logic
+            # while still priming the KV cache with the system prompt.
             raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
-            prompt = self._format_prompt([
-                { "role": "system", "message": self._generate_system_prompt(raw_prompt, llm_api)},
-                { "role": "user", "message": "" }
-            ], include_generation_prompt=False)
+            system_prompt = self._generate_system_prompt(raw_prompt, llm_api)
 
-            input_tokens = self.llm.tokenize(
-                prompt.encode(), add_bos=False
-            )
+            messages = get_oai_formatted_messages([
+                conversation.SystemContent(content=system_prompt),
+                conversation.UserContent(content="")
+            ])
+            tools = None
+            if llm_api:
+                tools = get_oai_formatted_tools(llm_api, self._async_get_all_exposed_domains())
 
             temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
             top_k = int(self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K))
             top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
+            min_p = self.entry.options.get(CONF_MIN_P, DEFAULT_MIN_P)
+            typical_p = self.entry.options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)
             grammar = self.grammar if self.entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR) else None
 
-            _LOGGER.debug(f"Processing {len(input_tokens)} input tokens...")
+            _LOGGER.debug("Priming model cache via chat completion API...")
 
-            # grab just one token. should prime the kv cache with the system prompt
-            next(self.llm.generate(
-                input_tokens,
-                temp=temperature,
-                top_k=top_k,
-                top_p=top_p,
-                grammar=grammar
-            ))
+            try:
+                # avoid strict typing issues from the llama-cpp-python bindings
+                self.llm.create_chat_completion(
+                    messages,
+                    tools=tools,
+                    temperature=temperature,
+                    top_k=top_k,
+                    top_p=top_p,
+                    min_p=min_p,
+                    typical_p=typical_p,
+                    max_tokens=1,
+                    grammar=grammar,
+                    stream=False,
+                )
 
-            self.last_cache_prime = time.time()
+                self.last_cache_prime = time.time()
+            except Exception:
+                _LOGGER.exception("Failed to prime model cache")
         finally:
             self.model_lock.release()
 
