@@ -50,16 +50,15 @@
 - [x] split out entity functionality so we can support conversation + ai tasks  
 - [x] fix icl examples to match new tool calling syntax config  
 - [x] set up docker-compose for running all of the various backends  
-- [x] fix the openai responses backend  
-- [ ] config sub-entry implementation
+- [x] config sub-entry implementation
     - [x] base work  
     - [x] generic openai backend  
     - [x] llamacpp backend  
     - [x] ollama backend  
-    - [ ] tailored_openai backend  
-    - [ ] generic openai responses backend  
+    - [x] tailored_openai backend  
+    - [x] generic openai responses backend  
 - [ ] fix and re-upload all compatible old models (+ upload all original safetensors)  
-- [ ] config entry migration function  
+- [x] config entry migration function  
 
 ## more complicated ideas
 - [ ] "context requests"  

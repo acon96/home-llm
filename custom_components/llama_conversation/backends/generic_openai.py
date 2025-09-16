@@ -45,7 +45,6 @@ class GenericOpenAIAPIClient(LocalLLMClient):
     """Implements the OpenAPI-compatible text completion and chat completion API backends."""
 
     api_host: str
-    api_base_path: str
     api_key: str
 
     _attr_supports_streaming = True
@@ -78,7 +77,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
                     ssl=user_input[CONF_SSL],
                     path=f"/{api_base_path}/models"
                 ),
-                timeout=5, # quick timeout
+                timeout=aiohttp.ClientTimeout(total=5), # quick timeout
                 headers=headers
             ) as response:
                 if response.ok:
@@ -96,7 +95,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         session = async_get_clientsession(self.hass)
         async with session.get(
             f"{self.api_host}/models",
-            timeout=5, # quick timeout
+            timeout=aiohttp.ClientTimeout(total=5), # quick timeout
             headers=headers
         ) as response:
             response.raise_for_status()
@@ -212,7 +211,6 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         return response_text, tool_calls
 
 
-# FIXME: this class is mostly broken
 class GenericOpenAIResponsesAPIClient(LocalLLMClient):
     """Implements the OpenAPI-compatible Responses API backend."""
 
@@ -224,21 +222,21 @@ class GenericOpenAIResponsesAPIClient(LocalLLMClient):
     _last_response_id: str | None = None
     _last_response_id_time: datetime.datetime | None = None
 
-    async def _async_load_model(self, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, client_options: dict[str, Any]) -> None:
+        super().__init__(hass, client_options)
         self.api_host = format_url(
-            hostname=entry.data[CONF_HOST],
-            port=entry.data[CONF_PORT],
-            ssl=entry.data[CONF_SSL],
-            path=""
+            hostname=client_options[CONF_HOST],
+            port=client_options[CONF_PORT],
+            ssl=client_options[CONF_SSL],
+            path="/" + client_options.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
         )
 
-        self.api_key = entry.data.get(CONF_OPENAI_API_KEY, "")
+        self.api_key = client_options.get(CONF_OPENAI_API_KEY, "")
 
-    def _responses_params(self, conversation: List[conversation.Content], api_base_path: str) -> Tuple[str, Dict[str, Any]]:
+    def _responses_params(self, conversation: List[conversation.Content], entity_options: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
         request_params = {}
-        api_base_path = self.entry.data.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
 
-        endpoint = f"/{api_base_path}/responses"
+        endpoint = "/responses"
         # Find the last user message in the conversation and use its content as the input
         input_text: str | None = None
         for msg in reversed(conversation):
@@ -256,9 +254,9 @@ class GenericOpenAIResponsesAPIClient(LocalLLMClient):
         request_params["input"] = input_text
 
         # Assign previous_response_id if relevant
-        if self._last_response_id and self._last_response_id_time and self.entry.options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION):
+        if self._last_response_id and self._last_response_id_time and entity_options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION):
             # If the last response was generated recently, use it as a context
-            configured_memory_time: datetime.timedelta = datetime.timedelta(minutes=self.entry.options.get(CONF_REMEMBER_CONVERSATION_TIME_MINUTES, DEFAULT_REMEMBER_CONVERSATION_TIME_MINUTES))
+            configured_memory_time: datetime.timedelta = datetime.timedelta(minutes=entity_options.get(CONF_REMEMBER_CONVERSATION_TIME_MINUTES, DEFAULT_REMEMBER_CONVERSATION_TIME_MINUTES))
             last_conversation_age: datetime.timedelta = datetime.datetime.now() - self._last_response_id_time
             _LOGGER.debug(f"Conversation ID age: {last_conversation_age}")
             if last_conversation_age < configured_memory_time:
@@ -303,7 +301,7 @@ class GenericOpenAIResponsesAPIClient(LocalLLMClient):
         if response_json["status"] != "completed":
             _LOGGER.warning(f"Response status is not 'completed', got {response_json['status']}. Details: {response_json.get('incomplete_details', 'No details provided')}")
 
-    def _extract_response(self, response_json: dict, llm_api: llm.APIInstance | None, user_input: conversation.ConversationInput) -> str | None:
+    def _extract_response(self, response_json: dict) -> str | None:
         self._validate_response_payload(response_json)
         self._check_response_status(response_json)
 
@@ -348,11 +346,12 @@ class GenericOpenAIResponsesAPIClient(LocalLLMClient):
                         entity_options: dict[str, Any]) -> TextGenerationResult:
         """Generate a response using the OpenAI-compatible Responses API (non-streaming endpoint wrapped as a single-chunk stream)."""
 
+        model_name = entity_options.get(CONF_CHAT_MODEL)
         timeout = entity_options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
-        endpoint, additional_params = self._responses_params(conversation, api_base_path=entity_options.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH))
+        endpoint, additional_params = self._responses_params(conversation, entity_options)
 
         request_params: Dict[str, Any] = {
-            "model": self.model_name,
+            "model": model_name,
         }
         request_params.update(additional_params)
 
@@ -374,7 +373,7 @@ class GenericOpenAIResponsesAPIClient(LocalLLMClient):
                 response_json = await response.json()
 
                 try:
-                    text = self._extract_response(response_json, llm_api, user_input)
+                    text = self._extract_response(response_json)
                     return TextGenerationResult(response=text, response_streamed=False)
                 except Exception as err:
                     _LOGGER.exception("Failed to parse Responses API payload: %s", err)

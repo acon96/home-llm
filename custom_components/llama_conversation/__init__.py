@@ -5,7 +5,7 @@ import logging
 from typing import Final
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, CONF_HOST, CONF_PORT, CONF_SSL, CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, llm, device_registry as dr, entity_registry as er
 from homeassistant.util.json import JsonObjectType
@@ -21,6 +21,19 @@ from .const import (
     SERVICE_TOOL_ALLOWED_SERVICES,
     SERVICE_TOOL_ALLOWED_DOMAINS,
     CONF_BACKEND_TYPE,
+    CONF_SELECTED_LANGUAGE,
+    CONF_OPENAI_API_KEY,
+    CONF_GENERIC_OPENAI_PATH,
+    CONF_CHAT_MODEL, CONF_DOWNLOADED_MODEL_QUANTIZATION, CONF_DOWNLOADED_MODEL_FILE, CONF_REQUEST_TIMEOUT, CONF_MAX_TOOL_CALL_ITERATIONS,
+    CONF_REFRESH_SYSTEM_PROMPT, CONF_REMEMBER_CONVERSATION, CONF_REMEMBER_NUM_INTERACTIONS, CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
+    CONF_PROMPT, CONF_TEMPERATURE, CONF_TOP_K, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P, CONF_MAX_TOKENS,
+    CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES, CONF_IN_CONTEXT_EXAMPLES_FILE, CONF_NUM_IN_CONTEXT_EXAMPLES, CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, 
+    CONF_THINKING_PREFIX, CONF_THINKING_SUFFIX, CONF_TOOL_CALL_PREFIX, CONF_TOOL_CALL_SUFFIX,
+    CONF_PROMPT_CACHING_ENABLED, CONF_PROMPT_CACHING_INTERVAL, CONF_CONTEXT_LENGTH,
+    CONF_LLAMACPP_BATCH_SIZE, CONF_LLAMACPP_THREAD_COUNT, CONF_LLAMACPP_BATCH_THREAD_COUNT,
+    CONF_LLAMACPP_ENABLE_FLASH_ATTENTION, CONF_USE_GBNF_GRAMMAR, CONF_GBNF_GRAMMAR_FILE,
+    CONF_TEXT_GEN_WEBUI_PRESET, CONF_TEXT_GEN_WEBUI_CHAT_MODE, CONF_ENABLE_LEGACY_TOOL_CALLING,
+    CONF_OLLAMA_JSON_MODE, CONF_OLLAMA_KEEP_ALIVE_MIN,
     DEFAULT_BACKEND_TYPE,
     BACKEND_TYPE_LLAMA_CPP,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
@@ -89,10 +102,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) ->
     hass.data[DOMAIN].pop(entry.entry_id)
     return True
 
-# TODO: split out which options are per-model and which ones are conversation-specific
-# and only migrate the conversation-specific ones to the subentry
-ENTRY_KEYS = []
-SUBENTRY_KEYS = []
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: LocalLLMConfigEntry):
     """Migrate old entry."""
@@ -102,88 +111,57 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: LocalLLMConfigE
     if config_entry.version == 1:
         _LOGGER.error("Cannot upgrade models that were created prior to v0.3. Please delete and re-create them.")
         return False
-    
-    # If already at or above the target version nothing to do
-    if config_entry.version >= 3:
-        _LOGGER.debug("Entry already migrated (version %s)", config_entry.version)
-        return True
 
-    # Migrate each existing config entry to use subentries for conversations
-    # We will create a conversation subentry using the entry.options plus any
-    # model identifier stored in entry.data (CONF_CHAT_MODEL / CONF_DOWNLOADED_MODEL_FILE)
+    # Migrate the config_entry to be an entry + sub-entry
+    if config_entry.version == 2:
+        ENTRY_DATA_KEYS = [CONF_BACKEND_TYPE, CONF_SELECTED_LANGUAGE]
+        ENTRY_OPTIONS_KEYS = [CONF_HOST, CONF_PORT, CONF_SSL, CONF_OPENAI_API_KEY, CONF_GENERIC_OPENAI_PATH]
+        SUBENTRY_KEYS = [
+            CONF_CHAT_MODEL, CONF_DOWNLOADED_MODEL_QUANTIZATION, CONF_DOWNLOADED_MODEL_FILE, CONF_REQUEST_TIMEOUT, CONF_MAX_TOOL_CALL_ITERATIONS,
+            CONF_REFRESH_SYSTEM_PROMPT, CONF_REMEMBER_CONVERSATION, CONF_REMEMBER_NUM_INTERACTIONS, CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
+            CONF_LLM_HASS_API, CONF_PROMPT, CONF_TEMPERATURE, CONF_TOP_K, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P, CONF_MAX_TOKENS,
+            CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES, CONF_IN_CONTEXT_EXAMPLES_FILE, CONF_NUM_IN_CONTEXT_EXAMPLES, CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, 
+            CONF_THINKING_PREFIX, CONF_THINKING_SUFFIX, CONF_TOOL_CALL_PREFIX, CONF_TOOL_CALL_SUFFIX,
+            CONF_PROMPT_CACHING_ENABLED, CONF_PROMPT_CACHING_INTERVAL, CONF_CONTEXT_LENGTH,
+            CONF_LLAMACPP_BATCH_SIZE, CONF_LLAMACPP_THREAD_COUNT, CONF_LLAMACPP_BATCH_THREAD_COUNT,
+            CONF_LLAMACPP_ENABLE_FLASH_ATTENTION, CONF_USE_GBNF_GRAMMAR, CONF_GBNF_GRAMMAR_FILE,
+            CONF_TEXT_GEN_WEBUI_PRESET, CONF_TEXT_GEN_WEBUI_CHAT_MODE, CONF_ENABLE_LEGACY_TOOL_CALLING,
+            CONF_OLLAMA_JSON_MODE, CONF_OLLAMA_KEEP_ALIVE_MIN
+        ]
 
-    entries = sorted(
-        hass.config_entries.async_entries(DOMAIN),
-        key=lambda e: e.disabled_by is not None,
-    )
+        # Build entry data/options & subentry data from existing options and model info
+        source_data = {**config_entry.data}
+        source_data.update(config_entry.options)
 
-    for entry in entries:
-        # Skip entries that already have subentries
-        if entry.subentries:
-            continue
-
-        # Build subentry data from existing options and model info
-        subentry_data = { k: v for k, v in (entry.options or {}).items() if k in SUBENTRY_KEYS }
-        entry_data = { k: v for k, v in (entry.data or {}).items() if k in ENTRY_KEYS }
+        entry_data = { k: v for k, v in source_data.items() if k in ENTRY_DATA_KEYS }
+        entry_options = { k: v for k, v in source_data.items() if k in ENTRY_OPTIONS_KEYS }
+        subentry_data = { k: v for k, v in source_data.items() if k in SUBENTRY_KEYS }
 
         subentry = ConfigSubentry(
             data=MappingProxyType(subentry_data),
             subentry_type="conversation",
-            title=entry.title,
+            title=config_entry.title, # FIXME: should be the "new" name format
             unique_id=None,
         )
 
-        hass.config_entries.async_add_subentry(entry, subentry)
+        # don't attempt to create duplicate llama.cpp backends
+        if entry_data[CONF_BACKEND_TYPE] == BACKEND_TYPE_LLAMA_CPP:
+            all_entries = hass.config_entries.async_entries(DOMAIN)
+            for entry in all_entries:
+                if entry.version < 3 or entry.data[CONF_BACKEND_TYPE] != BACKEND_TYPE_LLAMA_CPP:
+                    continue
 
-        # Move entity/device registry associations to the new subentry where applicable
-        entity_registry = er.async_get(hass)
-        device_registry = dr.async_get(hass)
+                await hass.config_entries.async_remove(config_entry.entry_id)
+                config_entry = entry
+                break
 
-        conversation_entity_id = entity_registry.async_get_entity_id(
-            "conversation",
-            DOMAIN,
-            entry.entry_id,
-        )
-        device = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+        # create sub-entry
+        hass.config_entries.async_add_subentry(config_entry, subentry)
 
-        if conversation_entity_id is not None:
-            conversation_entity_entry = entity_registry.entities[conversation_entity_id]
-            entity_disabled_by = conversation_entity_entry.disabled_by
-            # Keep a sensible disabled flag when migrating
-            if (
-                entity_disabled_by is er.RegistryEntryDisabler.CONFIG_ENTRY
-                and not all(e.disabled_by is not None for e in entries if e.entry_id != entry.entry_id)
-            ):
-                entity_disabled_by = (
-                    er.RegistryEntryDisabler.DEVICE if device else er.RegistryEntryDisabler.USER
-                )
-            entity_registry.async_update_entity(
-                conversation_entity_id,
-                config_entry_id=entry.entry_id,
-                config_subentry_id=subentry.subentry_id,
-                disabled_by=entity_disabled_by,
-                new_unique_id=subentry.subentry_id,
-            )
+        # update the parent entry
+        hass.config_entries.async_update_entry(config_entry, data=entry_data, options=entry_options, version=3)
 
-        if device is not None:
-            # Adjust device registry identifiers to point to the subentry
-            device_disabled_by = device.disabled_by
-            if (
-                device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
-            ):
-                device_disabled_by = dr.DeviceEntryDisabler.USER
-            device_registry.async_update_device(
-                device.id,
-                disabled_by=device_disabled_by,
-                new_identifiers={(DOMAIN, subentry.subentry_id)},
-                add_config_subentry_id=subentry.subentry_id,
-                add_config_entry_id=entry.entry_id,
-            )
-
-        # Update the parent entry to remove model-level fields and clear options
-        hass.config_entries.async_update_entry(entry, data=entry_data, options={}, version=3)
-
-    _LOGGER.debug("Migration to subentries complete")
+        _LOGGER.debug("Migration to subentries complete")
 
     return True
 

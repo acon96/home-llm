@@ -4,23 +4,22 @@ from __future__ import annotations
 import logging
 import os
 from typing import Optional, Tuple, Dict, List, Any
-from dataclasses import dataclass
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from custom_components.llama_conversation.const import (
-    CONF_MAX_TOKENS,
+    CONF_CHAT_MODEL,
     CONF_TOP_K,
     CONF_TYPICAL_P,
     CONF_MIN_P,
     CONF_USE_GBNF_GRAMMAR,
+    CONF_GBNF_GRAMMAR_FILE,
     CONF_TEXT_GEN_WEBUI_PRESET,
     CONF_TEXT_GEN_WEBUI_ADMIN_KEY,
     CONF_TEXT_GEN_WEBUI_CHAT_MODE,
     CONF_CONTEXT_LENGTH,
-    DEFAULT_MAX_TOKENS,
     DEFAULT_TOP_K,
     DEFAULT_MIN_P,
     DEFAULT_TYPICAL_P,
@@ -37,12 +36,15 @@ from custom_components.llama_conversation.backends.generic_openai import Generic
 _LOGGER = logging.getLogger(__name__)
 
 class TextGenerationWebuiClient(GenericOpenAIAPIClient):
-    admin_key: str
+    admin_key: Optional[str]
 
-    async def _async_load_model(self, entry: ConfigEntry) -> None:
-        await super()._async_load_model(entry)
-        self.admin_key = entry.data.get(CONF_TEXT_GEN_WEBUI_ADMIN_KEY, self.api_key)
+    def __init__(self, hass: HomeAssistant, client_options: dict[str, Any]) -> None:
+        super().__init__(hass, client_options)
 
+        self.admin_key = client_options.get(CONF_TEXT_GEN_WEBUI_ADMIN_KEY)
+
+    async def _async_load_model(self, entity_options: dict[str, Any]) -> None:
+        model_name = entity_options.get(CONF_CHAT_MODEL)
         try:
             headers = {}
             session = async_get_clientsession(self.hass)
@@ -58,18 +60,16 @@ class TextGenerationWebuiClient(GenericOpenAIAPIClient):
                 currently_loaded_result = await response.json()
 
             loaded_model = currently_loaded_result["model_name"]
-            if loaded_model == self.model_name:
-                _LOGGER.info(f"Model {self.model_name} is already loaded on the remote backend.")
+            if loaded_model == model_name:
+                _LOGGER.info(f"Model {model_name} is already loaded on the remote backend.")
                 return
             else:
-                _LOGGER.info(f"Model is not {self.model_name} loaded on the remote backend. Loading it now...")
+                _LOGGER.info(f"Model is not {model_name} loaded on the remote backend. Loading it now...")
 
             async with session.post(
                 f"{self.api_host}/v1/internal/model/load",
                 json={
-                    "model_name": self.model_name,
-                    # TODO: expose arguments to the user in home assistant UI
-                    # "args": {},
+                    "model_name": model_name,
                 },
                 headers=headers
             ) as response:
@@ -98,55 +98,14 @@ class TextGenerationWebuiClient(GenericOpenAIAPIClient):
         return endpoint, request_params
     
 
-async def _async_validate_text_generation_webui(self, user_input: dict) -> tuple:
-    """
-    Validates a connection to text-generation-webui and that the model exists on the remote server
-
-    :param user_input: the input dictionary used to build the connection
-    :return: a tuple of (error message name, exception detail); both can be None
-    """
-    try:
-        headers = {}
-        api_key = user_input.get(CONF_TEXT_GEN_WEBUI_ADMIN_KEY, user_input.get(CONF_OPENAI_API_KEY))
-        if api_key:
-            headers["Authorization"] = f"Bearer {api_key}"
-
-        session = async_get_clientsession(self.hass)
-        async with session.get(
-            format_url(
-                hostname=self.model_config[CONF_HOST],
-                port=self.model_config[CONF_PORT],
-                ssl=self.model_config[CONF_SSL],
-                path="/v1/internal/model/list"
-            ),
-            timeout=5, # quick timeout
-            headers=headers
-        ) as response:
-            response.raise_for_status()
-            models = await response.json()
-
-        for model in models["model_names"]:
-            if model == self.model_config[CONF_CHAT_MODEL].replace("/", "_"):
-                return None, None, []
-
-        return "missing_model_api", None, models["model_names"]
-
-    except Exception as ex:
-        _LOGGER.info("Connection error was: %s", repr(ex))
-        return "failed_to_connect", ex, []
-
 class LlamaCppServerClient(GenericOpenAIAPIClient):
     grammar: str
 
-    async def _async_load_model(self, entry: ConfigEntry):
-        await super()._async_load_model(entry)
+    def __init__(self, hass: HomeAssistant, client_options: Dict[str, Any]):
+        super().__init__(hass, client_options)
 
-        return await self.hass.async_add_executor_job(
-            self._load_model, entry
-        )
-
-    def _load_model(self, entry: ConfigEntry):
-        with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), DEFAULT_GBNF_GRAMMAR_FILE)) as f:
+        grammar_file_name = client_options.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE)
+        with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), grammar_file_name)) as f:
             self.grammar = "".join(f.readlines())
     
     def _chat_completion_params(self, entity_options: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:

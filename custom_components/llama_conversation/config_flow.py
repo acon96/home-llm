@@ -217,6 +217,7 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
     """Handle a config flow for Local LLM Conversation."""
 
     VERSION = 3
+    MINOR_VERSION = 0
 
     install_wheel_task = None
     install_wheel_error = None
