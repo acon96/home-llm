@@ -227,9 +227,6 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
     async def async_added_to_hass(self) -> None:
         """When entity is added to Home Assistant."""
         await super().async_added_to_hass()
-        assist_pipeline.async_migrate_engine(
-            self.hass, "conversation", self.entry.entry_id, self.entity_id
-        )
         conversation.async_set_agent(self.hass, self.entry, self)
 
     async def async_will_remove_from_hass(self) -> None:
@@ -591,7 +588,7 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
                 area_id = entity.area_id
 
             if area_id:
-                area = area_registry.async_get_area(entity.area_id)
+                area = area_registry.async_get_area(area_id)
                 if area:
                     attributes["area_id"] = area.id
                     attributes["area_name"] = area.name
