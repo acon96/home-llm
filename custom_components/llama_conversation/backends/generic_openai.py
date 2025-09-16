@@ -62,25 +62,31 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         self.api_key = client_options.get(CONF_OPENAI_API_KEY, "")
     
     @staticmethod
-    async def async_validate_connection(hass: HomeAssistant, user_input: Dict[str, Any]) -> bool:
+    async def async_validate_connection(hass: HomeAssistant, user_input: Dict[str, Any]) -> str | None:
         headers = {}
         api_key = user_input.get(CONF_OPENAI_API_KEY)
         api_base_path = user_input.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
         if api_key:
             headers["Authorization"] = f"Bearer {api_key}"
 
-        session = async_get_clientsession(hass)
-        async with session.get(
-            format_url(
-                hostname=user_input[CONF_HOST],
-                port=user_input[CONF_PORT],
-                ssl=user_input[CONF_SSL],
-                path=f"/{api_base_path}/models"
-            ),
-            timeout=5, # quick timeout
-            headers=headers
-        ) as response:
-            return response.ok
+        try:
+            session = async_get_clientsession(hass)
+            async with session.get(
+                format_url(
+                    hostname=user_input[CONF_HOST],
+                    port=user_input[CONF_PORT],
+                    ssl=user_input[CONF_SSL],
+                    path=f"/{api_base_path}/models"
+                ),
+                timeout=5, # quick timeout
+                headers=headers
+            ) as response:
+                if response.ok:
+                    return None
+                else:
+                    return f"HTTP Status {response.status}"
+        except Exception as ex:
+            return str(ex)
 
     async def async_get_available_models(self) -> List[str]:
         headers = {}

@@ -117,9 +117,9 @@ class LocalLLMClient:
             self.in_context_examples = None
 
     @staticmethod
-    async def async_validate_connection(hass: HomeAssistant, user_input: Dict[str, Any]) -> bool:
+    async def async_validate_connection(hass: HomeAssistant, user_input: Dict[str, Any]) -> str | None:
         """Validate connection to the backend. Implemented by sub-classes"""
-        return True
+        return None
 
     def _load_model(self, entity_options: dict[str, Any]) -> None:
         """Load the model on the backend. Implemented by sub-classes"""

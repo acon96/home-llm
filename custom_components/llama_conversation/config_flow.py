@@ -197,6 +197,7 @@ def remote_connection_schema(backend_type: str, *, host=None, port=None, ssl=Non
 
     extra = {}
     default_port = DEFAULT_PORT
+    default_path = DEFAULT_GENERIC_OPENAI_PATH
 
     if backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
         extra[vol.Optional(CONF_TEXT_GEN_WEBUI_ADMIN_KEY)] = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
@@ -204,6 +205,7 @@ def remote_connection_schema(backend_type: str, *, host=None, port=None, ssl=Non
         default_port = "8000"
     elif backend_type == BACKEND_TYPE_OLLAMA:
         default_port = "11434"
+        default_path = ""
     elif backend_type in [BACKEND_TYPE_GENERIC_OPENAI, BACKEND_TYPE_GENERIC_OPENAI_RESPONSES]:
         default_port = ""
 
@@ -213,9 +215,9 @@ def remote_connection_schema(backend_type: str, *, host=None, port=None, ssl=Non
             vol.Optional(CONF_PORT, default=port if port else default_port): str,
             vol.Required(CONF_SSL, default=ssl if ssl else DEFAULT_SSL): bool,
             vol.Optional(CONF_OPENAI_API_KEY): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
-            vol.Required(
+            vol.Optional(
                 CONF_GENERIC_OPENAI_PATH,
-                default=selected_path if selected_path else DEFAULT_GENERIC_OPENAI_PATH
+                default=selected_path if selected_path else default_path
             ): TextSelector(TextSelectorConfig(prefix="/")),
             **extra
         }
@@ -246,6 +248,7 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
+        description_placeholders = {}
 
         if self.internal_step == "init":
             self.client_config = {}
@@ -327,19 +330,35 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
                 self.client_config.update(user_input)
 
                 # validate remote connections
-                is_valid = True
+                connect_err = True
                 backend = self.client_config[CONF_BACKEND_TYPE]
                 if backend == BACKEND_TYPE_GENERIC_OPENAI:
-                    is_valid = await GenericOpenAIAPIClient.async_validate_connection(self.hass, self.client_config)
+                    connect_err = await GenericOpenAIAPIClient.async_validate_connection(self.hass, self.client_config)
                 elif backend == BACKEND_TYPE_GENERIC_OPENAI_RESPONSES:
-                    is_valid = await GenericOpenAIResponsesAPIClient.async_validate_connection(self.hass, self.client_config)
+                    connect_err = await GenericOpenAIResponsesAPIClient.async_validate_connection(self.hass, self.client_config)
                 elif backend == BACKEND_TYPE_TEXT_GEN_WEBUI:
-                    is_valid = await TextGenerationWebuiClient.async_validate_connection(self.hass, self.client_config)
+                    connect_err = await TextGenerationWebuiClient.async_validate_connection(self.hass, self.client_config)
                 elif backend == BACKEND_TYPE_OLLAMA:
-                    is_valid = await OllamaAPIClient.async_validate_connection(self.hass, self.client_config)
+                    connect_err = await OllamaAPIClient.async_validate_connection(self.hass, self.client_config)
 
-                if is_valid:
+                if not connect_err:
                     return await self.async_step_finish()
+                else:
+                    errors["base"] = "failed_to_connect"
+                    description_placeholders["exception"] = str(connect_err)
+                    return self.async_show_form(
+                        step_id="user", 
+                        data_schema=remote_connection_schema(
+                            self.client_config[CONF_BACKEND_TYPE],
+                            host=user_input.get(CONF_HOST),
+                            port=user_input.get(CONF_PORT),
+                            ssl=user_input.get(CONF_SSL),
+                            selected_path=user_input.get(CONF_GENERIC_OPENAI_PATH)
+                        ), 
+                        errors=errors,
+                        description_placeholders=description_placeholders,
+                        last_step=True
+                    )
             else:
                 return self.async_show_form(
                     step_id="user", data_schema=remote_connection_schema(self.client_config[CONF_BACKEND_TYPE],
@@ -374,6 +393,12 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
                 title = f"LLama.cpp Server at '{format_url(hostname=host, port=port, ssl=ssl, path=path)}'"
 
         _LOGGER.debug(f"creating provider with config: {self.client_config}")
+
+        # block duplicate providers
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if backend == BACKEND_TYPE_LLAMA_CPP and \
+               entry.data.get(CONF_BACKEND_TYPE) == BACKEND_TYPE_LLAMA_CPP:
+                return self.async_abort(reason="duplicate_client")
 
         return self.async_create_entry(
             title=title,
