@@ -92,7 +92,13 @@
                     "context_length": "Context Length",
                     "batch_size": "Batch Size",
                     "n_threads": "Thread Count",
-                    "n_batch_threads": "Batch Thread Count"
+                    "n_batch_threads": "Batch Thread Count",
+                    "thinking_prefix": "Reasoning Content Prefix",
+                    "thinking_suffix": "Reasoning Content Suffix",
+                    "tool_call_prefix": "Tool Call Prefix",
+                    "tool_call_suffix": "Tool Call Suffix",
+                    "enable_legacy_tool_calling": "Enable Legacy Tool Calling",
+                    "max_tool_call_iterations": "Maximum Tool Call Attempts"
                 },
                 "data_description": {
                     "llm_hass_api": "Select 'Assist' if you want the model to be able to control devices. If you are using the Home-LLM v1, v2, or v3 model then select 'Home-LLM (v1-3)'",
@@ -115,9 +121,6 @@
                     "llm_hass_api": "Selected LLM API",
                     "max_new_tokens": "Maximum tokens to return in response",
                     "prompt": "System Prompt",
-                    "prompt_template": "Prompt Format",
-                    "tool_format": "Tool Format",
-                    "tool_multi_turn_chat": "Multi-Turn Tool Use",
                     "temperature": "Temperature",
                     "top_k": "Top K",
                     "top_p": "Top P",
@@ -147,7 +150,13 @@
                     "context_length": "Context Length",
                     "batch_size": "Batch Size",
                     "n_threads": "Thread Count",
-                    "n_batch_threads": "Batch Thread Count"
+                    "n_batch_threads": "Batch Thread Count",
+                    "thinking_prefix": "Reasoning Content Prefix",
+                    "thinking_suffix": "Reasoning Content Suffix",
+                    "tool_call_prefix": "Tool Call Prefix",
+                    "tool_call_suffix": "Tool Call Suffix",
+                    "enable_legacy_tool_calling": "Enable Legacy Tool Calling",
+                    "max_tool_call_iterations": "Maximum Tool Call Attempts"
                 },
                 "data_description": {
                     "llm_hass_api": "Select 'Assist' if you want the model to be able to control devices. If you are using the Home-LLM v1, v2, or v3 model then select 'Home-LLM (v1-3)'",
@@ -167,27 +176,6 @@
         }
     },
     "selector": {
-        "prompt_template": {
-            "options": {
-                "chatml": "ChatML",
-                "vicuna": "Vicuna",
-                "alpaca": "Alpaca",
-                "mistral": "Mistral",
-                "zephyr": "Zephyr (<|endoftext|>)",
-                "zephyr2": "Zephyr ('</s>')",
-                "zephyr3": "Zephyr (<|end|>)",
-                "llama3": "Llama 3",
-                "command-r": "Command R",
-                "no_prompt_template": "None"
-            }
-        },
-        "tool_format": {
-            "options": {
-                "full_tool_format": "Full JSON Tool Format",
-                "reduced_tool_format": "Reduced JSON Tool Format",
-                "min_tool_format": "Minimal Function Style Tool Format"
-            }
-        },
         "model_backend": {
             "options": {
                 "llama_cpp_hf": "Llama.cpp (HuggingFace)",

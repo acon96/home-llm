@@ -34,8 +34,6 @@ from homeassistant.helpers.selector import (
     BooleanSelector,
     BooleanSelectorConfig,
 )
-from homeassistant.util.package import is_installed
-from importlib.metadata import version
 
 from .utils import download_model_from_hf, get_llama_cpp_python_version, install_llama_cpp_python, format_url, MissingQuantizationException
 from .const import (
@@ -58,6 +56,7 @@ from .const import (
     CONF_THINKING_SUFFIX,
     CONF_TOOL_CALL_PREFIX,
     CONF_TOOL_CALL_SUFFIX,
+    CONF_ENABLE_LEGACY_TOOL_CALLING,
     CONF_ENABLE_FLASH_ATTENTION,
     CONF_USE_GBNF_GRAMMAR,
     CONF_GBNF_GRAMMAR_FILE,
@@ -107,6 +106,7 @@ from .const import (
     DEFAULT_THINKING_SUFFIX,
     DEFAULT_TOOL_CALL_PREFIX,
     DEFAULT_TOOL_CALL_SUFFIX,
+    DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
     DEFAULT_ENABLE_FLASH_ATTENTION,
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_GBNF_GRAMMAR_FILE,
@@ -1068,6 +1068,11 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
                 default=DEFAULT_REQUEST_TIMEOUT,
             ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
+            vol.Required(
+                CONF_ENABLE_LEGACY_TOOL_CALLING,
+                description={"suggested_value": options.get(CONF_ENABLE_LEGACY_TOOL_CALLING)},
+                default=DEFAULT_ENABLE_LEGACY_TOOL_CALLING
+            ): bool,
         })
     elif backend_type in BACKEND_TYPE_GENERIC_OPENAI_RESPONSES:
         del result[CONF_REMEMBER_NUM_INTERACTIONS]
@@ -1127,6 +1132,11 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
                 default=DEFAULT_REQUEST_TIMEOUT,
             ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
+            vol.Required(
+                CONF_ENABLE_LEGACY_TOOL_CALLING,
+                description={"suggested_value": options.get(CONF_ENABLE_LEGACY_TOOL_CALLING)},
+                default=DEFAULT_ENABLE_LEGACY_TOOL_CALLING
+            ): bool,
         })
     elif backend_type == BACKEND_TYPE_OLLAMA:
         result = insert_after_key(result, CONF_MAX_TOKENS, {

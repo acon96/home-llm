@@ -80,11 +80,11 @@ class TextGenerationWebuiAgent(GenericOpenAIAPIAgent):
             _LOGGER.debug("Connection error was: %s", repr(ex))
             raise ConfigEntryNotReady("There was a problem connecting to the remote server") from ex
 
-    def _chat_completion_params(self, conversation: List[Dict[str, str]]) -> Tuple[str, Dict]:
+    def _chat_completion_params(self) -> Tuple[str, Dict[str, Any]]:
         preset = self.entry.options.get(CONF_TEXT_GEN_WEBUI_PRESET)
         chat_mode = self.entry.options.get(CONF_TEXT_GEN_WEBUI_CHAT_MODE, DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE)
 
-        endpoint, request_params = super()._chat_completion_params(conversation)
+        endpoint, request_params = super()._chat_completion_params()
 
         request_params["mode"] = chat_mode
         if chat_mode == TEXT_GEN_WEBUI_CHAT_MODE_CHAT or chat_mode == TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT:
@@ -97,37 +97,6 @@ class TextGenerationWebuiAgent(GenericOpenAIAPIAgent):
         request_params["typical_p"] = self.entry.options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)
 
         return endpoint, request_params
-
-    def _completion_params(self, conversation: List[Dict[str, str]]) -> Tuple[str, Dict[str, Any]]:
-        preset = self.entry.options.get(CONF_TEXT_GEN_WEBUI_PRESET)
-
-        endpoint, request_params = super()._completion_params(conversation)
-
-        if preset:
-            request_params["preset"] = preset
-
-        request_params["truncation_length"] = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
-        request_params["top_k"] = self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K)
-        request_params["min_p"] = self.entry.options.get(CONF_MIN_P, DEFAULT_MIN_P)
-        request_params["typical_p"] = self.entry.options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)
-
-        return endpoint, request_params
-
-    def _extract_response(self, response_json: dict) -> TextGenerationResult:
-        choices = response_json["choices"]
-        if choices[0]["finish_reason"] != "stop":
-            _LOGGER.warning("Model response did not end on a stop token (unfinished sentence)")
-
-        context_len = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
-        max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
-        if response_json["usage"]["prompt_tokens"] + max_tokens > context_len:
-            self._warn_context_size()
-
-        # text-gen-webui has a typo where it is 'chat.completions' not 'chat.completion'
-        if response_json["object"] == "chat.completions":
-            return choices[0]["message"]["content"]
-        else:
-            return choices[0]["text"]
 
 class LlamaCppServerAgent(GenericOpenAIAPIAgent):
     grammar: str
@@ -151,9 +120,5 @@ class LlamaCppServerAgent(GenericOpenAIAPIAgent):
 
         if self.entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
             request_params["grammar"] = self.grammar
-
-        # force usage of COMMON_CHAT_TOOL_CHOICE_NONE so it returns raw content and then parse ourself when using
-        # the custom home llm tool call syntax. otherwise let the server detect it automatically
-        request_params["tool_choice"] = "none"
 
         return endpoint, request_params

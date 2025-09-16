@@ -1,0 +1,59 @@
+# you can start and stop backends by running `docker-compose up -d <service name>`
+version: '3.8'
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"  # Ollama default
+    volumes:
+      - ./models:/models
+      - ./scripts:/scripts # needed for import script
+    environment:
+      - OLLAMA_MODELS=/models/.ollama
+    restart: unless-stopped
+
+  text-generation-webui:
+    image: atinoda/text-generation-webui:default-cpu
+    container_name: textgen-webui
+    init: true
+    environment:
+      - EXTRA_LAUNCH_ARGS="--listen --verbose" # Custom launch args (e.g., --model MODEL_NAME)
+    ports:
+      - "7860:7860"  # Web UI default
+      # - "5000:5000" # API Default
+      # - "5005:5005" # Streaming API default
+    volumes:
+      - ./models:/app/user_data/models
+    restart: unless-stopped
+
+  # llamacpp server can only run one model at a time; set it below
+  llamacpp:
+    image: ghcr.io/ggerganov/llama.cpp:server
+    container_name: llamacpp-server
+    ports:
+      - "8000:8000"  # llama.cpp server default
+    volumes:
+      - ./models:/models
+    environment:
+      - MODEL_DIR=/models
+    restart: unless-stopped
+    command: |-
+      --port 8000
+      --no-webui
+      --metrics
+      --jinja
+      --ctx-size 8192
+      --alias "Home-3B-v3"
+      --model "/models/Home-3B-v3-fixed.q4_k_m.gguf"
+
+  localai:
+    image: localai/localai:latest
+    container_name: localai
+    ports:
+      - "8080:8080"  # LocalAI default
+    volumes:
+      - ./models:/models
+    environment:
+      - MODELS_PATH=/models
+    restart: unless-stopped

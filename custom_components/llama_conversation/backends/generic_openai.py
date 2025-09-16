@@ -26,6 +26,7 @@ from custom_components.llama_conversation.const import (
     CONF_REMEMBER_CONVERSATION,
     CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
     CONF_GENERIC_OPENAI_PATH,
+    CONF_ENABLE_LEGACY_TOOL_CALLING,
     DEFAULT_MAX_TOKENS,
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_P,
@@ -33,6 +34,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_REMEMBER_CONVERSATION,
     DEFAULT_REMEMBER_CONVERSATION_TIME_MINUTES,
     DEFAULT_GENERIC_OPENAI_PATH,
+    DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
 )
 from custom_components.llama_conversation.conversation import LocalLLMAgent, TextGenerationResult
 
@@ -63,6 +65,7 @@ class GenericOpenAIAPIAgent(LocalLLMAgent):
         temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
         top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
         timeout = self.entry.options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
+        enable_legacy_tool_calling = self.entry.options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
 
         endpoint, additional_params = self._chat_completion_params()
         messages = get_oai_formatted_messages(conversation)
@@ -77,7 +80,9 @@ class GenericOpenAIAPIAgent(LocalLLMAgent):
         }
 
         tools = None
-        if llm_api:
+        # "legacy" tool calling passes the tools directly as part of the system prompt instead of as "tools"
+        # most local backends absolutely butcher any sort of prompt formatting when using tool calling
+        if llm_api and not enable_legacy_tool_calling:
             tools = get_oai_formatted_tools(llm_api, self._async_get_all_exposed_domains())
             request_params["tools"] = tools
 
@@ -103,22 +108,19 @@ class GenericOpenAIAPIAgent(LocalLLMAgent):
                 ) as response:
                     response.raise_for_status()
                     async for line_bytes in response.content:
-                        chunk = line_bytes.decode("utf-8").strip().removeprefix("data: ")
+                        raw_line = line_bytes.decode("utf-8").strip()
+                        if raw_line.startswith("error: "):
+                            raise Exception(f"Error from server: {raw_line}")
+                        chunk = raw_line.removeprefix("data: ")
                         if "[DONE]" in chunk:
                             break
-                        
+
                         if chunk and chunk.strip():
                             yield self._extract_response(json.loads(chunk), llm_api)
             except asyncio.TimeoutError as err:
                 raise HomeAssistantError("The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities.") from err
             except aiohttp.ClientError as err:
                 raise HomeAssistantError(f"Failed to communicate with the API! {err}") from err
-            except Exception as err:
-                _LOGGER.debug(f"Err was: {err}")
-                _LOGGER.debug(f"Request was: {request_params}")
-                _LOGGER.debug(f"Result was: {response}")
-                _LOGGER.debug(f"Chunk was {chunk}")
-                raise HomeAssistantError(f"An unknown error occurred! {err}") from err
 
         return self._async_parse_completion(llm_api, anext_token=anext_token())
     
@@ -158,8 +160,6 @@ class GenericOpenAIAPIAgent(LocalLLMAgent):
         if not streamed or streamed and choice["finish_reason"]:
             if choice["finish_reason"] == "length" or choice["finish_reason"] == "content_filter":
                 _LOGGER.warning("Model response did not end on a stop token (unfinished sentence)")
-
-        _LOGGER.debug("Model chunk '%s'", response_text)
 
         return response_text, tool_calls
 

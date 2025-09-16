@@ -22,7 +22,7 @@ from homeassistant.helpers import config_validation as cv, intent, template, ent
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color
 
-from .utils import closest_color, parse_raw_tool_call
+from .utils import closest_color, parse_raw_tool_call, flatten_vol_schema
 from .const import (
     CONF_CHAT_MODEL,
     CONF_PROMPT,
@@ -40,6 +40,7 @@ from .const import (
     CONF_THINKING_SUFFIX,
     CONF_TOOL_CALL_PREFIX,
     CONF_TOOL_CALL_SUFFIX,
+    CONF_ENABLE_LEGACY_TOOL_CALLING,
     DEFAULT_PROMPT,
     DEFAULT_BACKEND_TYPE,
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
@@ -58,6 +59,7 @@ from .const import (
     DEFAULT_THINKING_SUFFIX,
     DEFAULT_TOOL_CALL_PREFIX,
     DEFAULT_TOOL_CALL_SUFFIX,
+    DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,8 +83,6 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
     # call update handler
     agent: LocalLLMAgent = entry.runtime_data
     await hass.async_add_executor_job(agent._update_options)
-
-    return True
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddConfigEntryEntitiesCallback) -> bool:
     """Set up Local LLM Conversation from a config entry."""
@@ -427,15 +427,18 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
 
                 elif tool_suffix in potential_block and in_tool_call:
                     in_tool_call = False
-                    tool_call, to_say = parse_raw_tool_call(tool_content.strip().removeprefix(tool_prefix).removesuffix(tool_suffix), llm_api)
-                    _LOGGER.debug("Tool call parsed: %s", tool_call)
-
-                    if tool_call:
-                        result.tool_calls = [tool_call]
-                    if to_say:
-                        content = to_say
+                    if not llm_api:
+                        _LOGGER.warning("Model attempted to call a tool but no LLM API was provided, ignoring tool calls")
                     else:
-                        content = None
+                        tool_call, to_say = parse_raw_tool_call(tool_content.strip().removeprefix(tool_prefix).removesuffix(tool_suffix), llm_api)
+                        _LOGGER.debug("Tool call parsed: %s", tool_call)
+
+                        if tool_call:
+                            result.tool_calls = [tool_call]
+                        if to_say:
+                            content = to_say
+                        else:
+                            content = None
 
                 result.response = content
             
@@ -463,9 +466,9 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
 
         return list(domains)
 
-    def _async_get_exposed_entities(self) -> dict[str, str]:
+    def _async_get_exposed_entities(self) -> dict[str, dict]:
         """Gather exposed entity states"""
-        entity_states = {}
+        entity_states: dict[str, dict] = {}
         entity_registry = er.async_get(self.hass)
         device_registry = dr.async_get(self.hass)
         area_registry = ar.async_get(self.hass)
@@ -577,10 +580,12 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
         """Generate the system prompt with current entity states"""
         entities_to_expose = self._async_get_exposed_entities()
 
-        extra_attributes_to_expose = self.entry.options \
-            .get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE)
+        extra_attributes_to_expose = self.entry.options.get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE)
+        enable_legacy_tool_calling = self.entry.options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
+        tool_call_prefix = self.entry.options.get(CONF_TOOL_CALL_PREFIX, DEFAULT_TOOL_CALL_PREFIX)
+        tool_call_suffix = self.entry.options.get(CONF_TOOL_CALL_SUFFIX, DEFAULT_TOOL_CALL_SUFFIX)
 
-        def expose_attributes(attributes) -> list[str]:
+        def expose_attributes(attributes: dict[str, Any]) -> list[str]:
             result = []
             for attribute_name in extra_attributes_to_expose:
                 if attribute_name not in attributes:
@@ -645,8 +650,22 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
         render_variables = {
             "devices": devices,
             "formatted_devices": formatted_devices,
-            "response_examples": []
+            "response_examples": [],
+            "tool_call_prefix": tool_call_prefix,
+            "tool_call_suffix": tool_call_suffix,
         }
+
+        if enable_legacy_tool_calling:
+            if llm_api:
+                tools = []
+                for tool in llm_api.tools:
+                    tools.append(f"{tool.name}({','.join(flatten_vol_schema(tool.parameters))})")
+                render_variables["tools"] = tools
+                render_variables["formatted_tools"] = ", ".join(tools)
+            else:
+                message = "No tools were provided. If the user requests you interact with a device, tell them you are unable to do so."
+                render_variables["tools"] = [message]
+                render_variables["formatted_tools"] = message
 
         # only pass examples if there are loaded examples + an API was exposed
         if self.in_context_examples and llm_api:

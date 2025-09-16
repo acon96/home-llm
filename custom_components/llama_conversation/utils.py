@@ -335,10 +335,10 @@ def get_home_llm_tools(llm_api: llm.APIInstance, domains: list[str]) -> List[Dic
         # scripts show up as individual services
         if domain == "script" and not scripts_added:
             all_services.extend([
-                ("script.reload", vol.Schema({})),
-                ("script.turn_on", vol.Schema({})),
-                ("script.turn_off", vol.Schema({})),
-                ("script.toggle", vol.Schema({})),
+                ("script.reload", vol.Schema({vol.Required("target_device"): str})),
+                ("script.turn_on", vol.Schema({vol.Required("target_device"): str})),
+                ("script.turn_off", vol.Schema({vol.Required("target_device"): str})),
+                ("script.toggle", vol.Schema({vol.Required("target_device"): str})),
             ])
             scripts_added = True
             continue
@@ -350,7 +350,8 @@ def get_home_llm_tools(llm_api: llm.APIInstance, domains: list[str]) -> List[Dic
             args = flatten_vol_schema(service.schema)
             args_to_expose = set(args).intersection(ALLOWED_SERVICE_CALL_ARGUMENTS)
             service_schema = vol.Schema({
-                vol.Optional(arg): str for arg in args_to_expose
+                vol.Required("target_device"): str,
+                **{vol.Optional(arg): str for arg in args_to_expose}
             })
 
             all_services.append((f"{domain}.{name}", service_schema))
@@ -384,17 +385,20 @@ def parse_raw_tool_call(raw_block: str | dict, llm_api: llm.APIInstance) -> tupl
     else:
         schema_to_validate = vol.Schema({
             vol.Required("name"): str,
-            vol.Required("arguments"): dict,
+            vol.Required("arguments"): str | dict,
         })
 
     try:
         schema_to_validate(parsed_tool_call)
     except vol.Error as ex:
         _LOGGER.info(f"LLM produced an improperly formatted response: {repr(ex)}")
-        raise # re-raise exception for now to force the LLM to try again
+        raise ex # re-raise exception for now to force the LLM to try again
 
     # try to fix certain arguments
     args_dict = parsed_tool_call if llm_api.api.id == HOME_LLM_API_ID else parsed_tool_call["arguments"]
+
+    if isinstance(args_dict, str):
+        args_dict = json.loads(args_dict)
 
     # make sure brightness is 0-255 and not a percentage
     if "brightness" in args_dict and 0.0 < args_dict["brightness"] <= 1.0:

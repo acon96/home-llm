@@ -76,13 +76,13 @@ ICL_EXTRAS = """
 {% for item in response_examples %}
 {{ item.request }}
 {{ item.response }}
-<functioncall> {{ item.tool | to_json }}
+{{ tool_call_prefix }}{{ item.tool | to_json }}{{ tool_call_suffix }}
 {% endfor %}"""
 ICL_NO_SYSTEM_PROMPT_EXTRAS = """
 {% for item in response_examples %}
 {{ item.request }}
 {{ item.response }}
-<functioncall> {{ item.tool | to_json }}
+{{ tool_call_prefix }}{{ item.tool | to_json }}{{ tool_call_suffix }}
 {% endfor %}
 <user_instruction>:"""
 DEFAULT_PROMPT = DEFAULT_PROMPT_BASE + ICL_EXTRAS
@@ -137,6 +137,8 @@ CONF_TOOL_CALL_PREFIX = "tool_call_prefix"
 DEFAULT_TOOL_CALL_PREFIX = "<tool_call>"
 CONF_TOOL_CALL_SUFFIX = "tool_call_suffix"
 DEFAULT_TOOL_CALL_SUFFIX = "</tool_call>"
+CONF_ENABLE_LEGACY_TOOL_CALLING = "enable_legacy_tool_calling"
+DEFAULT_ENABLE_LEGACY_TOOL_CALLING = False
 CONF_ENABLE_FLASH_ATTENTION = "enable_flash_attention"
 DEFAULT_ENABLE_FLASH_ATTENTION = False
 CONF_USE_GBNF_GRAMMAR = "gbnf_grammar"
@@ -179,7 +181,6 @@ CONF_GENERIC_OPENAI_PATH = "openai_path"
 DEFAULT_GENERIC_OPENAI_PATH = "v1"
 CONF_GENERIC_OPENAI_VALIDATE_MODEL = "openai_validate_model"
 DEFAULT_GENERIC_OPENAI_VALIDATE_MODEL = True
-
 CONF_CONTEXT_LENGTH = "context_length"
 DEFAULT_CONTEXT_LENGTH = 2048
 CONF_BATCH_SIZE = "batch_size"
@@ -228,6 +229,7 @@ OPTIONS_OVERRIDES = {
         CONF_TOOL_CALL_SUFFIX: "```",
         CONF_CONTEXT_LENGTH: 131072,
         CONF_MAX_TOOL_CALL_ITERATIONS: 1,
+        CONF_ENABLE_LEGACY_TOOL_CALLING: True
     },
     "home-3b-v3": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
@@ -235,6 +237,7 @@ OPTIONS_OVERRIDES = {
         CONF_TOOL_CALL_PREFIX: "```homeassistant",
         CONF_TOOL_CALL_SUFFIX: "```",
         CONF_MAX_TOOL_CALL_ITERATIONS: 1,
+        CONF_ENABLE_LEGACY_TOOL_CALLING: True
     },
     "home-3b-v2": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
@@ -242,6 +245,7 @@ OPTIONS_OVERRIDES = {
         CONF_TOOL_CALL_PREFIX: "```homeassistant",
         CONF_TOOL_CALL_SUFFIX: "```",
         CONF_MAX_TOOL_CALL_ITERATIONS: 1,
+        CONF_ENABLE_LEGACY_TOOL_CALLING: True
     },
     "home-3b-v1": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
@@ -249,6 +253,7 @@ OPTIONS_OVERRIDES = {
         CONF_TOOL_CALL_PREFIX: "```homeassistant",
         CONF_TOOL_CALL_SUFFIX: "```",
         CONF_MAX_TOOL_CALL_ITERATIONS: 1,
+        CONF_ENABLE_LEGACY_TOOL_CALLING: True
     },
     "home-1b-v3": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
@@ -256,6 +261,7 @@ OPTIONS_OVERRIDES = {
         CONF_TOOL_CALL_PREFIX: "```homeassistant",
         CONF_TOOL_CALL_SUFFIX: "```",
         CONF_MAX_TOOL_CALL_ITERATIONS: 1,
+        CONF_ENABLE_LEGACY_TOOL_CALLING: True
     },
     "home-1b-v2": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
@@ -263,6 +269,7 @@ OPTIONS_OVERRIDES = {
         CONF_TOOL_CALL_PREFIX: "```homeassistant",
         CONF_TOOL_CALL_SUFFIX: "```",
         CONF_MAX_TOOL_CALL_ITERATIONS: 1,
+        CONF_ENABLE_LEGACY_TOOL_CALLING: True
     },
     "home-1b-v1": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
@@ -270,6 +277,7 @@ OPTIONS_OVERRIDES = {
         CONF_TOOL_CALL_PREFIX: "```homeassistant",
         CONF_TOOL_CALL_SUFFIX: "```",
         CONF_MAX_TOOL_CALL_ITERATIONS: 1,
+        CONF_ENABLE_LEGACY_TOOL_CALLING: True
     },
     "mistral": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_NO_SYSTEM_PROMPT_EXTRAS,
