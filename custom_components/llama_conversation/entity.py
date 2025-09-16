@@ -12,7 +12,7 @@ from homeassistant.components.conversation import ConversationInput, Conversatio
 from homeassistant.components import conversation
 from homeassistant.components.conversation.const import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import MATCH_ALL, CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError, HomeAssistantError
@@ -56,6 +56,9 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+type LocalLLMConfigEntry = ConfigEntry[LocalLLMClient]
+
 
 @dataclass(kw_only=True)
 class TextGenerationResult:
@@ -236,7 +239,7 @@ class LocalLLMClient:
         for _ in range(max_tool_call_iterations):
             try:
                 _LOGGER.debug(message_history)
-                generation_result = await self._async_generate(message_history, user_input, chat_log)
+                generation_result = await self._async_generate(message_history, user_input, chat_log, entity_options)
             except Exception as err:
                 _LOGGER.exception("There was a problem talking to the backend")
                 intent_response = intent.IntentResponse(language=user_input.language)
@@ -607,22 +610,23 @@ class LocalLLMEntity(entity.Entity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, client: LocalLLMClient) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, subentry: ConfigSubentry, client: LocalLLMClient) -> None:
         """Initialize the agent."""
-        self._attr_name = entry.title
-        self._attr_unique_id = entry.entry_id
+        self._attr_name = subentry.title
+        self._attr_unique_id = subentry.subentry_id
 
         self.hass = hass
         self.entry_id = entry.entry_id
+        self.subentry_id = subentry.subentry_id
         self.client = client
 
-        if self.entry.options.get(CONF_LLM_HASS_API):
+        if subentry.data.get(CONF_LLM_HASS_API):
             self._attr_supported_features = (
                 conversation.ConversationEntityFeature.CONTROL
             )
 
     def handle_reload(self):
-        self.client._update_options(self.entry.options)
+        self.client._update_options(self.runtime_options)
 
     @property
     def entry(self) -> ConfigEntry:
@@ -630,6 +634,18 @@ class LocalLLMEntity(entity.Entity):
             return self.hass.data[DOMAIN][self.entry_id]
         except KeyError as ex:
             raise Exception("Attempted to use self.entry during startup.") from ex
+        
+    @property
+    def subentry(self) -> ConfigSubentry:
+        try:
+            return self.entry.subentries[self.subentry_id]
+        except KeyError as ex:
+            raise Exception("Attempted to use self.subentry during startup.") from ex
+        
+    @property
+    def runtime_options(self) -> dict[str, Any]:
+        """Return the runtime options for this entity."""
+        return {**self.entry.options, **self.subentry.data}
 
     @property
     def supported_languages(self) -> list[str] | Literal["*"]:

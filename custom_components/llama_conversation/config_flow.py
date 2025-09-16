@@ -10,13 +10,18 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_LLM_HASS_API, UnitOfTime
 from homeassistant.data_entry_flow import (
     AbortFlow,
     FlowHandler,
     FlowManager,
     FlowResult,
+)
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigSubentryFlow,
+    SubentryFlowResult,
 )
 from homeassistant.helpers import llm
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -307,7 +312,17 @@ class BaseLlamaConversationConfigFlow(FlowHandler, ABC):
 class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Local LLM Conversation."""
 
-    VERSION = 2
+    VERSION = 3
+
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(
+        cls, config_entry: config_entries.ConfigEntry
+    ) -> dict[str, type[config_entries.ConfigSubentryFlow]]:
+        """Return subentries supported by this integration."""
+        return {
+            "conversation": LocalLLMSubentryFlowHandler,
+        }
     install_wheel_task = None
     install_wheel_error = None
     download_task = None
@@ -816,43 +831,14 @@ class OptionsFlow(config_entries.OptionsFlow):
         )
 
 
-def insert_after_key(input_dict: dict, key_name: str, other_dict: dict):
-    # if we want to insert them into the above list we need to re-build the dictionary
-    result = {}
-    for key in input_dict.keys():
-        result[key] = input_dict[key]
 
-        if key.schema == key_name:
-            for other_key in other_dict.keys():
-                result[other_key] = other_dict[other_key]
-
-    return result
 
 def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyType[str, Any], backend_type: str) -> dict:
     """Return a schema for Local LLM completion options."""
     if not options:
         options = DEFAULT_OPTIONS
 
-    apis: list[SelectOptionDict] = [
-        SelectOptionDict(
-            label="No control",
-            value="none",
-        )
-    ]
-    apis.extend(
-        SelectOptionDict(
-            label=api.name,
-            value=api.id,
-        )
-        for api in llm.async_get_apis(hass)
-    )
-
     result = {
-        vol.Optional(
-            CONF_LLM_HASS_API,
-            description={"suggested_value": options.get(CONF_LLM_HASS_API)},
-            default="none",
-        ): SelectSelector(SelectSelectorConfig(options=apis)),
         vol.Required(
             CONF_PROMPT,
             description={"suggested_value": options.get(CONF_PROMPT)},
@@ -977,12 +963,12 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
                 CONF_LLAMACPP_THREAD_COUNT,
                 description={"suggested_value": options.get(CONF_LLAMACPP_THREAD_COUNT)},
                 default=DEFAULT_LLAMACPP_THREAD_COUNT,
-            ): NumberSelector(NumberSelectorConfig(min=1, max=(os.cpu_count() * 2), step=1)),
+            ): NumberSelector(NumberSelectorConfig(min=1, max=((os.cpu_count() or 1) * 2), step=1)),
             vol.Required(
                 CONF_LLAMACPP_BATCH_THREAD_COUNT,
                 description={"suggested_value": options.get(CONF_LLAMACPP_BATCH_THREAD_COUNT)},
                 default=DEFAULT_LLAMACPP_BATCH_THREAD_COUNT,
-            ): NumberSelector(NumberSelectorConfig(min=1, max=(os.cpu_count() * 2), step=1)),
+            ): NumberSelector(NumberSelectorConfig(min=1, max=((os.cpu_count() or 1) * 2), step=1)),
             vol.Required(
                 CONF_LLAMACPP_ENABLE_FLASH_ATTENTION,
                 description={"suggested_value": options.get(CONF_LLAMACPP_ENABLE_FLASH_ATTENTION)},
@@ -1082,8 +1068,6 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
                 description={"suggested_value": options.get(CONF_REMEMBER_CONVERSATION_TIME_MINUTES)},
                 default=DEFAULT_TOP_P,
             ): NumberSelector(NumberSelectorConfig(min=0, max=180, step=0.5, unit_of_measurement=UnitOfTime.MINUTES, mode=NumberSelectorMode.BOX)),
-        })
-        result = insert_after_key(result, CONF_MAX_TOKENS, {
             vol.Required(
                 CONF_TEMPERATURE,
                 description={"suggested_value": options.get(CONF_TEMPERATURE)},
@@ -1230,5 +1214,161 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
     ]
 
     result = { k: v for k, v in sorted(result.items(), key=lambda item: global_order.index(item[0]) if item[0] in global_order else 9999) }
+
+    return result
+
+
+class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
+    """Flow for managing Local LLM subentries."""
+
+    def __init__(self) -> None:
+        """Initialize the subentry flow."""
+        super().__init__()
+
+        self._name = None
+        self._config_data = None
+
+    @property
+    def _is_new(self) -> bool:
+        """Return if this is a new subentry."""
+        return self.source == "user"
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Handle model selection and configuration step."""
+        # Ensure the parent entry is loaded before allowing subentry edits
+        if self._get_entry().state != config_entries.ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
+        if user_input is not None:
+            if not user_input:
+                if self._is_new:
+                    return self.async_abort(reason="no_changes")
+                # No changes submitted -> return existing subentry data
+                return self.async_create_entry(data=dict(self._get_reconfigure_subentry().data))
+
+            # Create a new subentry or update an existing one
+            if self._is_new:
+                return self.async_create_entry(data=user_input)
+
+            return self.async_update_and_abort(
+                self._get_entry(), self._get_reconfigure_subentry(), data=user_input
+            )
+
+        # Generate schema with only the configurable parameters for subentries
+        if self._is_new:
+            options: dict[str, Any] = {}
+        else:
+            options = dict(self._get_reconfigure_subentry().data)
+
+        backend_type = self._get_entry().data[CONF_BACKEND_TYPE]
+        schema = vol.Schema(local_llama_config_subentry_schema(self.hass, MappingProxyType(options), backend_type, self._subentry_type))
+
+        return self.async_show_form(step_id="init", data_schema=schema)
+
+    async_step_user = async_step_init
+    async_step_reconfigure = async_step_init
+
+def local_llama_config_subentry_schema(
+    hass: HomeAssistant,
+    data: MappingProxyType[str, Any],
+    backend_type: str, 
+    subentry_type: str
+) -> dict:
+    """Return a schema dict for subentry (conversation) options.
+
+    This intentionally only exposes prompt + sampling parameters for subentries.
+    """
+    options = dict(data) if data else {}
+
+    # TODO: only expose options that are relevant to the backend_type
+    # TODO: remove the options from the main config flow
+    # TODO: sort entries properly using global order
+
+    result: dict = {
+        vol.Optional(
+            CONF_PROMPT,
+            description={"suggested_value": options.get(CONF_PROMPT, "")},
+            default=options.get(CONF_PROMPT, ""),
+        ): TemplateSelector(),
+        vol.Optional(
+            CONF_TEMPERATURE,
+            description={"suggested_value": options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)},
+            default=options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE),
+        ): NumberSelector(NumberSelectorConfig(min=0.0, max=2.0, step=0.05, mode=NumberSelectorMode.BOX)),
+        vol.Optional(
+            CONF_TOP_K,
+            description={"suggested_value": options.get(CONF_TOP_K, DEFAULT_TOP_K)},
+            default=options.get(CONF_TOP_K, DEFAULT_TOP_K),
+        ): NumberSelector(NumberSelectorConfig(min=1, max=500, mode=NumberSelectorMode.BOX)),
+        vol.Optional(
+            CONF_TOP_P,
+            description={"suggested_value": options.get(CONF_TOP_P, DEFAULT_TOP_P)},
+            default=options.get(CONF_TOP_P, DEFAULT_TOP_P),
+        ): NumberSelector(NumberSelectorConfig(min=0.0, max=1.0, step=0.05, mode=NumberSelectorMode.BOX)),
+        vol.Optional(
+            CONF_MIN_P,
+            description={"suggested_value": options.get(CONF_MIN_P, DEFAULT_MIN_P)},
+            default=options.get(CONF_MIN_P, DEFAULT_MIN_P),
+        ): NumberSelector(NumberSelectorConfig(min=0.0, max=1.0, step=0.05, mode=NumberSelectorMode.BOX)),
+        vol.Optional(
+            CONF_TYPICAL_P,
+            description={"suggested_value": options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)},
+            default=options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P),
+        ): NumberSelector(NumberSelectorConfig(min=0.0, max=1.0, step=0.05, mode=NumberSelectorMode.BOX)),
+        vol.Optional(
+            CONF_REFRESH_SYSTEM_PROMPT,
+            description={"suggested_value": options.get(CONF_REFRESH_SYSTEM_PROMPT, DEFAULT_REFRESH_SYSTEM_PROMPT)},
+            default=options.get(CONF_REFRESH_SYSTEM_PROMPT, DEFAULT_REFRESH_SYSTEM_PROMPT),
+        ): BooleanSelector(BooleanSelectorConfig()),
+        vol.Optional(
+            CONF_REMEMBER_CONVERSATION,
+            description={"suggested_value": options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION)},
+            default=options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION),
+        ): BooleanSelector(BooleanSelectorConfig()),
+        vol.Optional(
+            CONF_REMEMBER_NUM_INTERACTIONS,
+            description={"suggested_value": options.get(CONF_REMEMBER_NUM_INTERACTIONS, DEFAULT_REMEMBER_NUM_INTERACTIONS)},
+            default=options.get(CONF_REMEMBER_NUM_INTERACTIONS, DEFAULT_REMEMBER_NUM_INTERACTIONS),
+        ): NumberSelector(NumberSelectorConfig(min=0, max=100, mode=NumberSelectorMode.BOX)),
+        vol.Optional(
+            CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
+            description={"suggested_value": options.get(CONF_REMEMBER_CONVERSATION_TIME_MINUTES, DEFAULT_REMEMBER_CONVERSATION)},
+            default=options.get(CONF_REMEMBER_CONVERSATION_TIME_MINUTES, DEFAULT_REMEMBER_CONVERSATION),
+        ): NumberSelector(NumberSelectorConfig(min=0, max=1440, mode=NumberSelectorMode.BOX)),
+    }
+
+    if subentry_type == "conversation":
+        apis: list[SelectOptionDict] = [
+            SelectOptionDict(
+                label="No control",
+                value="none",
+            )
+        ]
+        apis.extend(
+            SelectOptionDict(
+                label=api.name,
+                value=api.id,
+            )
+            for api in llm.async_get_apis(hass)
+        )
+        result.update({
+            vol.Optional(
+                CONF_LLM_HASS_API,
+                description={"suggested_value": options.get(CONF_LLM_HASS_API)},
+                default="none",
+            ): SelectSelector(SelectSelectorConfig(options=apis)),
+            vol.Optional(
+                CONF_REMEMBER_CONVERSATION,
+                description={"suggested_value": options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION)},
+                default=options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION),
+            ): BooleanSelector(BooleanSelectorConfig()),
+            vol.Optional(
+                CONF_REMEMBER_NUM_INTERACTIONS,
+                description={"suggested_value": options.get(CONF_REMEMBER_NUM_INTERACTIONS, DEFAULT_REMEMBER_NUM_INTERACTIONS)},
+                default=options.get(CONF_REMEMBER_NUM_INTERACTIONS, DEFAULT_REMEMBER_NUM_INTERACTIONS),
+            ): int,
+        })
 
     return result

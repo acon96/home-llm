@@ -46,11 +46,12 @@
 
 ## v0.4 TODO for release:
 - [x] re-order the settings on the options config flow page. the order is very confusing  
-- [ ] split out entity functionality so we can support conversation + ai tasks  
+- [x] split out entity functionality so we can support conversation + ai tasks  
 - [x] fix icl examples to match new tool calling syntax config  
 - [x] set up docker-compose for running all of the various backends  
 - [ ] fix and re-upload all compatible old models (+ upload all original safetensors)  
 - [x] fix the openai responses backend  
+- [ ] config entry migration function?
 
 ## more complicated ideas
 - [ ] "context requests"  
