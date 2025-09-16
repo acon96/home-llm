@@ -6,7 +6,8 @@ import logging
 import os
 import threading
 import time
-from typing import Any, Callable, Generator, Optional, List, Dict, AsyncIterable, AsyncGenerator, Sequence
+import json
+from typing import Any, Callable, Iterator, List, AsyncGenerator
 
 from homeassistant.components import conversation as conversation
 from homeassistant.components.conversation.const import DOMAIN as CONVERSATION_DOMAIN
@@ -18,8 +19,14 @@ from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.helpers.event import async_track_state_change, async_call_later
 
+from llama_cpp import CreateChatCompletionStreamResponse
+
 from custom_components.llama_conversation.utils import install_llama_cpp_python, validate_llama_cpp_python_installation, get_oai_formatted_messages, get_oai_formatted_tools
 from custom_components.llama_conversation.const import (
+    CONF_THINKING_PREFIX,
+    CONF_THINKING_SUFFIX,
+    CONF_TOOL_CALL_PREFIX,
+    CONF_TOOL_CALL_SUFFIX,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_TEMPERATURE,
@@ -37,6 +44,10 @@ from custom_components.llama_conversation.const import (
     CONF_BATCH_SIZE,
     CONF_THREAD_COUNT,
     CONF_BATCH_THREAD_COUNT,
+    DEFAULT_THINKING_PREFIX,
+    DEFAULT_THINKING_SUFFIX,
+    DEFAULT_TOOL_CALL_PREFIX,
+    DEFAULT_TOOL_CALL_SUFFIX,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
@@ -270,7 +281,7 @@ class LlamaCppAgent(LocalLLMAgent):
         if self.entry.options.get(CONF_LLM_HASS_API):
             try:
                 llm_api = await llm.async_get_api(
-                    self.hass, self.entry.options[CONF_LLM_HASS_API]
+                    self.hass, self.entry.options[CONF_LLM_HASS_API],
                 )
             except HomeAssistantError:
                 _LOGGER.exception("Failed to get LLM API when caching prompt!")
@@ -316,8 +327,6 @@ class LlamaCppAgent(LocalLLMAgent):
             top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
             grammar = self.grammar if self.entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR) else None
 
-            _LOGGER.debug(f"Options: {self.entry.options}")
-
             _LOGGER.debug(f"Processing {len(input_tokens)} input tokens...")
 
             # grab just one token. should prime the kv cache with the system prompt
@@ -344,7 +353,7 @@ class LlamaCppAgent(LocalLLMAgent):
 
                 refresh_start = time.time()
                 _LOGGER.debug(f"refreshing cached prompt after cooldown...")
-                await self.hass.async_add_executor_job(self._cache_prompt)
+                await self.hass.async_add_executor_job(self._cache_prompt, llm_api)
 
                 refresh_end = time.time()
                 _LOGGER.debug(f"cache refresh took {(refresh_end - refresh_start):.2f} sec")
@@ -352,20 +361,71 @@ class LlamaCppAgent(LocalLLMAgent):
         refresh_delay = self.entry.options.get(CONF_PROMPT_CACHING_INTERVAL, DEFAULT_PROMPT_CACHING_INTERVAL)
         async_call_later(self.hass, float(refresh_delay), refresh_if_requested)
 
-    async def _async_generate_completion(self, chat_completion) -> AsyncGenerator[TextGenerationResult, None]:        
-        for token in chat_completion:
-            if isinstance(token, str):
-                yield TextGenerationResult(
-                    response=token,
-                    response_streamed=True
-                )
-            else:
-                token["choices"][0]["delta"].get("tool_calls")
+    async def _async_generate_completion(self, chat_completion: Iterator[CreateChatCompletionStreamResponse]) -> AsyncGenerator[TextGenerationResult, None]:
+        think_prefix = self.entry.options.get(CONF_THINKING_PREFIX, DEFAULT_THINKING_PREFIX)
+        think_suffix = self.entry.options.get(CONF_THINKING_SUFFIX, DEFAULT_THINKING_SUFFIX)
+        tool_prefix = self.entry.options.get(CONF_TOOL_CALL_PREFIX, DEFAULT_TOOL_CALL_PREFIX)
+        tool_suffix = self.entry.options.get(CONF_TOOL_CALL_SUFFIX, DEFAULT_TOOL_CALL_SUFFIX)
 
+        def next_token():
+            """Get the next token from the chat completion iterator."""
+            try:
+                return next(chat_completion)
+            except StopIteration:
+                return None
+        
+        in_thinking = False
+        in_tool_call = False
+        tool_content = ""
+        while chunk := await self.hass.async_add_executor_job(next_token):
+            content = chunk["choices"][0]["delta"].get("content")
+            tool_calls = chunk["choices"][0]["delta"].get("tool_calls")
 
-    def _generate_stream(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None) -> AsyncGenerator[TextGenerationResult, None]:
+            _LOGGER.debug(f"Handling chunk: {content}")
+
+            result = TextGenerationResult(
+                response=None,
+                response_streamed=True,
+                tool_calls=None
+            )
+            if content:
+                if think_prefix in content and not in_thinking:
+                    in_thinking = True
+                elif think_suffix in content and in_thinking:
+                    in_thinking = False
+                    content = content.replace(think_suffix, "").strip()
+                elif tool_prefix in content and not in_tool_call:
+                    in_tool_call = True
+                elif tool_suffix in content and in_tool_call:
+                    in_tool_call = False
+                    tool_call = json.loads(tool_content.strip().removeprefix(tool_prefix).removesuffix(tool_suffix))
+                    result.tool_calls = [
+                        llm.ToolInput(
+                            tool_name=tool_call["name"],
+                            tool_args=tool_call["arguments"]
+                        )
+                    ]
+
+                    content = None
+
+                result.response = content
+
+                if in_tool_call:
+                    tool_content += content
+            
+            if tool_calls:
+                result.tool_calls = [
+                    llm.ToolInput(
+                        tool_name=str(tool_calls[0]["function"]["name"]),
+                        tool_args=json.loads(tool_calls[0]["function"]["arguments"])
+                    )
+                ]
+
+            if not in_thinking and not in_tool_call:
+                yield result
+
+    def _generate_stream(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None, user_input: conversation.ConversationInput) -> AsyncGenerator[TextGenerationResult, None]:
         """Async generator that yields TextGenerationResult as tokens are produced."""
-        # prompt = self._format_prompt(conversation)
         max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
         temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
         top_k = int(self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K))
@@ -375,6 +435,7 @@ class LlamaCppAgent(LocalLLMAgent):
 
         _LOGGER.debug(f"Options: {self.entry.options}")
 
+        # TODO: re-enable the context length check
         # with self.model_lock:
         #     # FIXME: use the high level API so we can use the built-in prompt formatting
         #     input_tokens = self.llm.tokenize(
@@ -397,6 +458,8 @@ class LlamaCppAgent(LocalLLMAgent):
         if llm_api:
             tools = get_oai_formatted_tools(llm_api)
 
+        _LOGGER.debug(f"Generating completion with {len(messages)} messages and {len(tools) if tools else 0} tools...")
+
         return self._async_generate_completion(self.llm.create_chat_completion(
             messages,
             tools=tools,
@@ -406,6 +469,7 @@ class LlamaCppAgent(LocalLLMAgent):
             min_p=min_p,
             typical_p=typical_p,
             max_tokens=max_tokens,
-            grammar=self.grammar
+            grammar=self.grammar,
+            stream=True,
         ))
 

@@ -24,7 +24,6 @@ from custom_components.llama_conversation.const import (
     CONF_OPENAI_API_KEY,
     CONF_REMEMBER_CONVERSATION,
     CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
-    CONF_REMOTE_USE_CHAT_ENDPOINT,
     CONF_GENERIC_OPENAI_PATH,
     DEFAULT_MAX_TOKENS,
     DEFAULT_TEMPERATURE,
@@ -42,6 +41,8 @@ class BaseOpenAICompatibleAPIAgent(LocalLLMAgent):
     api_host: str
     api_key: str
     model_name: str
+
+    _attr_supports_streaming = True
 
     async def _async_load_model(self, entry: ConfigEntry) -> None:
         self.api_host = format_url(
@@ -218,7 +219,7 @@ class GenericOpenAIResponsesAPIAgent(BaseOpenAICompatibleAPIAgent):
         if response_json["status"] != "completed":
             _LOGGER.warning(f"Response status is not 'completed', got {response_json['status']}. Details: {response_json.get('incomplete_details', 'No details provided')}")
 
-    def _extract_response(self, response_json: dict) -> TextGenerationResult:
+    def _extract_response(self, response_json: dict, llm_api: llm.APIInstance | None, user_input: conversation.ConversationInput) -> TextGenerationResult:
         self._validate_response_payload(response_json)
         self._check_response_status(response_json)
 

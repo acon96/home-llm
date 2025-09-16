@@ -2,6 +2,7 @@
 - [ ] proper tool calling support  
 - [ ] home assistant component text streaming support  
 - [ ] new models based on qwen3  
+- [ ] support AI task API  
 - [x] support new LLM APIs  
     - rewrite how services are called  
     - handle no API selected  
@@ -54,6 +55,6 @@
     - set up vectordb  
     - ingest home assistant docs  
     - "context request" from above to initiate a RAG search  
-- [ ] train the model to respond to house events  
+- [ ] train the model to respond to house events (HA is calling these AI tasks)  
     - present the model with an event + a "prompt" from the user of what you want it to do (i.e. turn on the lights when I get home = the model turns on lights when your entity presence triggers as being home)  
     - basically lets you write automations in plain english  

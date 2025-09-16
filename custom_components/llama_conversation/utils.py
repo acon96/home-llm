@@ -7,7 +7,8 @@ import logging
 import multiprocessing
 import voluptuous as vol
 import webcolors
-from typing import Any, Dict, List, Sequence
+import json
+from typing import Any, Dict, List, Sequence, cast
 from webcolors import CSS3
 from importlib.metadata import version
 
@@ -17,6 +18,8 @@ from homeassistant.helpers import intent, llm
 from homeassistant.requirements import pip_kwargs
 from homeassistant.util import color
 from homeassistant.util.package import install_package, is_installed
+
+from voluptuous_openapi import convert
 
 from .const import (
     INTEGRATION_VERSION,
@@ -250,17 +253,19 @@ def format_url(*, hostname: str, port: str, ssl: bool, path: str):
     return f"{'https' if ssl else 'http'}://{hostname}{ ':' + port if port else ''}{path}"
 
 def get_oai_formatted_tools(llm_api: llm.APIInstance) -> List[ChatCompletionTool]:
-    return [ {
+    result: List[ChatCompletionTool] = [ {
         "type": "function",
         "function": {
             "name": tool.name,
             "description": tool.description or "",
-            "parameters": tool.parameters.schema
+            "parameters": convert(tool.parameters, custom_serializer=llm_api.custom_serializer)
         }
     } for tool in llm_api.tools ]
 
-def get_oai_formatted_messages(conversation: Sequence[conversation.Content]) -> List[ChatCompletionRequestMessage]:
-        messages = []
+    return result
+
+def get_oai_formatted_messages(conversation: Sequence[conversation.Content], user_content_as_list: bool = False) -> List[ChatCompletionRequestMessage]:
+        messages: List[ChatCompletionRequestMessage] = []
         for message in conversation:
             if message.role == "system":
                 messages.append({
@@ -268,21 +273,27 @@ def get_oai_formatted_messages(conversation: Sequence[conversation.Content]) -> 
                     "content": message.content
                 })
             elif message.role == "user":
-                messages.append({
-                    "role": "user",
-                    "content": [{ "type": "text", "text": message.content }]
-                })
+                if user_content_as_list:
+                    messages.append({
+                        "role": "user",
+                        "content": [{ "type": "text", "text": message.content }]
+                    })
+                else:
+                    messages.append({
+                        "role": "user",
+                        "content": message.content
+                    })
             elif message.role == "assistant":
                 if message.tool_calls:
                     messages.append({
                         "role": "assistant",
-                        "content": message.content,
+                        "content": str(message.content),
                         "tool_calls": [
                             {
                                 "type" : "function",
                                 "id": t.id,
-                                "function":  {
-                                    "arguments": t.tool_args,
+                                "function": {
+                                    "arguments": json.dumps(t.tool_args),
                                     "name": t.tool_name,
                                 }
                             } for t in message.tool_calls
@@ -291,7 +302,7 @@ def get_oai_formatted_messages(conversation: Sequence[conversation.Content]) -> 
             elif message.role == "tool_result":
                 messages.append({
                     "role": "tool",
-                    "content": message.tool_result,
+                    "content": json.dumps(message.tool_result),
                     "tool_call_id": message.tool_call_id
                 })
 

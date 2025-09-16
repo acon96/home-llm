@@ -15,7 +15,6 @@ from custom_components.llama_conversation.const import (
     CONF_TOP_K,
     CONF_TYPICAL_P,
     CONF_MIN_P,
-    CONF_PROMPT_TEMPLATE,
     CONF_USE_GBNF_GRAMMAR,
     CONF_TEXT_GEN_WEBUI_PRESET,
     CONF_TEXT_GEN_WEBUI_ADMIN_KEY,
@@ -25,7 +24,6 @@ from custom_components.llama_conversation.const import (
     DEFAULT_TOP_K,
     DEFAULT_MIN_P,
     DEFAULT_TYPICAL_P,
-    DEFAULT_PROMPT_TEMPLATE,
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_GBNF_GRAMMAR_FILE,
     DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
@@ -92,8 +90,6 @@ class TextGenerationWebuiAgent(GenericOpenAIAPIAgent):
         if chat_mode == TEXT_GEN_WEBUI_CHAT_MODE_CHAT or chat_mode == TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT:
             if preset:
                 request_params["character"] = preset
-        elif chat_mode == TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT:
-            request_params["instruction_template"] = self.entry.options.get(CONF_PROMPT_TEMPLATE, DEFAULT_PROMPT_TEMPLATE)
 
         request_params["truncation_length"] = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
         request_params["top_k"] = self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K)

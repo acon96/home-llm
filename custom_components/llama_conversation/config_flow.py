@@ -54,9 +54,10 @@ from .const import (
     CONF_DOWNLOADED_MODEL_FILE,
     CONF_DOWNLOADED_MODEL_QUANTIZATION,
     CONF_DOWNLOADED_MODEL_QUANTIZATION_OPTIONS,
-    CONF_PROMPT_TEMPLATE,
-    CONF_TOOL_FORMAT,
-    CONF_TOOL_MULTI_TURN_CHAT,
+    CONF_THINKING_PREFIX,
+    CONF_THINKING_SUFFIX,
+    CONF_TOOL_CALL_PREFIX,
+    CONF_TOOL_CALL_SUFFIX,
     CONF_ENABLE_FLASH_ATTENTION,
     CONF_USE_GBNF_GRAMMAR,
     CONF_GBNF_GRAMMAR_FILE,
@@ -73,8 +74,6 @@ from .const import (
     CONF_NUM_IN_CONTEXT_EXAMPLES,
     CONF_OPENAI_API_KEY,
     CONF_TEXT_GEN_WEBUI_ADMIN_KEY,
-    CONF_SERVICE_CALL_REGEX,
-    CONF_REMOTE_USE_CHAT_ENDPOINT,
     CONF_TEXT_GEN_WEBUI_CHAT_MODE,
     CONF_OLLAMA_KEEP_ALIVE_MIN,
     CONF_OLLAMA_JSON_MODE,
@@ -95,7 +94,6 @@ from .const import (
     TOOLS_PROMPT,
     AREA_PROMPT,
     USER_INSTRUCTION,
-    DEFAULT_PROMPT_BASE,
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
@@ -104,9 +102,10 @@ from .const import (
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_BACKEND_TYPE,
     DEFAULT_DOWNLOADED_MODEL_QUANTIZATION,
-    DEFAULT_PROMPT_TEMPLATE,
-    DEFAULT_TOOL_FORMAT,
-    DEFAULT_TOOL_MULTI_TURN_CHAT,
+    DEFAULT_THINKING_PREFIX,
+    DEFAULT_THINKING_SUFFIX,
+    DEFAULT_TOOL_CALL_PREFIX,
+    DEFAULT_TOOL_CALL_SUFFIX,
     DEFAULT_ENABLE_FLASH_ATTENTION,
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_GBNF_GRAMMAR_FILE,
@@ -119,8 +118,6 @@ from .const import (
     DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
     DEFAULT_IN_CONTEXT_EXAMPLES_FILE,
     DEFAULT_NUM_IN_CONTEXT_EXAMPLES,
-    DEFAULT_SERVICE_CALL_REGEX,
-    DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
     DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
     DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
     DEFAULT_OLLAMA_JSON_MODE,
@@ -137,10 +134,6 @@ from .const import (
     BACKEND_TYPE_GENERIC_OPENAI_RESPONSES,
     BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER,
     BACKEND_TYPE_OLLAMA,
-    PROMPT_TEMPLATE_DESCRIPTIONS,
-    TOOL_FORMAT_FULL,
-    TOOL_FORMAT_REDUCED,
-    TOOL_FORMAT_MINIMAL,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT,
     TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT,
@@ -864,31 +857,6 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
             default=options[CONF_PROMPT],
         ): TemplateSelector(),
         vol.Required(
-            CONF_PROMPT_TEMPLATE,
-            description={"suggested_value": options.get(CONF_PROMPT_TEMPLATE)},
-            default=DEFAULT_PROMPT_TEMPLATE,
-        ): SelectSelector(SelectSelectorConfig(
-            options=list(PROMPT_TEMPLATE_DESCRIPTIONS.keys()),
-            translation_key=CONF_PROMPT_TEMPLATE,
-            multiple=False,
-            mode=SelectSelectorMode.DROPDOWN,
-        )),
-        vol.Required(
-            CONF_TOOL_FORMAT,
-            description={"suggested_value": options.get(CONF_TOOL_FORMAT)},
-            default=DEFAULT_TOOL_FORMAT,
-        ): SelectSelector(SelectSelectorConfig(
-            options=[TOOL_FORMAT_FULL, TOOL_FORMAT_REDUCED, TOOL_FORMAT_MINIMAL],
-            translation_key=CONF_TOOL_FORMAT,
-            multiple=False,
-            mode=SelectSelectorMode.DROPDOWN,
-        )),
-        vol.Required(
-            CONF_TOOL_MULTI_TURN_CHAT,
-            description={"suggested_value": options.get(CONF_TOOL_MULTI_TURN_CHAT)},
-            default=DEFAULT_TOOL_MULTI_TURN_CHAT,
-        ): BooleanSelector(BooleanSelectorConfig()),
-        vol.Required(
             CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
             description={"suggested_value": options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES)},
             default=DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
@@ -914,9 +882,24 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
             default=DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
         ): TextSelector(TextSelectorConfig(multiple=True)),
         vol.Required(
-            CONF_SERVICE_CALL_REGEX,
-            description={"suggested_value": options.get(CONF_SERVICE_CALL_REGEX)},
-            default=DEFAULT_SERVICE_CALL_REGEX,
+            CONF_THINKING_PREFIX,
+            description={"suggested_value": options.get(CONF_THINKING_PREFIX)},
+            default=DEFAULT_THINKING_PREFIX,
+        ): str,
+        vol.Required(
+            CONF_THINKING_SUFFIX,
+            description={"suggested_value": options.get(CONF_THINKING_SUFFIX)},
+            default=DEFAULT_THINKING_SUFFIX,
+        ): str,
+        vol.Required(
+            CONF_TOOL_CALL_PREFIX,
+            description={"suggested_value": options.get(CONF_TOOL_CALL_PREFIX)},
+            default=DEFAULT_TOOL_CALL_PREFIX,
+        ): str,
+        vol.Required(
+            CONF_TOOL_CALL_SUFFIX,
+            description={"suggested_value": options.get(CONF_TOOL_CALL_SUFFIX)},
+            default=DEFAULT_TOOL_CALL_SUFFIX,
         ): str,
         vol.Required(
             CONF_REFRESH_SYSTEM_PROMPT,
@@ -1046,11 +1029,6 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
                 default=DEFAULT_REQUEST_TIMEOUT,
             ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
-            vol.Required(
-                CONF_REMOTE_USE_CHAT_ENDPOINT,
-                description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
-                default=DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
-            ): BooleanSelector(BooleanSelectorConfig()),
             vol.Optional(
                 CONF_TEXT_GEN_WEBUI_PRESET,
                 description={"suggested_value": options.get(CONF_TEXT_GEN_WEBUI_PRESET)},
@@ -1083,11 +1061,6 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
                 default=DEFAULT_REQUEST_TIMEOUT,
             ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
-            vol.Required(
-                CONF_REMOTE_USE_CHAT_ENDPOINT,
-                description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
-                default=DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
-            ): BooleanSelector(BooleanSelectorConfig()),
         })
     elif backend_type in BACKEND_TYPE_GENERIC_OPENAI_RESPONSES:
         del result[CONF_REMEMBER_NUM_INTERACTIONS]
@@ -1147,11 +1120,6 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
                 default=DEFAULT_REQUEST_TIMEOUT,
             ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
-            vol.Required(
-                CONF_REMOTE_USE_CHAT_ENDPOINT,
-                description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
-                default=DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
-            ): BooleanSelector(BooleanSelectorConfig()),
         })
     elif backend_type == BACKEND_TYPE_OLLAMA:
         result = insert_after_key(result, CONF_MAX_TOKENS, {
@@ -1195,11 +1163,6 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
                 description={"suggested_value": options.get(CONF_OLLAMA_KEEP_ALIVE_MIN)},
                 default=DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
             ): NumberSelector(NumberSelectorConfig(min=-1, max=1440, step=1, unit_of_measurement=UnitOfTime.MINUTES, mode=NumberSelectorMode.BOX)),
-            vol.Required(
-                CONF_REMOTE_USE_CHAT_ENDPOINT,
-                description={"suggested_value": options.get(CONF_REMOTE_USE_CHAT_ENDPOINT)},
-                default=DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
-            ): BooleanSelector(BooleanSelectorConfig()),
         })
 
     return result

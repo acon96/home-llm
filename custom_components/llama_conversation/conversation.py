@@ -34,38 +34,26 @@ from .const import (
     CONF_PROMPT,
     CONF_BACKEND_TYPE,
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
-    CONF_PROMPT_TEMPLATE,
-    CONF_TOOL_FORMAT,
-    CONF_TOOL_MULTI_TURN_CHAT,
     CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
     CONF_IN_CONTEXT_EXAMPLES_FILE,
     CONF_NUM_IN_CONTEXT_EXAMPLES,
     CONF_REFRESH_SYSTEM_PROMPT,
     CONF_REMEMBER_CONVERSATION,
     CONF_REMEMBER_NUM_INTERACTIONS,
-    CONF_SERVICE_CALL_REGEX,
     CONF_CONTEXT_LENGTH,
     DEFAULT_PROMPT,
     DEFAULT_BACKEND_TYPE,
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
-    DEFAULT_PROMPT_TEMPLATE,
-    DEFAULT_TOOL_FORMAT,
-    DEFAULT_TOOL_MULTI_TURN_CHAT,
     DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
     DEFAULT_IN_CONTEXT_EXAMPLES_FILE,
     DEFAULT_NUM_IN_CONTEXT_EXAMPLES,
     DEFAULT_REFRESH_SYSTEM_PROMPT,
     DEFAULT_REMEMBER_CONVERSATION,
     DEFAULT_REMEMBER_NUM_INTERACTIONS,
-    DEFAULT_SERVICE_CALL_REGEX,
     DEFAULT_CONTEXT_LENGTH,
     DOMAIN,
     HOME_LLM_API_ID,
     SERVICE_TOOL_NAME,
-    PROMPT_TEMPLATE_DESCRIPTIONS,
-    TOOL_FORMAT_FULL,
-    TOOL_FORMAT_REDUCED,
-    TOOL_FORMAT_MINIMAL,
     ALLOWED_SERVICE_CALL_ARGUMENTS,
     SERVICE_TOOL_ALLOWED_SERVICES,
     SERVICE_TOOL_ALLOWED_DOMAINS,
@@ -172,6 +160,7 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
 
     _attr_has_entity_name = True
 
+
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the agent."""
         self._attr_name = entry.title
@@ -188,9 +177,6 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
             self._attr_supported_features = (
                 conversation.ConversationEntityFeature.CONTROL
             )
-        
-        # mark true if subclass supports streaming responses
-        self._attr_supports_streaming = hasattr(self, "_generate_stream")
 
         self.in_context_examples = None
         if entry.options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES, DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES):
@@ -299,6 +285,7 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
     ):
         async def async_iterator():
             async for input_chunk in result:
+                # _LOGGER.debug("Received chunk: %s", input_chunk)
                 yield conversation.AssistantContentDeltaDict(
                     content=input_chunk.response,
                     tool_calls=input_chunk.tool_calls
@@ -325,27 +312,9 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
     ) -> conversation.ConversationResult:
 
         raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
-        prompt_template = self.entry.options.get(CONF_PROMPT_TEMPLATE, DEFAULT_PROMPT_TEMPLATE)
-        template_desc = PROMPT_TEMPLATE_DESCRIPTIONS[prompt_template]
         refresh_system_prompt = self.entry.options.get(CONF_REFRESH_SYSTEM_PROMPT, DEFAULT_REFRESH_SYSTEM_PROMPT)
         remember_conversation = self.entry.options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION)
         remember_num_interactions = self.entry.options.get(CONF_REMEMBER_NUM_INTERACTIONS, DEFAULT_REMEMBER_NUM_INTERACTIONS)
-        service_call_regex = self.entry.options.get(CONF_SERVICE_CALL_REGEX, DEFAULT_SERVICE_CALL_REGEX)
-
-        try:
-            service_call_pattern = re.compile(service_call_regex, flags=re.MULTILINE)
-        except Exception as err:
-            _LOGGER.exception("There was a problem compiling the service call regex")
-
-            intent_response = intent.IntentResponse(language=user_input.language)
-            intent_response.async_set_error(
-                intent.IntentResponseErrorCode.UNKNOWN,
-                f"Sorry, there was a problem compiling the service call regex: {err}",
-            )
-
-            return ConversationResult(
-                response=intent_response, conversation_id=user_input.conversation_id
-            )
 
         llm_api: llm.APIInstance | None = None
         if self.entry.options.get(CONF_LLM_HASS_API):
@@ -353,13 +322,7 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
                 llm_api = await llm.async_get_api(
                     self.hass,
                     self.entry.options[CONF_LLM_HASS_API],
-                    llm_context=llm.LLMContext(
-                        platform=DOMAIN,
-                        context=user_input.context,
-                        language=user_input.language,
-                        assistant=conversation.DOMAIN,
-                        device_id=user_input.device_id,
-                    )
+                    llm_context=user_input.as_llm_context(DOMAIN)
                 )
             except HomeAssistantError as err:
                 _LOGGER.error("Error getting LLM API: %s", err)
@@ -371,6 +334,9 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
                 return ConversationResult(
                     response=intent_response, conversation_id=user_input.conversation_id
                 )
+            
+        # ensure this chat log has the LLM API instance
+        chat_log.llm_api = llm_api
 
         if remember_conversation:
             message_history = chat_log.content[:]
@@ -402,14 +368,12 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
             else:
                 message_history[0] = system_prompt
 
-        multi_turn_enabled = self.entry.options.get(CONF_TOOL_MULTI_TURN_CHAT, DEFAULT_TOOL_MULTI_TURN_CHAT)
-        MAX_TOOL_CALL_ITERATIONS = 3 if multi_turn_enabled else 1
+        MAX_TOOL_CALL_ITERATIONS = 3 # FIXME: move to config option
         tool_calls: List[Tuple[llm.ToolInput, Any]] = []
         for _ in range(MAX_TOOL_CALL_ITERATIONS):
             try:
                 _LOGGER.debug(message_history)
                 generation_result = await self._async_generate(message_history, user_input, chat_log)
-                _LOGGER.debug(generation_result)
             except Exception as err:
                 _LOGGER.exception("There was a problem talking to the backend")
                 intent_response = intent.IntentResponse(language=user_input.language)
@@ -432,7 +396,7 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
 
             # If not multi-turn, break after first tool call
             # also break if no tool calls were made
-            if not multi_turn_enabled or not last_message_had_tool_calls:
+            if not last_message_had_tool_calls:
                 break
 
         # generate intent response to Home Assistant
@@ -444,6 +408,9 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
                 title="Changes",
                 content=f"Ran the following tools:\n{tools_str}"
             )
+
+        intent_response.async_set_speech(message_history[-1].content)
+
         return ConversationResult(
             response=intent_response, conversation_id=user_input.conversation_id
         )
@@ -492,95 +459,6 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
             domains.add(state.domain)
 
         return entity_states, list(domains)
-
-    def _format_prompt(
-        self, prompt: list[dict], include_generation_prompt: bool = True
-    ) -> str:
-        """Format a conversation into a raw text completion using the model's prompt template"""
-        formatted_prompt = ""
-
-        prompt_template = self.entry.options.get(CONF_PROMPT_TEMPLATE, DEFAULT_PROMPT_TEMPLATE)
-        template_desc = PROMPT_TEMPLATE_DESCRIPTIONS[prompt_template]
-
-        # handle models without a system prompt
-        if prompt[0]["role"] == "system" and "system" not in template_desc:
-            system_prompt = prompt.pop(0)
-            prompt[0]["message"] = system_prompt["message"] + prompt[0]["message"]
-
-        for message in prompt:
-            role = message["role"]
-            message = message["message"]
-            # fall back to the "user" role for unknown roles
-            role_desc = template_desc.get(role, template_desc["user"])
-            formatted_prompt = (
-                formatted_prompt + f"{role_desc['prefix']}{message}{role_desc['suffix']}\n"
-            )
-
-        if include_generation_prompt:
-            formatted_prompt = formatted_prompt + template_desc["generation_prompt"]
-
-        _LOGGER.debug(formatted_prompt)
-        return formatted_prompt
-
-    def _format_tool(self, name: str, parameters: vol.Schema, description: str):
-        style = self.entry.options.get(CONF_TOOL_FORMAT, DEFAULT_TOOL_FORMAT)
-
-        if style == TOOL_FORMAT_MINIMAL:
-            result = f"{name}({','.join(flatten_vol_schema(parameters))})"
-            if description:
-                result = result + f" - {description}"
-            return result
-
-        raw_parameters: list = voluptuous_serialize.convert(
-            parameters, custom_serializer=custom_custom_serializer)
-
-        # handle vol.Any in the key side of things
-        processed_parameters = []
-        for param in raw_parameters:
-            if isinstance(param["name"], vol.Any):
-                for possible_name in param["name"].validators:
-                    actual_param = param.copy()
-                    actual_param["name"] = possible_name
-                    actual_param["required"] = False
-                    processed_parameters.append(actual_param)
-            else:
-                processed_parameters.append(param)
-
-        if style == TOOL_FORMAT_REDUCED:
-            return {
-                "name": name,
-                "description": description,
-                "parameters": {
-                    "properties": {
-                        x["name"]: x.get("type", "string") for x in processed_parameters
-                    },
-                    "required": [
-                        x["name"] for x in processed_parameters if x.get("required")
-                    ]
-                }
-            }
-        elif style == TOOL_FORMAT_FULL:
-            return {
-                "type": "function",
-                "function": {
-                    "name": name,
-                    "description": description,
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            x["name"]: {
-                                "type": x.get("type", "string"),
-                                "description": x.get("description", ""),
-                            } for x in processed_parameters
-                        },
-                        "required": [
-                            x["name"] for x in processed_parameters if x.get("required")
-                        ]
-                    }
-                }
-            }
-
-        raise Exception(f"Unknown tool format {style}")
 
     def _generate_icl_examples(self, num_examples, entity_names):
         entity_names = entity_names[:]
@@ -718,62 +596,62 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
                         "is_alias": True
                     })
 
-        if llm_api:
-            if llm_api.api.id == HOME_LLM_API_ID:
-                service_dict = self.hass.services.async_services()
-                all_services = []
-                scripts_added = False
-                for domain in domains:
-                    if domain not in SERVICE_TOOL_ALLOWED_DOMAINS:
-                        continue
+        # if llm_api:
+        #     if llm_api.api.id == HOME_LLM_API_ID:
+        #         service_dict = self.hass.services.async_services()
+        #         all_services = []
+        #         scripts_added = False
+        #         for domain in domains:
+        #             if domain not in SERVICE_TOOL_ALLOWED_DOMAINS:
+        #                 continue
 
-                    # scripts show up as individual services
-                    if domain == "script" and not scripts_added:
-                        all_services.extend([
-                            ("script.reload", vol.Schema({}), ""),
-                            ("script.turn_on", vol.Schema({}), ""),
-                            ("script.turn_off", vol.Schema({}), ""),
-                            ("script.toggle", vol.Schema({}), ""),
-                        ])
-                        scripts_added = True
-                        continue
+        #             # scripts show up as individual services
+        #             if domain == "script" and not scripts_added:
+        #                 all_services.extend([
+        #                     ("script.reload", vol.Schema({}), ""),
+        #                     ("script.turn_on", vol.Schema({}), ""),
+        #                     ("script.turn_off", vol.Schema({}), ""),
+        #                     ("script.toggle", vol.Schema({}), ""),
+        #                 ])
+        #                 scripts_added = True
+        #                 continue
 
-                    for name, service in service_dict.get(domain, {}).items():
-                        if name not in SERVICE_TOOL_ALLOWED_SERVICES:
-                            continue
+        #             for name, service in service_dict.get(domain, {}).items():
+        #                 if name not in SERVICE_TOOL_ALLOWED_SERVICES:
+        #                     continue
 
-                        args = flatten_vol_schema(service.schema)
-                        args_to_expose = set(args).intersection(ALLOWED_SERVICE_CALL_ARGUMENTS)
-                        service_schema = vol.Schema({
-                            vol.Optional(arg): str for arg in args_to_expose
-                        })
+        #                 args = flatten_vol_schema(service.schema)
+        #                 args_to_expose = set(args).intersection(ALLOWED_SERVICE_CALL_ARGUMENTS)
+        #                 service_schema = vol.Schema({
+        #                     vol.Optional(arg): str for arg in args_to_expose
+        #                 })
 
-                        all_services.append((f"{domain}.{name}", service_schema, ""))
+        #                 all_services.append((f"{domain}.{name}", service_schema, ""))
 
-                tools = [
-                    self._format_tool(*tool)
-                    for tool in all_services
-                ]
+        #         tools = [
+        #             self._format_tool(*tool)
+        #             for tool in all_services
+        #         ]
 
-            else:
-                tools = [
-                    self._format_tool(tool.name, tool.parameters, tool.description)
-                    for tool in llm_api.tools
-                ]
+        #     else:
+        #         tools = [
+        #             self._format_tool(tool.name, tool.parameters, tool.description)
+        #             for tool in llm_api.tools
+        #         ]
 
-            if  self.entry.options.get(CONF_TOOL_FORMAT, DEFAULT_TOOL_FORMAT) == TOOL_FORMAT_MINIMAL:
-                formatted_tools = ", ".join(tools)
-            else:
-                formatted_tools = json.dumps(tools)
-        else:
-            tools = ["No tools were provided. If the user requests you interact with a device, tell them you are unable to do so."]
-            formatted_tools = tools[0]
+        #     if  self.entry.options.get(CONF_TOOL_FORMAT, DEFAULT_TOOL_FORMAT) == TOOL_FORMAT_MINIMAL:
+        #         formatted_tools = ", ".join(tools)
+        #     else:
+        #         formatted_tools = json.dumps(tools)
+        # else:
+        #     tools = ["No tools were provided. If the user requests you interact with a device, tell them you are unable to do so."]
+        #     formatted_tools = tools[0]
 
         render_variables = {
             "devices": devices,
             "formatted_devices": formatted_devices,
-            "tools": tools,
-            "formatted_tools": formatted_tools,
+            # "tools": tools,
+            # "formatted_tools": formatted_tools,
             "response_examples": []
         }
 
