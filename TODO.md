@@ -1,5 +1,6 @@
 # TODO
 - [ ] proper tool calling support  
+- [ ] fix old GGUFs to support tool calling  
 - [ ] home assistant component text streaming support  
 - [ ] new models based on qwen3  
 - [ ] support AI task API  

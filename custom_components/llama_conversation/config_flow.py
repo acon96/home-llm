@@ -134,7 +134,7 @@ from .const import (
     BACKEND_TYPE_TEXT_GEN_WEBUI,
     BACKEND_TYPE_GENERIC_OPENAI,
     BACKEND_TYPE_GENERIC_OPENAI_RESPONSES,
-    BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER,
+    BACKEND_TYPE_LLAMA_CPP_SERVER,
     BACKEND_TYPE_OLLAMA,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT,
     TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT,
@@ -166,7 +166,7 @@ def STEP_INIT_DATA_SCHEMA(backend_type=None):
                     BACKEND_TYPE_TEXT_GEN_WEBUI,
                     BACKEND_TYPE_GENERIC_OPENAI,
                     BACKEND_TYPE_GENERIC_OPENAI_RESPONSES,
-                    BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER,
+                    BACKEND_TYPE_LLAMA_CPP_SERVER,
                     BACKEND_TYPE_OLLAMA
                 ],
                 translation_key=CONF_BACKEND_TYPE,
@@ -215,7 +215,7 @@ def STEP_REMOTE_SETUP_DATA_SCHEMA(backend_type: str, *, host=None, port=None, ss
 
     if backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
         extra2[vol.Optional(CONF_TEXT_GEN_WEBUI_ADMIN_KEY)] = TextSelector(TextSelectorConfig(type="password"))
-    elif backend_type == BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER:
+    elif backend_type == BACKEND_TYPE_LLAMA_CPP_SERVER:
         default_port = "8000"
     elif backend_type == BACKEND_TYPE_OLLAMA:
         default_port = "11434"
@@ -1095,7 +1095,7 @@ def local_llama_config_option_schema(hass: HomeAssistant, options: MappingProxyT
                 default=DEFAULT_REQUEST_TIMEOUT,
             ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
         })
-    elif backend_type == BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER:
+    elif backend_type == BACKEND_TYPE_LLAMA_CPP_SERVER:
         result = insert_after_key(result, CONF_MAX_TOKENS, {
             vol.Required(
                 CONF_TOP_K,
