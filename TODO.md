@@ -5,6 +5,7 @@
 - [ ] new model based on qwen3 0.6b  
 - [ ] new model based on gemma3 270m  
 - [ ] support AI task API  
+- [ ] move llamacpp to a separate process because of all the crashing  
 - [x] support new LLM APIs  
     - rewrite how services are called  
     - handle no API selected  
@@ -44,14 +45,13 @@
 
 
 ## v0.4 TODO for release:
-[ ] re-order the settings on the options config flow page. the order is very confusing  
-[ ] split out entity functionality so we can support conversation + ai tasks  
-[x] fix icl examples to match new tool calling syntax config  
-[x] set up docker-compose for running all of the various backends  
-[ ] fix and re-upload all compatible old models (+ upload all original safetensors)  
-[ ] move llamacpp to a separate process because of all the crashing  
-[ ] dedicated localai backend (tailored openai variant /w model loading)  
-[ ] fix the openai responses backend
+- [ ] re-order the settings on the options config flow page. the order is very confusing  
+- [ ] split out entity functionality so we can support conversation + ai tasks  
+- [x] fix icl examples to match new tool calling syntax config  
+- [x] set up docker-compose for running all of the various backends  
+- [ ] fix and re-upload all compatible old models (+ upload all original safetensors)  
+- [ ] dedicated localai backend (tailored openai variant /w model loading)  
+- [x] fix the openai responses backend  
 
 ## more complicated ideas
 - [ ] "context requests"  

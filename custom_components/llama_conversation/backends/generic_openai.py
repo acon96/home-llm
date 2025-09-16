@@ -171,6 +171,8 @@ class GenericOpenAIResponsesAPIAgent(LocalLLMAgent):
     api_key: str
     model_name: str
 
+    _attr_supports_streaming = False
+
     _last_response_id: str | None = None
     _last_response_id_time: datetime.datetime | None = None
 
@@ -185,15 +187,29 @@ class GenericOpenAIResponsesAPIAgent(LocalLLMAgent):
         self.api_key = entry.data.get(CONF_OPENAI_API_KEY, "")
         self.model_name = entry.data.get(CONF_CHAT_MODEL, "")
 
-    def _responses_params(self, conversation: List[Dict[str, str]]) -> Tuple[str, Dict[str, Any]]:
+    def _responses_params(self, conversation: List[conversation.Content]) -> Tuple[str, Dict[str, Any]]:
         request_params = {}
         api_base_path = self.entry.data.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
 
         endpoint = f"/{api_base_path}/responses"
-        request_params["input"] = conversation[-1]["message"] # last message in the conversation is the user input
+        # Find the last user message in the conversation and use its content as the input
+        input_text: str | None = None
+        for msg in reversed(conversation):
+            try:
+                if msg.role == "user":
+                    input_text = msg.content
+                    break
+            except Exception:
+                continue
+
+        if input_text is None:
+            # fallback to the last message content
+            input_text = getattr(conversation[-1], "content", "")
+
+        request_params["input"] = input_text
 
         # Assign previous_response_id if relevant
-        if self._last_response_id and self.entry.options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION):
+        if self._last_response_id and self._last_response_id_time and self.entry.options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION):
             # If the last response was generated recently, use it as a context
             configured_memory_time: datetime.timedelta = datetime.timedelta(minutes=self.entry.options.get(CONF_REMEMBER_CONVERSATION_TIME_MINUTES, DEFAULT_REMEMBER_CONVERSATION_TIME_MINUTES))
             last_conversation_age: datetime.timedelta = datetime.datetime.now() - self._last_response_id_time
@@ -240,7 +256,7 @@ class GenericOpenAIResponsesAPIAgent(LocalLLMAgent):
         if response_json["status"] != "completed":
             _LOGGER.warning(f"Response status is not 'completed', got {response_json['status']}. Details: {response_json.get('incomplete_details', 'No details provided')}")
 
-    def _extract_response(self, response_json: dict, llm_api: llm.APIInstance | None, user_input: conversation.ConversationInput) -> TextGenerationResult:
+    def _extract_response(self, response_json: dict, llm_api: llm.APIInstance | None, user_input: conversation.ConversationInput) -> str | None:
         self._validate_response_payload(response_json)
         self._check_response_status(response_json)
 
@@ -279,7 +295,44 @@ class GenericOpenAIResponsesAPIAgent(LocalLLMAgent):
         return to_return
 
     async def _generate(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None, user_input: conversation.ConversationInput) -> TextGenerationResult:
-        """Generate a response using the OpenAI-compatible Responses API"""
+        """Generate a response using the OpenAI-compatible Responses API (non-streaming endpoint wrapped as a single-chunk stream)."""
+
+        timeout = self.entry.options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
 
         endpoint, additional_params = self._responses_params(conversation)
-        return self._async_generate_with_parameters(endpoint, False, additional_params)
+
+        request_params: Dict[str, Any] = {
+            "model": self.model_name,
+        }
+        request_params.update(additional_params)
+
+        headers: Dict[str, Any] = {}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+
+        session = async_get_clientsession(self.hass)
+        response = None
+
+        try:
+            async with session.post(
+                f"{self.api_host}{endpoint}",
+                json=request_params,
+                timeout=aiohttp.ClientTimeout(total=timeout),
+                headers=headers,
+            ) as response:
+                response.raise_for_status()
+                response_json = await response.json()
+
+                try:
+                    text = self._extract_response(response_json, llm_api, user_input)
+                    return TextGenerationResult(response=text, response_streamed=False)
+                except Exception as err:
+                    _LOGGER.exception("Failed to parse Responses API payload: %s", err)
+                    return TextGenerationResult(raise_error=True, error_msg=f"Failed to parse Responses API payload: {err}")
+        except asyncio.TimeoutError:
+            return TextGenerationResult(raise_error=True, error_msg="The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities.")
+        except aiohttp.ClientError as err:
+            _LOGGER.debug(f"Err was: {err}")
+            _LOGGER.debug(f"Request was: {request_params}")
+            _LOGGER.debug(f"Result was: {response}")
+            return TextGenerationResult(raise_error=True, error_msg=f"Failed to communicate with the API! {err}")
