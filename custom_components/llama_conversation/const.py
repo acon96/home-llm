@@ -70,7 +70,6 @@ DEFAULT_PROMPT_BASE = """<persona>
 {% endfor %}"""
 DEFAULT_PROMPT_BASE_LEGACY = """<persona>
 <current_date>
-<services>: {{ formatted_tools }}
 <devices>:
 {{ formatted_devices }}"""
 ICL_EXTRAS = """

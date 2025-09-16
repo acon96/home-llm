@@ -129,8 +129,7 @@ class TextGenerationWebuiAgent(GenericOpenAIAPIAgent):
         else:
             return choices[0]["text"]
 
-class LlamaCppPythonAPIAgent(GenericOpenAIAPIAgent):
-    """https://llama-cpp-python.readthedocs.io/en/latest/server/"""
+class LlamaCppServerAgent(GenericOpenAIAPIAgent):
     grammar: str
 
     async def _async_load_model(self, entry: ConfigEntry):
@@ -141,27 +140,20 @@ class LlamaCppPythonAPIAgent(GenericOpenAIAPIAgent):
         )
 
     def _load_model(self, entry: ConfigEntry):
-        with open(os.path.join(os.path.dirname(__file__), DEFAULT_GBNF_GRAMMAR_FILE)) as f:
+        with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), DEFAULT_GBNF_GRAMMAR_FILE)) as f:
             self.grammar = "".join(f.readlines())
-
-    def _chat_completion_params(self, conversation: List[Dict[str, str]]) -> Tuple[str, Dict[str, Any]]:
+    
+    def _chat_completion_params(self) -> Tuple[str, Dict[str, Any]]:
         top_k = int(self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K))
-        endpoint, request_params = super()._chat_completion_params(conversation)
+        endpoint, request_params = super()._chat_completion_params()
 
         request_params["top_k"] = top_k
 
         if self.entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
             request_params["grammar"] = self.grammar
 
-        return endpoint, request_params
-
-    def _completion_params(self, conversation: List[Dict[str, str]]) -> Tuple[str, Dict[str, Any]]:
-        top_k = int(self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K))
-        endpoint, request_params = super()._completion_params(conversation)
-
-        request_params["top_k"] = top_k
-
-        if self.entry.options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
-            request_params["grammar"] = self.grammar
+        # force usage of COMMON_CHAT_TOOL_CHOICE_NONE so it returns raw content and then parse ourself when using
+        # the custom home llm tool call syntax. otherwise let the server detect it automatically
+        request_params["tool_choice"] = "none"
 
         return endpoint, request_params

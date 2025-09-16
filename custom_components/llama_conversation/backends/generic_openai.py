@@ -6,8 +6,9 @@ import aiohttp
 import asyncio
 import datetime
 import logging
-from typing import List, Dict, Tuple, AsyncGenerator, Any
+from typing import List, Dict, Tuple, AsyncGenerator, Any, Optional
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
@@ -37,7 +38,9 @@ from custom_components.llama_conversation.conversation import LocalLLMAgent, Tex
 
 _LOGGER = logging.getLogger(__name__)
 
-class BaseOpenAICompatibleAPIAgent(LocalLLMAgent):
+class GenericOpenAIAPIAgent(LocalLLMAgent):
+    """Implements the OpenAPI-compatible text completion and chat completion API backends."""
+
     api_host: str
     api_key: str
     model_name: str
@@ -55,21 +58,28 @@ class BaseOpenAICompatibleAPIAgent(LocalLLMAgent):
         self.api_key = entry.data.get(CONF_OPENAI_API_KEY, "")
         self.model_name = entry.data.get(CONF_CHAT_MODEL, "")
 
-    async def _async_generate_with_parameters(self, endpoint: str, stream: bool, additional_params: dict, llm_api: llm.APIInstance | None, user_input: conversation.ConversationInput):
-        """Generate a response using the OpenAI-compatible API"""
-
+    def _generate_stream(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None, user_input: conversation.ConversationInput) -> AsyncGenerator[TextGenerationResult, None]:
         max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
         temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
         top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
         timeout = self.entry.options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
 
+        endpoint, additional_params = self._chat_completion_params()
+        messages = get_oai_formatted_messages(conversation)
+
         request_params = {
             "model": self.model_name,
-            "stream": stream,
+            "stream": True,
             "max_tokens": max_tokens,
             "temperature": temperature,
             "top_p": top_p,
+            "messages": messages
         }
+
+        tools = None
+        if llm_api:
+            tools = get_oai_formatted_tools(llm_api, self._async_get_all_exposed_domains())
+            request_params["tools"] = tools
 
         request_params.update(additional_params)
 
@@ -77,41 +87,51 @@ class BaseOpenAICompatibleAPIAgent(LocalLLMAgent):
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
 
+        _LOGGER.debug(f"Generating completion with {len(messages)} messages and {len(tools) if tools else 0} tools...")
+
         session = async_get_clientsession(self.hass)
-        response = None
-        try:
-            async with session.post(
-                f"{self.api_host}{endpoint}",
-                json=request_params,
-                timeout=timeout,
-                headers=headers
-            ) as response:
-                response.raise_for_status()
-                if stream:
+
+        async def anext_token() -> AsyncGenerator[Tuple[Optional[str], Optional[List]], None]:
+            response = None
+            chunk = None
+            try:
+                async with session.post(
+                    f"{self.api_host}{endpoint}",
+                    json=request_params,
+                    timeout=timeout,
+                    headers=headers
+                ) as response:
+                    response.raise_for_status()
                     async for line_bytes in response.content:
                         chunk = line_bytes.decode("utf-8").strip().removeprefix("data: ")
-                        if not chunk.strip():
+                        if "[DONE]" in chunk:
                             break
                         
-                        yield self._extract_response(json.loads(chunk), llm_api, user_input)
-                else:
-                    response_json = await response.json()
-                    yield self._extract_response(response_json, llm_api, user_input)
-        except asyncio.TimeoutError:
-            yield TextGenerationResult(raise_error=True, error_msg="The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities.")
-        except aiohttp.ClientError as err:
-            _LOGGER.debug(f"Err was: {err}")
-            _LOGGER.debug(f"Request was: {request_params}")
-            _LOGGER.debug(f"Result was: {response}")
-            yield TextGenerationResult(raise_error=True, error_msg=f"Failed to communicate with the API! {err}")
+                        if chunk and chunk.strip():
+                            yield self._extract_response(json.loads(chunk), llm_api)
+            except asyncio.TimeoutError as err:
+                raise HomeAssistantError("The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities.") from err
+            except aiohttp.ClientError as err:
+                raise HomeAssistantError(f"Failed to communicate with the API! {err}") from err
+            except Exception as err:
+                _LOGGER.debug(f"Err was: {err}")
+                _LOGGER.debug(f"Request was: {request_params}")
+                _LOGGER.debug(f"Result was: {response}")
+                _LOGGER.debug(f"Chunk was {chunk}")
+                raise HomeAssistantError(f"An unknown error occurred! {err}") from err
 
-    def _extract_response(self, response_json: dict, llm_api: llm.APIInstance | None, user_input: conversation.ConversationInput) -> TextGenerationResult:
-        raise NotImplementedError("Subclasses must implement _extract_response()")
+        return self._async_parse_completion(llm_api, anext_token=anext_token())
+    
+    def _chat_completion_params(self) -> Tuple[str, Dict[str, Any]]:
+        request_params = {}
+        api_base_path = self.entry.data.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
+        endpoint = f"/{api_base_path}/chat/completions"
+        return endpoint, request_params
 
-class GenericOpenAIAPIAgent(BaseOpenAICompatibleAPIAgent):
-    """Implements the OpenAPI-compatible text completion and chat completion API backends."""
-
-    def _extract_response(self, response_json: dict, llm_api: llm.APIInstance | None, user_input: conversation.ConversationInput) -> TextGenerationResult:
+    def _extract_response(self, response_json: dict, llm_api: llm.APIInstance | None) -> Tuple[Optional[str], Optional[List]]:
+        if len(response_json["choices"]) == 0: # finished
+            return None, None
+        
         choice = response_json["choices"][0]
         tool_calls = None
         if response_json["object"] == "chat.completion":
@@ -141,30 +161,29 @@ class GenericOpenAIAPIAgent(BaseOpenAICompatibleAPIAgent):
 
         _LOGGER.debug("Model chunk '%s'", response_text)
 
-        return TextGenerationResult(
-            response=response_text,
-            stop_reason=choice["finish_reason"],
-            response_streamed=streamed,
-            tool_calls=tool_calls
-        )
+        return response_text, tool_calls
 
-    def _generate_stream(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None, user_input: conversation.ConversationInput) -> AsyncGenerator[TextGenerationResult, None]:
-        request_params = {}
-        api_base_path = self.entry.data.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
 
-        endpoint = f"/{api_base_path}/chat/completions"
-        request_params["messages"] = get_oai_formatted_messages(conversation)
-
-        if llm_api:
-            request_params["tools"] = get_oai_formatted_tools(llm_api, self._async_get_all_exposed_domains())
-
-        return self._async_generate_with_parameters(endpoint, True, request_params, llm_api, user_input)
-
-class GenericOpenAIResponsesAPIAgent(BaseOpenAICompatibleAPIAgent):
+class GenericOpenAIResponsesAPIAgent(LocalLLMAgent):
     """Implements the OpenAPI-compatible Responses API backend."""
+
+    api_host: str
+    api_key: str
+    model_name: str
 
     _last_response_id: str | None = None
     _last_response_id_time: datetime.datetime | None = None
+
+    async def _async_load_model(self, entry: ConfigEntry) -> None:
+        self.api_host = format_url(
+            hostname=entry.data[CONF_HOST],
+            port=entry.data[CONF_PORT],
+            ssl=entry.data[CONF_SSL],
+            path=""
+        )
+
+        self.api_key = entry.data.get(CONF_OPENAI_API_KEY, "")
+        self.model_name = entry.data.get(CONF_CHAT_MODEL, "")
 
     def _responses_params(self, conversation: List[Dict[str, str]]) -> Tuple[str, Dict[str, Any]]:
         request_params = {}
@@ -259,8 +278,8 @@ class GenericOpenAIResponsesAPIAgent(BaseOpenAICompatibleAPIAgent):
 
         return to_return
 
-    async def _async_generate(self, conv: List[Dict[str, str]], user_input: conversation.ConversationInput, chat_log: conversation.chat_log.ChatLog):
+    async def _generate(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None, user_input: conversation.ConversationInput) -> TextGenerationResult:
         """Generate a response using the OpenAI-compatible Responses API"""
 
-        endpoint, additional_params = self._responses_params(conv)
+        endpoint, additional_params = self._responses_params(conversation)
         return self._async_generate_with_parameters(endpoint, False, additional_params)

@@ -2,18 +2,15 @@
 from __future__ import annotations
 
 import csv
-import json
 import logging
 import os
 import random
-import re
-import voluptuous as vol
-from typing import Literal, Any, List, Dict, Optional, Tuple, AsyncIterator, AsyncGenerator
+from typing import Literal, Any, List, Dict, Optional, Tuple, AsyncIterator, Generator, AsyncGenerator
 from dataclasses import dataclass
 
 from homeassistant.components.conversation import ConversationInput, ConversationResult, ConversationEntity
 from homeassistant.components.conversation.models import AbstractConversationAgent
-from homeassistant.components import assist_pipeline, conversation
+from homeassistant.components import conversation
 from homeassistant.components.conversation.const import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.config_entries import ConfigEntry
@@ -25,10 +22,7 @@ from homeassistant.helpers import config_validation as cv, intent, template, ent
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color
 
-
-import voluptuous_serialize
-
-from .utils import closest_color, flatten_vol_schema, custom_custom_serializer
+from .utils import closest_color, parse_raw_tool_call
 from .const import (
     CONF_CHAT_MODEL,
     CONF_PROMPT,
@@ -42,6 +36,10 @@ from .const import (
     CONF_REMEMBER_NUM_INTERACTIONS,
     CONF_MAX_TOOL_CALL_ITERATIONS,
     CONF_CONTEXT_LENGTH,
+    CONF_THINKING_PREFIX,
+    CONF_THINKING_SUFFIX,
+    CONF_TOOL_CALL_PREFIX,
+    CONF_TOOL_CALL_SUFFIX,
     DEFAULT_PROMPT,
     DEFAULT_BACKEND_TYPE,
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
@@ -56,6 +54,10 @@ from .const import (
     DOMAIN,
     CONF_BACKEND_TYPE,
     DEFAULT_BACKEND_TYPE,
+    DEFAULT_THINKING_PREFIX,
+    DEFAULT_THINKING_SUFFIX,
+    DEFAULT_TOOL_CALL_PREFIX,
+    DEFAULT_TOOL_CALL_SUFFIX,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -360,6 +362,97 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
         return ConversationResult(
             response=intent_response, conversation_id=user_input.conversation_id
         )
+    
+    async def _async_parse_completion(
+            self, llm_api: llm.APIInstance | None, 
+            next_token: Optional[Generator[Tuple[Optional[str], Optional[List]]]] = None,
+            anext_token: Optional[AsyncGenerator[Tuple[Optional[str], Optional[List]]]] = None,
+        ) -> AsyncGenerator[TextGenerationResult, None]:
+        think_prefix = self.entry.options.get(CONF_THINKING_PREFIX, DEFAULT_THINKING_PREFIX)
+        think_suffix = self.entry.options.get(CONF_THINKING_SUFFIX, DEFAULT_THINKING_SUFFIX)
+        tool_prefix = self.entry.options.get(CONF_TOOL_CALL_PREFIX, DEFAULT_TOOL_CALL_PREFIX)
+        tool_suffix = self.entry.options.get(CONF_TOOL_CALL_SUFFIX, DEFAULT_TOOL_CALL_SUFFIX)
+
+        token_generator = None
+        if next_token:
+            async def async_generator_wrapper() -> AsyncGenerator[Tuple[Optional[str], Optional[List]]]:
+                try:
+                    result = (None, None)
+                    while result:
+                        result = await self.hass.async_add_executor_job(lambda: next(next_token, None))
+                        if result and (result[0] or result[1]):
+                            yield result
+                except StopIteration:
+                    return
+            token_generator = async_generator_wrapper()
+        elif anext_token:
+            token_generator = anext_token
+
+        if not token_generator:
+            raise Exception("Either next_token or anext_token must be provided")
+        
+        in_thinking = False
+        in_tool_call = False
+        tool_content = ""
+        last_5_tokens = [] # FIXME: this still returns the first few tokens of the tool call if the prefix is split across chunks
+        async for chunk in token_generator:
+            _LOGGER.debug(f"Handling chunk: {chunk}")
+            content, tool_calls = chunk
+
+            result = TextGenerationResult(
+                response=None,
+                response_streamed=True,
+                tool_calls=None
+            )
+            if content:
+
+                last_5_tokens.append(content)
+                if len(last_5_tokens) > 5:
+                    last_5_tokens.pop(0)
+
+                potential_block = "".join(last_5_tokens)
+
+                if in_tool_call:
+                    tool_content += content
+
+                if think_prefix in potential_block and not in_thinking:
+                    in_thinking = True
+                    last_5_tokens.clear()
+                elif think_suffix in potential_block and in_thinking:
+                    in_thinking = False
+                    content = content.replace(think_suffix, "").strip()
+                elif tool_prefix in potential_block and not in_tool_call:
+                    in_tool_call = True
+                    last_5_tokens.clear()
+
+                elif tool_suffix in potential_block and in_tool_call:
+                    in_tool_call = False
+                    tool_call, to_say = parse_raw_tool_call(tool_content.strip().removeprefix(tool_prefix).removesuffix(tool_suffix), llm_api)
+                    _LOGGER.debug("Tool call parsed: %s", tool_call)
+
+                    if tool_call:
+                        result.tool_calls = [tool_call]
+                    if to_say:
+                        content = to_say
+                    else:
+                        content = None
+
+                result.response = content
+            
+            if tool_calls:
+                if not llm_api:
+                    _LOGGER.warning("Model attempted to call a tool but no LLM API was provided, ignoring tool calls")
+                else:
+                    result.tool_calls = []
+                    for raw_tool_call in tool_calls:
+                        tool_input, to_say = parse_raw_tool_call(raw_tool_call["function"], llm_api)
+                        if tool_input:
+                            result.tool_calls.append(tool_input)
+                        if to_say:
+                            result.response = to_say
+
+            if not in_thinking and not in_tool_call:
+                yield result
     
     def _async_get_all_exposed_domains(self) -> list[str]:
         """Gather all exposed domains"""

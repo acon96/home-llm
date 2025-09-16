@@ -6,8 +6,7 @@ import logging
 import os
 import threading
 import time
-import json
-from typing import Any, Callable, Iterator, List, AsyncGenerator
+from typing import Any, Callable, List, Generator, AsyncGenerator, Optional
 
 from homeassistant.components import conversation as conversation
 from homeassistant.components.conversation.const import DOMAIN as CONVERSATION_DOMAIN
@@ -19,14 +18,8 @@ from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.helpers.event import async_track_state_change, async_call_later
 
-from llama_cpp import CreateChatCompletionStreamResponse
-
 from custom_components.llama_conversation.utils import install_llama_cpp_python, validate_llama_cpp_python_installation, get_oai_formatted_messages, get_oai_formatted_tools, parse_raw_tool_call
 from custom_components.llama_conversation.const import (
-    CONF_THINKING_PREFIX,
-    CONF_THINKING_SUFFIX,
-    CONF_TOOL_CALL_PREFIX,
-    CONF_TOOL_CALL_SUFFIX,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_TEMPERATURE,
@@ -44,10 +37,6 @@ from custom_components.llama_conversation.const import (
     CONF_BATCH_SIZE,
     CONF_THREAD_COUNT,
     CONF_BATCH_THREAD_COUNT,
-    DEFAULT_THINKING_PREFIX,
-    DEFAULT_THINKING_SUFFIX,
-    DEFAULT_TOOL_CALL_PREFIX,
-    DEFAULT_TOOL_CALL_SUFFIX,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
@@ -361,78 +350,6 @@ class LlamaCppAgent(LocalLLMAgent):
         refresh_delay = self.entry.options.get(CONF_PROMPT_CACHING_INTERVAL, DEFAULT_PROMPT_CACHING_INTERVAL)
         async_call_later(self.hass, float(refresh_delay), refresh_if_requested)
 
-    async def _async_parse_completion(self, llm_api: llm.APIInstance | None, chat_completion: Iterator[CreateChatCompletionStreamResponse]) -> AsyncGenerator[TextGenerationResult, None]:
-        think_prefix = self.entry.options.get(CONF_THINKING_PREFIX, DEFAULT_THINKING_PREFIX)
-        think_suffix = self.entry.options.get(CONF_THINKING_SUFFIX, DEFAULT_THINKING_SUFFIX)
-        tool_prefix = self.entry.options.get(CONF_TOOL_CALL_PREFIX, DEFAULT_TOOL_CALL_PREFIX)
-        tool_suffix = self.entry.options.get(CONF_TOOL_CALL_SUFFIX, DEFAULT_TOOL_CALL_SUFFIX)
-
-        def next_token():
-            """Get the next token from the chat completion iterator."""
-            try:
-                return next(chat_completion)
-            except StopIteration:
-                return None
-        
-        in_thinking = False
-        in_tool_call = False
-        tool_content = ""
-        last_5_tokens = [] # FIXME: this still returns the first few tokens of the tool call if the prefix is split across chunks
-        while chunk := await self.hass.async_add_executor_job(next_token):
-            content = chunk["choices"][0]["delta"].get("content")
-            tool_calls = chunk["choices"][0]["delta"].get("tool_calls")
-
-            _LOGGER.debug(f"Handling chunk: {content}")
-
-            result = TextGenerationResult(
-                response=None,
-                response_streamed=True,
-                tool_calls=None
-            )
-            if content:
-
-                last_5_tokens.append(content)
-                if len(last_5_tokens) > 5:
-                    last_5_tokens.pop(0)
-
-                potential_block = "".join(last_5_tokens)
-
-                if in_tool_call:
-                    tool_content += content
-
-                if think_prefix in potential_block and not in_thinking:
-                    in_thinking = True
-                    last_5_tokens.clear()
-                elif think_suffix in potential_block and in_thinking:
-                    in_thinking = False
-                    content = content.replace(think_suffix, "").strip()
-                elif tool_prefix in potential_block and not in_tool_call:
-                    in_tool_call = True
-                    last_5_tokens.clear()
-
-                elif tool_suffix in potential_block and in_tool_call:
-                    in_tool_call = False
-                    _LOGGER.debug("Tool content: %s", tool_content)
-                    tool_call, to_say = parse_raw_tool_call(tool_content.strip().removeprefix(tool_prefix).removesuffix(tool_suffix), llm_api)
-
-                    if tool_call:
-                        result.tool_calls = [tool_call]
-                    if to_say:
-                        content = to_say
-                    else:
-                        content = None
-
-                result.response = content
-            
-            if tool_calls:
-                result.tool_calls = [llm.ToolInput(
-                    tool_name=str(tool_call["function"]["name"]),
-                    tool_args=json.loads(tool_call["function"]["arguments"])
-                ) for tool_call in tool_calls ]
-
-            if not in_thinking and not in_tool_call:
-                yield result
-
     def _generate_stream(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None, user_input: conversation.ConversationInput) -> AsyncGenerator[TextGenerationResult, None]:
         """Async generator that yields TextGenerationResult as tokens are produced."""
         max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
@@ -468,7 +385,7 @@ class LlamaCppAgent(LocalLLMAgent):
 
         _LOGGER.debug(f"Generating completion with {len(messages)} messages and {len(tools) if tools else 0} tools...")
 
-        return self._async_parse_completion(llm_api, self.llm.create_chat_completion(
+        chat_completion = self.llm.create_chat_completion(
             messages,
             tools=tools,
             temperature=temperature,
@@ -479,5 +396,17 @@ class LlamaCppAgent(LocalLLMAgent):
             max_tokens=max_tokens,
             grammar=self.grammar,
             stream=True,
-        ))
+        )
+
+        def next_token() -> Generator[tuple[Optional[str], Optional[List]]]:
+            """Get the next token from the chat completion iterator."""
+            for chunk in chat_completion:
+                if isinstance(chunk, str):
+                    yield chunk, []
+                else:
+                    content = chunk["choices"][0]["delta"].get("content")
+                    tool_calls = chunk["choices"][0]["delta"].get("tool_calls")
+                    yield content, tool_calls
+
+        return self._async_parse_completion(llm_api, next_token=next_token())
 
