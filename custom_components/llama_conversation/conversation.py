@@ -33,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry, asy
         await entry.runtime_data._async_load_model(dict(subentry.data))
 
         # register the agent entity
-        async_add_entities([agent_entity])
+        async_add_entities([agent_entity], config_subentry_id=subentry.subentry_id,)
 
     return True
 

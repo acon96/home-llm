@@ -18,11 +18,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError, HomeAssistantError
 from homeassistant.helpers import intent, template, entity_registry as er, llm, \
     area_registry as ar, device_registry as dr, entity
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color
 
 from .utils import closest_color, parse_raw_tool_call, flatten_vol_schema
 from .const import (
+    CONF_CHAT_MODEL,
     CONF_SELECTED_LANGUAGE,
     CONF_PROMPT,
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
@@ -83,6 +83,10 @@ class LocalLLMClient:
             icl_examples_filename = client_options.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE)
             if icl_examples_filename:
                 self._load_icl_examples(icl_examples_filename)
+
+    @staticmethod
+    def get_name(client_options: dict[str, Any]):
+        raise NotImplementedError()
 
     def _load_icl_examples(self, filename: str):
         """Load info used for generating in context learning examples"""
@@ -635,15 +639,26 @@ class LocalLLMEntity(entity.Entity):
         """Initialize the agent."""
         self._attr_name = subentry.title
         self._attr_unique_id = subentry.subentry_id
+        self._attr_device_info = dr.DeviceInfo(
+            identifiers={(DOMAIN, subentry.subentry_id)},
+            name=subentry.title,
+            model=subentry.data.get(CONF_CHAT_MODEL),
+            entry_type=dr.DeviceEntryType.SERVICE,
+        )
 
         self.hass = hass
         self.entry_id = entry.entry_id
         self.subentry_id = subentry.subentry_id
         self.client = client
 
+        # create update handler
+        self.async_on_remove(entry.add_update_listener(self._async_update_options))
 
-    def handle_reload(self):
-        self.client._update_options(self.runtime_options)
+    async def _async_update_options(self, hass: HomeAssistant, config_entry: LocalLLMConfigEntry):
+        for subentry in config_entry.subentries.values():
+            # handle subentry updates, but only invoke for this entity
+            if subentry.subentry_id == self.subentry_id:
+                await hass.async_add_executor_job(self.client._update_options, self.runtime_options)
 
     @property
     def entry(self) -> ConfigEntry:
@@ -651,7 +666,7 @@ class LocalLLMEntity(entity.Entity):
             return self.hass.data[DOMAIN][self.entry_id]
         except KeyError as ex:
             raise Exception("Attempted to use self.entry during startup.") from ex
-        
+
     @property
     def subentry(self) -> ConfigSubentry:
         try:

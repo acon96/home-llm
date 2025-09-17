@@ -59,6 +59,14 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         )
 
         self.api_key = client_options.get(CONF_OPENAI_API_KEY, "")
+
+    @staticmethod
+    def get_name(client_options: dict[str, Any]):
+        host = client_options[CONF_HOST]
+        port = client_options[CONF_PORT]
+        ssl = client_options[CONF_SSL]
+        path = "/" + client_options[CONF_GENERIC_OPENAI_PATH]
+        return f"Generic OpenAI at '{format_url(hostname=host, port=port, ssl=ssl, path=path)}'"
     
     @staticmethod
     async def async_validate_connection(hass: HomeAssistant, user_input: Dict[str, Any]) -> str | None:
@@ -232,6 +240,14 @@ class GenericOpenAIResponsesAPIClient(LocalLLMClient):
         )
 
         self.api_key = client_options.get(CONF_OPENAI_API_KEY, "")
+
+    @staticmethod
+    def get_name(client_options: dict[str, Any]):
+        host = client_options[CONF_HOST]
+        port = client_options[CONF_PORT]
+        ssl = client_options[CONF_SSL]
+        path = "/" + client_options[CONF_GENERIC_OPENAI_PATH]
+        return f"Generic OpenAI at '{format_url(hostname=host, port=port, ssl=ssl, path=path)}'"
 
     def _responses_params(self, conversation: List[conversation.Content], entity_options: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
         request_params = {}

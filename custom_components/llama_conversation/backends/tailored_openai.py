@@ -5,6 +5,7 @@ import logging
 import os
 from typing import Optional, Tuple, Dict, List, Any
 
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -20,6 +21,7 @@ from custom_components.llama_conversation.const import (
     CONF_TEXT_GEN_WEBUI_ADMIN_KEY,
     CONF_TEXT_GEN_WEBUI_CHAT_MODE,
     CONF_CONTEXT_LENGTH,
+    CONF_GENERIC_OPENAI_PATH,
     DEFAULT_TOP_K,
     DEFAULT_MIN_P,
     DEFAULT_TYPICAL_P,
@@ -32,6 +34,7 @@ from custom_components.llama_conversation.const import (
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT,
 )
 from custom_components.llama_conversation.backends.generic_openai import GenericOpenAIAPIClient
+from custom_components.llama_conversation.utils import format_url
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,6 +45,14 @@ class TextGenerationWebuiClient(GenericOpenAIAPIClient):
         super().__init__(hass, client_options)
 
         self.admin_key = client_options.get(CONF_TEXT_GEN_WEBUI_ADMIN_KEY)
+
+    @staticmethod
+    def get_name(client_options: dict[str, Any]):
+        host = client_options[CONF_HOST]
+        port = client_options[CONF_PORT]
+        ssl = client_options[CONF_SSL]
+        path = "/" + client_options[CONF_GENERIC_OPENAI_PATH]
+        return f"Text-Gen WebUI at '{format_url(hostname=host, port=port, ssl=ssl, path=path)}'"
 
     async def _async_load_model(self, entity_options: dict[str, Any]) -> None:
         model_name = entity_options.get(CONF_CHAT_MODEL)
@@ -107,6 +118,14 @@ class LlamaCppServerClient(GenericOpenAIAPIClient):
         grammar_file_name = client_options.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE)
         with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), grammar_file_name)) as f:
             self.grammar = "".join(f.readlines())
+
+    @staticmethod
+    def get_name(client_options: dict[str, Any]):
+        host = client_options[CONF_HOST]
+        port = client_options[CONF_PORT]
+        ssl = client_options[CONF_SSL]
+        path = "/" + client_options[CONF_GENERIC_OPENAI_PATH]
+        return f"LLama.cpp Server at '{format_url(hostname=host, port=port, ssl=ssl, path=path)}'"
     
     def _chat_completion_params(self, entity_options: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
         top_k = int(entity_options.get(CONF_TOP_K, DEFAULT_TOP_K))

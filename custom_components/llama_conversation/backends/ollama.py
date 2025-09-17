@@ -63,6 +63,14 @@ class OllamaAPIClient(LocalLLMClient):
         self.api_key = client_options.get(CONF_OPENAI_API_KEY, "")
 
     @staticmethod
+    def get_name(client_options: dict[str, Any]):
+        host = client_options[CONF_HOST]
+        port = client_options[CONF_PORT]
+        ssl = client_options[CONF_SSL]
+        path = "/" + client_options[CONF_GENERIC_OPENAI_PATH]
+        return f"Ollama at '{format_url(hostname=host, port=port, ssl=ssl, path=path)}'"
+
+    @staticmethod
     async def async_validate_connection(hass: HomeAssistant, user_input: Dict[str, Any]) -> str | None:
         headers = {}
         api_key = user_input.get(CONF_OPENAI_API_KEY)

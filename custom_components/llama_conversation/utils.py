@@ -226,12 +226,12 @@ def install_llama_cpp_python(config_dir: str):
 
         _LOGGER.info("Installing llama-cpp-python from local wheel")
         _LOGGER.debug(f"Wheel location: {latest_wheel}")
-        return install_package(os.path.join(folder, latest_wheel), pip_kwargs(config_dir))
+        return install_package(os.path.join(folder, latest_wheel), **pip_kwargs(config_dir))
         
     # scikit-build-core v0.9.7+ doesn't recognize these builds as musllinux, and just tags them as generic linux
     # github_release_url = f"https://github.com/acon96/home-llm/releases/download/v{INTEGRATION_VERSION}/llama_cpp_python-{EMBEDDED_LLAMA_CPP_PYTHON_VERSION}+homellm{instruction_extensions_suffix}-{runtime_version}-{runtime_version}-musllinux_1_2_{platform_suffix}.whl"
     github_release_url = f"https://github.com/acon96/home-llm/releases/download/v{INTEGRATION_VERSION}/llama_cpp_python-{EMBEDDED_LLAMA_CPP_PYTHON_VERSION}+homellm{instruction_extensions_suffix}-{runtime_version}-{runtime_version}-linux_{platform_suffix}.whl"
-    if install_package(github_release_url, pip_kwargs(config_dir)):
+    if install_package(github_release_url, **pip_kwargs(config_dir)):
         _LOGGER.info("llama-cpp-python successfully installed from GitHub release")
         return True
     

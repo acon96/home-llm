@@ -21,6 +21,7 @@ from .const import (
     SERVICE_TOOL_ALLOWED_SERVICES,
     SERVICE_TOOL_ALLOWED_DOMAINS,
     CONF_BACKEND_TYPE,
+    CONF_INSTALLED_LLAMACPP_VERSION,
     CONF_SELECTED_LANGUAGE,
     CONF_OPENAI_API_KEY,
     CONF_GENERIC_OPENAI_PATH,
@@ -41,12 +42,16 @@ from .const import (
     BACKEND_TYPE_GENERIC_OPENAI_RESPONSES,
     BACKEND_TYPE_LLAMA_CPP_SERVER,
     BACKEND_TYPE_OLLAMA,
+    BACKEND_TYPE_LLAMA_EXISTING_OLD,
+    BACKEND_TYPE_LLAMA_HF_OLD,
+    EMBEDDED_LLAMA_CPP_PYTHON_VERSION
 )
 from .entity import LocalLLMClient, LocalLLMConfigEntry
 from .backends.llamacpp import LlamaCppClient
 from .backends.generic_openai import GenericOpenAIAPIClient, GenericOpenAIResponsesAPIClient
 from .backends.tailored_openai import TextGenerationWebuiClient, LlamaCppServerClient
 from .backends.ollama import OllamaAPIClient
+from .utils import get_llama_cpp_python_version
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,14 +67,6 @@ BACKEND_TO_CLS: dict[str, type[LocalLLMClient]] = {
     BACKEND_TYPE_LLAMA_CPP_SERVER: LlamaCppServerClient,
     BACKEND_TYPE_OLLAMA: OllamaAPIClient,
 }
-
-async def update_listener(hass: HomeAssistant, entry: LocalLLMConfigEntry):
-    """Handle options update."""
-    hass.data[DOMAIN][entry.entry_id] = entry
-
-    # call update handler
-    client: LocalLLMClient = entry.runtime_data
-    await hass.async_add_executor_job(client._update_options, dict(entry.options))
 
 async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> bool:
 
@@ -87,13 +84,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> 
     backend_type = entry.data.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE)
     entry.runtime_data = await hass.async_add_executor_job(create_client, backend_type)
 
-    # handle updates to the options
-    entry.async_on_unload(entry.add_update_listener(update_listener))
-
     # forward setup to platform to register the entity
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
     return True
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> None:
+    await hass.config_entries.async_reload(entry.entry_id)
 
 async def async_unload_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> bool:
     """Unload Ollama."""
@@ -114,8 +114,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: LocalLLMConfigE
 
     # Migrate the config_entry to be an entry + sub-entry
     if config_entry.version == 2:
-        ENTRY_DATA_KEYS = [CONF_BACKEND_TYPE, CONF_SELECTED_LANGUAGE]
-        ENTRY_OPTIONS_KEYS = [CONF_HOST, CONF_PORT, CONF_SSL, CONF_OPENAI_API_KEY, CONF_GENERIC_OPENAI_PATH]
+        ENTRY_DATA_KEYS = [CONF_BACKEND_TYPE]
+        ENTRY_OPTIONS_KEYS = [CONF_SELECTED_LANGUAGE, CONF_HOST, CONF_PORT, CONF_SSL, CONF_OPENAI_API_KEY, CONF_GENERIC_OPENAI_PATH]
         SUBENTRY_KEYS = [
             CONF_CHAT_MODEL, CONF_DOWNLOADED_MODEL_QUANTIZATION, CONF_DOWNLOADED_MODEL_FILE, CONF_REQUEST_TIMEOUT, CONF_MAX_TOOL_CALL_ITERATIONS,
             CONF_REFRESH_SYSTEM_PROMPT, CONF_REMEMBER_CONVERSATION, CONF_REMEMBER_NUM_INTERACTIONS, CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
@@ -137,29 +137,29 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: LocalLLMConfigE
         entry_options = { k: v for k, v in source_data.items() if k in ENTRY_OPTIONS_KEYS }
         subentry_data = { k: v for k, v in source_data.items() if k in SUBENTRY_KEYS }
 
+        backend = config_entry.data[CONF_BACKEND_TYPE]
+        if backend == BACKEND_TYPE_LLAMA_EXISTING_OLD or backend == BACKEND_TYPE_LLAMA_HF_OLD:
+            backend = BACKEND_TYPE_LLAMA_CPP
+            entry_data[CONF_BACKEND_TYPE] = BACKEND_TYPE_LLAMA_CPP
+            entry_options[CONF_INSTALLED_LLAMACPP_VERSION] = await hass.async_add_executor_job(get_llama_cpp_python_version) or EMBEDDED_LLAMA_CPP_PYTHON_VERSION
+        else:
+            # ensure all remote backends have a path set
+            entry_options[CONF_GENERIC_OPENAI_PATH] = entry_options.get(CONF_GENERIC_OPENAI_PATH, "")
+        
+        entry_title = BACKEND_TO_CLS[backend].get_name(entry_options)
+
         subentry = ConfigSubentry(
             data=MappingProxyType(subentry_data),
             subentry_type="conversation",
-            title=config_entry.title, # FIXME: should be the "new" name format
+            title=config_entry.title.split("'")[-2],
             unique_id=None,
         )
-
-        # don't attempt to create duplicate llama.cpp backends
-        if entry_data[CONF_BACKEND_TYPE] == BACKEND_TYPE_LLAMA_CPP:
-            all_entries = hass.config_entries.async_entries(DOMAIN)
-            for entry in all_entries:
-                if entry.version < 3 or entry.data[CONF_BACKEND_TYPE] != BACKEND_TYPE_LLAMA_CPP:
-                    continue
-
-                await hass.config_entries.async_remove(config_entry.entry_id)
-                config_entry = entry
-                break
 
         # create sub-entry
         hass.config_entries.async_add_subentry(config_entry, subentry)
 
         # update the parent entry
-        hass.config_entries.async_update_entry(config_entry, data=entry_data, options=entry_options, version=3)
+        hass.config_entries.async_update_entry(config_entry, title=entry_title, data=entry_data, options=entry_options, version=3)
 
         _LOGGER.debug("Migration to subentries complete")
 

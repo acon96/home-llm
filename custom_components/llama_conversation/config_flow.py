@@ -52,6 +52,7 @@ from .const import (
     CONF_TYPICAL_P,
     CONF_REQUEST_TIMEOUT,
     CONF_BACKEND_TYPE,
+    CONF_INSTALLED_LLAMACPP_VERSION,
     CONF_SELECTED_LANGUAGE,
     CONF_SELECTED_LANGUAGE_OPTIONS,
     CONF_DOWNLOADED_MODEL_FILE,
@@ -221,7 +222,6 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
 
     install_wheel_task = None
     install_wheel_error = None
-    installed_version = None
     client_config: dict[str, Any]
     internal_step: str = "init"
 
@@ -257,9 +257,10 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
                 backend = user_input[CONF_BACKEND_TYPE]
                 self.client_config.update(user_input)
                 if backend == BACKEND_TYPE_LLAMA_CPP:
-                    self.installed_version = await self.hass.async_add_executor_job(get_llama_cpp_python_version)
-                    _LOGGER.debug(f"installed version: {self.installed_version}")
-                    if self.installed_version == EMBEDDED_LLAMA_CPP_PYTHON_VERSION:
+                    installed_version = await self.hass.async_add_executor_job(get_llama_cpp_python_version)
+                    _LOGGER.debug(f"installed version: {installed_version}")
+                    if installed_version == EMBEDDED_LLAMA_CPP_PYTHON_VERSION:
+                        self.client_config[CONF_INSTALLED_LLAMACPP_VERSION] = installed_version
                         return await self.async_step_finish()
                     else:
                         self.internal_step = "install_local_wheels"
@@ -315,6 +316,7 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
                 else:
                     _LOGGER.debug(f"Finished install: {wheel_install_result}")
                     next_step = "finish"
+                    self.client_config[CONF_INSTALLED_LLAMACPP_VERSION] = await self.hass.async_add_executor_job(get_llama_cpp_python_version)
 
             self.install_wheel_task = None
             self.internal_step = next_step
@@ -360,23 +362,7 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
 
         backend = self.client_config[CONF_BACKEND_TYPE]
-        title = "Generic AI Provider"
-        if backend == BACKEND_TYPE_LLAMA_CPP:
-            title = f"LLama.cpp (llama-cpp-python v{self.installed_version})"
-        else:
-            host = self.client_config[CONF_HOST]
-            port = self.client_config[CONF_PORT]
-            ssl = self.client_config[CONF_SSL]
-            path = "/" + self.client_config[CONF_GENERIC_OPENAI_PATH]
-            if backend == BACKEND_TYPE_GENERIC_OPENAI or backend == BACKEND_TYPE_GENERIC_OPENAI_RESPONSES:
-                title = f"Generic OpenAI at '{format_url(hostname=host, port=port, ssl=ssl, path=path)}'"
-            elif backend == BACKEND_TYPE_TEXT_GEN_WEBUI:
-                title = f"Text-Gen WebUI at '{format_url(hostname=host, port=port, ssl=ssl, path=path)}'"
-            elif backend == BACKEND_TYPE_OLLAMA:
-                title = f"Ollama at '{format_url(hostname=host, port=port, ssl=ssl, path=path)}'"
-            elif backend == BACKEND_TYPE_LLAMA_CPP_SERVER:
-                title = f"LLama.cpp Server at '{format_url(hostname=host, port=port, ssl=ssl, path=path)}'"
-
+        title = BACKEND_TO_CLS[backend].get_name(self.client_config)
         _LOGGER.debug(f"creating provider with config: {self.client_config}")
 
         # block duplicate providers
@@ -394,7 +380,7 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
     
     @classmethod
     def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
-        return config_entry.options.get(CONF_BACKEND_TYPE) != BACKEND_TYPE_LLAMA_CPP
+        return config_entry.data[CONF_BACKEND_TYPE] != BACKEND_TYPE_LLAMA_CPP
 
     @staticmethod
     def async_get_options_flow(
@@ -1036,7 +1022,7 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
         errors = {}
         description_placeholders = {}
         entry = self._get_entry()
-        backend_type = entry.options[CONF_BACKEND_TYPE]
+        backend_type = entry.data[CONF_BACKEND_TYPE]
 
         if not self.model_config:
             # determine selected language from model config or parent options
@@ -1061,7 +1047,7 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
         schema = vol.Schema(
             local_llama_config_option_schema(
                 self.hass,
-                entry.options[CONF_SELECTED_LANGUAGE],
+                entry.options.get(CONF_SELECTED_LANGUAGE, "en"),
                 self.model_config,
                 backend_type,
                 self._subentry_type,

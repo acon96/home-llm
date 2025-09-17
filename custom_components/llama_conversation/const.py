@@ -113,6 +113,7 @@ BACKEND_TYPE_GENERIC_OPENAI_RESPONSES = "generic_openai_responses"
 BACKEND_TYPE_LLAMA_CPP_SERVER = "llama_cpp_server"
 BACKEND_TYPE_OLLAMA = "ollama"
 DEFAULT_BACKEND_TYPE = BACKEND_TYPE_LLAMA_CPP
+CONF_INSTALLED_LLAMACPP_VERSION = "installed_llama_cpp_version"
 CONF_SELECTED_LANGUAGE = "selected_language"
 CONF_SELECTED_LANGUAGE_OPTIONS = [ "en", "de", "fr", "es", "pl"]
 CONF_DOWNLOADED_MODEL_QUANTIZATION = "downloaded_model_quantization"

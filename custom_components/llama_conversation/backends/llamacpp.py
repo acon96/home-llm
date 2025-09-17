@@ -20,6 +20,7 @@ from homeassistant.helpers.event import async_track_state_change, async_call_lat
 
 from custom_components.llama_conversation.utils import install_llama_cpp_python, validate_llama_cpp_python_installation, get_oai_formatted_messages, get_oai_formatted_tools, parse_raw_tool_call
 from custom_components.llama_conversation.const import (
+    CONF_INSTALLED_LLAMACPP_VERSION,
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
@@ -111,6 +112,10 @@ class LlamaCppClient(LocalLLMClient):
         self.last_updated_entities = {}
         self.cache_refresh_after_cooldown = False
         self.model_lock = threading.Lock()
+
+    @staticmethod
+    def get_name(client_options: dict[str, Any]):
+        return f"LLama.cpp (llama-cpp-python v{client_options[CONF_INSTALLED_LLAMACPP_VERSION]})"
 
     async def async_get_available_models(self) -> List[str]:
         return [] # TODO: find available "huggingface_hub" models that have been downloaded
