@@ -36,6 +36,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_REMEMBER_CONVERSATION_TIME_MINUTES,
     DEFAULT_GENERIC_OPENAI_PATH,
     DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
+    RECOMMENDED_CHAT_MODELS,
 )
 from custom_components.llama_conversation.entity import TextGenerationResult, LocalLLMClient
 
@@ -100,14 +101,18 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
 
-        session = async_get_clientsession(self.hass)
-        async with session.get(
-            f"{self.api_host}/models",
-            timeout=aiohttp.ClientTimeout(total=5), # quick timeout
-            headers=headers
-        ) as response:
-            response.raise_for_status()
-            models_result = await response.json()
+        try:
+            session = async_get_clientsession(self.hass)
+            async with session.get(
+                f"{self.api_host}/models",
+                timeout=aiohttp.ClientTimeout(total=5), # quick timeout
+                headers=headers
+            ) as response:
+                response.raise_for_status()
+                models_result = await response.json()
+        except:
+            _LOGGER.exception("Failed to get available models")
+            return RECOMMENDED_CHAT_MODELS
             
         return [ model["id"] for model in models_result["data"] ]
 
@@ -152,7 +157,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
 
         session = async_get_clientsession(self.hass)
 
-        async def anext_token() -> AsyncGenerator[Tuple[Optional[str], Optional[List]], None]:
+        async def anext_token() -> AsyncGenerator[Tuple[Optional[str], Optional[List[llm.ToolInput]]], None]:
             response = None
             chunk = None
             try:
@@ -172,20 +177,22 @@ class GenericOpenAIAPIClient(LocalLLMClient):
                             break
 
                         if chunk and chunk.strip():
-                            yield self._extract_response(json.loads(chunk), llm_api)
+                            to_say, tool_calls = self._extract_response(json.loads(chunk), llm_api, user_input)
+                            if to_say or tool_calls:
+                                yield to_say, tool_calls
             except asyncio.TimeoutError as err:
                 raise HomeAssistantError("The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities.") from err
             except aiohttp.ClientError as err:
                 raise HomeAssistantError(f"Failed to communicate with the API! {err}") from err
 
-        return self._async_parse_completion(llm_api, entity_options, anext_token=anext_token())
+        return self._async_parse_completion(llm_api, user_input, entity_options, anext_token=anext_token())
     
     def _chat_completion_params(self, entity_options: dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
         request_params = {}
         endpoint = "/chat/completions"
         return endpoint, request_params
 
-    def _extract_response(self, response_json: dict, llm_api: llm.APIInstance | None) -> Tuple[Optional[str], Optional[List]]:
+    def _extract_response(self, response_json: dict, llm_api: llm.APIInstance | None, user_input: conversation.ConversationInput) -> Tuple[Optional[str], Optional[List[llm.ToolInput]]]:
         if len(response_json["choices"]) == 0: # finished
             return None, None
         
@@ -200,7 +207,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
                 tool_calls = []
                 for call in choice["delta"]["tool_calls"]:
                     tool_args, to_say = parse_raw_tool_call(
-                        call["function"], llm_api)
+                        call["function"], llm_api, user_input)
                     
                     if tool_args:
                         tool_calls.append(tool_args)

@@ -1,7 +1,7 @@
 # TODO
 - [x] proper tool calling support  
 - [ ] fix old GGUFs to support tool calling  
-- [ ] home assistant component text streaming support  
+- [x] home assistant component text streaming support  
 - [ ] new model based on qwen3 0.6b  
 - [ ] new model based on gemma3 270m  
 - [ ] support AI task API  
@@ -59,6 +59,7 @@
     - [x] generic openai responses backend  
 - [ ] fix and re-upload all compatible old models (+ upload all original safetensors)  
 - [x] config entry migration function  
+- [ ] re-write setup guide  
 
 ## more complicated ideas
 - [ ] "context requests"  

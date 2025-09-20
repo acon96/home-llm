@@ -20,7 +20,7 @@ from homeassistant.helpers import intent, template, entity_registry as er, llm, 
     area_registry as ar, device_registry as dr, entity
 from homeassistant.util import color
 
-from .utils import closest_color, parse_raw_tool_call, flatten_vol_schema
+from .utils import closest_color, parse_raw_tool_call, flatten_vol_schema, MalformedToolCallException
 from .const import (
     CONF_CHAT_MODEL,
     CONF_SELECTED_LANGUAGE,
@@ -261,35 +261,51 @@ class LocalLLMClient:
                 message_history[0] = system_prompt
 
         tool_calls: List[Tuple[llm.ToolInput, Any]] = []
-        for _ in range(max_tool_call_iterations):
-            try:
-                _LOGGER.debug(message_history)
-                generation_result = await self._async_generate(message_history, user_input, chat_log, entity_options)
-            except Exception as err:
-                _LOGGER.exception("There was a problem talking to the backend")
+        for idx in range(max_tool_call_iterations):
+            generation_result = await self._async_generate(message_history, user_input, chat_log, entity_options)
+            
+            last_generation_had_tool_calls = False
+            while True:
+                try:
+                    message = await anext(generation_result)
+                    message_history.append(message)
+                    if message.role == "assistant":
+                        if message.tool_calls and len(message.tool_calls) > 0:
+                            last_generation_had_tool_calls = True
+                        else:
+                            last_generation_had_tool_calls = False
+                except StopAsyncIteration:
+                    break
+                except MalformedToolCallException as err:
+                    message_history.extend(err.as_tool_messages())
+                    last_generation_had_tool_calls = True
+                except Exception as err:
+                    _LOGGER.exception("There was a problem talking to the backend")
+                    intent_response = intent.IntentResponse(language=user_input.language)
+                    intent_response.async_set_error(
+                        intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
+                        f"Sorry, there was a problem talking to the backend: {repr(err)}",
+                    )
+                    return ConversationResult(
+                        response=intent_response, conversation_id=user_input.conversation_id
+                    )
+
+            # If not multi-turn, break after first tool call
+            # also break if no tool calls were made
+            if not last_generation_had_tool_calls:
+                break
+
+            # return an error if we run out of attempt without succeeding
+            if idx == max_tool_call_iterations - 1:
                 intent_response = intent.IntentResponse(language=user_input.language)
                 intent_response.async_set_error(
                     intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
-                    f"Sorry, there was a problem talking to the backend: {repr(err)}",
+                    f"Sorry, I ran out of attempts to handle your request",
                 )
                 return ConversationResult(
                     response=intent_response, conversation_id=user_input.conversation_id
                 )
-
-            last_message_had_tool_calls = False
-            async for message in generation_result:
-                message_history.append(message)
-                if message.role == "assistant":
-                    if message.tool_calls and len(message.tool_calls) > 0:
-                        last_message_had_tool_calls = True
-                    else:
-                        last_message_had_tool_calls = False
-
-            # If not multi-turn, break after first tool call
-            # also break if no tool calls were made
-            if not last_message_had_tool_calls:
-                break
-
+            
         # generate intent response to Home Assistant
         intent_response = intent.IntentResponse(language=user_input.language)
         if len(tool_calls) > 0:
@@ -300,11 +316,17 @@ class LocalLLMClient:
                 content=f"Ran the following tools:\n{tools_str}"
             )
 
+        has_speech = False
         for i in range(1, len(message_history)):
             cur_msg = message_history[-1 * i]
             if isinstance(cur_msg, conversation.AssistantContent) and cur_msg.content:
                 intent_response.async_set_speech(cur_msg.content)
+                has_speech = True
                 break
+
+        if not has_speech:
+            intent_response.async_set_speech("I don't have anything to say right now")
+            _LOGGER.debug(message_history)
 
         return ConversationResult(
             response=intent_response, conversation_id=user_input.conversation_id
@@ -312,6 +334,7 @@ class LocalLLMClient:
     
     async def _async_parse_completion(
             self, llm_api: llm.APIInstance | None, 
+            user_input: ConversationInput,
             entity_options: Dict[str, Any],
             next_token: Optional[Generator[Tuple[Optional[str], Optional[List]]]] = None,
             anext_token: Optional[AsyncGenerator[Tuple[Optional[str], Optional[List]]]] = None,
@@ -378,7 +401,7 @@ class LocalLLMClient:
                     if not llm_api:
                         _LOGGER.warning("Model attempted to call a tool but no LLM API was provided, ignoring tool calls")
                     else:
-                        tool_call, to_say = parse_raw_tool_call(tool_content.strip().removeprefix(tool_prefix).removesuffix(tool_suffix), llm_api)
+                        tool_call, to_say = parse_raw_tool_call(tool_content.strip().removeprefix(tool_prefix).removesuffix(tool_suffix), llm_api, user_input)
                         _LOGGER.debug("Tool call parsed: %s", tool_call)
 
                         if tool_call:
@@ -396,11 +419,14 @@ class LocalLLMClient:
                 else:
                     result.tool_calls = []
                     for raw_tool_call in tool_calls:
-                        tool_input, to_say = parse_raw_tool_call(raw_tool_call["function"], llm_api)
-                        if tool_input:
-                            result.tool_calls.append(tool_input)
-                        if to_say:
-                            result.response = to_say
+                        if isinstance(raw_tool_call, llm.ToolInput):
+                            result.tool_calls.append(raw_tool_call)
+                        else:
+                            tool_input, to_say = parse_raw_tool_call(raw_tool_call["function"], llm_api, user_input)
+                            if tool_input:
+                                result.tool_calls.append(tool_input)
+                            if to_say:
+                                result.response = to_say
 
             if not in_thinking and not in_tool_call:
                 yield result

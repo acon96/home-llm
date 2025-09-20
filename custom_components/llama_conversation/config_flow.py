@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import logging
 import os
-from types import MappingProxyType
 from typing import Any
 
 import voluptuous as vol
@@ -553,7 +552,12 @@ def local_llama_config_option_schema(
             CONF_TOOL_CALL_SUFFIX,
             description={"suggested_value": options.get(CONF_TOOL_CALL_SUFFIX)},
             default=DEFAULT_TOOL_CALL_SUFFIX,
-        ): str
+        ): str,
+        vol.Required(
+            CONF_ENABLE_LEGACY_TOOL_CALLING,
+            description={"suggested_value": options.get(CONF_ENABLE_LEGACY_TOOL_CALLING)},
+            default=DEFAULT_ENABLE_LEGACY_TOOL_CALLING
+        ): bool,
     }
 
     if backend_type == BACKEND_TYPE_LLAMA_CPP:
@@ -593,7 +597,7 @@ def local_llama_config_option_schema(
                 CONF_CONTEXT_LENGTH,
                 description={"suggested_value": options.get(CONF_CONTEXT_LENGTH)},
                 default=DEFAULT_CONTEXT_LENGTH,
-            ): NumberSelector(NumberSelectorConfig(min=512, max=32768, step=1)),
+            ): NumberSelector(NumberSelectorConfig(min=512, max=1_048_576, step=512)),
             vol.Required(
                 CONF_LLAMACPP_BATCH_SIZE,
                 description={"suggested_value": options.get(CONF_LLAMACPP_BATCH_SIZE)},
@@ -631,7 +635,7 @@ def local_llama_config_option_schema(
                 CONF_CONTEXT_LENGTH,
                 description={"suggested_value": options.get(CONF_CONTEXT_LENGTH)},
                 default=DEFAULT_CONTEXT_LENGTH,
-            ): NumberSelector(NumberSelectorConfig(min=512, max=32768, step=1)),
+            ): NumberSelector(NumberSelectorConfig(min=512, max=1_048_576, step=512)),
             vol.Required(
                 CONF_TOP_K,
                 description={"suggested_value": options.get(CONF_TOP_K)},
@@ -684,11 +688,6 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
                 default=DEFAULT_REQUEST_TIMEOUT,
             ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
-            vol.Required(
-                CONF_ENABLE_LEGACY_TOOL_CALLING,
-                description={"suggested_value": options.get(CONF_ENABLE_LEGACY_TOOL_CALLING)},
-                default=DEFAULT_ENABLE_LEGACY_TOOL_CALLING
-            ): bool,
         })
     elif backend_type in BACKEND_TYPE_GENERIC_OPENAI_RESPONSES:
         del result[CONF_REMEMBER_NUM_INTERACTIONS]
@@ -741,14 +740,14 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
                 default=DEFAULT_REQUEST_TIMEOUT,
             ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
-            vol.Required(
-                CONF_ENABLE_LEGACY_TOOL_CALLING,
-                description={"suggested_value": options.get(CONF_ENABLE_LEGACY_TOOL_CALLING)},
-                default=DEFAULT_ENABLE_LEGACY_TOOL_CALLING
-            ): bool,
         })
     elif backend_type == BACKEND_TYPE_OLLAMA:
         result.update({
+            vol.Required(
+                CONF_CONTEXT_LENGTH,
+                description={"suggested_value": options.get(CONF_CONTEXT_LENGTH)},
+                default=DEFAULT_CONTEXT_LENGTH,
+            ): NumberSelector(NumberSelectorConfig(min=512, max=1_048_576, step=512)),
             vol.Required(
                 CONF_TOP_K,
                 description={"suggested_value": options.get(CONF_TOP_K)},
@@ -909,7 +908,7 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
         description_placeholders = {}
         entry = self._get_entry()
 
-        backend_type = entry.options.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE)
+        backend_type = entry.data[CONF_BACKEND_TYPE]
         if backend_type == BACKEND_TYPE_LLAMA_CPP:
             schema = STEP_LOCAL_MODEL_SELECTION_DATA_SCHEMA()
         else:

@@ -51,6 +51,24 @@ class MissingQuantizationException(Exception):
         self.missing_quant = missing_quant
         self.available_quants = available_quants
 
+class MalformedToolCallException(Exception):
+    def __init__(self, agent_id: str, tool_call_id: str, tool_name: str, tool_args: str, error_msg: str):
+        self.agent_id = agent_id
+        self.tool_call_id = tool_call_id
+        self.tool_name = tool_name
+        self.tool_args = tool_args
+        self.error_msg = error_msg
+
+    def as_tool_messages(self) -> Sequence[conversation.Content]:
+        return [
+            conversation.AssistantContent(
+                self.agent_id, tool_calls=[llm.ToolInput(self.tool_name, {})]
+            ),
+            conversation.ToolResultContent(
+            self.agent_id, self.tool_call_id, self.tool_name, 
+            {"error": f"Error occurred calling tool with args='{self.tool_args}': {self.error_msg}" }
+        )]
+
 def closest_color(requested_color):
     min_colors = {}
     
@@ -280,7 +298,7 @@ def get_oai_formatted_tools(llm_api: llm.APIInstance, domains: list[str]) -> Lis
 
     return result
 
-def get_oai_formatted_messages(conversation: Sequence[conversation.Content], user_content_as_list: bool = False) -> List[ChatCompletionRequestMessage]:
+def get_oai_formatted_messages(conversation: Sequence[conversation.Content], user_content_as_list: bool = False, tool_args_to_str: bool = True) -> List[ChatCompletionRequestMessage]:
         messages: List[ChatCompletionRequestMessage] = []
         for message in conversation:
             if message.role == "system":
@@ -309,7 +327,7 @@ def get_oai_formatted_messages(conversation: Sequence[conversation.Content], use
                                 "type" : "function",
                                 "id": t.id,
                                 "function": {
-                                    "arguments": json.dumps(t.tool_args),
+                                    "arguments": cast(str, json.dumps(t.tool_args) if tool_args_to_str else t.tool_args),
                                     "name": t.tool_name,
                                 }
                             } for t in message.tool_calls
@@ -362,7 +380,7 @@ def get_home_llm_tools(llm_api: llm.APIInstance, domains: list[str]) -> List[Dic
 
     return tools
 
-def parse_raw_tool_call(raw_block: str | dict, llm_api: llm.APIInstance) -> tuple[llm.ToolInput | None, str | None]:
+def parse_raw_tool_call(raw_block: str | dict, llm_api: llm.APIInstance, user_input: conversation.ConversationInput) -> tuple[llm.ToolInput | None, str | None]:
     if isinstance(raw_block, dict):
         parsed_tool_call = raw_block
     else:
@@ -385,20 +403,27 @@ def parse_raw_tool_call(raw_block: str | dict, llm_api: llm.APIInstance) -> tupl
     else:
         schema_to_validate = vol.Schema({
             vol.Required("name"): str,
-            vol.Required("arguments"): str | dict,
+            vol.Required("arguments"): vol.Union(str, dict),
         })
 
     try:
         schema_to_validate(parsed_tool_call)
     except vol.Error as ex:
         _LOGGER.info(f"LLM produced an improperly formatted response: {repr(ex)}")
-        raise ex # re-raise exception for now to force the LLM to try again
+        raise MalformedToolCallException(user_input.agent_id, "", "unknown", str(raw_block), "Tool call was not properly formatted")
 
     # try to fix certain arguments
     args_dict = parsed_tool_call if llm_api.api.id == HOME_LLM_API_ID else parsed_tool_call["arguments"]
+    tool_name = parsed_tool_call.get("name", parsed_tool_call.get("service", ""))
 
     if isinstance(args_dict, str):
-        args_dict = json.loads(args_dict)
+        if not args_dict.strip():
+            args_dict = {} # don't attempt to parse empty arguments
+        else:
+            try:
+                args_dict = json.loads(args_dict)
+            except json.JSONDecodeError:
+                raise MalformedToolCallException(user_input.agent_id, "", tool_name, str(args_dict), "Tool arguments were not properly formatted JSON")
 
     # make sure brightness is 0-255 and not a percentage
     if "brightness" in args_dict and 0.0 < args_dict["brightness"] <= 1.0:

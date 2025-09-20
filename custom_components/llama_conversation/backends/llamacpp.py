@@ -18,7 +18,7 @@ from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.helpers.event import async_track_state_change, async_call_later
 
-from custom_components.llama_conversation.utils import install_llama_cpp_python, validate_llama_cpp_python_installation, get_oai_formatted_messages, get_oai_formatted_tools, parse_raw_tool_call
+from custom_components.llama_conversation.utils import install_llama_cpp_python, validate_llama_cpp_python_installation, get_oai_formatted_messages, get_oai_formatted_tools
 from custom_components.llama_conversation.const import (
     CONF_INSTALLED_LLAMACPP_VERSION,
     CONF_CHAT_MODEL,
@@ -475,5 +475,5 @@ class LlamaCppClient(LocalLLMClient):
                     tool_calls = chunk["choices"][0]["delta"].get("tool_calls")
                     yield content, tool_calls
 
-        return self._async_parse_completion(llm_api, entity_options, next_token=next_token())
+        return self._async_parse_completion(llm_api, user_input, entity_options, next_token=next_token())
 

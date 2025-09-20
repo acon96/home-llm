@@ -133,19 +133,3 @@ Vous êtes « Al », un assistant IA utile qui contrôle les appareils d'une m
 Eres 'Al', un útil asistente de IA que controla los dispositivos de una casa. Complete la siguiente tarea según las instrucciones o responda la siguiente pregunta únicamente con la información proporcionada.
 ```
 -->
-
-## Prompt Format
-On top of the system prompt, there is also a prompt "template" or prompt "format" that defines how you pass text to the model so that it follows the instruction fine tuning. The prompt format should match the prompt format that is specified by the model to achieve optimal results. 
-
-Currently supported prompt formats are:
-1. ChatML
-2. Vicuna
-3. Alpaca
-4. Mistral
-5. Zephyr w/ eos token `<|endoftext|>`
-6. Zephyr w/ eos token `</s>`
-7. Zephyr w/ eos token `<|end|>`
-8. Llama 3
-9. Command-R
-10. None (useful for foundation models)
-
