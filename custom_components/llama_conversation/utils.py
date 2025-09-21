@@ -48,11 +48,13 @@ CSS3_NAME_TO_RGB = {
 
 class MissingQuantizationException(Exception):
     def __init__(self, missing_quant: str, available_quants: list[str]):
+        super().__init__(missing_quant, available_quants)
         self.missing_quant = missing_quant
         self.available_quants = available_quants
 
 class MalformedToolCallException(Exception):
     def __init__(self, agent_id: str, tool_call_id: str, tool_name: str, tool_args: str, error_msg: str):
+        super().__init__(agent_id, tool_call_id, tool_name, tool_args, error_msg)
         self.agent_id = agent_id
         self.tool_call_id = tool_call_id
         self.tool_name = tool_name
@@ -437,13 +439,13 @@ def parse_raw_tool_call(raw_block: str | dict, llm_api: llm.APIInstance, user_in
         to_say = parsed_tool_call.pop("to_say", "")
         tool_input = llm.ToolInput(
             tool_name=SERVICE_TOOL_NAME,
-            tool_args=parsed_tool_call,
+            tool_args=args_dict,
         )
     else:
         to_say = ""
         tool_input = llm.ToolInput(
-            tool_name=parsed_tool_call["name"],
-            tool_args=parsed_tool_call["arguments"],
+            tool_name=tool_name,
+            tool_args=args_dict,
         )
 
     return tool_input, to_say

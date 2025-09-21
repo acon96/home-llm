@@ -206,11 +206,11 @@ class GenericOpenAIAPIClient(LocalLLMClient):
             if "tool_calls" in choice["delta"]:
                 tool_calls = []
                 for call in choice["delta"]["tool_calls"]:
-                    tool_args, to_say = parse_raw_tool_call(
+                    tool_call, to_say = parse_raw_tool_call(
                         call["function"], llm_api, user_input)
                     
-                    if tool_args:
-                        tool_calls.append(tool_args)
+                    if tool_call:
+                        tool_calls.append(tool_call)
                         
                     if to_say:
                         response_text += to_say
