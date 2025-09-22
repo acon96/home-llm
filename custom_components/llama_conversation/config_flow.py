@@ -524,11 +524,6 @@ def local_llama_config_option_schema(
             default=DEFAULT_NUM_IN_CONTEXT_EXAMPLES,
         ): NumberSelector(NumberSelectorConfig(min=1, max=16, step=1)),
         vol.Required(
-            CONF_MAX_TOKENS,
-            description={"suggested_value": options.get(CONF_MAX_TOKENS)},
-            default=DEFAULT_MAX_TOKENS,
-        ): NumberSelector(NumberSelectorConfig(min=1, max=8192, step=1)),
-        vol.Required(
             CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
             description={"suggested_value": options.get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE)},
             default=DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
@@ -562,6 +557,11 @@ def local_llama_config_option_schema(
 
     if backend_type == BACKEND_TYPE_LLAMA_CPP:
         result.update({
+                vol.Required(
+                CONF_MAX_TOKENS,
+                description={"suggested_value": options.get(CONF_MAX_TOKENS)},
+                default=DEFAULT_MAX_TOKENS,
+            ): NumberSelector(NumberSelectorConfig(min=1, max=8192, step=1)),
             vol.Required(
                 CONF_TOP_K,
                 description={"suggested_value": options.get(CONF_TOP_K)},
@@ -715,6 +715,11 @@ def local_llama_config_option_schema(
         })
     elif backend_type == BACKEND_TYPE_LLAMA_CPP_SERVER:
         result.update({
+                vol.Required(
+                CONF_MAX_TOKENS,
+                description={"suggested_value": options.get(CONF_MAX_TOKENS)},
+                default=DEFAULT_MAX_TOKENS,
+            ): NumberSelector(NumberSelectorConfig(min=1, max=8192, step=1)),
             vol.Required(
                 CONF_TOP_K,
                 description={"suggested_value": options.get(CONF_TOP_K)},
@@ -743,6 +748,11 @@ def local_llama_config_option_schema(
         })
     elif backend_type == BACKEND_TYPE_OLLAMA:
         result.update({
+                vol.Required(
+                CONF_MAX_TOKENS,
+                description={"suggested_value": options.get(CONF_MAX_TOKENS)},
+                default=DEFAULT_MAX_TOKENS,
+            ): NumberSelector(NumberSelectorConfig(min=1, max=8192, step=1)),
             vol.Required(
                 CONF_CONTEXT_LENGTH,
                 description={"suggested_value": options.get(CONF_CONTEXT_LENGTH)},

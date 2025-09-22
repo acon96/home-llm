@@ -122,7 +122,6 @@ class GenericOpenAIAPIClient(LocalLLMClient):
                          user_input: conversation.ConversationInput,
                          entity_options: dict[str, Any]) -> AsyncGenerator[TextGenerationResult, None]:
         model_name = entity_options[CONF_CHAT_MODEL]
-        max_tokens = entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
         temperature = entity_options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
         top_p = entity_options.get(CONF_TOP_P, DEFAULT_TOP_P)
         timeout = entity_options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
@@ -134,7 +133,6 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         request_params = {
             "model": model_name,
             "stream": True,
-            "max_tokens": max_tokens,
             "temperature": temperature,
             "top_p": top_p,
             "messages": messages

@@ -12,6 +12,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from custom_components.llama_conversation.const import (
     CONF_CHAT_MODEL,
+    CONF_MAX_TOKENS,
     CONF_TOP_K,
     CONF_TYPICAL_P,
     CONF_MIN_P,
@@ -22,6 +23,7 @@ from custom_components.llama_conversation.const import (
     CONF_TEXT_GEN_WEBUI_CHAT_MODE,
     CONF_CONTEXT_LENGTH,
     CONF_GENERIC_OPENAI_PATH,
+    DEFAULT_MAX_TOKENS,
     DEFAULT_TOP_K,
     DEFAULT_MIN_P,
     DEFAULT_TYPICAL_P,
@@ -125,13 +127,15 @@ class LlamaCppServerClient(GenericOpenAIAPIClient):
         port = client_options[CONF_PORT]
         ssl = client_options[CONF_SSL]
         path = "/" + client_options[CONF_GENERIC_OPENAI_PATH]
-        return f"LLama.cpp Server at '{format_url(hostname=host, port=port, ssl=ssl, path=path)}'"
+        return f"Llama.cpp Server at '{format_url(hostname=host, port=port, ssl=ssl, path=path)}'"
     
     def _chat_completion_params(self, entity_options: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
         top_k = int(entity_options.get(CONF_TOP_K, DEFAULT_TOP_K))
+        max_tokens = int(entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS))
         endpoint, request_params = super()._chat_completion_params(entity_options)
 
         request_params["top_k"] = top_k
+        request_params["max_tokens"] = max_tokens
 
         if entity_options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
             request_params["grammar"] = self.grammar

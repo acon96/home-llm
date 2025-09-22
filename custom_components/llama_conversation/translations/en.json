@@ -57,7 +57,7 @@
                 "reconfigure_successful": "Successfully updated model options."
             },
             "step": {
-                "init": {
+                "pick_model": {
                     "data": {
                         "huggingface_model": "Model Name",
                         "downloaded_model_file": "Local file name",

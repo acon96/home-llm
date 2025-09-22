@@ -280,6 +280,7 @@ class LocalLLMClient:
                 except MalformedToolCallException as err:
                     message_history.extend(err.as_tool_messages())
                     last_generation_had_tool_calls = True
+                    _LOGGER.debug("Malformed tool call produced", exc_info=err)
                 except Exception as err:
                     _LOGGER.exception("There was a problem talking to the backend")
                     intent_response = intent.IntentResponse(language=user_input.language)

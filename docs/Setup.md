@@ -13,13 +13,13 @@
     * [Overview](#overview-1)
     * [Step 1: Downloading and serving the Model](#step-1-downloading-and-serving-the-model)
     * [Step 2: Connect to the Ollama API](#step-2-connect-to-the-ollama-api)
-    * [Step 3: Model Configuration](#step-3-model-configuration-1)
+    * [Step 3: Model Selection & Configuration](#step-3-model-selection-configuration)
 * [Path 3: Using Llama-3-8B-Instruct with LM Studio](#path-3-using-llama-3-8b-instruct-with-lm-studio)
     * [Overview](#overview-2)
     * [Step 1: Downloading and serving the Model](#step-1-downloading-and-serving-the-model-1)
     * [Step 2: Connect to the LM Studio API](#step-2-connect-to-the-lm-studio-api)
-    * [Step 3: Model Configuration](#step-3-model-configuration-2)
-* [Configuring the Integration as a Conversation Agent](#configuring-the-integration-as-a-conversation-agent)
+    * [Step 3: Model Selection & Configuration](#step-3-model-selection-configuration-1)
+* [Using the Integration as a Conversation Agent](#using-the-integration-as-a-conversation-agent)
 * [Finished!](#finished)
 
 
@@ -40,7 +40,7 @@ The following link will open your Home Assistant installation and download the i
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?category=Integration&repository=home-llm&owner=acon96)
 
-After installation, A "Local LLM Conversation" device should show up in the `Settings > Devices and Services > [Devices]` tab now.
+After installation, A "Local LLM" device should show up in the `Settings > Devices and Services > [Devices]` tab now.
 
 ## Path 1: Using the Home Model with the Llama.cpp Backend
 ### Overview
@@ -49,8 +49,8 @@ This setup path involves downloading a fine-tuned model from HuggingFace and int
 ### Step 1: Wheel Installation for llama-cpp-python
 1. In Home Assistant: navigate to `Settings > Devices and Services`
 2. Select the `+ Add Integration` button in the bottom right corner
-3. Search for, and select `Local LLM Conversation`
-4. With the `Llama.cpp (HuggingFace)` backend selected, click `Submit`
+3. Search for, and select `Local LLM`
+4. With the `Llama.cpp` backend selected, click `Submit`
 
 This should download and install `llama-cpp-python` from GitHub. If the installation fails for any reason, follow the manual installation instructions [here](./Backend%20Configuration.md#wheels).
 
@@ -59,8 +59,9 @@ Once `llama-cpp-python` is installed, continue to the model selection.
 ### Step 2: Model Selection
 The next step is to specify which model will be used by the integration. You may select any repository on HuggingFace that has a model in GGUF format in it.  We will use `acon96/Home-3B-v3-GGUF` for this example.  If you have less than 4GB of RAM then use `acon96/Home-1B-v3-GGUF`.
 
+1. Under the `Llama.cpp` service that you just created, select `+ Add conversation agent`
 **Model Name**: Use either `acon96/Home-3B-v3-GGUF` or `acon96/Home-1B-v3-GGUF`  
-**Quantization Level**: The model will be downloaded in the selected quantization level from the HuggingFace repository. If unsure which level to choose, select `Q4_K_M`.  
+**Quantization Level**: The model will be downloaded in the selected quantization level from the HuggingFace repository. If unsure which level to choose, select `Q4_K_M` or `Q4_0`.  
 
 Pressing `Submit` will download the model from HuggingFace. The downloaded files will be stored by default in `/media/models/`.
 
@@ -89,22 +90,25 @@ In order to access the model from another machine, we need to run the Ollama API
 
 1. In Home Assistant: navigate to `Settings > Devices and Services`
 2. Select the `+ Add Integration` button in the bottom right corner
-3. Search for, and select `Local LLM Conversation`
+3. Search for, and select `Local LLM`
 4. Select `Ollama API` from the dropdown and click `Submit`
 5. Set up the connection to the API:
     - **IP Address**: Fill out IP Address for the machine hosting Ollama
     - **Port**: leave on `11434`
     - **Use HTTPS**: unchecked
-    - **Model Name**: `mistral:latest`
     - **API Key**: leave blank
+    - **Path**: leave blank **UNLESS** you are using OpenWebUI to host Ollama; if so set to `/ollama`
 6. Click `Submit`
 
-### Step 3: Model Configuration
-This step allows you to configure how the model is "prompted". See [here](./Model%20Prompting.md) for more information on how that works.
+### Step 3: Model Selection & Configuration
+1. You must create the conversation agent based on the model you wish to use.  
+    Under the `Ollama at '<url>` service that you just created, select `+ Add conversation agent`  
+    - **Model Name**: Select the Mistral 7B model. This should automatically populated based on the model you already downloaded 
+2. You can configure how the model is "prompted". See [here](./Model%20Prompting.md) for more information on how that works.  
 
 For now, defaults for the model should have been populated. If you would like the model to be able to control devices then you must select the `Assist` API.
 
-Once the desired API has been selected, scroll to the bottom and click `Submit`.
+Once the desired model has been selected & configured, scroll to the bottom and click `Submit`.
 
 > NOTE: The key settings in this case are that our prompt references the `{{ response_examples }}` variable and the `Enable in context learning (ICL) examples` option is turned on.
 
@@ -124,27 +128,27 @@ Llama 3 8B can be set up and downloaded on the serving machine using LM Studio b
 
 1. In Home Assistant: navigate to `Settings > Devices and Services`
 2. Select the `+ Add Integration` button in the bottom right corner
-3. Search for, and select `Local LLM Conversation`
+3. Search for, and select `Local LLM`
 4. Select `Generic OpenAI Compatible API` from the dropdown and click `Submit`
 5. Set up the connection to the API:
     - **IP Address**: Fill out IP Address for the machine hosting LM Studio
     - **Port**: enter the port that was listed in LM Studio
     - **Use HTTPS**: unchecked
-    - **Model Name**: Set this to the name of the model as it appears in LM Studio. If you receive an error that the model does not exist, then select the model from the dropdown list.
     - **API Key**: leave blank
     - **API Path**: leave as `/v1`
 6. Click `Submit`
 
-### Step 3: Model Configuration
-This step allows you to configure how the model is "prompted". See [here](./Model%20Prompting.md) for more information on how that works.
+### Step 3: Model Selection & Configuration
+1. You must create the conversation agent based on the model you wish to use.  
+    Under the `Ollama at '<url>` service that you just created, select `+ Add conversation agent`  
+    - - **Model Name**: Set this to the name of the model as it appears in LM Studio. The dropdown list should pre-populate with the models that are already installed.
+2. You can configure how the model is "prompted". See [here](./Model%20Prompting.md) for more information on how that works.  
 
 For now, defaults for the model should have been populated. If you would like the model to be able to control devices then you must select the `Assist` API.
 
-Once the desired API has been selected, scroll to the bottom and click `Submit`.
-
 > NOTE: The key settings in this case are that our prompt references the `{{ response_examples }}` variable and the `Enable in context learning (ICL) examples` option is turned on.
 
-## Configuring the Integration as a Conversation Agent
+## Using the Integration as a Conversation Agent
 Now that the integration is configured and providing the conversation agent, we need to configure Home Assistant to use our conversation agent instead of the built in intent recognition system.
 
 > 🛑 Warning 🛑

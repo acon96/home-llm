@@ -115,7 +115,7 @@ class LlamaCppClient(LocalLLMClient):
 
     @staticmethod
     def get_name(client_options: dict[str, Any]):
-        return f"LLama.cpp (llama-cpp-python v{client_options[CONF_INSTALLED_LLAMACPP_VERSION]})"
+        return f"Llama.cpp (llama-cpp-python v{client_options[CONF_INSTALLED_LLAMACPP_VERSION]})"
 
     async def async_get_available_models(self) -> List[str]:
         return [] # TODO: find available "huggingface_hub" models that have been downloaded
@@ -391,7 +391,6 @@ class LlamaCppClient(LocalLLMClient):
         finally:
             self.model_lock.release()
 
-
         # schedule a refresh using async_call_later
         # if the flag is set after the delay then we do another refresh
 
@@ -427,23 +426,6 @@ class LlamaCppClient(LocalLLMClient):
         grammar = self.grammars.get(model_name) if entity_options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR) else None
 
         _LOGGER.debug(f"Options: {entity_options}")
-
-        # TODO: re-enable the context length check
-        #     # FIXME: use the high level API so we can use the built-in prompt formatting
-        #     input_tokens = self.llm.tokenize(
-        #         prompt.encode(), add_bos=False
-        #     )
-
-        #     context_len = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
-        #     if len(input_tokens) >= context_len:
-        #         num_entities = len(self._async_get_exposed_entities())
-        #         context_size = self.entry.options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
-        #         self._warn_context_size()
-        #         raise Exception(f"The model failed to produce a result because too many devices are exposed ({num_entities} devices) for the context size ({context_size} tokens)!")
-        #     if len(input_tokens) + max_tokens >= context_len:
-        #         self._warn_context_size()
-
-        #     _LOGGER.debug(f"Processing {len(input_tokens)} input tokens...")
 
         messages = get_oai_formatted_messages(conversation)
         tools = None
