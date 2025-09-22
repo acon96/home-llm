@@ -1,0 +1,17 @@
+{% for message in messages %}
+{%- if message['role'] == 'user' or message['role'] == 'tool' -%}
+<|user|> {{ message['content'] }}{{ eos_token }}
+{%- elif message['role'] == 'system' -%}
+<|system|> {{ message['content'] }}
+Services:
+{%- for tool in tools %} {{ tool['function']['name'] }}({% for param in tool['function']['parameters']['properties'].keys() if param != 'target_device' %}{{ param }}{% if not loop.last %},{% endif %}{% endfor -%}),{% if not loop.last -%}
+{%- if tools | length == 0 %}No tools were provided. If the user requests you interact with a device, tell them you are unable to do so.{% endif %}
+{%- endif -%}{%- endfor -%}
+{{ eos_token }}
+{%- elif message['role'] == 'assistant' -%}
+<|assistant|> {{ message['content'] }}{{ eos_token }}
+{%- endif -%}
+{%- if loop.last and add_generation_prompt %}
+<|assistant|>
+{%- endif %}
+{% endfor -%}

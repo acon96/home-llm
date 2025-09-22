@@ -195,7 +195,7 @@
                 "text-generation-webui_api": "text-generation-webui API",
                 "generic_openai": "Ogólne API kompatybilne z OpenAI",
                 "generic_openai_responses": "Ogólne API odpowiedzi kompatybilne z OpenAPI",
-                "llama_cpp_python_server": "llama-cpp-python Server",
+                "llama_cpp_server": "Llama.cpp Server",
                 "ollama": "Ollama API"
             }
         },

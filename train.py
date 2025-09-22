@@ -675,8 +675,6 @@ def do_training_run(training_run_args: TrainingRunArguments):
         if input("Something bad happened! Try and save it? (Y/n) ").lower().startswith("y"):
             trainer._save_checkpoint(model, None)
             print("Saved Checkpoint!")
-
-        exit(-1)
     
 if __name__ == "__main__":
     parser = HfArgumentParser([TrainingRunArguments])
