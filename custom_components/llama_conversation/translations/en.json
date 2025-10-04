@@ -2,6 +2,7 @@
     "config": {
         "error": {
             "failed_to_connect": "Failed to connect to the remote API: {exception}",
+            "invalid_hostname": "The provided hostname was invalid. Please ensure you only provide the domain or IP address and not the full API endpoint.",
             "unknown": "Unexpected error",
             "pip_wheel_error": "Pip returned an error while installing the wheel! Please check the Home Assistant logs for more details."
         },
@@ -191,6 +192,7 @@
         },
         "error": {
             "failed_to_connect": "Failed to connect to the remote API: {exception}",
+            "invalid_hostname": "The provided hostname was invalid. Please ensure you only provide the domain or IP address and not the full API endpoint.",
             "unknown": "Unexpected error"
         }
     },

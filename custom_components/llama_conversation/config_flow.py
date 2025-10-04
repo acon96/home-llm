@@ -39,7 +39,7 @@ from homeassistant.helpers.selector import (
     BooleanSelectorConfig,
 )
 
-from .utils import download_model_from_hf, get_llama_cpp_python_version, install_llama_cpp_python, format_url, MissingQuantizationException
+from .utils import download_model_from_hf, get_llama_cpp_python_version, install_llama_cpp_python, is_valid_hostname, MissingQuantizationException
 from .const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -324,35 +324,32 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
             if user_input:
                 self.client_config.update(user_input)
 
-                # validate remote connections
-                connect_err = await BACKEND_TO_CLS[self.client_config[CONF_BACKEND_TYPE]].async_validate_connection(self.hass, self.client_config)
-
-                if not connect_err:
-                    return await self.async_step_finish()
+                hostname = user_input.get(CONF_HOST, "")
+                if not is_valid_hostname(hostname):
+                    errors["base"] = "invalid_hostname"
                 else:
-                    errors["base"] = "failed_to_connect"
-                    description_placeholders["exception"] = str(connect_err)
-                    return self.async_show_form(
-                        step_id="user", 
-                        data_schema=remote_connection_schema(
-                            self.client_config[CONF_BACKEND_TYPE],
-                            host=user_input.get(CONF_HOST),
-                            port=user_input.get(CONF_PORT),
-                            ssl=user_input.get(CONF_SSL),
-                            selected_path=user_input.get(CONF_GENERIC_OPENAI_PATH)
-                        ), 
-                        errors=errors,
-                        description_placeholders=description_placeholders,
-                        last_step=True
-                    )
-            else:
-                return self.async_show_form(
-                    step_id="user", data_schema=remote_connection_schema(self.client_config[CONF_BACKEND_TYPE],
-                        host=self.client_config.get(CONF_HOST),
-                        port=self.client_config.get(CONF_PORT),
-                        ssl=self.client_config.get(CONF_SSL),
-                        selected_path=self.client_config.get(CONF_GENERIC_OPENAI_PATH)
-                    ), last_step=True)
+                    # validate remote connections
+                    connect_err = await BACKEND_TO_CLS[self.client_config[CONF_BACKEND_TYPE]].async_validate_connection(self.hass, self.client_config)
+
+                    if connect_err:
+                        errors["base"] = "failed_to_connect"
+                        description_placeholders["exception"] = str(connect_err)
+                    else:
+                        return await self.async_step_finish()
+            
+            return self.async_show_form(
+                step_id="user", 
+                data_schema=remote_connection_schema(
+                    self.client_config[CONF_BACKEND_TYPE],
+                    host=self.client_config.get(CONF_HOST),
+                    port=self.client_config.get(CONF_PORT),
+                    ssl=self.client_config.get(CONF_SSL),
+                    selected_path=self.client_config.get(CONF_GENERIC_OPENAI_PATH)
+                ), 
+                errors=errors,
+                description_placeholders=description_placeholders,
+                last_step=True
+            )
         else:
             raise AbortFlow("Unknown internal step")
 

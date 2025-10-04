@@ -59,7 +59,7 @@
     - [x] generic openai responses backend  
 - [ ] fix and re-upload all compatible old models (+ upload all original safetensors)  
 - [x] config entry migration function  
-- [ ] re-write setup guide  
+- [x] re-write setup guide  
 
 ## more complicated ideas
 - [ ] "context requests"  

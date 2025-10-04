@@ -1,6 +1,7 @@
 import time
 import os
 import re
+import ipaddress
 import sys
 import platform
 import logging
@@ -449,3 +450,44 @@ def parse_raw_tool_call(raw_block: str | dict, llm_api: llm.APIInstance, user_in
         )
 
     return tool_input, to_say
+
+def is_valid_hostname(host: str) -> bool:
+    """
+    Validates whether a string is a valid hostname or IP address,
+    rejecting URLs, paths, ports, query strings, etc.
+    """
+    if not host or not isinstance(host, str):
+        return False
+
+    # Normalize: strip whitespace
+    host = host.strip().lower()
+
+    # Special case: localhost
+    if host == "localhost":
+        return True
+
+    # Try to parse as IPv4
+    try:
+        ipaddress.IPv4Address(host)
+        return True
+    except ipaddress.AddressValueError:
+        pass
+
+    # Try to parse as IPv6
+    try:
+        ipaddress.IPv6Address(host)
+        return True
+    except ipaddress.AddressValueError:
+        pass
+
+    # Validate as domain name (RFC 1034/1123)
+    # Rules:
+    # - Only a-z, 0-9, hyphens
+    # - No leading/trailing hyphens
+    # - Max 63 chars per label
+    # - At least 2 chars in TLD
+    # - No consecutive dots
+
+    domain_pattern = re.compile(r"^[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?)*\.[a-z]{2,}$")
+
+    return bool(domain_pattern.match(host))
