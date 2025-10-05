@@ -211,34 +211,11 @@ def install_llama_cpp_python(config_dir: str):
         platform_suffix = "x86_64"
 
     runtime_version = f"cp{sys.version_info.major}{sys.version_info.minor}"
-
-    instruction_extensions_suffix = ""
-    if platform_suffix == "x86_64":
-        instruction_extensions_suffix = "noavx"
-
-        try:
-            with open("/proc/cpuinfo") as f:
-                cpu_features = [ line for line in f.readlines() if line.startswith("Features") or line.startswith("flags")][0]
-
-            _LOGGER.debug(cpu_features)
-            if " avx512f " in cpu_features and " avx512bw " in cpu_features:
-                instruction_extensions_suffix = "avx512"
-            elif " avx2 " in cpu_features and \
-                 " avx " in cpu_features and \
-                 " f16c " in cpu_features and \
-                 " fma " in cpu_features and \
-                 (" sse3 " in cpu_features or " ssse3 " in cpu_features):
-                instruction_extensions_suffix = ""
-        except Exception as ex:
-            _LOGGER.debug(f"Couldn't detect CPU features: {ex}")
-            # default to the noavx build to avoid crashing home assistant
-            instruction_extensions_suffix = "noavx"
     
     folder = os.path.dirname(__file__)
     potential_wheels = sorted([ path for path in os.listdir(folder) if path.endswith(f"{platform_suffix}.whl") ], reverse=True)
     potential_wheels = [ wheel for wheel in potential_wheels if runtime_version in wheel ]
-    if instruction_extensions_suffix:
-        potential_wheels = [ wheel for wheel in potential_wheels if f"+homellm{instruction_extensions_suffix}" in wheel ]
+    potential_wheels = [ wheel for wheel in potential_wheels if f"{EMBEDDED_LLAMA_CPP_PYTHON_VERSION}+homellm" in wheel ]
 
     _LOGGER.debug(f"{potential_wheels=}")
     if len(potential_wheels) > 0:
@@ -250,8 +227,8 @@ def install_llama_cpp_python(config_dir: str):
         return install_package(os.path.join(folder, latest_wheel), **pip_kwargs(config_dir))
         
     # scikit-build-core v0.9.7+ doesn't recognize these builds as musllinux, and just tags them as generic linux
-    # github_release_url = f"https://github.com/acon96/home-llm/releases/download/v{INTEGRATION_VERSION}/llama_cpp_python-{EMBEDDED_LLAMA_CPP_PYTHON_VERSION}+homellm{instruction_extensions_suffix}-{runtime_version}-{runtime_version}-musllinux_1_2_{platform_suffix}.whl"
-    github_release_url = f"https://github.com/acon96/home-llm/releases/download/v{INTEGRATION_VERSION}/llama_cpp_python-{EMBEDDED_LLAMA_CPP_PYTHON_VERSION}+homellm{instruction_extensions_suffix}-{runtime_version}-{runtime_version}-linux_{platform_suffix}.whl"
+    # github_release_url = f"https://github.com/acon96/home-llm/releases/download/v{INTEGRATION_VERSION}/llama_cpp_python-{EMBEDDED_LLAMA_CPP_PYTHON_VERSION}+homellm-{runtime_version}-{runtime_version}-musllinux_1_2_{platform_suffix}.whl"
+    github_release_url = f"https://github.com/acon96/home-llm/releases/download/v{INTEGRATION_VERSION}/llama_cpp_python-{EMBEDDED_LLAMA_CPP_PYTHON_VERSION}+homellm-{runtime_version}-{runtime_version}-linux_{platform_suffix}.whl"
     if install_package(github_release_url, **pip_kwargs(config_dir)):
         _LOGGER.info("llama-cpp-python successfully installed from GitHub release")
         return True
@@ -260,7 +237,7 @@ def install_llama_cpp_python(config_dir: str):
     if not installed_wrong_version:
         _LOGGER.error(
             "Error installing llama-cpp-python. Could not install the binary wheels from GitHub for " + \
-            f"platform: {platform_suffix}{instruction_extensions_suffix}, python version: {sys.version_info.major}.{sys.version_info.minor}. " + \
+            f"platform: {platform_suffix}, python version: {sys.version_info.major}.{sys.version_info.minor}. " + \
             "Please manually build or download the wheels and place them in the `/config/custom_components/llama_conversation` directory." + \
             "Make sure that you download the correct .whl file for your platform and python version from the GitHub releases page."
         )
@@ -268,7 +245,7 @@ def install_llama_cpp_python(config_dir: str):
     else:
         _LOGGER.info(
             "Error installing llama-cpp-python. Could not install the binary wheels from GitHub for " + \
-            f"platform: {platform_suffix}{instruction_extensions_suffix}, python version: {sys.version_info.major}.{sys.version_info.minor}. " + \
+            f"platform: {platform_suffix}, python version: {sys.version_info.major}.{sys.version_info.minor}. " + \
             f"You already have a version of llama-cpp-python ({version('llama-cpp-python')}) installed, however it may not be compatible!"
         )
         time.sleep(0.5) # I still don't know why this is required

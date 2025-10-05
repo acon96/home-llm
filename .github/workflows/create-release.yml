@@ -13,41 +13,27 @@ permissions:
 
 jobs:
   build_wheels:
-    name: Build wheels for ${{ matrix.arch }}${{ matrix.suffix }} (HA ${{ matrix.home_assistant_image }})
+    name: Build wheels for ${{ matrix.arch }} (HA ${{ matrix.home_assistant_image }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
-        # ARM variants
+        # ARM64
         - home_assistant_image: "aarch64-homeassistant:2025.4.1"
           arch: "aarch64"
+          
+        # 32bit ARM (Raspberry pis)
         - home_assistant_image: "armhf-homeassistant:2025.4.1"
           arch: "armhf"
 
-        # Base x86
+        # x64
         - home_assistant_image: "amd64-homeassistant:2025.4.1"
-          suffix: "noavx"
           arch: "x86_64"
-          extra_defines: "-DGGML_SSE42=OFF -DGGML_AVX=OFF -DGGML_AVX2=OFF -DGGML_BMI2=OFF -DGGML_FMA=OFF -DGGML_F16C=OFF"
 
-        # AVX2 and AVX512
-        - home_assistant_image: "amd64-homeassistant:2025.4.1"
-          arch: "x86_64"
-          extra_defines: "-DGGML_SSE42=ON -DGGML_AVX=ON -DGGML_AVX2=ON -DGGML_BMI2=ON -DGGML_FMA=ON -DGGML_F16C=ON"
-        - home_assistant_image: "amd64-homeassistant:2025.4.1"
-          arch: "x86_64"
-          suffix: "avx512"
-          extra_defines: "-DGGML_SSE42=ON -DGGML_AVX=ON -DGGML_AVX2=ON -DGGML_BMI2=ON -DGGML_AVX512=ON -DGGML_FMA=ON -DGGML_F16C=ON"
-
-        # 32 bit for older processors, with and without AVX enabled
+        # 32 bit for older processors
         - home_assistant_image: "i386-homeassistant:2025.4.1"
           arch: "i386"
-          suffix: "noavx"
-          extra_defines: "-DGGML_SSE42=OFF -DGGML_AVX=OFF -DGGML_AVX2=OFF -DGGML_BMI2=OFF -DGGML_FMA=OFF -DGGML_F16C=OFF"
-        - home_assistant_image: "i386-homeassistant:2025.4.1"
-          arch: "i386"
-          extra_defines: "-DGGML_SSE42=ON -DGGML_AVX=ON -DGGML_AVX2=OFF -DGGML_BMI2=OFF -DGGML_FMA=ON -DGGML_F16C=ON"
         
     steps:
       - name: Checkout code
@@ -104,10 +90,10 @@ jobs:
             git clone --quiet --recurse-submodules https://github.com/abetlen/llama-cpp-python --branch "v${{ env.EMBEDDED_LLAMA_CPP_PYTHON_VERSION }}"
             cd llama-cpp-python
 
-            tag="homellm${{ matrix.suffix }}"
+            tag="homellm"
             sed -i -E "s/^(__version__ *= *\"[0-9]+\.[0-9]+\.[0-9]+)\"/\1+${tag}\"/" llama_cpp/__init__.py
 
-            export CMAKE_ARGS="-DLLAVA_BUILD=OFF -DGGML_NATIVE=OFF ${{ matrix.extra_defines }}"
+            export CMAKE_ARGS="-DLLAVA_BUILD=OFF -DGGML_NATIVE=OFF -DGGML_CPU_ALL_VARIANTS=ON -DGGML_BACKEND_DL=ON"
             python3 -m build --wheel
 
             mv ./dist/*.whl /artifacts
@@ -117,7 +103,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           path: ./artifacts/*.whl
-          name: artifact_${{ matrix.arch }}${{ matrix.suffix }}
+          name: artifact_${{ matrix.arch }}
 
   release:
     name: Create Release
