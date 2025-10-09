@@ -58,7 +58,6 @@ USER_INSTRUCTION = {
 }
 DEFAULT_PROMPT_BASE = """<persona>
 <current_date>
-<tools>: {{ tools | to_json }}
 <devices>:
 {% for device in devices | selectattr('area_id', 'none'): %}
 {{ device.entity_id }} '{{ device.name }}' = {{ device.state }}{{ ([""] + device.attributes) | join(";") }}
@@ -71,20 +70,19 @@ DEFAULT_PROMPT_BASE = """<persona>
 {% endfor %}"""
 DEFAULT_PROMPT_BASE_LEGACY = """<persona>
 <current_date>
-<services>: {{ formatted_tools }}
 <devices>:
 {{ formatted_devices }}"""
 ICL_EXTRAS = """
 {% for item in response_examples %}
 {{ item.request }}
 {{ item.response }}
-<functioncall> {{ item.tool | to_json }}
+{{ tool_call_prefix }}{{ item.tool | to_json }}{{ tool_call_suffix }}
 {% endfor %}"""
 ICL_NO_SYSTEM_PROMPT_EXTRAS = """
 {% for item in response_examples %}
 {{ item.request }}
 {{ item.response }}
-<functioncall> {{ item.tool | to_json }}
+{{ tool_call_prefix }}{{ item.tool | to_json }}{{ tool_call_suffix }}
 {% endfor %}
 <user_instruction>:"""
 DEFAULT_PROMPT = DEFAULT_PROMPT_BASE + ICL_EXTRAS
@@ -92,7 +90,7 @@ CONF_CHAT_MODEL = "huggingface_model"
 DEFAULT_CHAT_MODEL = "acon96/Home-3B-v3-GGUF"
 RECOMMENDED_CHAT_MODELS = [ "acon96/Home-3B-v3-GGUF", "acon96/Home-1B-v3-GGUF", "TheBloke/Mistral-7B-Instruct-v0.2-GGUF" ]
 CONF_MAX_TOKENS = "max_new_tokens"
-DEFAULT_MAX_TOKENS = 128
+DEFAULT_MAX_TOKENS = 512
 CONF_TOP_K = "top_k"
 DEFAULT_TOP_K = 40
 CONF_TOP_P = "top_p"
@@ -106,14 +104,16 @@ DEFAULT_TEMPERATURE = 0.1
 CONF_REQUEST_TIMEOUT = "request_timeout"
 DEFAULT_REQUEST_TIMEOUT = 90
 CONF_BACKEND_TYPE = "model_backend"
-BACKEND_TYPE_LLAMA_HF = "llama_cpp_hf"
-BACKEND_TYPE_LLAMA_EXISTING = "llama_cpp_existing"
+BACKEND_TYPE_LLAMA_HF_OLD = "llama_cpp_hf"
+BACKEND_TYPE_LLAMA_EXISTING_OLD = "llama_cpp_existing"
+BACKEND_TYPE_LLAMA_CPP = "llama_cpp_python"
 BACKEND_TYPE_TEXT_GEN_WEBUI = "text-generation-webui_api"
 BACKEND_TYPE_GENERIC_OPENAI = "generic_openai"
 BACKEND_TYPE_GENERIC_OPENAI_RESPONSES = "generic_openai_responses"
-BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER = "llama_cpp_python_server"
+BACKEND_TYPE_LLAMA_CPP_SERVER = "llama_cpp_server"
 BACKEND_TYPE_OLLAMA = "ollama"
-DEFAULT_BACKEND_TYPE = BACKEND_TYPE_LLAMA_HF
+DEFAULT_BACKEND_TYPE = BACKEND_TYPE_LLAMA_CPP
+CONF_INSTALLED_LLAMACPP_VERSION = "installed_llama_cpp_version"
 CONF_SELECTED_LANGUAGE = "selected_language"
 CONF_SELECTED_LANGUAGE_OPTIONS = [ "en", "de", "fr", "es", "pl"]
 CONF_DOWNLOADED_MODEL_QUANTIZATION = "downloaded_model_quantization"
@@ -131,99 +131,18 @@ DEFAULT_SSL = False
 CONF_EXTRA_ATTRIBUTES_TO_EXPOSE = "extra_attributes_to_expose"
 DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "media_title", "volume_level", "item", "wind_speed"]
 ALLOWED_SERVICE_CALL_ARGUMENTS = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "hvac_mode", "preset_mode", "item", "duration" ]
-CONF_PROMPT_TEMPLATE = "prompt_template"
-PROMPT_TEMPLATE_CHATML = "chatml"
-PROMPT_TEMPLATE_COMMAND_R = "command-r"
-PROMPT_TEMPLATE_ALPACA = "alpaca"
-PROMPT_TEMPLATE_VICUNA = "vicuna"
-PROMPT_TEMPLATE_MISTRAL = "mistral"
-PROMPT_TEMPLATE_LLAMA3 = "llama3"
-PROMPT_TEMPLATE_NONE = "no_prompt_template"
-PROMPT_TEMPLATE_ZEPHYR = "zephyr"
-PROMPT_TEMPLATE_ZEPHYR2 = "zephyr2"
-PROMPT_TEMPLATE_ZEPHYR3 = "zephyr3"
-DEFAULT_PROMPT_TEMPLATE = PROMPT_TEMPLATE_CHATML
-PROMPT_TEMPLATE_DESCRIPTIONS = {
-    PROMPT_TEMPLATE_CHATML: {
-        "system": { "prefix": "<|im_start|>system\n", "suffix": "<|im_end|>" },
-        "user": { "prefix": "<|im_start|>user\n", "suffix": "<|im_end|>" },
-        "assistant": { "prefix": "<|im_start|>assistant\n", "suffix": "<|im_end|>" },
-        "tool": { "prefix": "<|im_start|>tool", "suffix": "<|im_end|>" },
-        "chain_of_thought": { "prefix": "<think>", "suffix": "</think>"},
-        "generation_prompt": "<|im_start|>assistant"
-    },
-    PROMPT_TEMPLATE_COMMAND_R: {
-        "system": { "prefix": "<|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|>", "suffix": "<|END_OF_TURN_TOKEN|>" },
-        "user": { "prefix": "<|START_OF_TURN_TOKEN|><|USER_TOKEN|>", "suffix": "<|END_OF_TURN_TOKEN|>" },
-        "assistant": { "prefix": "<|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>", "suffix": "<|END_OF_TURN_TOKEN|>" },
-        "chain_of_thought": { "prefix": "<think>", "suffix": "</think>"},
-        "generation_prompt": "<|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>"
-    },
-    PROMPT_TEMPLATE_ALPACA: {
-        "system": { "prefix": "", "suffix": "\n" },
-        "user": { "prefix": "### Instruction:\n", "suffix": "\n" },
-        "assistant": { "prefix": "### Response:\n", "suffix": "\n" },
-        "chain_of_thought": { "prefix": "<think>", "suffix": "</think>"},
-        "generation_prompt": "### Response:"
-    },
-    PROMPT_TEMPLATE_VICUNA: {
-        "system": { "prefix": "", "suffix": "\n" },
-        "user": { "prefix": "USER: ", "suffix": "" },
-        "assistant": { "prefix": "ASSISTANT: ", "suffix": "</s>" },
-        "chain_of_thought": { "prefix": "<think>", "suffix": "</think>"},
-        "generation_prompt": "ASSISTANT:"
-    },
-    PROMPT_TEMPLATE_NONE: {
-        "system": { "prefix": "", "suffix": "" },
-        "user": { "prefix": "", "suffix": "" },
-        "assistant": { "prefix": "", "suffix": "" },
-        "chain_of_thought": { "prefix": "", "suffix": ""},
-        "generation_prompt": ""
-    },
-    PROMPT_TEMPLATE_MISTRAL: {
-        "user": { "prefix": "<s>[INST] ", "suffix": " [/INST] " },
-        "assistant": { "prefix": "", "suffix": "</s>" },
-        "chain_of_thought": { "prefix": "<think>", "suffix": "</think>"},
-        "generation_prompt": ""
-    },
-    PROMPT_TEMPLATE_ZEPHYR: {
-        "system": { "prefix": "<|system|>\n", "suffix": "<|endoftext|>" },
-        "user": { "prefix": "<|user|>\n", "suffix": "<|endoftext|>" },
-        "assistant": { "prefix": "<|assistant|>\n", "suffix": "<|endoftext|>" },
-        "chain_of_thought": { "prefix": "<think>", "suffix": "</think>"},
-        "generation_prompt": "<|assistant|>\n"
-    },
-    PROMPT_TEMPLATE_ZEPHYR2: {
-        "system": { "prefix": "<|system|>\n", "suffix": "</s>" },
-        "user": { "prefix": "<|user|>\n", "suffix": "</s>" },
-        "assistant": { "prefix": "<|assistant|>\n", "suffix": "</s>" },
-        "chain_of_thought": { "prefix": "<think>", "suffix": "</think>"},
-        "generation_prompt": "<|assistant|>\n"
-    },
-    PROMPT_TEMPLATE_ZEPHYR3: {
-        "system": { "prefix": "<|system|>\n", "suffix": "<|end|>" },
-        "user": { "prefix": "<|user|>\n", "suffix": "<|end|>" },
-        "assistant": { "prefix": "<|assistant|>\n", "suffix": "<|end|>" },
-        "chain_of_thought": { "prefix": "<think>", "suffix": "</think>"},
-        "generation_prompt": "<|assistant|>\n"
-    },
-    PROMPT_TEMPLATE_LLAMA3: {
-        "system": { "prefix": "<|start_header_id|>system<|end_header_id|>\n\n", "suffix": "<|eot_id|>"},
-        "user": { "prefix": "<|start_header_id|>user<|end_header_id|>\n\n", "suffix": "<|eot_id|>"},
-        "assistant": { "prefix": "<|start_header_id|>assistant<|end_header_id|>\n\n", "suffix": "<|eot_id|>"},
-        "chain_of_thought": { "prefix": "<think>", "suffix": "</think>"},
-        "generation_prompt": "<|start_header_id|>assistant<|end_header_id|>\n\n"
-    }
-}
-CONF_TOOL_FORMAT = "tool_format"
-TOOL_FORMAT_FULL = "full_tool_format"
-TOOL_FORMAT_REDUCED = "reduced_tool_format"
-TOOL_FORMAT_MINIMAL = "min_tool_format"
-DEFAULT_TOOL_FORMAT = TOOL_FORMAT_FULL
-CONF_TOOL_MULTI_TURN_CHAT = "tool_multi_turn_chat"
-DEFAULT_TOOL_MULTI_TURN_CHAT = False
-CONF_ENABLE_FLASH_ATTENTION = "enable_flash_attention"
-DEFAULT_ENABLE_FLASH_ATTENTION = False
+CONF_THINKING_PREFIX = "thinking_prefix"
+DEFAULT_THINKING_PREFIX = "<think>"
+CONF_THINKING_SUFFIX = "thinking_suffix"
+DEFAULT_THINKING_SUFFIX = "</think>"
+CONF_TOOL_CALL_PREFIX = "tool_call_prefix"
+DEFAULT_TOOL_CALL_PREFIX = "<tool_call>"
+CONF_TOOL_CALL_SUFFIX = "tool_call_suffix"
+DEFAULT_TOOL_CALL_SUFFIX = "</tool_call>"
+CONF_ENABLE_LEGACY_TOOL_CALLING = "enable_legacy_tool_calling"
+DEFAULT_ENABLE_LEGACY_TOOL_CALLING = False
+CONF_LLAMACPP_ENABLE_FLASH_ATTENTION = "enable_flash_attention"
+DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION = False
 CONF_USE_GBNF_GRAMMAR = "gbnf_grammar"
 DEFAULT_USE_GBNF_GRAMMAR = False
 CONF_GBNF_GRAMMAR_FILE = "gbnf_grammar_file"
@@ -245,15 +164,12 @@ CONF_REMEMBER_NUM_INTERACTIONS = "remember_num_interactions"
 DEFAULT_REMEMBER_NUM_INTERACTIONS = 5
 CONF_REMEMBER_CONVERSATION_TIME_MINUTES = "remember_conversation_time_minutes"
 DEFAULT_REMEMBER_CONVERSATION_TIME_MINUTES = 2
+CONF_MAX_TOOL_CALL_ITERATIONS = "max_tool_call_iterations"
+DEFAULT_MAX_TOOL_CALL_ITERATIONS = 3
 CONF_PROMPT_CACHING_ENABLED = "prompt_caching"
 DEFAULT_PROMPT_CACHING_ENABLED = False
 CONF_PROMPT_CACHING_INTERVAL = "prompt_caching_interval"
 DEFAULT_PROMPT_CACHING_INTERVAL = 30
-CONF_SERVICE_CALL_REGEX = "service_call_regex"
-DEFAULT_SERVICE_CALL_REGEX = r"<functioncall> ({[\S \t]*})"
-FINE_TUNED_SERVICE_CALL_REGEX = r"```homeassistant\n([\S \t\n]*?)```"
-CONF_REMOTE_USE_CHAT_ENDPOINT = "remote_use_chat_endpoint"
-DEFAULT_REMOTE_USE_CHAT_ENDPOINT = False
 CONF_TEXT_GEN_WEBUI_CHAT_MODE = "text_generation_webui_chat_mode"
 TEXT_GEN_WEBUI_CHAT_MODE_CHAT = "chat"
 TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT = "instruct"
@@ -267,15 +183,15 @@ CONF_GENERIC_OPENAI_PATH = "openai_path"
 DEFAULT_GENERIC_OPENAI_PATH = "v1"
 CONF_GENERIC_OPENAI_VALIDATE_MODEL = "openai_validate_model"
 DEFAULT_GENERIC_OPENAI_VALIDATE_MODEL = True
-
 CONF_CONTEXT_LENGTH = "context_length"
 DEFAULT_CONTEXT_LENGTH = 2048
-CONF_BATCH_SIZE = "batch_size"
-DEFAULT_BATCH_SIZE = 512
-CONF_THREAD_COUNT = "n_threads"
-DEFAULT_THREAD_COUNT = os.cpu_count()
-CONF_BATCH_THREAD_COUNT = "n_batch_threads"
-DEFAULT_BATCH_THREAD_COUNT = os.cpu_count()
+CONF_LLAMACPP_BATCH_SIZE = "batch_size"
+DEFAULT_LLAMACPP_BATCH_SIZE = 512
+CONF_LLAMACPP_THREAD_COUNT = "n_threads"
+DEFAULT_LLAMACPP_THREAD_COUNT = os.cpu_count()
+CONF_LLAMACPP_BATCH_THREAD_COUNT = "n_batch_threads"
+DEFAULT_LLAMACPP_BATCH_THREAD_COUNT = os.cpu_count()
+CONF_LLAMACPP_REINSTALL = "reinstall_llama_cpp"
 
 DEFAULT_OPTIONS = types.MappingProxyType(
     {
@@ -287,22 +203,19 @@ DEFAULT_OPTIONS = types.MappingProxyType(
         CONF_TYPICAL_P: DEFAULT_TYPICAL_P,
         CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
         CONF_REQUEST_TIMEOUT: DEFAULT_REQUEST_TIMEOUT,
-        CONF_PROMPT_TEMPLATE: DEFAULT_PROMPT_TEMPLATE,
-        CONF_ENABLE_FLASH_ATTENTION: DEFAULT_ENABLE_FLASH_ATTENTION,
+        CONF_LLAMACPP_ENABLE_FLASH_ATTENTION: DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION,
         CONF_USE_GBNF_GRAMMAR: DEFAULT_USE_GBNF_GRAMMAR,
         CONF_EXTRA_ATTRIBUTES_TO_EXPOSE: DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
         CONF_REFRESH_SYSTEM_PROMPT: DEFAULT_REFRESH_SYSTEM_PROMPT,
         CONF_REMEMBER_CONVERSATION: DEFAULT_REMEMBER_CONVERSATION,
         CONF_REMEMBER_NUM_INTERACTIONS: DEFAULT_REMEMBER_NUM_INTERACTIONS,
-        CONF_SERVICE_CALL_REGEX: DEFAULT_SERVICE_CALL_REGEX,
-        CONF_REMOTE_USE_CHAT_ENDPOINT: DEFAULT_REMOTE_USE_CHAT_ENDPOINT,
         CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
         CONF_IN_CONTEXT_EXAMPLES_FILE: DEFAULT_IN_CONTEXT_EXAMPLES_FILE,
         CONF_NUM_IN_CONTEXT_EXAMPLES: DEFAULT_NUM_IN_CONTEXT_EXAMPLES,
         CONF_CONTEXT_LENGTH: DEFAULT_CONTEXT_LENGTH,
-        CONF_BATCH_SIZE: DEFAULT_BATCH_SIZE,
-        CONF_THREAD_COUNT: DEFAULT_THREAD_COUNT,
-        CONF_BATCH_THREAD_COUNT: DEFAULT_BATCH_THREAD_COUNT,
+        CONF_LLAMACPP_BATCH_SIZE: DEFAULT_LLAMACPP_BATCH_SIZE,
+        CONF_LLAMACPP_THREAD_COUNT: DEFAULT_LLAMACPP_THREAD_COUNT,
+        CONF_LLAMACPP_BATCH_THREAD_COUNT: DEFAULT_LLAMACPP_BATCH_THREAD_COUNT,
         CONF_PROMPT_CACHING_ENABLED: DEFAULT_PROMPT_CACHING_ENABLED,
         CONF_OLLAMA_KEEP_ALIVE_MIN: DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
         CONF_OLLAMA_JSON_MODE: DEFAULT_OLLAMA_JSON_MODE,
@@ -314,97 +227,95 @@ DEFAULT_OPTIONS = types.MappingProxyType(
 OPTIONS_OVERRIDES = {
     "home-llama-3.2": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
-        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_LLAMA3,
         CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
-        CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
-        CONF_TOOL_FORMAT: TOOL_FORMAT_MINIMAL,
+        CONF_TOOL_CALL_PREFIX: "```homeassistant",
+        CONF_TOOL_CALL_SUFFIX: "```",
         CONF_CONTEXT_LENGTH: 131072,
+        CONF_MAX_TOOL_CALL_ITERATIONS: 1,
+        CONF_ENABLE_LEGACY_TOOL_CALLING: True
     },
     "home-3b-v3": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
-        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR,
         CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
-        CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
-        CONF_TOOL_FORMAT: TOOL_FORMAT_MINIMAL,
+        CONF_TOOL_CALL_PREFIX: "```homeassistant",
+        CONF_TOOL_CALL_SUFFIX: "```",
+        CONF_MAX_TOOL_CALL_ITERATIONS: 1,
+        CONF_ENABLE_LEGACY_TOOL_CALLING: True
     },
     "home-3b-v2": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
         CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
-        CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
-        CONF_TOOL_FORMAT: TOOL_FORMAT_MINIMAL,
+        CONF_TOOL_CALL_PREFIX: "```homeassistant",
+        CONF_TOOL_CALL_SUFFIX: "```",
+        CONF_MAX_TOOL_CALL_ITERATIONS: 1,
+        CONF_ENABLE_LEGACY_TOOL_CALLING: True
     },
     "home-3b-v1": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
-        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR,
         CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
-        CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
-        CONF_TOOL_FORMAT: TOOL_FORMAT_MINIMAL,
+        CONF_TOOL_CALL_PREFIX: "```homeassistant",
+        CONF_TOOL_CALL_SUFFIX: "```",
+        CONF_MAX_TOOL_CALL_ITERATIONS: 1,
+        CONF_ENABLE_LEGACY_TOOL_CALLING: True
     },
     "home-1b-v3": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
-        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR2,
         CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
-        CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
-        CONF_TOOL_FORMAT: TOOL_FORMAT_MINIMAL,
+        CONF_TOOL_CALL_PREFIX: "```homeassistant",
+        CONF_TOOL_CALL_SUFFIX: "```",
+        CONF_MAX_TOOL_CALL_ITERATIONS: 1,
+        CONF_ENABLE_LEGACY_TOOL_CALLING: True
     },
     "home-1b-v2": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
         CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
-        CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
-        CONF_TOOL_FORMAT: TOOL_FORMAT_MINIMAL,
+        CONF_TOOL_CALL_PREFIX: "```homeassistant",
+        CONF_TOOL_CALL_SUFFIX: "```",
+        CONF_MAX_TOOL_CALL_ITERATIONS: 1,
+        CONF_ENABLE_LEGACY_TOOL_CALLING: True
     },
     "home-1b-v1": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
         CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
-        CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
-        CONF_TOOL_FORMAT: TOOL_FORMAT_MINIMAL,
+        CONF_TOOL_CALL_PREFIX: "```homeassistant",
+        CONF_TOOL_CALL_SUFFIX: "```",
+        CONF_MAX_TOOL_CALL_ITERATIONS: 1,
+        CONF_ENABLE_LEGACY_TOOL_CALLING: True
     },
     "mistral": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_NO_SYSTEM_PROMPT_EXTRAS,
-        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_MISTRAL,
         CONF_MIN_P: 0.1,
         CONF_TYPICAL_P: 0.9,
     },
     "mixtral": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_NO_SYSTEM_PROMPT_EXTRAS,
-        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_MISTRAL,
         CONF_MIN_P: 0.1,
         CONF_TYPICAL_P: 0.9,
     },
     "llama-3": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_EXTRAS,
-        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_LLAMA3,
     },
     "llama3": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_EXTRAS,
-        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_LLAMA3,
     },
     "zephyr": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_EXTRAS,
-        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR,
     },
     "phi-3": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_EXTRAS,
-        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR3,
     },
     "command-r": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_EXTRAS,
-        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_COMMAND_R,
     },
     "stablehome": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
-        CONF_PROMPT_TEMPLATE: PROMPT_TEMPLATE_ZEPHYR,
         CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
-        CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
-        CONF_TOOL_FORMAT: TOOL_FORMAT_MINIMAL,
     },
     "tinyhome": {
         CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
         CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
-        CONF_SERVICE_CALL_REGEX: FINE_TUNED_SERVICE_CALL_REGEX,
-        CONF_TOOL_FORMAT: TOOL_FORMAT_MINIMAL,
     },
 }
 
-INTEGRATION_VERSION = "0.3.11"
-EMBEDDED_LLAMA_CPP_PYTHON_VERSION = "0.3.16"
+INTEGRATION_VERSION = "0.4.0"
+EMBEDDED_LLAMA_CPP_PYTHON_VERSION = "0.3.16+b6153"

@@ -1,110 +1,176 @@
 {
     "config": {
         "error": {
-            "download_failed": "The download failed to complete: {exception}",
-            "missing_quantization": "The GGUF quantization level {missing} does not exist in the provided HuggingFace repo. The following quantization levels were found: {available}",
-            "no_supported_ggufs": "The provided HuggingFace repo does not contain any compatible GGUF files!",
             "failed_to_connect": "Failed to connect to the remote API: {exception}",
-            "missing_model_api": "The selected model is not provided by this API. The available models have been populated in the dropdown.",
-            "missing_model_file": "The provided file does not exist.",
-            "other_existing_local": "Another model is already loaded locally. Please unload it or configure a remote model.",
+            "invalid_hostname": "The provided hostname was invalid. Please ensure you only provide the domain or IP address and not the full API endpoint.",
             "unknown": "Unexpected error",
-            "pip_wheel_error": "Pip returned an error while installing the wheel! Please check the Home Assistant logs for more details.",
-            "sys_refresh_caching_enabled": "System prompt refresh must be enabled for prompt caching to work!",
-            "missing_gbnf_file": "The GBNF file was not found: {filename}",
-            "missing_icl_file": "The in context learning example CSV file was not found: {filename}"
+            "pip_wheel_error": "Pip returned an error while installing the wheel! Please check the Home Assistant logs for more details."
         },
         "progress": {
             "download": "Please wait while the model is being downloaded from HuggingFace. This can take a few minutes.",
             "install_local_wheels": "Please wait while Llama.cpp is installed..."
         },
         "step": {
-            "local_model": {
+            "user": {
                 "data": {
-                    "downloaded_model_file": "Local file name",
-                    "downloaded_model_quantization": "Downloaded model quantization",
-                    "huggingface_model": "HuggingFace Model",
-                    "selected_language": "Model Language"
-                },
-                "description": "Please select a model to use.\n\n**Models supported out of the box:**\n1. [Home LLM](https://huggingface.co/collections/acon96/home-llm-6618762669211da33bb22c5a): Home 3B & Home 1B\n2. Mistral: [Mistral 7B](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2) or [Mixtral 8x7B](https://huggingface.co/mistralai/Mixtral-8x7B-Instruct-v0.1)\n3. Llama 3: [8B](https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct) and [70B](https://huggingface.co/meta-llama/Meta-Llama-3-70B-Instruct)",
-                "title": "Select Model"
-            },
-            "remote_model": {
-                "data": {
+                    "model_backend": "Backend",
+                    "selected_language": "Model Language",
                     "host": "API Hostname",
-                    "huggingface_model": "Model Name",
                     "port": "API Port",
                     "ssl": "Use HTTPS",
                     "openai_api_key": "API Key",
                     "openai_path": "API Path",
-                    "openai_validate_model": "Validate model exists?",
                     "text_generation_webui_admin_key": "Admin Key",
                     "text_generation_webui_preset": "Generation Preset/Character Name",
-                    "remote_use_chat_endpoint": "Use chat completions endpoint",
-                    "text_generation_webui_chat_mode": "Chat Mode",
-                    "selected_language": "Model Language"
+                    "text_generation_webui_chat_mode": "Chat Mode"
                 },
-                "description": "Provide the connection details to connect to the API that is hosting the model.\n\n**Models supported out of the box:**\n1. [Home LLM](https://huggingface.co/collections/acon96/home-llm-6618762669211da33bb22c5a): Home 3B & Home 1B\n2. Mistral: [Mistral 7B](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2) or [Mixtral 8x7B](https://huggingface.co/mistralai/Mixtral-8x7B-Instruct-v0.1)\n3. Llama 3: [8B](https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct) and [70B](https://huggingface.co/meta-llama/Meta-Llama-3-70B-Instruct)",
-                "title": "Configure connection to remote API"
+                "description": "Please select the backend and/or provide the connection details to connect to the API that is hosting the model.",
+                "title": "Configure Backend"
+            }
+        },
+        "abort": {
+           "duplicate_client": "Cannot create duplicate model provider!"
+        }
+    },
+    "config_subentries": {
+        "conversation": {
+            "initiate_flow": {
+                "user": "Add conversation agent",
+                "reconfigure": "Reconfigure conversation agent"
             },
-            "pick_backend": {
-                "data": {
-                    "download_model_from_hf": "Download model from HuggingFace",
-                    "use_local_backend": "Use Llama.cpp"
-                },
-                "description": "Select the backend for running the model. The options are:\n1. Llama.cpp with a model from HuggingFace\n2. Llama.cpp with a model stored on the disk\n3. [text-generation-webui API](https://github.com/oobabooga/text-generation-webui)\n4. Generic OpenAI API Compatible API\n5. [llama-cpp-python Server](https://llama-cpp-python.readthedocs.io/en/latest/server/)\n6. [Ollama API](https://github.com/jmorganca/ollama/blob/main/docs/api.md)",
-                "title": "Select Backend"
+            "entry_type": "Conversation agent",
+            "error": {
+                "download_failed": "The download failed to complete: {exception}",
+                "missing_quantization": "The GGUF quantization level {missing} does not exist in the provided HuggingFace repo. The following quantization levels were found: {available}",
+                "no_supported_ggufs": "The provided HuggingFace repo does not contain any compatible GGUF files!",
+                "missing_model_api": "The selected model is not provided by this API. The available models have been populated in the dropdown.",
+                "missing_model_file": "The provided file does not exist.",
+                "other_existing_local": "Another model is already loaded locally. Please unload it or configure a remote model.",
+                "unknown": "Unexpected error",
+                "sys_refresh_caching_enabled": "System prompt refresh must be enabled for prompt caching to work!",
+                "missing_gbnf_file": "The GBNF file was not found: {filename}",
+                "missing_icl_file": "The in context learning example CSV file was not found: {filename}"
             },
-            "model_parameters": {
-                "data": {
-                    "max_new_tokens": "Maximum tokens to return in response",
-                    "llm_hass_api": "Selected LLM API",
-                    "prompt": "System Prompt",
-                    "prompt_template": "Prompt Format",
-                    "tool_format": "Tool Format",
-                    "tool_multi_turn_chat": "Multi-Turn Tool Use",
-                    "temperature": "Temperature",
-                    "top_k": "Top K",
-                    "top_p": "Top P",
-                    "min_p": "Min P",
-                    "typical_p": "Typical P",
-                    "request_timeout": "Remote Request Timeout (seconds)",
-                    "ollama_keep_alive": "Keep Alive/Inactivity Timeout (minutes)",
-                    "ollama_json_mode": "JSON Output Mode",
-                    "extra_attributes_to_expose": "Additional attribute to expose in the context",
-                    "enable_flash_attention": "Enable Flash Attention",
-                    "gbnf_grammar": "Enable GBNF Grammar",
-                    "gbnf_grammar_file": "GBNF Grammar Filename",
-                    "openai_api_key": "API Key",
-                    "text_generation_webui_admin_key": "Admin Key",
-                    "service_call_regex": "Service Call Regex",
-                    "refresh_prompt_per_turn": "Refresh System Prompt Every Turn",
-                    "remember_conversation": "Remember conversation",
-                    "remember_num_interactions": "Number of past interactions to remember",
-                    "in_context_examples": "Enable in context learning (ICL) examples",
-                    "in_context_examples_file": "In context learning examples CSV filename",
-                    "num_in_context_examples": "Number of ICL examples to generate",
-                    "text_generation_webui_preset": "Generation Preset/Character Name",
-                    "remote_use_chat_endpoint": "Use chat completions endpoint",
-                    "text_generation_webui_chat_mode": "Chat Mode",
-                    "prompt_caching": "Enable Prompt Caching",
-                    "prompt_caching_interval": "Prompt Caching fastest refresh interval (sec)",
-                    "context_length": "Context Length",
-                    "batch_size": "Batch Size",
-                    "n_threads": "Thread Count",
-                    "n_batch_threads": "Batch Thread Count"
+            "progress": {
+                "download": "Please wait while the model is being downloaded from HuggingFace. This can take a few minutes."
+            },
+            "abort": {
+                "reconfigure_successful": "Successfully updated model options."
+            },
+            "step": {
+                "pick_model": {
+                    "data": {
+                        "huggingface_model": "Model Name",
+                        "downloaded_model_file": "Local file name",
+                        "downloaded_model_quantization": "Downloaded model quantization"
+                    },
+                    "description": "Select a model to use. \n\n**Models supported out of the box:**\n1. [Home LLM](https://huggingface.co/collections/acon96/home-llm-6618762669211da33bb22c5a): Home 3B & Home 1B\n2. Mistral: [Mistral 7B](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2) or [Mixtral 8x7B](https://huggingface.co/mistralai/Mixtral-8x7B-Instruct-v0.1)\n3. Llama 3: [8B](https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct) and [70B](https://huggingface.co/meta-llama/Meta-Llama-3-70B-Instruct)",
+                    "title": "Pick Model"
                 },
-                "data_description": {
-                    "llm_hass_api": "Select 'Assist' if you want the model to be able to control devices. If you are using the Home-LLM v1, v2, or v3 model then select 'Home-LLM (v1-3)'",
-                    "prompt": "See [here](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) for more information on model prompting.",
-                    "in_context_examples": "If you are using a model that is not specifically fine-tuned for use with this integration: enable this",
-                    "remote_use_chat_endpoint": "If this is enabled, then the integration will use the chat completion HTTP endpoint instead of the text completion one.",
-                    "extra_attributes_to_expose": "This is the list of Home Assistant 'attributes' that are exposed to the model. This limits how much information the model is able to see and answer questions on.",
-                    "gbnf_grammar": "Forces the model to output properly formatted responses. Ensure the file specified below exists in the integration directory.",
-                    "prompt_caching": "Prompt caching attempts to pre-process the prompt (house state) and cache the processing that needs to be done to understand the prompt. Enabling this will cause the model to re-process the prompt any time an entity state changes in the house, restricted by the interval below."
+                "model_parameters": {
+                    "data": {
+                        "max_new_tokens": "Maximum tokens to return in response",
+                        "llm_hass_api": "Selected LLM API",
+                        "prompt": "System Prompt",
+                        "temperature": "Temperature",
+                        "top_k": "Top K",
+                        "top_p": "Top P",
+                        "min_p": "Min P",
+                        "typical_p": "Typical P",
+                        "request_timeout": "Remote Request Timeout (seconds)",
+                        "ollama_keep_alive": "(ollama) Keep Alive/Inactivity Timeout (minutes)",
+                        "ollama_json_mode": "(ollama) JSON Output Mode",
+                        "extra_attributes_to_expose": "Additional attribute to expose in the context",
+                        "enable_flash_attention": "Enable Flash Attention",
+                        "gbnf_grammar": "Enable GBNF Grammar",
+                        "gbnf_grammar_file": "GBNF Grammar Filename",
+                        "openai_api_key": "API Key",
+                        "text_generation_webui_admin_key": "(text-generation-webui) Admin Key",
+                        "service_call_regex": "Service Call Regex",
+                        "refresh_prompt_per_turn": "Refresh System Prompt Every Turn",
+                        "remember_conversation": "Remember conversation",
+                        "remember_num_interactions": "Number of past interactions to remember",
+                        "in_context_examples": "Enable in context learning (ICL) examples",
+                        "in_context_examples_file": "In context learning examples CSV filename",
+                        "num_in_context_examples": "Number of ICL examples to generate",
+                        "text_generation_webui_preset": "(text-generation-webui) Generation Preset/Character Name",
+                        "text_generation_webui_chat_mode": "(text-generation-webui) Chat Mode",
+                        "prompt_caching": "Enable Prompt Caching",
+                        "prompt_caching_interval": "Prompt Caching fastest refresh interval (sec)",
+                        "context_length": "Context Length",
+                        "batch_size": "(llama.cpp) Batch Size",
+                        "n_threads": "(llama.cpp) Thread Count",
+                        "n_batch_threads": "(llama.cpp) Batch Thread Count",
+                        "thinking_prefix": "Reasoning Content Prefix",
+                        "thinking_suffix": "Reasoning Content Suffix",
+                        "tool_call_prefix": "Tool Call Prefix",
+                        "tool_call_suffix": "Tool Call Suffix",
+                        "enable_legacy_tool_calling": "Enable Legacy Tool Calling",
+                        "max_tool_call_iterations": "Maximum Tool Call Attempts"
+                    },
+                    "data_description": {
+                        "llm_hass_api": "Select 'Assist' if you want the model to be able to control devices. If you are using the Home-LLM v1, v2, or v3 model then select 'Home-LLM (v1-3)'",
+                        "prompt": "See [here](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) for more information on model prompting.",
+                        "in_context_examples": "If you are using a model that is not specifically fine-tuned for use with this integration: enable this",
+                        "extra_attributes_to_expose": "This is the list of Home Assistant 'attributes' that are exposed to the model. This limits how much information the model is able to see and answer questions on.",
+                        "gbnf_grammar": "Forces the model to output properly formatted responses. Ensure the file specified below exists in the integration directory.",
+                        "prompt_caching": "Prompt caching attempts to pre-process the prompt (house state) and cache the processing that needs to be done to understand the prompt. Enabling this will cause the model to re-process the prompt any time an entity state changes in the house, restricted by the interval below."
+                    },
+                    "description": "Please configure the model according to how it should be prompted. There are many different options and selecting the correct ones for your model is essential to getting optimal performance. See [here](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) for more information about the options on this page.\n\n**Some defaults may have been chosen for you based on the name of the selected model name or filename.** If you renamed a file or are using a fine-tuning of a supported model, then the defaults may not have been detected.",
+                    "title": "Configure the selected model"
                 },
-                "description": "Please configure the model according to how it should be prompted. There are many different options and selecting the correct ones for your model is essential to getting optimal performance. See [here](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) for more information about the options on this page.\n\n**Some defaults may have been chosen for you based on the name of the selected model name or filename.** If you renamed a file or are using a fine-tuning of a supported model, then the defaults may not have been detected.",
-                "title": "Configure the selected model"
+                "reconfigure": {
+                    "data": {
+                        "max_new_tokens": "Maximum tokens to return in response",
+                        "llm_hass_api": "Selected LLM API",
+                        "prompt": "System Prompt",
+                        "temperature": "Temperature",
+                        "top_k": "Top K",
+                        "top_p": "Top P",
+                        "min_p": "Min P",
+                        "typical_p": "Typical P",
+                        "request_timeout": "Remote Request Timeout (seconds)",
+                        "ollama_keep_alive": "(ollama) Keep Alive/Inactivity Timeout (minutes)",
+                        "ollama_json_mode": "(ollama) JSON Output Mode",
+                        "extra_attributes_to_expose": "Additional attribute to expose in the context",
+                        "enable_flash_attention": "Enable Flash Attention",
+                        "gbnf_grammar": "Enable GBNF Grammar",
+                        "gbnf_grammar_file": "GBNF Grammar Filename",
+                        "openai_api_key": "API Key",
+                        "text_generation_webui_admin_key": "(text-generation-webui) Admin Key",
+                        "service_call_regex": "Service Call Regex",
+                        "refresh_prompt_per_turn": "Refresh System Prompt Every Turn",
+                        "remember_conversation": "Remember conversation",
+                        "remember_num_interactions": "Number of past interactions to remember",
+                        "in_context_examples": "Enable in context learning (ICL) examples",
+                        "in_context_examples_file": "In context learning examples CSV filename",
+                        "num_in_context_examples": "Number of ICL examples to generate",
+                        "text_generation_webui_preset": "(text-generation-webui) Generation Preset/Character Name",
+                        "text_generation_webui_chat_mode": "(text-generation-webui) Chat Mode",
+                        "prompt_caching": "Enable Prompt Caching",
+                        "prompt_caching_interval": "Prompt Caching fastest refresh interval (sec)",
+                        "context_length": "Context Length",
+                        "batch_size": "(llama.cpp) Batch Size",
+                        "n_threads": "(llama.cpp) Thread Count",
+                        "n_batch_threads": "(llama.cpp) Batch Thread Count",
+                        "thinking_prefix": "Reasoning Content Prefix",
+                        "thinking_suffix": "Reasoning Content Suffix",
+                        "tool_call_prefix": "Tool Call Prefix",
+                        "tool_call_suffix": "Tool Call Suffix",
+                        "enable_legacy_tool_calling": "Enable Legacy Tool Calling",
+                        "max_tool_call_iterations": "Maximum Tool Call Attempts"
+                    },
+                    "data_description": {
+                        "llm_hass_api": "Select 'Assist' if you want the model to be able to control devices. If you are using the Home-LLM v1, v2, or v3 model then select 'Home-LLM (v1-3)'",
+                        "prompt": "See [here](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) for more information on model prompting.",
+                        "in_context_examples": "If you are using a model that is not specifically fine-tuned for use with this integration: enable this",
+                        "extra_attributes_to_expose": "This is the list of Home Assistant 'attributes' that are exposed to the model. This limits how much information the model is able to see and answer questions on.",
+                        "gbnf_grammar": "Forces the model to output properly formatted responses. Ensure the file specified below exists in the integration directory.",
+                        "prompt_caching": "Prompt caching attempts to pre-process the prompt (house state) and cache the processing that needs to be done to understand the prompt. Enabling this will cause the model to re-process the prompt any time an entity state changes in the house, restricted by the interval below."
+                    },
+                    "description": "Please configure the model according to how it should be prompted. There are many different options and selecting the correct ones for your model is essential to getting optimal performance. See [here](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) for more information about the options on this page.\n\n**Some defaults may have been chosen for you based on the name of the selected model name or filename.** If you renamed a file or are using a fine-tuning of a supported model, then the defaults may not have been detected.",
+                    "title": "Configure the selected model"
+                }
             }
         }
     },
@@ -112,91 +178,47 @@
         "step": {
             "init": {
                 "data": {
-                    "llm_hass_api": "Selected LLM API",
-                    "max_new_tokens": "Maximum tokens to return in response",
-                    "prompt": "System Prompt",
-                    "prompt_template": "Prompt Format",
-                    "tool_format": "Tool Format",
-                    "tool_multi_turn_chat": "Multi-Turn Tool Use",
-                    "temperature": "Temperature",
-                    "top_k": "Top K",
-                    "top_p": "Top P",
-                    "min_p": "Min P",
-                    "typical_p": "Typical P",
-                    "request_timeout": "Remote Request Timeout (seconds)",
-                    "ollama_keep_alive": "Keep Alive/Inactivity Timeout (minutes)",
-                    "ollama_json_mode": "JSON Output Mode",
-                    "extra_attributes_to_expose": "Additional attribute to expose in the context",
-                    "enable_flash_attention": "Enable Flash Attention",
-                    "gbnf_grammar": "Enable GBNF Grammar",
-                    "gbnf_grammar_file": "GBNF Grammar Filename",
+                    "selected_language": "Model Language",
+                    "host": "API Hostname",
+                    "port": "API Port",
+                    "ssl": "Use HTTPS",
                     "openai_api_key": "API Key",
+                    "openai_path": "API Path",
                     "text_generation_webui_admin_key": "Admin Key",
-                    "service_call_regex": "Service Call Regex",
-                    "refresh_prompt_per_turn": "Refresh System Prompt Every Turn",
-                    "remember_conversation": "Remember conversation",
-                    "remember_num_interactions": "Number of past interactions to remember",
-                    "in_context_examples": "Enable in context learning (ICL) examples",
-                    "in_context_examples_file": "In context learning examples CSV filename",
-                    "num_in_context_examples": "Number of ICL examples to generate",
                     "text_generation_webui_preset": "Generation Preset/Character Name",
-                    "remote_use_chat_endpoint": "Use chat completions endpoint",
-                    "text_generation_webui_chat_mode": "Chat Mode",
-                    "prompt_caching": "Enable Prompt Caching",
-                    "prompt_caching_interval": "Prompt Caching fastest refresh interval (sec)",
-                    "context_length": "Context Length",
-                    "batch_size": "Batch Size",
-                    "n_threads": "Thread Count",
-                    "n_batch_threads": "Batch Thread Count"
+                    "text_generation_webui_chat_mode": "Chat Mode"
                 },
-                "data_description": {
-                    "llm_hass_api": "Select 'Assist' if you want the model to be able to control devices. If you are using the Home-LLM v1, v2, or v3 model then select 'Home-LLM (v1-3)'",
-                    "prompt": "See [here](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) for more information on model prompting.",
-                    "in_context_examples": "If you are using a model that is not specifically fine-tuned for use with this integration: enable this",
-                    "remote_use_chat_endpoint": "If this is enabled, then the integration will use the chat completion HTTP endpoint instead of the text completion one.",
-                    "extra_attributes_to_expose": "This is the list of Home Assistant 'attributes' that are exposed to the model. This limits how much information the model is able to see and answer questions on.",
-                    "gbnf_grammar": "Forces the model to output properly formatted responses. Ensure the file specified below exists in the integration directory.",
-                    "prompt_caching": "Prompt caching attempts to pre-process the prompt (house state) and cache the processing that needs to be done to understand the prompt. Enabling this will cause the model to re-process the prompt any time an entity state changes in the house, restricted by the interval below."
-                }
+                "description": "Please provide the connection details to connect to the API that is hosting the model.",
+                "title": "Configure Connection"
+            },
+            "reinstall": {
+                "data": {
+                    "reinstall_llama_cpp": "Reinstall Llama.cpp",
+                    "installed_llama_cpp_version": "Version to (re)install"
+                },
+                "description": "__If you are experiencing issues with Llama.cpp__, you can force a reinstall of the package here. This will attempt to re-install or upgrade the llama-cpp-python package from GitHub *or* a local wheel file placed in the `/config/custom_components/llama_conversation/` directory.",
+                "title": "Reinstall Llama.cpp"
             }
         },
         "error": {
-            "sys_refresh_caching_enabled": "System prompt refresh must be enabled for prompt caching to work!",
-            "missing_gbnf_file": "The GBNF file was not found: {filename}",
-            "missing_icl_file": "The in context learning example CSV file was not found: {filename}"
+            "failed_to_connect": "Failed to connect to the remote API: {exception}",
+            "invalid_hostname": "The provided hostname was invalid. Please ensure you only provide the domain or IP address and not the full API endpoint.",
+            "unknown": "Unexpected error",
+            "pip_wheel_error": "Pip returned an error while installing the wheel! Please check the Home Assistant logs for more details."
+        },
+        "progress": {
+            "install_local_wheels": "Please wait while Llama.cpp is installed..."
         }
     },
     "selector": {
-        "prompt_template": {
-            "options": {
-                "chatml": "ChatML",
-                "vicuna": "Vicuna",
-                "alpaca": "Alpaca",
-                "mistral": "Mistral",
-                "zephyr": "Zephyr (<|endoftext|>)",
-                "zephyr2": "Zephyr ('</s>')",
-                "zephyr3": "Zephyr (<|end|>)",
-                "llama3": "Llama 3",
-                "command-r": "Command R",
-                "no_prompt_template": "None"
-            }
-        },
-        "tool_format": {
-            "options": {
-                "full_tool_format": "Full JSON Tool Format",
-                "reduced_tool_format": "Reduced JSON Tool Format",
-                "min_tool_format": "Minimal Function Style Tool Format"
-            }
-        },
         "model_backend": {
             "options": {
-                "llama_cpp_hf": "Llama.cpp (HuggingFace)",
-                "llama_cpp_existing": "Llama.cpp (existing model)",
-                "text-generation-webui_api": "text-generation-webui API",
+                "llama_cpp_python": "Llama.cpp",
                 "generic_openai": "Generic OpenAI Compatible API",
                 "generic_openai_responses": "Generic OpenAPI Compatible Responses API",
-                "llama_cpp_python_server": "llama-cpp-python Server",
-                "ollama": "Ollama API"
+                "llama_cpp_server": "Llama.cpp Server",
+                "ollama": "Ollama API",
+                "text-generation-webui_api": "text-generation-webui API"
 
             }
         },

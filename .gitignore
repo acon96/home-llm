@@ -11,3 +11,4 @@ main.log
 *.xlsx
 notes.txt
 runpod_bootstrap.sh
+*.code-workspace

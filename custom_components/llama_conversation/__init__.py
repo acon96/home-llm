@@ -4,12 +4,12 @@ from __future__ import annotations
 import logging
 from typing import Final
 
-import homeassistant.components.conversation as ha_conversation
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.const import ATTR_ENTITY_ID, Platform, CONF_HOST, CONF_PORT, CONF_SSL, CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, llm
+from homeassistant.helpers import config_validation as cv, llm, device_registry as dr, entity_registry as er
 from homeassistant.util.json import JsonObjectType
+from types import MappingProxyType
 
 import voluptuous as vol
 
@@ -21,19 +21,36 @@ from .const import (
     SERVICE_TOOL_ALLOWED_SERVICES,
     SERVICE_TOOL_ALLOWED_DOMAINS,
     CONF_BACKEND_TYPE,
+    CONF_INSTALLED_LLAMACPP_VERSION,
+    CONF_SELECTED_LANGUAGE,
+    CONF_OPENAI_API_KEY,
+    CONF_GENERIC_OPENAI_PATH,
+    CONF_CHAT_MODEL, CONF_DOWNLOADED_MODEL_QUANTIZATION, CONF_DOWNLOADED_MODEL_FILE, CONF_REQUEST_TIMEOUT, CONF_MAX_TOOL_CALL_ITERATIONS,
+    CONF_REFRESH_SYSTEM_PROMPT, CONF_REMEMBER_CONVERSATION, CONF_REMEMBER_NUM_INTERACTIONS, CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
+    CONF_PROMPT, CONF_TEMPERATURE, CONF_TOP_K, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P, CONF_MAX_TOKENS,
+    CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES, CONF_IN_CONTEXT_EXAMPLES_FILE, CONF_NUM_IN_CONTEXT_EXAMPLES, CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, 
+    CONF_THINKING_PREFIX, CONF_THINKING_SUFFIX, CONF_TOOL_CALL_PREFIX, CONF_TOOL_CALL_SUFFIX,
+    CONF_PROMPT_CACHING_ENABLED, CONF_PROMPT_CACHING_INTERVAL, CONF_CONTEXT_LENGTH,
+    CONF_LLAMACPP_BATCH_SIZE, CONF_LLAMACPP_THREAD_COUNT, CONF_LLAMACPP_BATCH_THREAD_COUNT,
+    CONF_LLAMACPP_ENABLE_FLASH_ATTENTION, CONF_USE_GBNF_GRAMMAR, CONF_GBNF_GRAMMAR_FILE,
+    CONF_TEXT_GEN_WEBUI_PRESET, CONF_TEXT_GEN_WEBUI_CHAT_MODE, CONF_ENABLE_LEGACY_TOOL_CALLING,
+    CONF_OLLAMA_JSON_MODE, CONF_OLLAMA_KEEP_ALIVE_MIN,
     DEFAULT_BACKEND_TYPE,
-    BACKEND_TYPE_LLAMA_HF,
-    BACKEND_TYPE_LLAMA_EXISTING,
+    BACKEND_TYPE_LLAMA_CPP,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
     BACKEND_TYPE_GENERIC_OPENAI,
     BACKEND_TYPE_GENERIC_OPENAI_RESPONSES,
-    BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER,
+    BACKEND_TYPE_LLAMA_CPP_SERVER,
     BACKEND_TYPE_OLLAMA,
+    BACKEND_TYPE_LLAMA_EXISTING_OLD,
+    BACKEND_TYPE_LLAMA_HF_OLD,
 )
-from .conversation import LlamaCppAgent, GenericOpenAIAPIAgent, GenericOpenAIResponsesAPIAgent, \
-    TextGenerationWebuiAgent, LlamaCppPythonAPIAgent, OllamaAPIAgent, LocalLLMAgent
-
-type LocalLLMConfigEntry = ConfigEntry[LocalLLMAgent]
+from .entity import LocalLLMClient, LocalLLMConfigEntry
+from .backends.llamacpp import LlamaCppClient
+from .backends.generic_openai import GenericOpenAIAPIClient, GenericOpenAIResponsesAPIClient
+from .backends.tailored_openai import TextGenerationWebuiClient, LlamaCppServerClient
+from .backends.ollama import OllamaAPIClient
+from .utils import get_llama_cpp_python_version
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,6 +58,14 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS = (Platform.CONVERSATION,)
 
+BACKEND_TO_CLS: dict[str, type[LocalLLMClient]] = {
+    BACKEND_TYPE_LLAMA_CPP: LlamaCppClient,
+    BACKEND_TYPE_GENERIC_OPENAI: GenericOpenAIAPIClient,
+    BACKEND_TYPE_GENERIC_OPENAI_RESPONSES: GenericOpenAIResponsesAPIClient,
+    BACKEND_TYPE_TEXT_GEN_WEBUI: TextGenerationWebuiClient, 
+    BACKEND_TYPE_LLAMA_CPP_SERVER: LlamaCppServerClient,
+    BACKEND_TYPE_OLLAMA: OllamaAPIClient,
+}
 
 async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> bool:
 
@@ -50,36 +75,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> 
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry
 
-    def create_agent(backend_type):
-        agent_cls = None
-
-        if backend_type in [ BACKEND_TYPE_LLAMA_HF, BACKEND_TYPE_LLAMA_EXISTING ]:
-            agent_cls = LlamaCppAgent
-        elif backend_type == BACKEND_TYPE_GENERIC_OPENAI:
-            agent_cls = GenericOpenAIAPIAgent
-        elif backend_type == BACKEND_TYPE_GENERIC_OPENAI_RESPONSES:
-            agent_cls = GenericOpenAIResponsesAPIAgent
-        elif backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
-            agent_cls = TextGenerationWebuiAgent
-        elif backend_type == BACKEND_TYPE_LLAMA_CPP_PYTHON_SERVER:
-            agent_cls = LlamaCppPythonAPIAgent
-        elif backend_type == BACKEND_TYPE_OLLAMA:
-            agent_cls = OllamaAPIAgent
-
-        return agent_cls(hass, entry)
+    def create_client(backend_type):
+        _LOGGER.debug("Creating Local LLM client of type %s", backend_type)
+        return BACKEND_TO_CLS[backend_type](hass, dict(entry.options))
 
     # create the agent in an executor job because the constructor calls `open()`
     backend_type = entry.data.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE)
-    entry.runtime_data = await hass.async_add_executor_job(create_agent, backend_type)
-
-    # call load model
-    await entry.runtime_data._async_load_model(entry)
+    entry.runtime_data = await hass.async_add_executor_job(create_client, backend_type)
 
     # forward setup to platform to register the entity
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
     return True
 
+
+async def _async_update_listener(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> None:
+    await hass.config_entries.async_reload(entry.entry_id)
 
 async def async_unload_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> bool:
     """Unload Ollama."""
@@ -87,6 +100,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) ->
         return False
     hass.data[DOMAIN].pop(entry.entry_id)
     return True
+
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: LocalLLMConfigEntry):
     """Migrate old entry."""
@@ -97,7 +111,56 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: LocalLLMConfigE
         _LOGGER.error("Cannot upgrade models that were created prior to v0.3. Please delete and re-create them.")
         return False
 
-    _LOGGER.debug("Migration to version %s successful", config_entry.version)
+    # Migrate the config_entry to be an entry + sub-entry
+    if config_entry.version == 2:
+        ENTRY_DATA_KEYS = [CONF_BACKEND_TYPE]
+        ENTRY_OPTIONS_KEYS = [CONF_SELECTED_LANGUAGE, CONF_HOST, CONF_PORT, CONF_SSL, CONF_OPENAI_API_KEY, CONF_GENERIC_OPENAI_PATH]
+        SUBENTRY_KEYS = [
+            CONF_CHAT_MODEL, CONF_DOWNLOADED_MODEL_QUANTIZATION, CONF_DOWNLOADED_MODEL_FILE, CONF_REQUEST_TIMEOUT, CONF_MAX_TOOL_CALL_ITERATIONS,
+            CONF_REFRESH_SYSTEM_PROMPT, CONF_REMEMBER_CONVERSATION, CONF_REMEMBER_NUM_INTERACTIONS, CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
+            CONF_LLM_HASS_API, CONF_PROMPT, CONF_TEMPERATURE, CONF_TOP_K, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P, CONF_MAX_TOKENS,
+            CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES, CONF_IN_CONTEXT_EXAMPLES_FILE, CONF_NUM_IN_CONTEXT_EXAMPLES, CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, 
+            CONF_THINKING_PREFIX, CONF_THINKING_SUFFIX, CONF_TOOL_CALL_PREFIX, CONF_TOOL_CALL_SUFFIX,
+            CONF_PROMPT_CACHING_ENABLED, CONF_PROMPT_CACHING_INTERVAL, CONF_CONTEXT_LENGTH,
+            CONF_LLAMACPP_BATCH_SIZE, CONF_LLAMACPP_THREAD_COUNT, CONF_LLAMACPP_BATCH_THREAD_COUNT,
+            CONF_LLAMACPP_ENABLE_FLASH_ATTENTION, CONF_USE_GBNF_GRAMMAR, CONF_GBNF_GRAMMAR_FILE,
+            CONF_TEXT_GEN_WEBUI_PRESET, CONF_TEXT_GEN_WEBUI_CHAT_MODE, CONF_ENABLE_LEGACY_TOOL_CALLING,
+            CONF_OLLAMA_JSON_MODE, CONF_OLLAMA_KEEP_ALIVE_MIN
+        ]
+
+        # Build entry data/options & subentry data from existing options and model info
+        source_data = {**config_entry.data}
+        source_data.update(config_entry.options)
+
+        entry_data = { k: v for k, v in source_data.items() if k in ENTRY_DATA_KEYS }
+        entry_options = { k: v for k, v in source_data.items() if k in ENTRY_OPTIONS_KEYS }
+        subentry_data = { k: v for k, v in source_data.items() if k in SUBENTRY_KEYS }
+
+        backend = config_entry.data[CONF_BACKEND_TYPE]
+        if backend == BACKEND_TYPE_LLAMA_EXISTING_OLD or backend == BACKEND_TYPE_LLAMA_HF_OLD:
+            backend = BACKEND_TYPE_LLAMA_CPP
+            entry_data[CONF_BACKEND_TYPE] = BACKEND_TYPE_LLAMA_CPP
+            entry_options[CONF_INSTALLED_LLAMACPP_VERSION] = await hass.async_add_executor_job(get_llama_cpp_python_version)
+        else:
+            # ensure all remote backends have a path set
+            entry_options[CONF_GENERIC_OPENAI_PATH] = entry_options.get(CONF_GENERIC_OPENAI_PATH, "")
+        
+        entry_title = BACKEND_TO_CLS[backend].get_name(entry_options)
+
+        subentry = ConfigSubentry(
+            data=MappingProxyType(subentry_data),
+            subentry_type="conversation",
+            title=config_entry.title.split("'")[-2],
+            unique_id=None,
+        )
+
+        # create sub-entry
+        hass.config_entries.async_add_subentry(config_entry, subentry)
+
+        # update the parent entry
+        hass.config_entries.async_update_entry(config_entry, title=entry_title, data=entry_data, options=entry_options, version=3)
+
+        _LOGGER.debug("Migration to subentries complete")
 
     return True
 

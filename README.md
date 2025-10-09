@@ -19,7 +19,7 @@ The integration can either run the model in 2 different ways:
     - [Ollama](https://ollama.com/) (easier)
     - [LocalAI](https://localai.io/) via the Generic OpenAI backend (easier)
     - [oobabooga/text-generation-webui](https://github.com/oobabooga/text-generation-webui) project (advanced)
-    - [llama.cpp example server](https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md) (advanced)
+    - [llama.cpp example server](https://github.com/ggml-org/llama.cpp/tree/master/tools/server#readme) (advanced)
 
 ## Home LLM Model
 The "Home" models are a fine tuning of various Large Languages Models that are under 5B parameters.  The models are able to control devices in the user's house as well as perform basic question and answering.  The fine tuning dataset is a [custom synthetic dataset](./data) designed to teach the model function calling based on the device information in the context.
@@ -155,13 +155,10 @@ python3 train.py \
 </details>
 
 
-## Home Assistant Addon
-In order to facilitate running the project entirely on the system where Home Assistant is installed, there is an experimental Home Assistant Add-on that runs the oobabooga/text-generation-webui to connect to using the "remote" backend options.  The addon can be found in the [addon/](./addon/README.md) directory.
-
-
 ## Version History
 | Version | Description                                                                                                                                                                                                          |
 |---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| v0.4    | Rewrite integration to support tool calling models/agentic tool use loop, voice streaming, multiple config sub-entries per backend, and dynamic llama.cpp processor selection                                        |
 | v0.3.11 | Bug-fixes and llama.cpp version update                                                                                                                                                                               |
 | v0.3.10 | Add support for the OpenAI "Responses" API endpoint, Update llama.cpp version, Fix for breaking change in HA version 2025.7.0                                                                                        |
 | v0.3.9  | Update llama.cpp version, fix installation bugs, fix conversation history not working                                                                                                                                |
