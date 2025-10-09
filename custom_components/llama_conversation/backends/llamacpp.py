@@ -39,6 +39,7 @@ from custom_components.llama_conversation.const import (
     CONF_LLAMACPP_BATCH_SIZE,
     CONF_LLAMACPP_THREAD_COUNT,
     CONF_LLAMACPP_BATCH_THREAD_COUNT,
+    CONF_INSTALLED_LLAMACPP_VERSION,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
@@ -78,6 +79,7 @@ def snapshot_settings(options: dict[str, Any]) -> dict[str, Any]:
         CONF_LLAMACPP_THREAD_COUNT: options.get(CONF_LLAMACPP_THREAD_COUNT, DEFAULT_LLAMACPP_THREAD_COUNT),
         CONF_LLAMACPP_BATCH_THREAD_COUNT: options.get(CONF_LLAMACPP_BATCH_THREAD_COUNT, DEFAULT_LLAMACPP_BATCH_THREAD_COUNT),
         CONF_LLAMACPP_ENABLE_FLASH_ATTENTION: options.get(CONF_LLAMACPP_ENABLE_FLASH_ATTENTION, DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION),
+        CONF_INSTALLED_LLAMACPP_VERSION: options.get(CONF_INSTALLED_LLAMACPP_VERSION, ""),
         CONF_GBNF_GRAMMAR_FILE: options.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE),
         CONF_PROMPT_CACHING_ENABLED: options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED),
     }
@@ -115,7 +117,7 @@ class LlamaCppClient(LocalLLMClient):
 
     @staticmethod
     def get_name(client_options: dict[str, Any]):
-        return f"Llama.cpp (llama-cpp-python v{client_options[CONF_INSTALLED_LLAMACPP_VERSION]})"
+        return "Llama.cpp"
 
     async def async_get_available_models(self) -> List[str]:
         return [] # TODO: find available "huggingface_hub" models that have been downloaded
@@ -215,6 +217,11 @@ class LlamaCppClient(LocalLLMClient):
             should_reload = True
         elif loaded_options[CONF_LLAMACPP_ENABLE_FLASH_ATTENTION] != entity_options.get(CONF_LLAMACPP_ENABLE_FLASH_ATTENTION, DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION):
             should_reload = True
+        elif loaded_options[CONF_INSTALLED_LLAMACPP_VERSION] != entity_options.get(CONF_INSTALLED_LLAMACPP_VERSION):
+            should_reload = True
+            _LOGGER.debug(f"Reloading llama.cpp...")
+            if self.llama_cpp_module:
+                self.llama_cpp_module = importlib.reload(self.llama_cpp_module)
 
         model_path = entity_options.get(CONF_DOWNLOADED_MODEL_FILE, "")
         model_name = entity_options.get(CONF_CHAT_MODEL, "")

@@ -1,6 +1,7 @@
 """Config flow for Local LLM Conversation integration."""
 from __future__ import annotations
 
+from asyncio import Task
 import logging
 import os
 from typing import Any
@@ -39,7 +40,8 @@ from homeassistant.helpers.selector import (
     BooleanSelectorConfig,
 )
 
-from .utils import download_model_from_hf, get_llama_cpp_python_version, install_llama_cpp_python, is_valid_hostname, MissingQuantizationException
+from .utils import download_model_from_hf, get_llama_cpp_python_version, install_llama_cpp_python, \
+    is_valid_hostname, get_available_llama_cpp_versions, MissingQuantizationException
 from .const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -87,6 +89,7 @@ from .const import (
     CONF_LLAMACPP_BATCH_SIZE,
     CONF_LLAMACPP_THREAD_COUNT,
     CONF_LLAMACPP_BATCH_THREAD_COUNT,
+    CONF_LLAMACPP_REINSTALL,
     DEFAULT_CHAT_MODEL,
     DEFAULT_PORT,
     DEFAULT_SSL,
@@ -258,14 +261,14 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
                 if backend == BACKEND_TYPE_LLAMA_CPP:
                     installed_version = await self.hass.async_add_executor_job(get_llama_cpp_python_version)
                     _LOGGER.debug(f"installed version: {installed_version}")
-                    if installed_version == EMBEDDED_LLAMA_CPP_PYTHON_VERSION:
+                    if installed_version and installed_version == EMBEDDED_LLAMA_CPP_PYTHON_VERSION:
                         self.client_config[CONF_INSTALLED_LLAMACPP_VERSION] = installed_version
                         return await self.async_step_finish()
                     else:
                         self.internal_step = "install_local_wheels"
                         _LOGGER.debug("Queuing install task...")
                         async def install_task():
-                            await self.hass.async_add_executor_job(
+                            return await self.hass.async_add_executor_job(
                                 install_llama_cpp_python, self.hass.config.config_dir
                             )
 
@@ -376,7 +379,7 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
     
     @classmethod
     def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
-        return config_entry.data[CONF_BACKEND_TYPE] != BACKEND_TYPE_LLAMA_CPP
+        return True
 
     @staticmethod
     def async_get_options_flow(
@@ -399,6 +402,9 @@ class OptionsFlow(BaseOptionsFlow):
     """Local LLM config flow options handler."""
 
     model_config: dict[str, Any] | None = None
+    reinstall_task: Task[Any] | None = None
+    wheel_install_error: str | None = None
+    wheel_install_successful: bool = False
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -410,32 +416,112 @@ class OptionsFlow(BaseOptionsFlow):
         backend_type = self.config_entry.data.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE)
         client_config = dict(self.config_entry.options)
 
+        if self.wheel_install_error:
+            _LOGGER.warning("Failed to install wheel: %s", repr(self.wheel_install_error))
+            return self.async_abort(reason="pip_wheel_error")
+
+        if self.wheel_install_successful:
+            client_config[CONF_INSTALLED_LLAMACPP_VERSION] = await self.hass.async_add_executor_job(get_llama_cpp_python_version)
+            _LOGGER.debug(f"new version is: {client_config[CONF_INSTALLED_LLAMACPP_VERSION]}")
+            return self.async_create_entry(data=client_config)
+
+        if backend_type == BACKEND_TYPE_LLAMA_CPP:
+            potential_versions = await get_available_llama_cpp_versions(self.hass)
+
+            schema = vol.Schema({
+                vol.Required(CONF_LLAMACPP_REINSTALL, default=False): BooleanSelector(BooleanSelectorConfig()),
+                vol.Required(CONF_INSTALLED_LLAMACPP_VERSION, default=client_config.get(CONF_INSTALLED_LLAMACPP_VERSION, "not installed")): SelectSelector(
+                    SelectSelectorConfig(
+                        options=[ SelectOptionDict(value=x[0], label=x[0] if not x[1] else f"{x[0]} (local)") for x in potential_versions ],
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
+                )
+            })
+
+            return self.async_show_form(
+                step_id="reinstall",
+                data_schema=schema,
+            )
+        else:
+
+            if user_input is not None:
+                client_config.update(user_input)
+
+                # validate remote connections
+                connect_err = await BACKEND_TO_CLS[backend_type].async_validate_connection(self.hass, client_config)
+
+                if not connect_err:
+                    return self.async_create_entry(data=client_config)
+                else:
+                    errors["base"] = "failed_to_connect"
+                    description_placeholders["exception"] = str(connect_err)
+
+            schema = remote_connection_schema(
+                backend_type=backend_type,
+                host=client_config.get(CONF_HOST),
+                port=client_config.get(CONF_PORT),
+                ssl=client_config.get(CONF_SSL),
+                selected_path=client_config.get(CONF_GENERIC_OPENAI_PATH)
+            )
+
+            return self.async_show_form(
+                step_id="init",
+                data_schema=schema,
+                errors=errors,
+                description_placeholders=description_placeholders,
+            )
+    
+    async def async_step_reinstall(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        client_config = dict(self.config_entry.options)
+
         if user_input is not None:
-            client_config.update(user_input)
-
-            # validate remote connections
-            connect_err = await BACKEND_TO_CLS[backend_type].async_validate_connection(self.hass, client_config)
-
-            if not connect_err:
+            if not user_input[CONF_LLAMACPP_REINSTALL]:
+                _LOGGER.debug("Reinstall was not selected, finishing")
                 return self.async_create_entry(data=client_config)
+                
+        if not self.reinstall_task:
+            if not user_input:
+                return self.async_abort(reason="unknown")
+            
+            desired_version = user_input.get(CONF_INSTALLED_LLAMACPP_VERSION)
+            async def install_task():
+                return await self.hass.async_add_executor_job(
+                    install_llama_cpp_python, self.hass.config.config_dir, True, desired_version
+                )
+
+            self.reinstall_task = self.hass.async_create_background_task(
+                install_task(), name="llama_cpp_python_installation")
+
+            _LOGGER.debug("Queuing reinstall task...")
+            return self.async_show_progress(
+                progress_task=self.reinstall_task,
+                step_id="reinstall",
+                progress_action="install_local_wheels",
+            )
+        
+        if not self.reinstall_task.done():
+            return self.async_show_progress(
+                progress_task=self.reinstall_task,
+                step_id="reinstall",
+                progress_action="install_local_wheels",
+            )
+        
+        _LOGGER.debug("done... checking result")
+        install_exception = self.reinstall_task.exception()
+        if install_exception:
+            self.wheel_install_error = repr(install_exception)
+            _LOGGER.debug(f"Hit error: {self.wheel_install_error}")
+            return self.async_show_progress_done(next_step_id="init")
+        else:
+            wheel_install_result = self.reinstall_task.result()
+            if not wheel_install_result:
+                self.wheel_install_error = "Pip returned false"
+                _LOGGER.debug(f"Hit error: {self.wheel_install_error} ({wheel_install_result})")
+                return self.async_show_progress_done(next_step_id="init")
             else:
-                errors["base"] = "failed_to_connect"
-                description_placeholders["exception"] = str(connect_err)
-
-        schema = remote_connection_schema(
-            backend_type=backend_type,
-            host=client_config.get(CONF_HOST),
-            port=client_config.get(CONF_PORT),
-            ssl=client_config.get(CONF_SSL),
-            selected_path=client_config.get(CONF_GENERIC_OPENAI_PATH)
-        )
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=schema,
-            errors=errors,
-            description_placeholders=description_placeholders,
-        )
+                _LOGGER.debug(f"Finished install: {wheel_install_result}")
+                self.wheel_install_successful = True
+                return self.async_show_progress_done(next_step_id="init")
     
 
 def STEP_LOCAL_MODEL_SELECTION_DATA_SCHEMA(model_file=None, chat_model=None, downloaded_model_quantization=None, available_quantizations=None):

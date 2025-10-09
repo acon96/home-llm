@@ -44,7 +44,6 @@ from .const import (
     BACKEND_TYPE_OLLAMA,
     BACKEND_TYPE_LLAMA_EXISTING_OLD,
     BACKEND_TYPE_LLAMA_HF_OLD,
-    EMBEDDED_LLAMA_CPP_PYTHON_VERSION
 )
 from .entity import LocalLLMClient, LocalLLMConfigEntry
 from .backends.llamacpp import LlamaCppClient
@@ -141,7 +140,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: LocalLLMConfigE
         if backend == BACKEND_TYPE_LLAMA_EXISTING_OLD or backend == BACKEND_TYPE_LLAMA_HF_OLD:
             backend = BACKEND_TYPE_LLAMA_CPP
             entry_data[CONF_BACKEND_TYPE] = BACKEND_TYPE_LLAMA_CPP
-            entry_options[CONF_INSTALLED_LLAMACPP_VERSION] = await hass.async_add_executor_job(get_llama_cpp_python_version) or EMBEDDED_LLAMA_CPP_PYTHON_VERSION
+            entry_options[CONF_INSTALLED_LLAMACPP_VERSION] = await hass.async_add_executor_job(get_llama_cpp_python_version)
         else:
             # ensure all remote backends have a path set
             entry_options[CONF_GENERIC_OPENAI_PATH] = entry_options.get(CONF_GENERIC_OPENAI_PATH, "")

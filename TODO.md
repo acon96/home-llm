@@ -2,6 +2,7 @@
 - [x] proper tool calling support  
 - [ ] fix old GGUFs to support tool calling  
 - [x] home assistant component text streaming support  
+- [x] move llama-cpp build to forked repo + add support for multi backend builds (no more -noavx)  
 - [ ] new model based on qwen3 0.6b  
 - [ ] new model based on gemma3 270m  
 - [ ] support AI task API  

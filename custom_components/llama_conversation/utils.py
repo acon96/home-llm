@@ -9,13 +9,14 @@ import multiprocessing
 import voluptuous as vol
 import webcolors
 import json
-from typing import Any, Dict, List, Sequence, cast
+from typing import Any, Dict, List, Sequence, Tuple, cast
 from webcolors import CSS3
 from importlib.metadata import version
 
+from homeassistant.core import HomeAssistant
 from homeassistant.components import conversation
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import intent, llm
+from homeassistant.helpers import intent, llm, aiohttp_client
 from homeassistant.requirements import pip_kwargs
 from homeassistant.util import color
 from homeassistant.util.package import install_package, is_installed
@@ -191,18 +192,11 @@ def validate_llama_cpp_python_installation():
 def get_llama_cpp_python_version():
     if not is_installed("llama-cpp-python"):
         return None
-    return version("llama-cpp-python").split("+")[0]
+    return version("llama-cpp-python")
 
-def install_llama_cpp_python(config_dir: str):
+def get_runtime_and_platform_suffix() -> Tuple[str, str]:
+    runtime_version = f"cp{sys.version_info.major}{sys.version_info.minor}"
 
-    installed_wrong_version = False
-    if is_installed("llama-cpp-python"):
-        if version("llama-cpp-python") != EMBEDDED_LLAMA_CPP_PYTHON_VERSION:
-            installed_wrong_version = True
-        else:
-            time.sleep(0.5) # I still don't know why this is required
-            return True
-    
     platform_suffix = platform.machine()
     # remap other names for architectures to the names we use
     if platform_suffix == "arm64":
@@ -210,42 +204,65 @@ def install_llama_cpp_python(config_dir: str):
     if platform_suffix == "i386" or platform_suffix == "amd64":
         platform_suffix = "x86_64"
 
-    runtime_version = f"cp{sys.version_info.major}{sys.version_info.minor}"
-    
+    return runtime_version, platform_suffix
+
+async def get_available_llama_cpp_versions(hass: HomeAssistant) -> List[Tuple[str, bool]]:
+    github_index_url = "https://acon96.github.io/llama-cpp-python/whl/ha/llama-cpp-python/"
+    session = aiohttp_client.async_get_clientsession(hass)
+    try:
+        async with session.get(github_index_url) as resp:
+            if resp.status != 200:
+                raise Exception(f"Failed to fetch available versions from GitHub (HTTP {resp.status})")
+            text = await resp.text()
+            # pull version numbers out of h2 tags
+            versions = re.findall(r"<h2.*>(.+)</h2>", text)
+            remote =  sorted([(v, False) for v in versions], reverse=True)
+    except Exception as ex:
+        _LOGGER.warning(f"Error fetching available versions from GitHub: {repr(ex)}")
+        remote = []
+
+    runtime_version, platform_suffix = get_runtime_and_platform_suffix()
     folder = os.path.dirname(__file__)
     potential_wheels = sorted([ path for path in os.listdir(folder) if path.endswith(f"{platform_suffix}.whl") ], reverse=True)
-    potential_wheels = [ wheel for wheel in potential_wheels if runtime_version in wheel ]
-    potential_wheels = [ wheel for wheel in potential_wheels if f"{EMBEDDED_LLAMA_CPP_PYTHON_VERSION}+homellm" in wheel ]
+    local = [ (wheel, True) for wheel in potential_wheels if runtime_version in wheel and "llama_cpp_python" in wheel]
+    
+    return remote + local
 
-    _LOGGER.debug(f"{potential_wheels=}")
-    if len(potential_wheels) > 0:
+def install_llama_cpp_python(config_dir: str, force_reinstall: bool = False, specific_version: str | None = None) -> bool:
 
-        latest_wheel = potential_wheels[0]
-
-        _LOGGER.info("Installing llama-cpp-python from local wheel")
-        _LOGGER.debug(f"Wheel location: {latest_wheel}")
-        return install_package(os.path.join(folder, latest_wheel), **pip_kwargs(config_dir))
+    installed_wrong_version = False
+    if is_installed("llama-cpp-python") and not force_reinstall:
+        if version("llama-cpp-python") != EMBEDDED_LLAMA_CPP_PYTHON_VERSION:
+            installed_wrong_version = True
+        else:
+            time.sleep(0.5) # I still don't know why this is required
+            return True
         
-    # scikit-build-core v0.9.7+ doesn't recognize these builds as musllinux, and just tags them as generic linux
-    # github_release_url = f"https://github.com/acon96/home-llm/releases/download/v{INTEGRATION_VERSION}/llama_cpp_python-{EMBEDDED_LLAMA_CPP_PYTHON_VERSION}+homellm-{runtime_version}-{runtime_version}-musllinux_1_2_{platform_suffix}.whl"
-    github_release_url = f"https://github.com/acon96/home-llm/releases/download/v{INTEGRATION_VERSION}/llama_cpp_python-{EMBEDDED_LLAMA_CPP_PYTHON_VERSION}+homellm-{runtime_version}-{runtime_version}-linux_{platform_suffix}.whl"
-    if install_package(github_release_url, **pip_kwargs(config_dir)):
-        _LOGGER.info("llama-cpp-python successfully installed from GitHub release")
+    runtime_version, platform_suffix = get_runtime_and_platform_suffix()
+
+    if not specific_version:
+        specific_version = EMBEDDED_LLAMA_CPP_PYTHON_VERSION
+    
+    if ".whl" in specific_version:
+        wheel_location = os.path.join(os.path.dirname(__file__), specific_version)
+    else:
+        wheel_location = f"https://github.com/acon96/llama-cpp-python/releases/download/{specific_version}/llama_cpp_python-{specific_version}-{runtime_version}-{runtime_version}-linux_{platform_suffix}.whl"
+
+    if install_package(wheel_location, **pip_kwargs(config_dir)):
+        _LOGGER.info("llama-cpp-python successfully installed")
         return True
     
     # if it is just the wrong version installed then ignore the installation error
     if not installed_wrong_version:
         _LOGGER.error(
-            "Error installing llama-cpp-python. Could not install the binary wheels from GitHub for " + \
-            f"platform: {platform_suffix}, python version: {sys.version_info.major}.{sys.version_info.minor}. " + \
+            "Error installing llama-cpp-python. Could not install the binary wheels from GitHub." + \
             "Please manually build or download the wheels and place them in the `/config/custom_components/llama_conversation` directory." + \
             "Make sure that you download the correct .whl file for your platform and python version from the GitHub releases page."
         )
         return False
     else:
         _LOGGER.info(
-            "Error installing llama-cpp-python. Could not install the binary wheels from GitHub for " + \
-            f"platform: {platform_suffix}, python version: {sys.version_info.major}.{sys.version_info.minor}. " + \
+            "Error installing llama-cpp-python. Could not install the binary wheels from GitHub." + \
             f"You already have a version of llama-cpp-python ({version('llama-cpp-python')}) installed, however it may not be compatible!"
         )
         time.sleep(0.5) # I still don't know why this is required

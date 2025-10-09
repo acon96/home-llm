@@ -187,13 +187,27 @@
                     "text_generation_webui_admin_key": "Admin Key",
                     "text_generation_webui_preset": "Generation Preset/Character Name",
                     "text_generation_webui_chat_mode": "Chat Mode"
-                }
+                },
+                "description": "Please provide the connection details to connect to the API that is hosting the model.",
+                "title": "Configure Connection"
+            },
+            "reinstall": {
+                "data": {
+                    "reinstall_llama_cpp": "Reinstall Llama.cpp",
+                    "installed_llama_cpp_version": "Version to (re)install"
+                },
+                "description": "__If you are experiencing issues with Llama.cpp__, you can force a reinstall of the package here. This will attempt to re-install or upgrade the llama-cpp-python package from GitHub *or* a local wheel file placed in the `/config/custom_components/llama_conversation/` directory.",
+                "title": "Reinstall Llama.cpp"
             }
         },
         "error": {
             "failed_to_connect": "Failed to connect to the remote API: {exception}",
             "invalid_hostname": "The provided hostname was invalid. Please ensure you only provide the domain or IP address and not the full API endpoint.",
-            "unknown": "Unexpected error"
+            "unknown": "Unexpected error",
+            "pip_wheel_error": "Pip returned an error while installing the wheel! Please check the Home Assistant logs for more details."
+        },
+        "progress": {
+            "install_local_wheels": "Please wait while Llama.cpp is installed..."
         }
     },
     "selector": {
