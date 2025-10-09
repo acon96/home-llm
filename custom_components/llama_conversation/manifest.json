@@ -1,6 +1,6 @@
 {
   "domain": "llama_conversation",
-  "name": "Local LLM",
+  "name": "Local LLMs",
   "version": "0.4.0",
   "codeowners": ["@acon96"],
   "config_flow": true,

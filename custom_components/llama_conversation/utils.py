@@ -24,7 +24,6 @@ from homeassistant.util.package import install_package, is_installed
 from voluptuous_openapi import convert
 
 from .const import (
-    INTEGRATION_VERSION,
     EMBEDDED_LLAMA_CPP_PYTHON_VERSION,
     ALLOWED_SERVICE_CALL_ARGUMENTS,
     SERVICE_TOOL_ALLOWED_SERVICES,

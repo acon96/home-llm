@@ -158,6 +158,7 @@ python3 train.py \
 ## Version History
 | Version | Description                                                                                                                                                                                                          |
 |---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| v0.4    | Rewrite integration to support tool calling models/agentic tool use loop, voice streaming, multiple config sub-entries per backend, and dynamic llama.cpp processor selection                                        |
 | v0.3.11 | Bug-fixes and llama.cpp version update                                                                                                                                                                               |
 | v0.3.10 | Add support for the OpenAI "Responses" API endpoint, Update llama.cpp version, Fix for breaking change in HA version 2025.7.0                                                                                        |
 | v0.3.9  | Update llama.cpp version, fix installation bugs, fix conversation history not working                                                                                                                                |
