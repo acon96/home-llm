@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from typing import Final
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
@@ -50,7 +51,7 @@ from .backends.llamacpp import LlamaCppClient
 from .backends.generic_openai import GenericOpenAIAPIClient, GenericOpenAIResponsesAPIClient
 from .backends.tailored_openai import TextGenerationWebuiClient, LlamaCppServerClient
 from .backends.ollama import OllamaAPIClient
-from .utils import get_llama_cpp_python_version
+from .utils import get_llama_cpp_python_version, download_model_from_hf
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -161,6 +162,27 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: LocalLLMConfigE
         hass.config_entries.async_update_entry(config_entry, title=entry_title, data=entry_data, options=entry_options, version=3)
 
         _LOGGER.debug("Migration to subentries complete")
+    
+    if config_entry.version == 3 and config_entry.minor_version == 0:
+        # add the downloaded model file to options if missing
+        if config_entry.data.get(CONF_BACKEND_TYPE) == BACKEND_TYPE_LLAMA_CPP:
+            for subentry in config_entry.subentries.values():
+                if subentry.data.get(CONF_DOWNLOADED_MODEL_FILE) is None:
+                    model_name = subentry.data[CONF_CHAT_MODEL]
+                    quantization_type = subentry.data[CONF_DOWNLOADED_MODEL_QUANTIZATION]
+                    storage_folder = os.path.join(hass.config.media_dirs.get("local", hass.config.path("media")), "models")
+
+                    new_options = dict(subentry.data)
+                    file_name = await hass.async_add_executor_job(download_model_from_hf, model_name, quantization_type, storage_folder, True)
+                    new_options[CONF_DOWNLOADED_MODEL_FILE] = file_name
+
+                    hass.config_entries.async_update_subentry(
+                        config_entry, subentry, data=MappingProxyType(new_options)
+                    )
+
+        hass.config_entries.async_update_entry(config_entry, minor_version=1)
+        
+        _LOGGER.debug("Migration to add downloaded model file complete") 
 
     return True
 
