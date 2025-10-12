@@ -220,7 +220,7 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
     """Handle a config flow for Local LLM Conversation."""
 
     VERSION = 3
-    MINOR_VERSION = 0
+    MINOR_VERSION = 1
 
     install_wheel_task = None
     install_wheel_error = None
@@ -1071,11 +1071,10 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
         if not self.download_task:
             model_name = self.model_config[CONF_CHAT_MODEL]
             quantization_type = self.model_config[CONF_DOWNLOADED_MODEL_QUANTIZATION]
-
             storage_folder = os.path.join(self.hass.config.media_dirs.get("local", self.hass.config.path("media")), "models")
 
             async def download_task():
-                await self.hass.async_add_executor_job(
+                return await self.hass.async_add_executor_job(
                     download_model_from_hf, model_name, quantization_type, storage_folder
                 )
 

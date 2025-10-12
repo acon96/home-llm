@@ -136,7 +136,7 @@ def custom_custom_serializer(value):
     
     return cv.custom_serializer(value)
 
-def download_model_from_hf(model_name: str, quantization_type: str, storage_folder: str):
+def download_model_from_hf(model_name: str, quantization_type: str, storage_folder: str, file_lookup_only: bool = False):
     try:
         from huggingface_hub import hf_hub_download, HfFileSystem
     except Exception as ex:
@@ -162,6 +162,7 @@ def download_model_from_hf(model_name: str, quantization_type: str, storage_fold
         repo_type="model",
         filename=wanted_file[0].removeprefix(model_name + "/"),
         cache_dir=storage_folder,
+        local_files_only=file_lookup_only
     )
 
 def _load_extension():
