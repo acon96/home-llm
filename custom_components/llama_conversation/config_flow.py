@@ -1074,8 +1074,7 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
             storage_folder = os.path.join(self.hass.config.media_dirs.get("local", self.hass.config.path("media")), "models")
 
             async def download_task():
-                # return await self.hass.async_add_executor_job(
-                await self.hass.async_add_executor_job(
+                return await self.hass.async_add_executor_job(
                     download_model_from_hf, model_name, quantization_type, storage_folder
                 )
 
