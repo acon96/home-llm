@@ -1166,9 +1166,6 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
                     errors["base"] = "missing_icl_file"
                     description_placeholders["filename"] = filename
 
-            if user_input[CONF_LLM_HASS_API] == "none":
-                user_input.pop(CONF_LLM_HASS_API)
-
             # --- Normalize numeric fields to ints to avoid slice/type errors later ---
             for key in (
                 CONF_REMEMBER_NUM_INTERACTIONS,
@@ -1185,6 +1182,11 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
                     # validate input
                     schema(user_input)
                     self.model_config.update(user_input)
+
+                    # clear LLM API if 'none' selected
+                    if self.model_config.get(CONF_LLM_HASS_API) == "none":
+                        self.model_config.pop(CONF_LLM_HASS_API, None)
+                    
                     return await self.async_step_finish()
                 except Exception:
                     _LOGGER.exception("An unknown error has occurred!")
