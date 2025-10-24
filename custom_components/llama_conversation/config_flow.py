@@ -157,6 +157,11 @@ from . import HomeLLMAPI, LocalLLMConfigEntry, LocalLLMClient, BACKEND_TO_CLS
 
 _LOGGER = logging.getLogger(__name__)
 
+def _coerce_int(val, default=0):
+    try:
+        return int(val)
+    except (TypeError, ValueError):
+        return default
 
 def pick_backend_schema(backend_type=None, selected_language=None):
     return vol.Schema(
@@ -1164,6 +1169,17 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
             if user_input[CONF_LLM_HASS_API] == "none":
                 user_input.pop(CONF_LLM_HASS_API)
 
+            # --- Normalize numeric fields to ints to avoid slice/type errors later ---
+            for key in (
+                CONF_REMEMBER_NUM_INTERACTIONS,
+                CONF_MAX_TOOL_CALL_ITERATIONS,
+                CONF_CONTEXT_LENGTH,
+                CONF_MAX_TOKENS,
+                CONF_REQUEST_TIMEOUT,
+             ):
+                if key in user_input:
+                    user_input[key] = _coerce_int(user_input[key], user_input.get(key) or 0)
+            
             if len(errors) == 0:
                 try:
                     # validate input
