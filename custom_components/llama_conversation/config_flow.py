@@ -148,7 +148,7 @@ from .const import (
     DOMAIN,
     HOME_LLM_API_ID,
     DEFAULT_OPTIONS,
-    OPTIONS_OVERRIDES,
+    option_overrides,
     RECOMMENDED_CHAT_MODELS,
     EMBEDDED_LLAMA_CPP_PYTHON_VERSION
 )
@@ -157,6 +157,11 @@ from . import HomeLLMAPI, LocalLLMConfigEntry, LocalLLMClient, BACKEND_TO_CLS
 
 _LOGGER = logging.getLogger(__name__)
 
+def _coerce_int(val, default=0):
+    try:
+        return int(val)
+    except (TypeError, ValueError):
+        return default
 
 def pick_backend_schema(backend_type=None, selected_language=None):
     return vol.Schema(
@@ -1115,12 +1120,14 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
         entry = self._get_entry()
         backend_type = entry.data[CONF_BACKEND_TYPE]
 
-        if not self.model_config:
+        if CONF_PROMPT not in self.model_config:
             # determine selected language from model config or parent options
             selected_language = self.model_config.get(
                 CONF_SELECTED_LANGUAGE, entry.options.get(CONF_SELECTED_LANGUAGE, "en")
             )
             model_name = self.model_config.get(CONF_CHAT_MODEL, "").lower()
+
+            OPTIONS_OVERRIDES = option_overrides(backend_type)
 
             selected_default_options = {**DEFAULT_OPTIONS}
             for key in OPTIONS_OVERRIDES.keys():
@@ -1161,14 +1168,27 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
                     errors["base"] = "missing_icl_file"
                     description_placeholders["filename"] = filename
 
-            if user_input[CONF_LLM_HASS_API] == "none":
-                user_input.pop(CONF_LLM_HASS_API)
-
+            # --- Normalize numeric fields to ints to avoid slice/type errors later ---
+            for key in (
+                CONF_REMEMBER_NUM_INTERACTIONS,
+                CONF_MAX_TOOL_CALL_ITERATIONS,
+                CONF_CONTEXT_LENGTH,
+                CONF_MAX_TOKENS,
+                CONF_REQUEST_TIMEOUT,
+             ):
+                if key in user_input:
+                    user_input[key] = _coerce_int(user_input[key], user_input.get(key) or 0)
+            
             if len(errors) == 0:
                 try:
                     # validate input
                     schema(user_input)
                     self.model_config.update(user_input)
+
+                    # clear LLM API if 'none' selected
+                    if self.model_config.get(CONF_LLM_HASS_API) == "none":
+                        self.model_config.pop(CONF_LLM_HASS_API, None)
+                    
                     return await self.async_step_finish()
                 except Exception:
                     _LOGGER.exception("An unknown error has occurred!")

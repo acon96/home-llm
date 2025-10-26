@@ -53,6 +53,8 @@ from .const import (
     DEFAULT_TOOL_CALL_PREFIX,
     DEFAULT_TOOL_CALL_SUFFIX,
     DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
+    HOME_LLM_API_ID,
+    SERVICE_TOOL_NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -187,10 +189,20 @@ class LocalLLMClient:
     ):
         async def async_iterator():
             async for input_chunk in result:
-                # _LOGGER.debug("Received chunk: %s", input_chunk)
+                _LOGGER.debug("Received chunk: %s", input_chunk)
+
+                tool_calls = input_chunk.tool_calls
+                # fix tool calls for the service tool
+                if tool_calls and chat_log.llm_api and chat_log.llm_api.api.id == HOME_LLM_API_ID:
+                    tool_calls = [
+                        llm.ToolInput(
+                            tool_name=SERVICE_TOOL_NAME,
+                            tool_args={**tc.tool_args, "service": tc.tool_name}
+                        ) for tc in tool_calls
+                    ]
                 yield conversation.AssistantContentDeltaDict(
                     content=input_chunk.response,
-                    tool_calls=input_chunk.tool_calls
+                    tool_calls=tool_calls
                 )
         
         return chat_log.async_add_delta_content_stream(user_input.agent_id, stream=async_iterator())
@@ -263,6 +275,7 @@ class LocalLLMClient:
         tool_calls: List[Tuple[llm.ToolInput, Any]] = []
         # if max tool calls is 0 then we expect to generate the response & tool call in one go
         for idx in range(max(1, max_tool_call_iterations)):
+            _LOGGER.debug(f"Generating response for {user_input.text=}, iteration {idx+1}/{max_tool_call_iterations}")
             generation_result = await self._async_generate(message_history, user_input, chat_log, entity_options)
             
             last_generation_had_tool_calls = False
@@ -270,6 +283,7 @@ class LocalLLMClient:
                 try:
                     message = await anext(generation_result)
                     message_history.append(message)
+                    _LOGGER.debug("Added message to history: %s", message)
                     if message.role == "assistant":
                         if message.tool_calls and len(message.tool_calls) > 0:
                             last_generation_had_tool_calls = True
@@ -367,10 +381,10 @@ class LocalLLMClient:
         in_thinking = False
         in_tool_call = False
         tool_content = ""
-        last_5_tokens = [] # FIXME: this still returns the first few tokens of the tool call if the prefix is split across chunks
+        last_5_tokens = []
         cur_match_length = 0
         async for chunk in token_generator:
-            _LOGGER.debug(f"Handling chunk: {chunk} {in_thinking=} {in_tool_call=} {last_5_tokens=}")
+            # _LOGGER.debug(f"Handling chunk: {chunk} {in_thinking=} {in_tool_call=} {last_5_tokens=}")
             tool_calls: Optional[List[str | llm.ToolInput | dict]]
             content, tool_calls = chunk
 
@@ -578,7 +592,7 @@ class LocalLLMClient:
                 if attribute_name not in attributes:
                     continue
 
-                _LOGGER.debug(f"{attribute_name} = {attributes[attribute_name]}")
+                # _LOGGER.debug(f"{attribute_name} = {attributes[attribute_name]}")
 
                 value = attributes[attribute_name]
                 if value is not None:

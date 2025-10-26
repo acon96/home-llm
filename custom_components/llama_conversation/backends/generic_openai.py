@@ -217,8 +217,9 @@ class GenericOpenAIAPIClient(LocalLLMClient):
             response_text = choice["text"]
             streamed = False
 
-        if not streamed or streamed and choice["finish_reason"]:
-            if choice["finish_reason"] == "length" or choice["finish_reason"] == "content_filter":
+        if not streamed or (streamed and choice.get("finish_reason")):
+            finish_reason = choice.get("finish_reason")
+            if finish_reason in ("length", "content_filter"):
                 _LOGGER.warning("Model response did not end on a stop token (unfinished sentence)")
 
         return response_text, tool_calls

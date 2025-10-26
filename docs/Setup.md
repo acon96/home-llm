@@ -9,7 +9,7 @@
     * [Step 1: Wheel Installation for llama-cpp-python](#step-1-wheel-installation-for-llama-cpp-python)
     * [Step 2: Model Selection](#step-2-model-selection)
     * [Step 3: Model Configuration](#step-3-model-configuration)
-* [Path 2: Using Mistral-Instruct-7B with Ollama Backend](#path-2-using-mistral-instruct-7b-with-ollama-backend)
+* [Path 2: Using Qwen3 with Ollama Backend](#path-2-using-qwen3-with-ollama-backend)
     * [Overview](#overview-1)
     * [Step 1: Downloading and serving the Model](#step-1-downloading-and-serving-the-model)
     * [Step 2: Connect to the Ollama API](#step-2-connect-to-the-ollama-api)
@@ -70,21 +70,36 @@ Pressing `Submit` will download the model from HuggingFace. The downloaded files
 ### Step 3: Model Configuration
 This step allows you to configure how the model is "prompted". See [here](./Model%20Prompting.md) for more information on how that works.
 
-For now, defaults for the model should have been populated. If you would like the model to be able to control devices then you must select the `Home-LLM (v1-v3)` API. This API is included to ensure compatability with the Home-LLM models that were trained before the introduction of the built in Home Assistant LLM API.
+For now, defaults for the model should have been populated. If you would like the Home-LLM model to be able to control devices then you should select the `Home-LLM (v1-v3)` API. This API is included to ensure compatability with the Home-LLM models that were trained before the introduction of the built in Home Assistant LLM API.
 
 Once the desired API has been selected, scroll to the bottom and click `Submit`.
 
 The model will be loaded into memory and should now be available to select as a conversation agent!
 
-## Path 2: Using Mistral-Instruct-7B with Ollama Backend
+## Path 2: Using Qwen3 with Ollama Backend
 ### Overview
-For those who have access to a GPU, you can also use the Mistral-Instruct-7B model to power your conversation agent. This path requires a separate machine that has a GPU and has [Ollama](https://ollama.com/) already installed on it.  This path utilizes in-context learning examples, to prompt the model to produce the output that we expect.
+For those who have access to a GPU, you can also use the Qwen3 model to power your conversation agent. This path requires a separate machine that has a GPU and has [Ollama](https://ollama.com/) already installed on it.  This path utilizes in-context learning examples, to prompt the model to produce the output that we expect.
 
 ### Step 1: Downloading and serving the Model
-Mistral can be easily set up and downloaded on the serving machine using the `ollama pull mistral` command.
+There are multiple size options for the Qwen3 series of model. Replace `8b` with the tag for your choice of model.
 
-In order to access the model from another machine, we need to run the Ollama API server open to the local network. This can be achieved using the `OLLAMA_HOST=0.0.0.0:11434 ollama serve` command. **DO NOT RUN THIS COMMAND ON ANY PUBLICLY
- ACCESSIBLE SERVERS AS IT LISTENS ON ALL NETWORK INTERFACES**
+| Parameter Count  | Estimated VRAM | Ollama Tag | 
+| -----------------| ---------------|------------|
+| 4 Billion        | 8-10 GB        | `4b`       |
+| 8 Billion        | 9-12 GB        | `8b`       |
+| 14 Billion       | 14-16 GB       | `14b`      |
+| 32 Billion       | 22+ GB         | `32b`      |
+| 30B (3B Active)  | 20+ GB         | `30b`      |
+
+Qwen3 can be easily set up and downloaded on the serving machine using the `ollama pull qwen3:8b` command.
+
+> Note: You can also host the Home-LLM models on Ollama by pulling them from HuggingFace directly by prepending `hf.co/` to the full model name. For example:
+>  - `acon96/Home-3B-v3-GGUF` -> `ollama pull hf.co/acon96/Home-3B-v3-GGUF`
+>  - `acon96/Home-1B-v3-GGUF` -> `ollama pull hf.co/acon96/Home-1B-v3-GGUF`
+
+In order to access the model from another machine, we need to run the Ollama API server open to the local network. This can be achieved using the `OLLAMA_HOST=0.0.0.0:11434 ollama serve` command. 
+
+**DO NOT RUN THIS COMMAND ON ANY PUBLICLY ACCESSIBLE SERVERS AS IT LISTENS ON ALL NETWORK INTERFACES**
 
 ### Step 2: Connect to the Ollama API
 
@@ -102,11 +117,11 @@ In order to access the model from another machine, we need to run the Ollama API
 
 ### Step 3: Model Selection & Configuration
 1. You must create the conversation agent based on the model you wish to use.  
-    Under the `Ollama at '<url>` service that you just created, select `+ Add conversation agent`  
-    - **Model Name**: Select the Mistral 7B model. This should automatically populated based on the model you already downloaded 
+    Under the `Ollama at '<url>'` service that you just created, select `+ Add conversation agent`  
+    - **Model Name**: Select `qwen3:8b` from the list.
 2. You can configure how the model is "prompted". See [here](./Model%20Prompting.md) for more information on how that works.  
 
-For now, defaults for the model should have been populated. If you would like the model to be able to control devices then you must select the `Assist` API.
+For now, defaults for the model should have been populated. If you would like the Qwen3 model to be able to control devices then you should select the `Assist` API. This is the included Home Assistant API for controlling devices via Large Language Models.
 
 Once the desired model has been selected & configured, scroll to the bottom and click `Submit`.
 
@@ -144,7 +159,7 @@ Llama 3 8B can be set up and downloaded on the serving machine using LM Studio b
     - - **Model Name**: Set this to the name of the model as it appears in LM Studio. The dropdown list should pre-populate with the models that are already installed.
 2. You can configure how the model is "prompted". See [here](./Model%20Prompting.md) for more information on how that works.  
 
-For now, defaults for the model should have been populated. If you would like the model to be able to control devices then you must select the `Assist` API.
+For now, defaults for the model should have been populated. If you would like the model to be able to control devices then you should select the `Assist` API. This is the included Home Assistant API for controlling devices via Large Language Models.
 
 > NOTE: The key settings in this case are that our prompt references the `{{ response_examples }}` variable and the `Enable in context learning (ICL) examples` option is turned on.
 

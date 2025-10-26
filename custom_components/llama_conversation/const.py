@@ -1,5 +1,6 @@
 """Constants for the Local LLM Conversation integration."""
 import types, os
+from typing import Any
 
 DOMAIN = "llama_conversation"
 HOME_LLM_API_ID = "home-llm-service-api"
@@ -224,98 +225,117 @@ DEFAULT_OPTIONS = types.MappingProxyType(
     }
 )
 
-OPTIONS_OVERRIDES = {
-    "home-llama-3.2": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
-        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
-        CONF_TOOL_CALL_PREFIX: "```homeassistant",
-        CONF_TOOL_CALL_SUFFIX: "```",
-        CONF_CONTEXT_LENGTH: 131072,
-        CONF_MAX_TOOL_CALL_ITERATIONS: 1,
-        CONF_ENABLE_LEGACY_TOOL_CALLING: True
-    },
-    "home-3b-v3": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
-        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
-        CONF_TOOL_CALL_PREFIX: "```homeassistant",
-        CONF_TOOL_CALL_SUFFIX: "```",
-        CONF_MAX_TOOL_CALL_ITERATIONS: 1,
-        CONF_ENABLE_LEGACY_TOOL_CALLING: True
-    },
-    "home-3b-v2": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
-        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
-        CONF_TOOL_CALL_PREFIX: "```homeassistant",
-        CONF_TOOL_CALL_SUFFIX: "```",
-        CONF_MAX_TOOL_CALL_ITERATIONS: 1,
-        CONF_ENABLE_LEGACY_TOOL_CALLING: True
-    },
-    "home-3b-v1": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
-        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
-        CONF_TOOL_CALL_PREFIX: "```homeassistant",
-        CONF_TOOL_CALL_SUFFIX: "```",
-        CONF_MAX_TOOL_CALL_ITERATIONS: 1,
-        CONF_ENABLE_LEGACY_TOOL_CALLING: True
-    },
-    "home-1b-v3": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
-        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
-        CONF_TOOL_CALL_PREFIX: "```homeassistant",
-        CONF_TOOL_CALL_SUFFIX: "```",
-        CONF_MAX_TOOL_CALL_ITERATIONS: 1,
-        CONF_ENABLE_LEGACY_TOOL_CALLING: True
-    },
-    "home-1b-v2": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
-        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
-        CONF_TOOL_CALL_PREFIX: "```homeassistant",
-        CONF_TOOL_CALL_SUFFIX: "```",
-        CONF_MAX_TOOL_CALL_ITERATIONS: 1,
-        CONF_ENABLE_LEGACY_TOOL_CALLING: True
-    },
-    "home-1b-v1": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
-        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
-        CONF_TOOL_CALL_PREFIX: "```homeassistant",
-        CONF_TOOL_CALL_SUFFIX: "```",
-        CONF_MAX_TOOL_CALL_ITERATIONS: 1,
-        CONF_ENABLE_LEGACY_TOOL_CALLING: True
-    },
-    "mistral": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_NO_SYSTEM_PROMPT_EXTRAS,
-        CONF_MIN_P: 0.1,
-        CONF_TYPICAL_P: 0.9,
-    },
-    "mixtral": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_NO_SYSTEM_PROMPT_EXTRAS,
-        CONF_MIN_P: 0.1,
-        CONF_TYPICAL_P: 0.9,
-    },
-    "llama-3": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_EXTRAS,
-    },
-    "llama3": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_EXTRAS,
-    },
-    "zephyr": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_EXTRAS,
-    },
-    "phi-3": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_EXTRAS,
-    },
-    "command-r": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_EXTRAS,
-    },
-    "stablehome": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
-        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
-    },
-    "tinyhome": {
-        CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
-        CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
-    },
-}
+def option_overrides(backend_type: str) -> dict[str, Any]:
+    return {
+        "home-llama-3.2": {
+            CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
+            CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
+            CONF_TOOL_CALL_PREFIX: "```homeassistant",
+            CONF_TOOL_CALL_SUFFIX: "```",
+            CONF_CONTEXT_LENGTH: 131072,
+            CONF_MAX_TOOL_CALL_ITERATIONS: 0,
+            # llama cpp server doesn't support custom tool calling formats. so just use legacy tool calling
+            CONF_ENABLE_LEGACY_TOOL_CALLING: backend_type == BACKEND_TYPE_LLAMA_CPP_SERVER
+        },
+        "home-3b-v3": {
+            CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
+            CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
+            CONF_TOOL_CALL_PREFIX: "```homeassistant",
+            CONF_TOOL_CALL_SUFFIX: "```",
+            CONF_MAX_TOOL_CALL_ITERATIONS: 0,
+            # llama cpp server doesn't support custom tool calling formats. so just use legacy tool calling
+            CONF_ENABLE_LEGACY_TOOL_CALLING: backend_type == BACKEND_TYPE_LLAMA_CPP_SERVER
+        },
+        "home-3b-v2": {
+            CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
+            CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
+            CONF_TOOL_CALL_PREFIX: "```homeassistant",
+            CONF_TOOL_CALL_SUFFIX: "```",
+            CONF_MAX_TOOL_CALL_ITERATIONS: 0,
+            # no prompt formats with tool calling support, so just use legacy tool calling
+            CONF_ENABLE_LEGACY_TOOL_CALLING: True
+        },
+        "home-3b-v1": {
+            CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
+            CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
+            CONF_TOOL_CALL_PREFIX: "```homeassistant",
+            CONF_TOOL_CALL_SUFFIX: "```",
+            CONF_MAX_TOOL_CALL_ITERATIONS: 0,
+            # no prompt formats with tool calling support, so just use legacy tool calling
+            CONF_ENABLE_LEGACY_TOOL_CALLING: True
+        },
+        "home-1b-v3": {
+            CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
+            CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
+            CONF_TOOL_CALL_PREFIX: "```homeassistant",
+            CONF_TOOL_CALL_SUFFIX: "```",
+            CONF_MAX_TOOL_CALL_ITERATIONS: 0,
+            # no prompt formats with tool calling support, so just use legacy tool calling
+            CONF_ENABLE_LEGACY_TOOL_CALLING: True
+        },
+        "home-1b-v2": {
+            CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
+            CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
+            CONF_TOOL_CALL_PREFIX: "```homeassistant",
+            CONF_TOOL_CALL_SUFFIX: "```",
+            CONF_MAX_TOOL_CALL_ITERATIONS: 0,
+            # no prompt formats with tool calling support, so just use legacy tool calling
+            CONF_ENABLE_LEGACY_TOOL_CALLING: True
+        },
+        "home-1b-v1": {
+            CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
+            CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
+            CONF_TOOL_CALL_PREFIX: "```homeassistant",
+            CONF_TOOL_CALL_SUFFIX: "```",
+            CONF_MAX_TOOL_CALL_ITERATIONS: 0,
+            # no prompt formats with tool calling support, so just use legacy tool calling
+            CONF_ENABLE_LEGACY_TOOL_CALLING: True
+        },
+        "qwen3": {
+            CONF_PROMPT: DEFAULT_PROMPT_BASE,
+            CONF_TEMPERATURE: 0.6,
+            CONF_TOP_K: 20,
+            CONF_TOP_P: 0.95
+        },
+        "mistral": {
+            CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_NO_SYSTEM_PROMPT_EXTRAS,
+            CONF_MIN_P: 0.1,
+            CONF_TYPICAL_P: 0.9,
+            # no prompt formats with tool calling support, so just use legacy tool calling
+            CONF_ENABLE_LEGACY_TOOL_CALLING: True,
+        },
+        "mixtral": {
+            CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_NO_SYSTEM_PROMPT_EXTRAS,
+            CONF_MIN_P: 0.1,
+            CONF_TYPICAL_P: 0.9,
+            # no prompt formats with tool calling support, so just use legacy tool calling
+            CONF_ENABLE_LEGACY_TOOL_CALLING: True,
+        },
+        "llama-3": {
+            CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_EXTRAS,
+        },
+        "llama3": {
+            CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_EXTRAS,
+        },
+        "zephyr": {
+            CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_EXTRAS,
+            
+        },
+        "phi-3": {
+            CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_EXTRAS,
+        },
+        "command-r": {
+            CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_EXTRAS,
+        },
+        "stablehome": {
+            CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
+            CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
+        },
+        "tinyhome": {
+            CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
+            CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
+        },
+    }
 
-INTEGRATION_VERSION = "0.4.1"
+INTEGRATION_VERSION = "0.4.2"
 EMBEDDED_LLAMA_CPP_PYTHON_VERSION = "0.3.16+b6153"

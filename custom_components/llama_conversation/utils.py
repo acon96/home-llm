@@ -430,18 +430,11 @@ def parse_raw_tool_call(raw_block: str | dict, llm_api: llm.APIInstance, user_in
     if "rgb_color" in args_dict and isinstance(args_dict["rgb_color"], str):
         args_dict["rgb_color"] = [ int(x) for x in args_dict["rgb_color"][1:-1].split(",") ]
 
-    if llm_api.api.id == HOME_LLM_API_ID:
-        to_say = parsed_tool_call.pop("to_say", "")
-        tool_input = llm.ToolInput(
-            tool_name=SERVICE_TOOL_NAME,
-            tool_args=args_dict,
-        )
-    else:
-        to_say = ""
-        tool_input = llm.ToolInput(
-            tool_name=tool_name,
-            tool_args=args_dict,
-        )
+    to_say = args_dict.pop("to_say", "")
+    tool_input = llm.ToolInput(
+        tool_name=tool_name,
+        tool_args=args_dict,
+    )
 
     return tool_input, to_say
 
