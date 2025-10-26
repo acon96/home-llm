@@ -1,25 +1,27 @@
 # TODO
-- [x] proper tool calling support  
-- [ ] fix old GGUFs to support tool calling  
-- [x] home assistant component text streaming support  
-- [x] move llama-cpp build to forked repo + add support for multi backend builds (no more -noavx)  
-- [ ] new model based on qwen3 0.6b  
+- [ ] new model based on qwen3 0.6b, 1.7b and 4b    
 - [ ] new model based on gemma3 270m  
 - [ ] support AI task API  
+- [ ] vision support for remote backends  
+- [ ] vision support for local backend (llama.cpp + llava)  
 - [ ] move llamacpp to a separate process because of all the crashing  
 - [ ] optional sampling parameters in options panel (don't pass to backend if not set)  
+- [ ] update dataset so new models will work with the Assist API  
+- [ ] make ICL examples into conversation turns  
+- [ ] translate ICL examples + make better ones  
+- [ ] figure out DPO to improve response quality  
+- [x] proper tool calling support  
+- [x] fix old GGUFs to support tool calling  
+- [x] home assistant component text streaming support  
+- [x] move llama-cpp build to forked repo + add support for multi backend builds (no more -noavx)  
 - [x] support new LLM APIs  
     - rewrite how services are called  
     - handle no API selected  
     - rewrite prompts + service block formats  
     - implement new LLM API that has `HassCallService` so old models can still work  
-- [ ] update dataset so new models will work with the API  
-- [ ] make ICL examples into conversation turns  
-- [ ] translate ICL examples + make better ones  
 - [x] areas/room support  
 - [x] convert requests to aiohttp  
 - [x] detection/mitigation of too many entities being exposed & blowing out the context length  
-- [ ] figure out DPO to improve response quality  
 - [x] setup github actions to build wheels that  are optimized for RPIs
 - [x] mixtral + prompting (no fine tuning)  
     - add in context learning variables to sys prompt template
@@ -58,24 +60,6 @@
     - [x] ollama backend  
     - [x] tailored_openai backend  
     - [x] generic openai responses backend  
-- [ ] fix and re-upload all compatible old models (+ upload all original safetensors)  
+- [x] fix and re-upload all compatible old models (+ upload all original safetensors)  
 - [x] config entry migration function  
 - [x] re-write setup guide  
-
-## more complicated ideas
-- [ ] "context requests"  
-    - basically just let the model decide what RAG/extra context it wants  
-    - the model predicts special tokens as the first few tokens of its output  
-    - the requested content is added to the context after the request tokens and then generation continues  
-    - needs more complicated training b/c multi-turn + there will be some weird masking going on for training the responses properly  
-- [ ] integrate with llava for checking camera feeds in home assistant
-    - can check still frames to describe what is there
-    - for remote backends that support images, could also support this
-    - depends on context requests because we don't want to feed camera feeds into the context every time
-- [ ] RAG for getting info for setting up new devices  
-    - set up vectordb  
-    - ingest home assistant docs  
-    - "context request" from above to initiate a RAG search  
-- [ ] train the model to respond to house events (HA is calling these AI tasks)  
-    - present the model with an event + a "prompt" from the user of what you want it to do (i.e. turn on the lights when I get home = the model turns on lights when your entity presence triggers as being home)  
-    - basically lets you write automations in plain english  
