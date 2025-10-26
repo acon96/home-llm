@@ -131,12 +131,9 @@ class OllamaAPIClient(LocalLLMClient):
             tool_calls = [ llm.ToolInput(tool_name=x["function"]["name"], tool_args=x["function"]["arguments"]) for x in raw_tool_calls] if raw_tool_calls else None
             stop_reason = response_json.get("done_reason")
 
-        _LOGGER.debug(f"{response=} {tool_calls=}")
+        # _LOGGER.debug(f"{response=} {tool_calls=}")
 
         return response, tool_calls
-        # return TextGenerationResult(
-        #     response=response, tool_calls=tool_calls, stop_reason=stop_reason, response_streamed=True
-        # )
 
     def _generate_stream(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None, user_input: conversation.ConversationInput, entity_options: Dict[str, Any]) -> AsyncGenerator[TextGenerationResult, None]:
         model_name = entity_options.get(CONF_CHAT_MODEL, "")

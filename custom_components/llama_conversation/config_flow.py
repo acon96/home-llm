@@ -148,7 +148,7 @@ from .const import (
     DOMAIN,
     HOME_LLM_API_ID,
     DEFAULT_OPTIONS,
-    OPTIONS_OVERRIDES,
+    option_overrides,
     RECOMMENDED_CHAT_MODELS,
     EMBEDDED_LLAMA_CPP_PYTHON_VERSION
 )
@@ -1120,12 +1120,14 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
         entry = self._get_entry()
         backend_type = entry.data[CONF_BACKEND_TYPE]
 
-        if not self.model_config:
+        if CONF_PROMPT not in self.model_config:
             # determine selected language from model config or parent options
             selected_language = self.model_config.get(
                 CONF_SELECTED_LANGUAGE, entry.options.get(CONF_SELECTED_LANGUAGE, "en")
             )
             model_name = self.model_config.get(CONF_CHAT_MODEL, "").lower()
+
+            OPTIONS_OVERRIDES = option_overrides(backend_type)
 
             selected_default_options = {**DEFAULT_OPTIONS}
             for key in OPTIONS_OVERRIDES.keys():

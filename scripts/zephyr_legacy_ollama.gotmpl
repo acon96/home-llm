@@ -1,0 +1,11 @@
+{{- range .Messages }}<|{{ .Role }}|>
+{{ .Content }}
+{{- if eq .Role "system" }}
+Services:
+{{- range $.Tools }} {{ .Function.Name }}({{- range $key, $value := .Function.Parameters.Properties }}{{- if ne $key "target_device" }}{{ $key }},{{- end }}{{- end }}),{{- end }}
+{{- else if eq .Role "assistant" }}
+{{ if .ToolCalls }}```homeassistant
+{{ range .ToolCalls }}{"name": "{{ .Function.Name }}", "arguments": {{ .Function.Arguments }}}
+{{ end }}```{{ end }}
+{{- end }}<|endoftext|>
+{{ end }}<|assistant|>
