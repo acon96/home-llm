@@ -291,15 +291,25 @@ def option_overrides(backend_type: str) -> dict[str, Any]:
             # no prompt formats with tool calling support, so just use legacy tool calling
             CONF_ENABLE_LEGACY_TOOL_CALLING: True
         },
+        "qwen3": {
+            CONF_PROMPT: DEFAULT_PROMPT_BASE,
+            CONF_TEMPERATURE: 0.6,
+            CONF_TOP_K: 20,
+            CONF_TOP_P: 0.95
+        },
         "mistral": {
             CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_NO_SYSTEM_PROMPT_EXTRAS,
             CONF_MIN_P: 0.1,
             CONF_TYPICAL_P: 0.9,
+            # no prompt formats with tool calling support, so just use legacy tool calling
+            CONF_ENABLE_LEGACY_TOOL_CALLING: True,
         },
         "mixtral": {
             CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_NO_SYSTEM_PROMPT_EXTRAS,
             CONF_MIN_P: 0.1,
             CONF_TYPICAL_P: 0.9,
+            # no prompt formats with tool calling support, so just use legacy tool calling
+            CONF_ENABLE_LEGACY_TOOL_CALLING: True,
         },
         "llama-3": {
             CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_EXTRAS,
@@ -309,6 +319,7 @@ def option_overrides(backend_type: str) -> dict[str, Any]:
         },
         "zephyr": {
             CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_EXTRAS,
+            
         },
         "phi-3": {
             CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_EXTRAS,
