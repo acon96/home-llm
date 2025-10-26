@@ -191,7 +191,9 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         return endpoint, request_params
 
     def _extract_response(self, response_json: dict, llm_api: llm.APIInstance | None, user_input: conversation.ConversationInput) -> Tuple[Optional[str], Optional[List[llm.ToolInput]]]:
-        if len(response_json["choices"]) == 0: # finished
+        if "choices" not in response_json or len(response_json["choices"]) == 0: # finished
+            _LOGGER.warning("Response missing or empty 'choices'. Keys present: %s. Full response: %s",
+                            list(response_json.keys()), response_json)
             return None, None
         
         choice = response_json["choices"][0]
