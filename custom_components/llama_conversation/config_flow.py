@@ -1139,8 +1139,8 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
             selected_default_options[CONF_PROMPT] = build_prompt_template(
                 selected_language, str(selected_default_options.get(CONF_PROMPT, DEFAULT_PROMPT))
             )
-
-            self.model_config = selected_default_options
+            
+            self.model_config = {**selected_default_options, **self.model_config}
 
         schema = vol.Schema(
             local_llama_config_option_schema(
