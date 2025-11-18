@@ -203,7 +203,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
             streamed = False
         elif response_json["object"] == "chat.completion.chunk":
             response_text = choice["delta"].get("content", "")
-            if "tool_calls" in choice["delta"]:
+            if "tool_calls" in choice["delta"] and choice["delta"]["tool_calls"] is not None:
                 tool_calls = []
                 for call in choice["delta"]["tool_calls"]:
                     tool_call, to_say = parse_raw_tool_call(

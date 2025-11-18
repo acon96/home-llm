@@ -66,7 +66,7 @@ class TextGenerationWebuiClient(GenericOpenAIAPIClient):
                 headers["Authorization"] = f"Bearer {self.admin_key}"
 
             async with session.get(
-                f"{self.api_host}/v1/internal/model/info",
+                f"{self.api_host}/internal/model/info",
                 headers=headers
             ) as response:
                 response.raise_for_status()
@@ -80,7 +80,7 @@ class TextGenerationWebuiClient(GenericOpenAIAPIClient):
                 _LOGGER.info(f"Model is not {model_name} loaded on the remote backend. Loading it now...")
 
             async with session.post(
-                f"{self.api_host}/v1/internal/model/load",
+                f"{self.api_host}/internal/model/load",
                 json={
                     "model_name": model_name,
                 },
