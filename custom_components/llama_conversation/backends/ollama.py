@@ -135,7 +135,7 @@ class OllamaAPIClient(LocalLLMClient):
 
         return response, tool_calls
 
-    def _generate_stream(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None, user_input: conversation.ConversationInput, entity_options: Dict[str, Any]) -> AsyncGenerator[TextGenerationResult, None]:
+    def _generate_stream(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None, agent_id: str, entity_options: Dict[str, Any]) -> AsyncGenerator[TextGenerationResult, None]:
         model_name = entity_options.get(CONF_CHAT_MODEL, "")
         context_length = entity_options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
         max_tokens = entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
@@ -199,4 +199,4 @@ class OllamaAPIClient(LocalLLMClient):
             except aiohttp.ClientError as err:
                 raise HomeAssistantError(f"Failed to communicate with the API! {err}") from err
 
-        return self._async_parse_completion(llm_api, user_input, entity_options, anext_token=anext_token())
+        return self._async_parse_completion(llm_api, agent_id, entity_options, anext_token=anext_token())

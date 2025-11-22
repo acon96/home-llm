@@ -419,7 +419,7 @@ class LlamaCppClient(LocalLLMClient):
     def _generate_stream(self, 
                          conversation: List[conversation.Content],
                          llm_api: llm.APIInstance | None,
-                         user_input: conversation.ConversationInput,
+                         agent_id: str,
                          entity_options: dict[str, Any],
                         ) -> AsyncGenerator[TextGenerationResult, None]:
         """Async generator that yields TextGenerationResult as tokens are produced."""
@@ -434,7 +434,7 @@ class LlamaCppClient(LocalLLMClient):
 
         _LOGGER.debug(f"Options: {entity_options}")
 
-        messages = get_oai_formatted_messages(conversation)
+        messages = get_oai_formatted_messages(conversation, user_content_as_list=True)
         tools = None
         if llm_api:
             tools = get_oai_formatted_tools(llm_api, self._async_get_all_exposed_domains())
@@ -464,5 +464,5 @@ class LlamaCppClient(LocalLLMClient):
                     tool_calls = chunk["choices"][0]["delta"].get("tool_calls")
                     yield content, tool_calls
 
-        return self._async_parse_completion(llm_api, user_input, entity_options, next_token=next_token())
+        return self._async_parse_completion(llm_api, agent_id, entity_options, next_token=next_token())
 

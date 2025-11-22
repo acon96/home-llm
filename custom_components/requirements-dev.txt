@@ -1,5 +1,5 @@
 # types from Home Assistant
-homeassistant>=2024.8.3
+homeassistant>=2025.8.3
 hassil
 home-assistant-intents
 

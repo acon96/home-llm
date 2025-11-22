@@ -9,11 +9,14 @@ import multiprocessing
 import voluptuous as vol
 import webcolors
 import json
+import base64
+from pathlib import Path
 from typing import Any, Dict, List, Sequence, Tuple, cast
 from webcolors import CSS3
 from importlib.metadata import version
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.components import conversation
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import intent, llm, aiohttp_client
@@ -24,12 +27,12 @@ from homeassistant.util.package import install_package, is_installed
 from voluptuous_openapi import convert
 
 from .const import (
+    DOMAIN,
     EMBEDDED_LLAMA_CPP_PYTHON_VERSION,
     ALLOWED_SERVICE_CALL_ARGUMENTS,
     SERVICE_TOOL_ALLOWED_SERVICES,
     SERVICE_TOOL_ALLOWED_DOMAINS,
     HOME_LLM_API_ID,
-    SERVICE_TOOL_NAME
 )
 
 from typing import TYPE_CHECKING
@@ -296,48 +299,64 @@ def get_oai_formatted_tools(llm_api: llm.APIInstance, domains: list[str]) -> Lis
     return result
 
 def get_oai_formatted_messages(conversation: Sequence[conversation.Content], user_content_as_list: bool = False, tool_args_to_str: bool = True) -> List[ChatCompletionRequestMessage]:
-        messages: List[ChatCompletionRequestMessage] = []
-        for message in conversation:
-            if message.role == "system":
-                messages.append({
-                    "role": "system",
-                    "content": message.content
-                })
-            elif message.role == "user":
-                if user_content_as_list:
-                    messages.append({
-                        "role": "user",
-                        "content": [{ "type": "text", "text": message.content }]
-                    })
-                else:
-                    messages.append({
-                        "role": "user",
-                        "content": message.content
-                    })
-            elif message.role == "assistant":
-                if message.tool_calls:
-                    messages.append({
-                        "role": "assistant",
-                        "content": str(message.content),
-                        "tool_calls": [
-                            {
-                                "type" : "function",
-                                "id": t.id,
-                                "function": {
-                                    "arguments": cast(str, json.dumps(t.tool_args) if tool_args_to_str else t.tool_args),
-                                    "name": t.tool_name,
-                                }
-                            } for t in message.tool_calls
-                        ]
-                    })
-            elif message.role == "tool_result":
-                messages.append({
-                    "role": "tool",
-                    "content": json.dumps(message.tool_result),
-                    "tool_call_id": message.tool_call_id
-                })
+    messages: List[ChatCompletionRequestMessage] = []
+    for message in conversation:
+        if message.role == "system":
+            messages.append({
+                "role": "system",
+                "content": message.content
+            })
+        elif message.role == "user":
+            images: list[str] = []
+            for attachment in message.attachments or ():
+                if not attachment.mime_type.startswith("image/"):
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="unsupported_attachment_type",
+                    )
+                images.append(get_file_contents_base64(attachment.path))
 
-        return messages
+            if user_content_as_list:
+                content = [{ "type": "text", "text": message.content }]
+                for image in images:
+                    content.append({ "type": "image_url", "image_url": {"url": image } })
+
+                messages.append({
+                    "role": "user",
+                    "content": content
+                })
+            else:
+                message = {
+                    "role": "user",
+                    "content": message.content
+                }
+                if images:
+                    message["images"] = images
+                messages.append(message)
+        elif message.role == "assistant":
+            if message.tool_calls:
+                messages.append({
+                    "role": "assistant",
+                    "content": str(message.content),
+                    "tool_calls": [
+                        {
+                            "type" : "function",
+                            "id": t.id,
+                            "function": {
+                                "arguments": cast(str, json.dumps(t.tool_args) if tool_args_to_str else t.tool_args),
+                                "name": t.tool_name,
+                            }
+                        } for t in message.tool_calls
+                    ]
+                })
+        elif message.role == "tool_result":
+            messages.append({
+                "role": "tool",
+                "content": json.dumps(message.tool_result),
+                "tool_call_id": message.tool_call_id
+            })
+
+    return messages
 
 def get_home_llm_tools(llm_api: llm.APIInstance, domains: list[str]) -> List[Dict[str, Any]]:
     service_dict = llm_api.api.hass.services.async_services()
@@ -377,7 +396,7 @@ def get_home_llm_tools(llm_api: llm.APIInstance, domains: list[str]) -> List[Dic
 
     return tools
 
-def parse_raw_tool_call(raw_block: str | dict, llm_api: llm.APIInstance, user_input: conversation.ConversationInput) -> tuple[llm.ToolInput | None, str | None]:
+def parse_raw_tool_call(raw_block: str | dict, llm_api: llm.APIInstance, agent_id: str) -> tuple[llm.ToolInput | None, str | None]:
     if isinstance(raw_block, dict):
         parsed_tool_call = raw_block
     else:
@@ -407,7 +426,7 @@ def parse_raw_tool_call(raw_block: str | dict, llm_api: llm.APIInstance, user_in
         schema_to_validate(parsed_tool_call)
     except vol.Error as ex:
         _LOGGER.info(f"LLM produced an improperly formatted response: {repr(ex)}")
-        raise MalformedToolCallException(user_input.agent_id, "", "unknown", str(raw_block), "Tool call was not properly formatted")
+        raise MalformedToolCallException(agent_id, "", "unknown", str(raw_block), "Tool call was not properly formatted")
 
     # try to fix certain arguments
     args_dict = parsed_tool_call if llm_api.api.id == HOME_LLM_API_ID else parsed_tool_call["arguments"]
@@ -420,7 +439,7 @@ def parse_raw_tool_call(raw_block: str | dict, llm_api: llm.APIInstance, user_in
             try:
                 args_dict = json.loads(args_dict)
             except json.JSONDecodeError:
-                raise MalformedToolCallException(user_input.agent_id, "", tool_name, str(args_dict), "Tool arguments were not properly formatted JSON")
+                raise MalformedToolCallException(agent_id, "", tool_name, str(args_dict), "Tool arguments were not properly formatted JSON")
 
     # make sure brightness is 0-255 and not a percentage
     if "brightness" in args_dict and 0.0 < args_dict["brightness"] <= 1.0:
@@ -478,3 +497,12 @@ def is_valid_hostname(host: str) -> bool:
     domain_pattern = re.compile(r"^[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?)*\.[a-z]{2,}$")
 
     return bool(domain_pattern.match(host))
+
+
+def get_file_contents_base64(file_path: Path) -> str:
+    """Reads a file and returns its contents encoded in base64."""
+    with open(file_path, "rb") as f:
+        encoded_bytes = base64.b64encode(f.read())
+        encoded_str = encoded_bytes.decode('utf-8')
+    
+    return encoded_str

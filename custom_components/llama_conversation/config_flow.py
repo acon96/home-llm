@@ -400,6 +400,7 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
         """Return subentries supported by this integration."""
         return {
             "conversation": LocalLLMSubentryFlowHandler,
+            # "ai_task_data": LocalLLMSubentryFlowHandler,
         }
 
 
@@ -836,7 +837,7 @@ def local_llama_config_option_schema(
         })
     elif backend_type == BACKEND_TYPE_OLLAMA:
         result.update({
-                vol.Required(
+            vol.Required(
                 CONF_MAX_TOKENS,
                 description={"suggested_value": options.get(CONF_MAX_TOKENS)},
                 default=DEFAULT_MAX_TOKENS,
@@ -924,6 +925,8 @@ def local_llama_config_option_schema(
                 default=DEFAULT_MAX_TOOL_CALL_ITERATIONS,
             ): int,
         })
+    elif subentry_type == "ai_task_data":
+        pass # no additional options for ai_task_data for now
 
     # sort the options
     global_order = [

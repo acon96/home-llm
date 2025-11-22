@@ -119,7 +119,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
     def _generate_stream(self, 
                          conversation: List[conversation.Content],
                          llm_api: llm.APIInstance | None,
-                         user_input: conversation.ConversationInput,
+                         agent_id: str,
                          entity_options: dict[str, Any]) -> AsyncGenerator[TextGenerationResult, None]:
         model_name = entity_options[CONF_CHAT_MODEL]
         temperature = entity_options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
@@ -128,7 +128,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         enable_legacy_tool_calling = entity_options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
 
         endpoint, additional_params = self._chat_completion_params(entity_options)
-        messages = get_oai_formatted_messages(conversation)
+        messages = get_oai_formatted_messages(conversation, user_content_as_list=True)
 
         request_params = {
             "model": model_name,
@@ -175,7 +175,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
                             break
 
                         if chunk and chunk.strip():
-                            to_say, tool_calls = self._extract_response(json.loads(chunk), llm_api, user_input)
+                            to_say, tool_calls = self._extract_response(json.loads(chunk), llm_api, agent_id)
                             if to_say or tool_calls:
                                 yield to_say, tool_calls
             except asyncio.TimeoutError as err:
@@ -183,14 +183,14 @@ class GenericOpenAIAPIClient(LocalLLMClient):
             except aiohttp.ClientError as err:
                 raise HomeAssistantError(f"Failed to communicate with the API! {err}") from err
 
-        return self._async_parse_completion(llm_api, user_input, entity_options, anext_token=anext_token())
+        return self._async_parse_completion(llm_api, agent_id, entity_options, anext_token=anext_token())
     
     def _chat_completion_params(self, entity_options: dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
         request_params = {}
         endpoint = "/chat/completions"
         return endpoint, request_params
 
-    def _extract_response(self, response_json: dict, llm_api: llm.APIInstance | None, user_input: conversation.ConversationInput) -> Tuple[Optional[str], Optional[List[llm.ToolInput]]]:
+    def _extract_response(self, response_json: dict, llm_api: llm.APIInstance | None, agent_id: str) -> Tuple[Optional[str], Optional[List[llm.ToolInput]]]:
         if "choices" not in response_json or len(response_json["choices"]) == 0: # finished
             _LOGGER.warning("Response missing or empty 'choices'. Keys present: %s. Full response: %s",
                             list(response_json.keys()), response_json)
@@ -203,11 +203,11 @@ class GenericOpenAIAPIClient(LocalLLMClient):
             streamed = False
         elif response_json["object"] == "chat.completion.chunk":
             response_text = choice["delta"].get("content", "")
-            if "tool_calls" in choice["delta"]:
+            if "tool_calls" in choice["delta"] and choice["delta"]["tool_calls"] is not None:
                 tool_calls = []
                 for call in choice["delta"]["tool_calls"]:
                     tool_call, to_say = parse_raw_tool_call(
-                        call["function"], llm_api, user_input)
+                        call["function"], llm_api, agent_id)
                     
                     if tool_call:
                         tool_calls.append(tool_call)
@@ -366,7 +366,7 @@ class GenericOpenAIResponsesAPIClient(LocalLLMClient):
     async def _generate(self, 
                         conversation: List[conversation.Content],
                         llm_api: llm.APIInstance | None,
-                        user_input: conversation.ConversationInput,
+                        agent_id: str,
                         entity_options: dict[str, Any]) -> TextGenerationResult:
         """Generate a response using the OpenAI-compatible Responses API (non-streaming endpoint wrapped as a single-chunk stream)."""
 
