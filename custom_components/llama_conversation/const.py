@@ -337,5 +337,5 @@ def option_overrides(backend_type: str) -> dict[str, Any]:
         },
     }
 
-INTEGRATION_VERSION = "0.4.3"
+INTEGRATION_VERSION = "0.4.4"
 EMBEDDED_LLAMA_CPP_PYTHON_VERSION = "0.3.16+b6153"

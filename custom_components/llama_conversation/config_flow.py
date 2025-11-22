@@ -400,7 +400,7 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
         """Return subentries supported by this integration."""
         return {
             "conversation": LocalLLMSubentryFlowHandler,
-            "ai_task_data": LocalLLMSubentryFlowHandler,
+            # "ai_task_data": LocalLLMSubentryFlowHandler,
         }
 
 
