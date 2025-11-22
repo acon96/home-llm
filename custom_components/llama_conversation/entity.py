@@ -518,6 +518,10 @@ class LocalLLMClient:
                 message = "No tools were provided. If the user requests you interact with a device, tell them you are unable to do so."
                 render_variables["tools"] = [message]
                 render_variables["formatted_tools"] = message
+        else:
+            # Tools are passed via the API not the prompt
+            render_variables["tools"] = []
+            render_variables["formatted_tools"] = ""
 
         # only pass examples if there are loaded examples + an API was exposed
         if self.in_context_examples and llm_api:
