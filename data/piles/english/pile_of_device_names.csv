@@ -645,3 +645,117 @@ timer.baby_nap_timer,"Baby nap monitor"
 timer.tea_steeping,"Tea steeping countdown"
 timer.game_timer,"Board game timer"
 timer.morning_coffee,"Morning coffee brew timer"
+light.basement_bar_cool,Basement Bar Cool Light
+light.upstairs_craft_room_zigbee,Upstairs Craft Room Light
+light.downstairs_music_room_homekit,Downstairs Music Room Light
+light.front_laundry_ge,Front Laundry Light
+light.back_exercise_warm,Back Exercise Warm Light
+light.kitchen_herb_garden_cool,Kitchen Herb Garden Cool Light
+light.upstairs_meditation_zwave,Upstairs Meditation Light
+light.downstairs_pet_area_mqtt,Downstairs Pet Area Light
+light.front_entry_closet_homekit,Front Entry Closet Light
+light.back_tool_room_lifx,Back Tool Room Light
+light.garage_paint_booth_warm,Garage Paint Booth Warm Light
+light.upstairs_craft_table_zigbee,Upstairs Craft Table Light
+light.downstairs_wine_bar_homekit,Downstairs Wine Bar Light
+light.front_potting_shed_ge,Front Potting Shed Light
+light.back_aquarium_stand_warm,Back Aquarium Stand Warm Light
+blinds.conservatory,Conservatory Blinds
+blinds.morning_room,Morning room blinds
+blinds.reading_nook,Reading nook blinds
+blinds.meditation_space,Meditation space blinds
+blinds.art_studio,Art studio blinds
+blinds.music_room,Music room blinds
+blinds.wine_cellar_window,Wine cellar window blinds
+blinds.workshop_skylight,Workshop skylight blinds
+blinds.greenhouse_south,South greenhouse blinds
+blinds.library_bay_window,Library bay window blinds
+fan.wine_cellar,Wine cellar fan
+fan.art_studio,Art studio fan
+fan.mudroom,Mudroom fan
+fan.conservatory,Conservatory fan
+fan.greenhouse,Greenhouse fan
+fan.library,Library fan
+fan.music_room,Music room fan
+fan.workshop_ceiling,Workshop ceiling fan
+fan.exercise_room,Exercise room fan
+fan.craft_room,Craft room fan
+garage_door.art_studio,Art studio door
+garage_door.pool_house,Pool house door
+garage_door.equipment_storage,Equipment storage door
+garage_door.art_gallery,Art gallery door
+garage_door.pottery_studio,Pottery studio door
+garage_door.woodshop,Woodshop door
+garage_door.auto_bay_left,Left auto bay door
+garage_door.auto_bay_right,Right auto bay door
+garage_door.detached_garage,Detached garage door
+garage_door.alley_access,Alley access door
+lock.mudroom_entry,Mudroom entry lock
+lock.solarium,Solarium Lock
+lock.servants_entrance,Servants entrance lock
+lock.breezeway,Breezeway Lock
+lock.equipment_room,Equipment room lock
+lock.art_gallery,Art Gallery Lock
+lock.trophy_room,Trophy room lock
+lock.panic_room,Panic Room Lock
+lock.server_room,Server room lock
+lock.craft_closet,Craft closet lock
+lock.hvac_room,HVAC room lock
+lock.electrical_panel,Electrical panel lock
+lock.water_heater_closet,Water heater closet lock
+lock.recycling_area,Recycling area lock
+lock.pet_door_smart,Smart pet door lock
+media_player.exercise_room,Exercise Room Media
+media_player.craft_room_radio,Craft Room Radio
+media_player.greenhouse_speaker,Greenhouse Speaker
+media_player.wine_cellar_audio,Wine Cellar Audio System
+media_player.library_audiobook,Library Audiobook Player
+media_player.meditation_room,Meditation Room Media
+media_player.art_studio_spotify,Art Studio Spotify Player
+media_player.workshop_podcast,Workshop Podcast Player
+media_player.pool_house_tv,Pool House Television
+media_player.cabana_soundbar,Cabana Soundbar
+switch.pool_heater,Pool Heater Switch
+switch.fountain_pump,Fountain Pump Switch
+switch.pond_aerator,Pond aerator switch
+switch.christmas_lights,Christmas lights switch
+switch.landscape_uplighting,Landscape uplighting control
+switch.driveway_heating,Driveway heating switch
+switch.gutter_heating,Gutter heating control
+switch.hot_tub_jets,Hot tub jets switch
+switch.sauna_heater,Sauna heater control
+switch.steam_shower,Steam shower switch
+switch.towel_warmer,Towel warmer control
+switch.wine_cooler,Wine cooler switch
+switch.aquarium_filter,Aquarium filter switch
+switch.pet_fountain,Pet fountain control
+switch.bird_bath_heater,Bird bath heater switch
+climate.wine_cellar_cooling,Wine Cellar Climate Control
+climate.greenhouse_climate,Greenhouse Climate System
+climate.server_room_cooling,Server Room Cooling
+climate.art_studio_climate,Art Studio Climate Control
+climate.humidor_control,Humidor Climate Control
+vacuum.mudroom_entry,Mudroom entry vacuum
+vacuum.workshop_floor,Workshop floor cleaner
+vacuum.craft_room_helper,Craft room cleaning bot
+vacuum.wine_cellar_vac,Wine cellar vacuum
+vacuum.greenhouse_sweeper,Greenhouse floor sweeper
+vacuum.library_quiet_mode,Library quiet vacuum
+vacuum.art_studio_cleaner,Art studio dust collector
+vacuum.exercise_equipment_area,Exercise equipment area cleaner
+vacuum.pet_feeding_station,Pet feeding station vacuum
+vacuum.laundry_room_corners,Laundry room corner cleaner
+todo.pet_care_schedule,Pet care scheduler
+todo.plant_watering_tracker,Plant watering tracker
+todo.medication_reminders,Medication reminder list
+todo.seasonal_maintenance,Seasonal maintenance checklist
+todo.gift_ideas_list,Gift ideas organizer
+todo.meal_planning,Weekly meal planner
+todo.home_inventory,Home inventory tracker
+timer.pizza_oven,Pizza oven timer
+timer.espresso_machine,Espresso machine timer
+timer.sprinkler_system,Sprinkler system timer
+timer.pool_filter,Pool filter cycle timer
+timer.dehumidifier_basement,Basement dehumidifier timer
+timer.pet_feeder,Automatic pet feeder timer
+timer.aquarium_lights,Aquarium lighting timer
