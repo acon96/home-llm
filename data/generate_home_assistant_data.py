@@ -307,26 +307,14 @@ SUPPORTED_DEVICES = {
         possible_states=[
             (STATE_ON, 0.5),
             (STATE_OFF, 0.5)
-        ],
-        services={
-            "turn_on": [],
-            "turn_off": [],
-            "toggle": []
-        },
+        ]
     ),
     "fan": DeviceType(
         name="fan",
         possible_states=[
             (STATE_ON, 0.5),
             (STATE_OFF, 0.5)
-        ],
-        services={
-            "turn_on": [],
-            "turn_off": [],
-            "toggle": [],
-            "increase_speed": [],
-            "decrease_speed": [],
-        },
+        ]
     ),
     "garage_door": DeviceType(
         name="garage_door",
@@ -335,13 +323,7 @@ SUPPORTED_DEVICES = {
             (STATE_CLOSED, 0.49),
             (STATE_OPENING, 0.01),
             (STATE_CLOSING, 0.01)
-        ],
-        services={
-            "open_cover": [],
-            "close_cover": [],
-            "stop_cover": [],
-            "toggle": [],
-        },
+        ]
     ),
     "blinds": DeviceType(
         name="blinds",
@@ -350,24 +332,14 @@ SUPPORTED_DEVICES = {
             (STATE_CLOSED, 0.49),
             (STATE_OPENING, 0.01),
             (STATE_CLOSING, 0.01)
-        ],
-        services={
-            "open_cover": [],
-            "close_cover": [],
-            "stop_cover": [],
-            "toggle": [],
-        },
+        ]
     ),
     "lock": DeviceType(
         name="lock",
         possible_states=[
             (STATE_LOCKED, 0.5),
             (STATE_UNLOCKED, 0.5),
-        ],
-        services={
-            "lock": [],
-            "unlock": [],
-        },
+        ]
     ),
     "media_player": MediaPlayerDeviceType(),
     "climate": ClimateDeviceType(),
@@ -379,13 +351,7 @@ SUPPORTED_DEVICES = {
             (STATE_RETURNING, 0.1),
             (STATE_IDLE, 0.05),
             (STATE_PAUSED, 0.05),
-        ],
-        services={
-            "start": [],
-            "pause": [],
-            "stop": [],
-            "return_to_base": [],
-        },
+        ]
     ),
     "timer": DeviceType(
         name="timer",
@@ -639,8 +605,8 @@ def generate_templated_example(template: dict, persona: str, max_devices: int = 
         )
 
         question = question_template.replace("<device_name>", chosen_devices[0]["description"])
-        answer = [ answer_template.replace("<device_name>", chosen_devices[0]["description"]) ]
-    else:        
+        answer = answer_template.replace("<device_name>", chosen_devices[0]["description"])
+    else:
         question = question_template
         answers = []
         for i in range(len(template_device_types)):
