@@ -20,7 +20,7 @@ This dataset contains a list of requests and responses for a user interacting wi
 
 This dataset is NOT distributed as a static file, but as a Python script. This is due to the multitude of different formats that are used in the LLM fine-tuning ecosystem. The goal is to be able to support using this dataset to fine-tune any desired model, and to support that, you need to be able to generate the dataset in the exact format that matches the model you want to fine-tune.
 
-The dataset is generated from the different CSV "piles". The "piles" contain different chunks of requests that are assembled into a final context that is presented to the LLM. For example, `piles/<language>/pile_of_device_names.csv` contains only names of various devices to be used as part of context as well as inserted into `piles/<language>/pile_of_templated_actions.csv` and `piles/<language>/pile_of_status_requests.csv`. The logic for assembling the final dataset from the piles is contained in [generate_home_assistant_data.py](./generate_home_assistant_data.py).
+The dataset is generated from the different CSV "piles". The "piles" contain different chunks of requests that are assembled into a final context that is presented to the LLM. For example, `piles/<language>/pile_of_device_names.csv` contains only names of various devices to be used as part of context as well as inserted into `piles/<language>/pile_of_templated_actions.csv` and `piles/<language>/pile_of_status_requests.csv`. The logic for assembling the final dataset from the piles is contained in [generate_data.py](./generate_data.py).
 
 ## Prepare environment
 
@@ -36,16 +36,15 @@ pip3 install pandas==2.2.2 datasets==2.20.0 webcolors==1.13 babel==2.15.0
 
 ## Generating the dataset from piles
 
-`python3 generate_home_assistant_data.py --train --test --large --sharegpt`
+`python3 generate_data.py --train --test --large --sharegpt`
 
 Supported dataset splits are `--test`, `--train`, & `--sample`
 Arguments to set the train dataset size are `--small`, `--medium`, `--large`, & `--xl`.
-Supported formats are `--raw_corpus` (chatml formatted) & `--sharegpt`
 Languages can be enabled using `--language english german french spanish polish`
 
 ## Merging with other instruct-datasets for training
 
-`python3 generate_home_assistant_data.py --merge <dataset>`
+`python3 generate_data.py --merge <dataset>`
 
 Supported datasets right now are: 
 - `alpaca`
@@ -70,7 +69,7 @@ Generating the full dataset using the python script will print out a warning for
 
 ## Adding new Home Assistant functionality
 TODO
-<!-- In order to add new home assistant device types, you will need to add data to a handful of piles, as well as make small modifications to the `generate_home_assistant_data.py` script.
+<!-- In order to add new home assistant device types, you will need to add data to a handful of piles, as well as make small modifications to the `generate_data.py` script.
 1. Add 15-30 new device names with the new type to the `pile_of_device_names.csv`. This should be an entity_id and a 'friendly name'
 2. Add 
  -->
