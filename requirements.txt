@@ -6,7 +6,7 @@ bitsandbytes>=0.45.2
 trl>=0.14.0
 webcolors>=1.13
 pandas>=2.2.3
-# flash-attn
+flash-attn
 sentencepiece>=0.2.0
 deep-translator>=1.11.4
 langcodes>=3.5.0
