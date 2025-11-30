@@ -4,7 +4,7 @@ datasets>=3.2.0
 peft>=0.14.0
 bitsandbytes>=0.45.2
 trl>=0.14.0
-webcolors>=1.13
+webcolors>=24.8.0
 pandas>=2.2.3
 # flash-attn
 sentencepiece>=0.2.0
