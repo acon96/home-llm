@@ -8,6 +8,11 @@ from typing import Callable
 from tqdm import tqdm
 import webcolors
 
+# ensure we can import from the data/ directory
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 from device_types import *
 from prompting import generate_system_prompt, USER_INSTRUCTION_PROMPT
 from utils import get_random_response, generate_random_parameter, closest_color, get_dataset_piles, NoResponseAvailableException

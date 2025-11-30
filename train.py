@@ -71,6 +71,7 @@ class TrainingRunArguments:
     # token options
     add_pad_token: bool = field(default=False, metadata={"help": "If set, a pad token will be added to the tokenizer's vocabulary"})
     add_chatml_tokens: bool = field(default=False, metadata={"help": "If set, tokens for the ChatML format will be added specifically"})
+    add_tool_calling_tokens: bool = field(default=False, metadata={"help": "If set, tokens for tool calling will be added specifically"})
     add_chatml_prompt_template: bool = field(default=False, metadata={"help": "If set, the ChatML prompt template will be set as the model's Jinja2 template"})
     prefix_ids: Optional[str] = field(default=None, metadata={"help": "Determine the prefix tokens that surround the response from the assistant for SFT if model can not correctly recognize response."})
     suffix_ids: Optional[str] = field(default=None, metadata={"help": "Determine the suffix tokens that surround the response from the assistant for SFT if model can not correctly recognize response."})
@@ -448,15 +449,14 @@ def do_training_run(training_run_args: TrainingRunArguments):
         model.config.bos_token_id = tokenizer.bos_token_id
         model.config.eos_token_id = tokenizer.eos_token_id
 
+    if training_run_args.add_tool_calling_tokens:
+        tokenizer.add_special_tokens({
+            'additional_special_tokens': ['<tool_call>', '</tool_call>']
+        })
+
     if training_run_args.add_chatml_prompt_template:
-        tokenizer.chat_template = (
-            "{% for message in messages %}"
-            "{{'<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n'}}"
-            "{% endfor %}"
-            "{% if add_generation_prompt %}"
-            "{{ '<|im_start|>assistant\n' }}"
-            "{% endif %}"
-        )
+        with open("scripts/chatml_template.j2", "r") as f:
+            tokenizer.chat_template = f.read()
 
     # resize embeddings if added tokens require it
     embeddings_len = math.ceil(len(tokenizer) / 32) * 32
@@ -474,8 +474,7 @@ def do_training_run(training_run_args: TrainingRunArguments):
         target_modules = training_run_args.lora_modules.split(",") if training_run_args.lora_modules else None
         modules_to_save = training_run_args.lora_modules_to_save.split(",") if training_run_args.lora_modules_to_save else None
         peft_config = LoraConfig(
-            task_type=TaskType.CAUSAL_LM,
-            inference_mode=False,
+            task_type=TaskType.            inference_mode=False,
             r=training_run_args.lora_rank,
             lora_alpha=training_run_args.lora_alpha,
             lora_dropout=training_run_args.lora_dropout,
