@@ -66,6 +66,7 @@ def generate_random_parameter(param_name, piles_of_data):
     
     return param_generator()
 
+# FIXME: return 2 responses, 1 to confirm the action and one to confirm completion of the action
 def get_random_response(pile_of_responses, *, service: str, persona: str, question_template: str, short: bool) -> str:
 
     required_vars = list(set([var for var in var_pattern.findall(question_template) if "device_name" not in var]))
