@@ -4,3 +4,6 @@ pandas>=2.2.3
 deep-translator>=1.11.4
 langcodes>=3.5.0
 babel>=2.15.0
+aiohttp>=3.9.0
+pydantic>=2.5.0
+tqdm>=4.66.0

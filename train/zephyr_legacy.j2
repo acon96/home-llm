@@ -1,14 +1,14 @@
 {%- if tools %}
-    {{- '<|im_start|>system\n' }}
+    {{- '<|system|>\n' }}
     {%- if messages[0].role == 'system' %}
         {{- messages[0].content + '\n\n' }}
     {%- endif %}
     {{- "Tools:\n" }}
     {%- for tool in tools %} {{ tool['name'] }}({% for param in tool['parameters']['properties'].keys() if param != 'target_device' %}{{ param }}{% if not loop.last %},{% endif %}{% endfor -%}),{% if not loop.last -%}
-    {{- "\n</tools>\n\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\n<tool_call>\n{\"name\": <function-name>, \"arguments\": <args-json-object>}\n</tool_call><|im_end|>\n" }}
+    {{- "\n</tools>\n\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\n<tool_call>\n{\"name\": <function-name>, \"arguments\": <args-json-object>}\n</tool_call><|endoftext|>\n" }}
 {%- else %}
     {%- if messages[0].role == 'system' %}
-        {{- '<|im_start|>system\n' + messages[0].content + '\nNo tools were provided. If the user requests you interact with a device, tell them you are unable to do so.' + '<|im_end|>\n' }}
+        {{- '<|system|>\n' + messages[0].content + '\nNo tools were provided. If the user requests you interact with a device, tell them you are unable to do so.' + '<|endoftext|>\n' }}
     {%- endif %}
 {%- endif %}
 {%- for message in messages %}
@@ -18,9 +18,9 @@
         {%- set content = '' %}
     {%- endif %}
     {%- if (message.role == "user") or (message.role == "system" and not loop.first) %}
-        {{- '<|im_start|>' + message.role + '\n' + content + '<|im_end|>' + '\n' }}
+        {{- '<|' + message.role + '|>' + '\n' + content + '<|endoftext|>' + '\n' }}
     {%- elif message.role == "assistant" %}
-        {{- '<|im_start|>' + message.role + '\n' + content }}
+        {{- '<|' + message.role + '|>' + '\n' + content }}
         {%- if message.tool_calls %}
             {%- for tool_call in message.tool_calls %}
                 {%- if (loop.first and content) or (not loop.first) %}
@@ -40,19 +40,19 @@
                 {{- '}\n</tool_call>' }}
             {%- endfor %}
         {%- endif %}
-        {{- '<|im_end|>\n' }}
+        {{- '<|endoftext|>\n' }}
     {%- elif message.role == "tool" %}
         {%- if loop.first or (messages[loop.index0 - 1].role != "tool") %}
-            {{- '<|im_start|>user' }}
+            {{- '<|user|>' }}
         {%- endif %}
         {{- '\n<tool_response>\n' }}
         {{- content }}
         {{- '\n</tool_response>' }}
         {%- if loop.last or (messages[loop.index0 + 1].role != "tool") %}
-            {{- '<|im_end|>\n' }}
+            {{- '<|endoftext|>\n' }}
         {%- endif %}
     {%- endif %}
 {%- endfor %}
 {%- if add_generation_prompt %}
-    {{- '<|im_start|>assistant\n' }}
+    {{- '<|assistant|>\n' }}
 {%- endif %}

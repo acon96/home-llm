@@ -66,8 +66,7 @@ def generate_random_parameter(param_name, piles_of_data):
     
     return param_generator()
 
-# FIXME: return 2 responses, 1 to confirm the action and one to confirm completion of the action
-def get_random_response(pile_of_responses, *, service: str, persona: str, question_template: str, short: bool) -> str:
+def get_random_response(pile_of_responses, *, service: str, persona: str, question_template: str, short: bool) -> tuple[str, str]:
 
     required_vars = list(set([var for var in var_pattern.findall(question_template) if "device_name" not in var]))
     
@@ -80,7 +79,7 @@ def get_random_response(pile_of_responses, *, service: str, persona: str, questi
     if len(possible_results) == 0:
         raise NoResponseAvailableException(f"No responses matched the provided filters: {persona}, {service}, {required_vars}, {short}")
     
-    return possible_results.sample()["response"].values[0]
+    return possible_results.sample()["response_starting"].values[0], possible_results.sample()["response_confirmed"].values[0]
 
 class DatasetPiles:
     def __init__(self, supported_devices, language="english"):
@@ -130,7 +129,7 @@ class DatasetPiles:
             self.pile_of_specific_actions = list(reader)
 
         self.pile_of_responses = pandas.read_csv(f"piles/{language}/pile_of_responses.csv")
-        self.pile_of_responses["contains_vars"] = self.pile_of_responses["response"].apply(get_included_vars)
+        self.pile_of_responses["contains_vars"] = self.pile_of_responses["response_starting"].apply(get_included_vars)
 
         with open(f"piles/{language}/pile_of_status_requests.csv", encoding="utf8") as f:
             reader = csv.DictReader(f)

@@ -128,15 +128,15 @@ def generate_static_example(action: dict, persona: str, language: str, max_devic
     service_action = service_name.split(".")[1]
     tool_name = SERVICE_TO_TOOL_MAP.get(service_action, TOOL_TURN_ON)
 
-    response = get_random_response(
+    response_starting, response_confirmed = get_random_response(
         piles.pile_of_responses,
         service=service_name,
         persona=persona,
         question_template="",
         short=False
-    ).lower()
+    )
 
-    answer_list = [response]
+    answer_list = [response_confirmed]
     tool_args = {}
 
     question = question.replace("<device_name>", target_device)
@@ -229,6 +229,7 @@ def generate_static_example(action: dict, persona: str, language: str, max_devic
         "available_tools": available_tools,
         "question": question.lower(),
         "answers": answer_list,
+        "answer_starting": response_starting,
         "tool_calls": [ tool_call ]
     }
 
@@ -291,7 +292,7 @@ def generate_templated_example(template: dict, persona: str, language: str, max_
 
     # pick an appropriate response and generate the question
     if len(template_device_types) == 1:
-        answer_template = get_random_response(
+        answer_starting, answer_confirmed = get_random_response(
             piles.pile_of_responses,
             service=service_names[0],
             persona=persona,
@@ -300,20 +301,23 @@ def generate_templated_example(template: dict, persona: str, language: str, max_
         )
 
         question = question_template.replace("<device_name>", chosen_devices[0]["description"])
-        answer_list = [ answer_template.replace("<device_name>", chosen_devices[0]["description"]) ]
+        answer_starting = answer_starting.replace("<device_name>", chosen_devices[0]["description"])
+        answer_list = [ answer_confirmed.replace("<device_name>", chosen_devices[0]["description"]) ]
     else:
         question = question_template
         answers = []
+        answer_starting = ""
         for i in range(len(template_device_types)):
             question = question.replace(f"<device_name{(i + 1)}>", chosen_devices[i]["description"])
-            answer_response = get_random_response(
+            answer_starting_part, answer_confirmed = get_random_response(
                 piles.pile_of_responses,
                 service=service_names[i],
                 persona=persona,
                 question_template=question_template,
                 short=True
             )
-            answers.append(answer_response.replace(f"<device_name>", chosen_devices[i]["description"]))
+            answer_starting += answer_starting_part.replace(f"<device_name>", chosen_devices[i]["description"]) + " "
+            answers.append(answer_confirmed.replace(f"<device_name>", chosen_devices[i]["description"]))
 
         answer_list = []
         for word in piles.and_words:
@@ -414,6 +418,7 @@ def generate_templated_example(template: dict, persona: str, language: str, max_
         "states": device_list,
         "available_tools": available_tools,
         "question": question.lower(),
+        "answer_starting": answer_starting.lower(),
         "answers": [ sentence.lower() for sentence in answer_list ],
         "tool_calls": tool_calls
     }
@@ -520,6 +525,7 @@ def format_example_sharegpt(example, persona, language, use_system_role, use_ser
     sys_prompt = generate_system_prompt(example, persona, language, piles.pile_of_system_prompts)
     question = example["question"]
     answers = " ".join(example["answers"])
+    answer_starting = example.get("answer_starting", "")
 
     tool_calls = []
     tool_results = []
@@ -564,8 +570,7 @@ def format_example_sharegpt(example, persona, language, use_system_role, use_ser
         conversation.extend([
             { 
                 "role": "assistant", 
-                # FIXME: use the "confirmation" response here instead of a canned text
-                "content": [{ "type": "text", "text": "I will perform the requested user action." }],
+                "content": [{ "type": "text", "text": answer_starting }],
                 "tool_calls": tool_calls
             },
             {
@@ -581,7 +586,7 @@ def format_example_sharegpt(example, persona, language, use_system_role, use_ser
         conversation.extend([
             { 
                 "role": "assistant", 
-                "content": [{ "type": "text", "text": answers }],
+                "content": [{ "type": "text", "text": answer_starting + answers }],
             }
         ])
     
