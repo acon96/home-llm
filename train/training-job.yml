@@ -1,0 +1,71 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: training-job-
+  namespace: ai
+  labels:
+    app: training-job
+spec:
+  template:
+    metadata:
+      labels:
+        app: training-job
+    spec:
+      containers:
+        - name: axolotl
+          image: axolotlai/axolotl-cloud:main-py3.11-cu128-2.8.0
+          imagePullPolicy: IfNotPresent
+          command: 
+            - axolotl
+            - train
+            - /workspace/configs/gemma3-270m.yml
+          env:
+            - name: AXOLOTL_DO_NOT_TRACK
+              value: "1"
+          volumeMounts:
+            - name: training-runs
+              mountPath: /workspace/data/training-runs
+            - name: training-data
+              mountPath: /workspace/data/datasets
+            - name: training-configs
+              mountPath: /workspace/configs
+            - name: hf-cache
+              mountPath: /workspace/data/huggingface-cache
+          resources:
+            limits:
+              nvidia.com/gpu: 2
+        - name: tensorboard
+          image: python:3.11-slim
+          imagePullPolicy: IfNotPresent
+          command:
+            - bash
+            - -c 
+            - "pip3 install tensorboard && tensorboard --logdir=/workspace/data/training-runs --host=0.0.0.0 --port 8080"
+          ports:
+            - containerPort: 8080
+              name: tensorboard
+              protocol: TCP
+          volumeMounts:
+            - name: training-runs
+              mountPath: /workspace/data/training-runs
+      runtimeClassName: nvidia
+      nodeSelector:
+        nvidia.com/gpu: "true"
+      restartPolicy: OnFailure
+      volumes:
+        - name: training-runs
+          hostPath:
+            path: /mnt/data/training-runs
+            type: DirectoryOrCreate
+        - name: training-data
+          hostPath:
+            path: /mnt/data/training-data
+            type: DirectoryOrCreate
+        - name: training-configs
+          hostPath:
+            path: /mnt/data/training-configs
+            type: DirectoryOrCreate
+        - name: hf-cache
+          hostPath:
+            path: /mnt/data/hf-cache
+            type: DirectoryOrCreate
