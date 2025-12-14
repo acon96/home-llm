@@ -288,8 +288,6 @@ class LlamaCppClient(LocalLLMClient):
         # Sort the items based on the sort_key function
         sorted_items = sorted(list(entity_order.items()), key=sort_key)
 
-        _LOGGER.debug(f"sorted_items: {sorted_items}")
-
         sorted_entities: dict[str, dict[str, str]] = {}
         for item_name, _ in sorted_items:
             sorted_entities[item_name] = entities[item_name]

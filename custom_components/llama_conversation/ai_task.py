@@ -115,39 +115,43 @@ class LocalLLMTaskEntity(
     async def _generate_once(
         self,
         message_history: list[conversation.Content],
-        chat_log: conversation.ChatLog,
+        llm_api: llm.APIInstance | None,
         entity_options: dict[str, Any],
-    ) -> tuple[str, list | None]:
+    ) -> tuple[str, list | None, Exception | None]:
         """Generate a single response from the LLM."""
-        collected: list[str] = []
         collected_tools = None
+        text = ""
 
         # call the LLM client directly (not _async_generate) since that will attempt to execute tool calls
-        if hasattr(self.client, "_generate_stream"):
-            async for chunk in self.client._generate_stream(
-                message_history,
-                chat_log.llm_api,
-                self.entity_id,
-                entity_options,
-            ):
-                if chunk.response:
-                    collected.append(chunk.response)
-                if chunk.tool_calls:
-                    collected_tools = chunk.tool_calls
-        else:
-            blocking_result = await self.client._generate(
-                message_history,
-                chat_log.llm_api,
-                self.entity_id,
-                entity_options,
-            )
-            if blocking_result.response:
-                collected.append(blocking_result.response)
-            if blocking_result.tool_calls:
-                collected_tools = blocking_result.tool_calls
+        try:
+            if hasattr(self.client, "_generate_stream"):
+                async for chunk in self.client._generate_stream(
+                    message_history,
+                    llm_api,
+                    self.entity_id,
+                    entity_options,
+                ):
+                    if chunk.response:
+                        text += chunk.response.strip()
+                    if chunk.tool_calls:
+                        collected_tools = chunk.tool_calls
+            else:
+                blocking_result = await self.client._generate(
+                    message_history,
+                    llm_api,
+                    self.entity_id,
+                    entity_options,
+                )
+                if blocking_result.response:
+                    text = blocking_result.response.strip()
+                if blocking_result.tool_calls:
+                    collected_tools = blocking_result.tool_calls
 
-        text = "".join(collected).strip()
-        return text, collected_tools
+            _LOGGER.debug("AI Task '%s' generated text: %s (tools=%s)", self.entity_id, text, collected_tools)
+            return text, collected_tools, None
+        except JSONDecodeError as err:
+            _LOGGER.debug("AI Task '%s' json error generated text: %s (tools=%s)", self.entity_id, text, collected_tools)
+            return text, collected_tools, err
 
     def _extract_data(
         self,
@@ -156,43 +160,40 @@ class LocalLLMTaskEntity(
         extraction_method: ResultExtractionMethod,
         chat_log: conversation.ChatLog,
         structure: vol.Schema | None,
-    ) -> ai_task.GenDataTaskResult:
+    ) -> tuple[ai_task.GenDataTaskResult | None, Exception | None]:
         """Extract the final data from the LLM response based on the extraction method."""
         try:
             if extraction_method == ResultExtractionMethod.NONE or structure is None:
                 return ai_task.GenDataTaskResult(
                     conversation_id=chat_log.conversation_id,
                     data=raw_text,
-                )
+                ), None
 
             if extraction_method == ResultExtractionMethod.STRUCTURED_OUTPUT:
-                try:
-                    data = json_loads(raw_text)
-                except JSONDecodeError as err:
-                    raise HomeAssistantError("Error with Local LLM structured response") from err
+                data = json_loads(raw_text)
                 return ai_task.GenDataTaskResult(
                     conversation_id=chat_log.conversation_id,
                     data=data,
-                )
+                ), None
 
             if extraction_method == ResultExtractionMethod.TOOL:
                 first_tool = next(iter(tool_calls or []), None)
                 if not first_tool or not getattr(first_tool, "tool_args", None):
-                    raise HomeAssistantError("Error with Local LLM tool response")
+                    return None, HomeAssistantError("Please produce at least one tool call with the structured response.")
                 structure(first_tool.tool_args) # validate tool call against vol schema structure
                 return ai_task.GenDataTaskResult(
                     conversation_id=chat_log.conversation_id,
                     data=first_tool.tool_args,
-                )
+                ), None
         except vol.Invalid as err:
             if isinstance(err, vol.MultipleInvalid):
                 # combine all error messages into one
                 error_message = "; ".join(f"Error at '{e.path}': {e.error_message}" for e in err.errors)
             else:
                 error_message = f"Error at '{err.path}': {err.error_message}"
-            raise HomeAssistantError(f"Please address the following schema errors: {error_message}") from err
+            return None, HomeAssistantError(f"Please address the following schema errors: {error_message}")
         except JSONDecodeError as err:
-            raise HomeAssistantError(f"Please produce properly formatted JSON: {repr(err)}") from err
+            return None, HomeAssistantError(f"Please produce properly formatted JSON: {repr(err)}")
 
         raise HomeAssistantError(f"Invalid extraction method for AI Task {extraction_method}")
 
@@ -235,17 +236,24 @@ class LocalLLMTaskEntity(
             last_error: Exception | None = None
             for attempt in range(max_attempts):
                 _LOGGER.debug("Generating response for %s (attempt %s/%s)...", task.name, attempt + 1, max_attempts)
-                text, tool_calls = await self._generate_once(message_history, chat_log, entity_options)
-                try:
-                    return self._extract_data(text, tool_calls, extraction_method, chat_log, task.structure)
-                except HomeAssistantError as err:
+                text, tool_calls, err = await self._generate_once(message_history, chat_log.llm_api, entity_options)
+                if err:
                     last_error = err
                     message_history.append(conversation.AssistantContent(agent_id=self.entity_id, content=text, tool_calls=tool_calls))
-                    message_history.append(conversation.UserContent(content=f"Error: {str(err)}. Please try again."))        
+                    message_history.append(conversation.UserContent(content=f"Error: {str(err)}. Please try again."))
+                    continue
+                
+                data, err = self._extract_data(text, tool_calls, extraction_method, chat_log, task.structure)
+                if err:
+                    last_error = err
+                    message_history.append(conversation.AssistantContent(agent_id=self.entity_id, content=text, tool_calls=tool_calls))
+                    message_history.append(conversation.UserContent(content=f"Error: {str(err)}. Please try again."))
+                    continue
+                
+                if data:
+                    return data
         except Exception as err:
             _LOGGER.exception("Unhandled exception while running AI Task '%s'", task.name)
             raise HomeAssistantError(f"Unhandled error while running AI Task '{task.name}'") from err
         
-        if last_error:
-            raise last_error
-        raise HomeAssistantError("AI Task generation failed without an error")
+        raise last_error or HomeAssistantError(f"AI Task '{task.name}' failed after {max_attempts} attempts")
