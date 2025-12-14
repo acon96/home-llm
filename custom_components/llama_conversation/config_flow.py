@@ -46,6 +46,12 @@ from .const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
+    CONF_AI_TASK_PROMPT,
+    DEFAULT_AI_TASK_PROMPT,
+    CONF_AI_TASK_RETRIES,
+    DEFAULT_AI_TASK_RETRIES,
+    CONF_AI_TASK_EXTRACTION_METHOD,
+    DEFAULT_AI_TASK_EXTRACTION_METHOD,
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
@@ -150,7 +156,7 @@ from .const import (
     DEFAULT_OPTIONS,
     option_overrides,
     RECOMMENDED_CHAT_MODELS,
-    EMBEDDED_LLAMA_CPP_PYTHON_VERSION
+    EMBEDDED_LLAMA_CPP_PYTHON_VERSION,
 )
 
 from . import HomeLLMAPI, LocalLLMConfigEntry, LocalLLMClient, BACKEND_TO_CLS
@@ -400,7 +406,7 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
         """Return subentries supported by this integration."""
         return {
             "conversation": LocalLLMSubentryFlowHandler,
-            # "ai_task_data": LocalLLMSubentryFlowHandler,
+            "ai_task_data": LocalLLMSubentryFlowHandler,
         }
 
 
@@ -584,69 +590,98 @@ def local_llama_config_option_schema(
     subentry_type: str,
 ) -> dict:
 
-    default_prompt = build_prompt_template(language, DEFAULT_PROMPT)
+    is_ai_task = subentry_type == "ai_task_data"
+    default_prompt = DEFAULT_AI_TASK_PROMPT if is_ai_task else build_prompt_template(language, DEFAULT_PROMPT)
+    prompt_key = CONF_AI_TASK_PROMPT if is_ai_task else CONF_PROMPT
+    prompt_selector = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT, multiline=True)) if is_ai_task else TemplateSelector()
 
-    result: dict = {
-        vol.Optional(
-            CONF_PROMPT,
-            description={"suggested_value": options.get(CONF_PROMPT, default_prompt)},
-            default=options.get(CONF_PROMPT, default_prompt),
-        ): TemplateSelector(),
-        vol.Optional(
-            CONF_TEMPERATURE,
-            description={"suggested_value": options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)},
-            default=options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE),
-        ): NumberSelector(NumberSelectorConfig(min=0.0, max=2.0, step=0.05, mode=NumberSelectorMode.BOX)),
-        vol.Required(
-            CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
-            description={"suggested_value": options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES)},
-            default=DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
-        ): BooleanSelector(BooleanSelectorConfig()),
-        vol.Required(
-            CONF_IN_CONTEXT_EXAMPLES_FILE,
-            description={"suggested_value": options.get(CONF_IN_CONTEXT_EXAMPLES_FILE)},
-            default=DEFAULT_IN_CONTEXT_EXAMPLES_FILE,
-        ): str,
-        vol.Required(
-            CONF_NUM_IN_CONTEXT_EXAMPLES,
-            description={"suggested_value": options.get(CONF_NUM_IN_CONTEXT_EXAMPLES)},
-            default=DEFAULT_NUM_IN_CONTEXT_EXAMPLES,
-        ): NumberSelector(NumberSelectorConfig(min=1, max=16, step=1)),
-        vol.Required(
-            CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
-            description={"suggested_value": options.get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE)},
-            default=DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
-        ): TextSelector(TextSelectorConfig(multiple=True)),
-        vol.Required(
-            CONF_THINKING_PREFIX,
-            description={"suggested_value": options.get(CONF_THINKING_PREFIX)},
-            default=DEFAULT_THINKING_PREFIX,
-        ): str,
-        vol.Required(
-            CONF_THINKING_SUFFIX,
-            description={"suggested_value": options.get(CONF_THINKING_SUFFIX)},
-            default=DEFAULT_THINKING_SUFFIX,
-        ): str,
-        vol.Required(
-            CONF_TOOL_CALL_PREFIX,
-            description={"suggested_value": options.get(CONF_TOOL_CALL_PREFIX)},
-            default=DEFAULT_TOOL_CALL_PREFIX,
-        ): str,
-        vol.Required(
-            CONF_TOOL_CALL_SUFFIX,
-            description={"suggested_value": options.get(CONF_TOOL_CALL_SUFFIX)},
-            default=DEFAULT_TOOL_CALL_SUFFIX,
-        ): str,
-        vol.Required(
-            CONF_ENABLE_LEGACY_TOOL_CALLING,
-            description={"suggested_value": options.get(CONF_ENABLE_LEGACY_TOOL_CALLING)},
-            default=DEFAULT_ENABLE_LEGACY_TOOL_CALLING
-        ): bool,
-    }
+    if is_ai_task:
+        result: dict = {
+            vol.Optional(
+                prompt_key,
+                description={"suggested_value": options.get(prompt_key, default_prompt)},
+                default=options.get(prompt_key, default_prompt),
+            ): prompt_selector,
+            vol.Required(
+                CONF_AI_TASK_EXTRACTION_METHOD,
+                description={"suggested_value": options.get(CONF_AI_TASK_EXTRACTION_METHOD, DEFAULT_AI_TASK_EXTRACTION_METHOD)},
+                default=options.get(CONF_AI_TASK_EXTRACTION_METHOD, DEFAULT_AI_TASK_EXTRACTION_METHOD),
+            ): SelectSelector(SelectSelectorConfig(
+                options=[
+                    SelectOptionDict(value="none", label="None"),
+                    SelectOptionDict(value="structure", label="Structured output"),
+                    SelectOptionDict(value="tool", label="Tool call"),
+                ],
+                mode=SelectSelectorMode.DROPDOWN,
+            )),
+            vol.Required(
+                CONF_AI_TASK_RETRIES,
+                description={"suggested_value": options.get(CONF_AI_TASK_RETRIES, DEFAULT_AI_TASK_RETRIES)},
+                default=options.get(CONF_AI_TASK_RETRIES, DEFAULT_AI_TASK_RETRIES),
+            ): NumberSelector(NumberSelectorConfig(min=0, max=5, step=1, mode=NumberSelectorMode.BOX)),
+        }
+    else:
+        result: dict = {
+            vol.Optional(
+                prompt_key,
+                description={"suggested_value": options.get(prompt_key, default_prompt)},
+                default=options.get(prompt_key, default_prompt),
+            ): prompt_selector,
+            vol.Optional(
+                CONF_TEMPERATURE,
+                description={"suggested_value": options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)},
+                default=options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE),
+            ): NumberSelector(NumberSelectorConfig(min=0.0, max=2.0, step=0.05, mode=NumberSelectorMode.BOX)),
+            vol.Required(
+                CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
+                description={"suggested_value": options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES)},
+                default=DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
+            ): BooleanSelector(BooleanSelectorConfig()),
+            vol.Required(
+                CONF_IN_CONTEXT_EXAMPLES_FILE,
+                description={"suggested_value": options.get(CONF_IN_CONTEXT_EXAMPLES_FILE)},
+                default=DEFAULT_IN_CONTEXT_EXAMPLES_FILE,
+            ): str,
+            vol.Required(
+                CONF_NUM_IN_CONTEXT_EXAMPLES,
+                description={"suggested_value": options.get(CONF_NUM_IN_CONTEXT_EXAMPLES)},
+                default=DEFAULT_NUM_IN_CONTEXT_EXAMPLES,
+            ): NumberSelector(NumberSelectorConfig(min=1, max=16, step=1)),
+            vol.Required(
+                CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
+                description={"suggested_value": options.get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE)},
+                default=DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
+            ): TextSelector(TextSelectorConfig(multiple=True)),
+            vol.Required(
+                CONF_THINKING_PREFIX,
+                description={"suggested_value": options.get(CONF_THINKING_PREFIX)},
+                default=DEFAULT_THINKING_PREFIX,
+            ): str,
+            vol.Required(
+                CONF_THINKING_SUFFIX,
+                description={"suggested_value": options.get(CONF_THINKING_SUFFIX)},
+                default=DEFAULT_THINKING_SUFFIX,
+            ): str,
+            vol.Required(
+                CONF_TOOL_CALL_PREFIX,
+                description={"suggested_value": options.get(CONF_TOOL_CALL_PREFIX)},
+                default=DEFAULT_TOOL_CALL_PREFIX,
+            ): str,
+            vol.Required(
+                CONF_TOOL_CALL_SUFFIX,
+                description={"suggested_value": options.get(CONF_TOOL_CALL_SUFFIX)},
+                default=DEFAULT_TOOL_CALL_SUFFIX,
+            ): str,
+            vol.Required(
+                CONF_ENABLE_LEGACY_TOOL_CALLING,
+                description={"suggested_value": options.get(CONF_ENABLE_LEGACY_TOOL_CALLING)},
+                default=DEFAULT_ENABLE_LEGACY_TOOL_CALLING
+            ): bool,
+        }
 
     if backend_type == BACKEND_TYPE_LLAMA_CPP:
         result.update({
-                vol.Required(
+            vol.Required(
                 CONF_MAX_TOKENS,
                 description={"suggested_value": options.get(CONF_MAX_TOKENS)},
                 default=DEFAULT_MAX_TOKENS,
@@ -920,13 +955,17 @@ def local_llama_config_option_schema(
             ): int,
         })
     elif subentry_type == "ai_task_data":
-        pass # no additional options for ai_task_data for now
+        # no extra conversation/tool options for ai_task_data beyond schema defaults
+        pass
 
     # sort the options
     global_order = [
         # general
         CONF_LLM_HASS_API,
         CONF_PROMPT,
+        CONF_AI_TASK_PROMPT,
+        CONF_AI_TASK_EXTRACTION_METHOD,
+        CONF_AI_TASK_RETRIES,
         CONF_CONTEXT_LENGTH,
         CONF_MAX_TOKENS,
         # sampling parameters
@@ -1116,8 +1155,16 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
         description_placeholders = {}
         entry = self._get_entry()
         backend_type = entry.data[CONF_BACKEND_TYPE]
+        is_ai_task = self._subentry_type == "ai_task_data"
 
-        if CONF_PROMPT not in self.model_config:
+        if is_ai_task:
+            if CONF_AI_TASK_PROMPT not in self.model_config:
+                self.model_config[CONF_AI_TASK_PROMPT] = DEFAULT_AI_TASK_PROMPT
+            if CONF_AI_TASK_RETRIES not in self.model_config:
+                self.model_config[CONF_AI_TASK_RETRIES] = DEFAULT_AI_TASK_RETRIES
+            if CONF_AI_TASK_EXTRACTION_METHOD not in self.model_config:
+                self.model_config[CONF_AI_TASK_EXTRACTION_METHOD] = DEFAULT_AI_TASK_EXTRACTION_METHOD
+        elif CONF_PROMPT not in self.model_config:
             # determine selected language from model config or parent options
             selected_language = self.model_config.get(
                 CONF_SELECTED_LANGUAGE, entry.options.get(CONF_SELECTED_LANGUAGE, "en")
@@ -1150,20 +1197,21 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
         )
 
         if user_input:
-            if not user_input.get(CONF_REFRESH_SYSTEM_PROMPT) and user_input.get(CONF_PROMPT_CACHING_ENABLED):
-                errors["base"] = "sys_refresh_caching_enabled"
+            if not is_ai_task:
+                if not user_input.get(CONF_REFRESH_SYSTEM_PROMPT) and user_input.get(CONF_PROMPT_CACHING_ENABLED):
+                    errors["base"] = "sys_refresh_caching_enabled"
 
-            if user_input.get(CONF_USE_GBNF_GRAMMAR):
-                filename = user_input.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE)
-                if not os.path.isfile(os.path.join(os.path.dirname(__file__), filename)):
-                    errors["base"] = "missing_gbnf_file"
-                    description_placeholders["filename"] = filename
+                if user_input.get(CONF_USE_GBNF_GRAMMAR):
+                    filename = user_input.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE)
+                    if not os.path.isfile(os.path.join(os.path.dirname(__file__), filename)):
+                        errors["base"] = "missing_gbnf_file"
+                        description_placeholders["filename"] = filename
 
-            if user_input.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES):
-                filename = user_input.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE)
-                if not os.path.isfile(os.path.join(os.path.dirname(__file__), filename)):
-                    errors["base"] = "missing_icl_file"
-                    description_placeholders["filename"] = filename
+                if user_input.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES):
+                    filename = user_input.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE)
+                    if not os.path.isfile(os.path.join(os.path.dirname(__file__), filename)):
+                        errors["base"] = "missing_icl_file"
+                        description_placeholders["filename"] = filename
 
             # --- Normalize numeric fields to ints to avoid slice/type errors later ---
             for key in (
@@ -1172,6 +1220,7 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
                 CONF_CONTEXT_LENGTH,
                 CONF_MAX_TOKENS,
                 CONF_REQUEST_TIMEOUT,
+                CONF_AI_TASK_RETRIES,
              ):
                 if key in user_input:
                     user_input[key] = _coerce_int(user_input[key], user_input.get(key) or 0)

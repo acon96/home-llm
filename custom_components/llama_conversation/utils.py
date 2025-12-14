@@ -24,7 +24,7 @@ from homeassistant.requirements import pip_kwargs
 from homeassistant.util import color
 from homeassistant.util.package import install_package, is_installed
 
-from voluptuous_openapi import convert
+from voluptuous_openapi import convert as convert_to_openapi
 
 from .const import (
     DOMAIN,
@@ -285,7 +285,7 @@ def get_oai_formatted_tools(llm_api: llm.APIInstance, domains: list[str]) -> Lis
                 "function": {
                     "name": tool["name"],
                     "description": f"Call the Home Assistant service '{tool['name']}'",
-                    "parameters": convert(tool["arguments"], custom_serializer=llm_api.custom_serializer)
+                    "parameters": convert_to_openapi(tool["arguments"], custom_serializer=llm_api.custom_serializer)
                 }
             } for tool in get_home_llm_tools(llm_api, domains) ])
         else:
@@ -294,7 +294,7 @@ def get_oai_formatted_tools(llm_api: llm.APIInstance, domains: list[str]) -> Lis
                 "function": {
                     "name": tool.name,
                     "description": tool.description or "",
-                    "parameters": convert(tool.parameters, custom_serializer=llm_api.custom_serializer)
+                    "parameters": convert_to_openapi(tool.parameters, custom_serializer=llm_api.custom_serializer)
                 }
             })
 

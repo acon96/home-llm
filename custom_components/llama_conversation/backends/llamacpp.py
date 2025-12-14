@@ -57,6 +57,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_LLAMACPP_THREAD_COUNT,
     DEFAULT_LLAMACPP_BATCH_THREAD_COUNT,
     DOMAIN,
+    CONF_RESPONSE_JSON_SCHEMA,
 )
 from custom_components.llama_conversation.entity import LocalLLMClient, TextGenerationResult
 
@@ -64,10 +65,15 @@ from custom_components.llama_conversation.entity import LocalLLMClient, TextGene
 from typing import TYPE_CHECKING
 from types import ModuleType
 if TYPE_CHECKING:
-    from llama_cpp import Llama as LlamaType, LlamaGrammar as LlamaGrammarType
+    from llama_cpp import (
+        Llama as LlamaType,
+        LlamaGrammar as LlamaGrammarType,
+        ChatCompletionRequestResponseFormat
+    )
 else:
     LlamaType = Any
     LlamaGrammarType = Any
+    ChatCompletionRequestResponseFormat = Any
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -441,6 +447,14 @@ class LlamaCppClient(LocalLLMClient):
 
         _LOGGER.debug(f"Generating completion with {len(messages)} messages and {len(tools) if tools else 0} tools...")
 
+        response_json_schema = entity_options.get(CONF_RESPONSE_JSON_SCHEMA)
+        response_format: Optional[ChatCompletionRequestResponseFormat] = None
+        if response_json_schema:
+            response_format = {
+                "type": "json_object",
+                "schema": response_json_schema,
+            }
+
         chat_completion = self.models[model_name].create_chat_completion(
             messages,
             tools=tools,
@@ -452,6 +466,7 @@ class LlamaCppClient(LocalLLMClient):
             max_tokens=max_tokens,
             grammar=grammar,
             stream=True,
+            response_format=response_format,
         )
 
         def next_token() -> Generator[tuple[Optional[str], Optional[List]]]:

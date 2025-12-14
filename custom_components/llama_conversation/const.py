@@ -8,6 +8,12 @@ SERVICE_TOOL_NAME = "HassCallService"
 SERVICE_TOOL_ALLOWED_SERVICES = ["turn_on", "turn_off", "toggle", "press", "increase_speed", "decrease_speed", "open_cover", "close_cover", "stop_cover", "lock", "unlock", "start", "stop", "return_to_base", "pause", "cancel", "add_item", "set_temperature", "set_humidity", "set_fan_mode", "set_hvac_mode", "set_preset_mode"]
 SERVICE_TOOL_ALLOWED_DOMAINS = ["light", "switch", "button", "fan", "cover", "lock", "media_player", "climate", "vacuum", "todo", "timer", "script"]
 CONF_PROMPT = "prompt"
+CONF_AI_TASK_PROMPT = "ai_task_prompt"
+DEFAULT_AI_TASK_PROMPT = "You are a task-specific assistant. Follow the task instructions and return the requested data."
+CONF_AI_TASK_RETRIES = "ai_task_retries"
+DEFAULT_AI_TASK_RETRIES = 0
+CONF_AI_TASK_EXTRACTION_METHOD = "ai_task_extraction_method"
+DEFAULT_AI_TASK_EXTRACTION_METHOD = "structure"
 PERSONA_PROMPTS = {
     "en": "You are 'Al', a helpful AI Assistant that controls the devices in a house. Complete the following task as instructed with the information provided only.",
     "de": "Du bist \u201eAl\u201c, ein hilfreicher KI-Assistent, der die Ger\u00e4te in einem Haus steuert. F\u00fchren Sie die folgende Aufgabe gem\u00e4\u00df den Anweisungen durch oder beantworten Sie die folgende Frage nur mit den bereitgestellten Informationen.",
@@ -188,6 +194,7 @@ CONF_GENERIC_OPENAI_VALIDATE_MODEL = "openai_validate_model"
 DEFAULT_GENERIC_OPENAI_VALIDATE_MODEL = True
 CONF_CONTEXT_LENGTH = "context_length"
 DEFAULT_CONTEXT_LENGTH = 8192
+CONF_RESPONSE_JSON_SCHEMA = "response_json_schema"
 CONF_LLAMACPP_BATCH_SIZE = "batch_size"
 DEFAULT_LLAMACPP_BATCH_SIZE = 512
 CONF_LLAMACPP_THREAD_COUNT = "n_threads"

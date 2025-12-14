@@ -28,6 +28,7 @@ from custom_components.llama_conversation.const import (
     CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
     CONF_GENERIC_OPENAI_PATH,
     CONF_ENABLE_LEGACY_TOOL_CALLING,
+    CONF_RESPONSE_JSON_SCHEMA,
     DEFAULT_MAX_TOKENS,
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_P,
@@ -120,7 +121,8 @@ class GenericOpenAIAPIClient(LocalLLMClient):
                          conversation: List[conversation.Content],
                          llm_api: llm.APIInstance | None,
                          agent_id: str,
-                         entity_options: dict[str, Any]) -> AsyncGenerator[TextGenerationResult, None]:
+                         entity_options: dict[str, Any],
+                        ) -> AsyncGenerator[TextGenerationResult, None]:
         model_name = entity_options[CONF_CHAT_MODEL]
         temperature = entity_options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
         top_p = entity_options.get(CONF_TOP_P, DEFAULT_TOP_P)
@@ -137,6 +139,17 @@ class GenericOpenAIAPIClient(LocalLLMClient):
             "top_p": top_p,
             "messages": messages
         }
+
+        response_json_schema = entity_options.get(CONF_RESPONSE_JSON_SCHEMA)
+        if response_json_schema:
+            request_params["response_format"] = {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "ha_task",
+                    "schema": response_json_schema,
+                    "strict": True,
+                },
+            }
 
         tools = None
         # "legacy" tool calling passes the tools directly as part of the system prompt instead of as "tools"
@@ -258,7 +271,6 @@ class GenericOpenAIResponsesAPIClient(LocalLLMClient):
             try:
                 if msg.role == "user":
                     input_text = msg.content
-                    break
             except Exception:
                 continue
 
@@ -358,7 +370,8 @@ class GenericOpenAIResponsesAPIClient(LocalLLMClient):
                         conversation: List[conversation.Content],
                         llm_api: llm.APIInstance | None,
                         agent_id: str,
-                        entity_options: dict[str, Any]) -> TextGenerationResult:
+                        entity_options: dict[str, Any],
+                        ) -> TextGenerationResult:
         """Generate a response using the OpenAI-compatible Responses API (non-streaming endpoint wrapped as a single-chunk stream)."""
 
         model_name = entity_options.get(CONF_CHAT_MODEL)
@@ -368,6 +381,16 @@ class GenericOpenAIResponsesAPIClient(LocalLLMClient):
         request_params: Dict[str, Any] = {
             "model": model_name,
         }
+        response_json_schema = entity_options.get(CONF_RESPONSE_JSON_SCHEMA)
+        if response_json_schema:
+            request_params["response_format"] = {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "ha_task",
+                    "schema": response_json_schema,
+                    "strict": True,
+                },
+            }
         request_params.update(additional_params)
 
         headers: Dict[str, Any] = {}

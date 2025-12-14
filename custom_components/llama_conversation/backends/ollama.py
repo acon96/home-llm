@@ -33,6 +33,7 @@ from custom_components.llama_conversation.const import (
     CONF_OLLAMA_JSON_MODE,
     CONF_CONTEXT_LENGTH,
     CONF_ENABLE_LEGACY_TOOL_CALLING,
+    CONF_RESPONSE_JSON_SCHEMA,
     DEFAULT_MAX_TOKENS,
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_K,
@@ -216,13 +217,14 @@ class OllamaAPIClient(LocalLLMClient):
         async def anext_token() -> AsyncGenerator[Tuple[Optional[str], Optional[List[dict]]], None]:
             client = self._build_client(timeout=timeout)
             try:
+                format_option = entity_options.get(CONF_RESPONSE_JSON_SCHEMA, "json" if json_mode else None)
                 stream = await client.chat(
                     model=model_name,
                     messages=messages,
                     tools=tools,
                     stream=True,
                     think=think_mode,
-                    format="json" if json_mode else None,
+                    format=format_option,
                     options=options,
                     keep_alive=keep_alive_payload,
                 )
