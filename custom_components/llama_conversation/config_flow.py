@@ -225,7 +225,7 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
     """Handle a config flow for Local LLM Conversation."""
 
     VERSION = 3
-    MINOR_VERSION = 1
+    MINOR_VERSION = 2
 
     install_wheel_task = None
     install_wheel_error = None
@@ -882,23 +882,17 @@ def local_llama_config_option_schema(
     if subentry_type == "conversation":
         apis: list[SelectOptionDict] = [
             SelectOptionDict(
-                label="No control",
-                value="none",
-            )
-        ]
-        apis.extend(
-            SelectOptionDict(
                 label=api.name,
                 value=api.id,
             )
             for api in llm.async_get_apis(hass)
-        )
+        ]
         result.update({
             vol.Optional(
                 CONF_LLM_HASS_API,
                 description={"suggested_value": options.get(CONF_LLM_HASS_API)},
-                default="none",
-            ): SelectSelector(SelectSelectorConfig(options=apis)),
+                default=None,
+            ): SelectSelector(SelectSelectorConfig(options=apis, multiple=True)),
             vol.Optional(
                 CONF_REFRESH_SYSTEM_PROMPT,
                 description={"suggested_value": options.get(CONF_REFRESH_SYSTEM_PROMPT, DEFAULT_REFRESH_SYSTEM_PROMPT)},
@@ -1187,10 +1181,6 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
                     # validate input
                     schema(user_input)
                     self.model_config.update(user_input)
-
-                    # clear LLM API if 'none' selected
-                    if self.model_config.get(CONF_LLM_HASS_API) == "none":
-                        self.model_config.pop(CONF_LLM_HASS_API, None)
                     
                     return await self.async_step_finish()
                 except Exception:
