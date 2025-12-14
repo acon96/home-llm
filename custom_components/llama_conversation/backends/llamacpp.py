@@ -9,7 +9,6 @@ import time
 from typing import Any, Callable, List, Generator, AsyncGenerator, Optional, cast
 
 from homeassistant.components import conversation as conversation
-from homeassistant.components.conversation.const import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LLM_HASS_API
@@ -303,7 +302,7 @@ class LlamaCppClient(LocalLLMClient):
 
             entity_ids = [
                 state.entity_id for state in self.hass.states.async_all() \
-                    if async_should_expose(self.hass, CONVERSATION_DOMAIN, state.entity_id)
+                    if async_should_expose(self.hass, conversation.DOMAIN, state.entity_id)
             ]
 
             _LOGGER.debug(f"watching entities: {entity_ids}")
@@ -440,7 +439,7 @@ class LlamaCppClient(LocalLLMClient):
 
         _LOGGER.debug(f"Options: {entity_options}")
 
-        messages = get_oai_formatted_messages(conversation, user_content_as_list=True)
+        messages = get_oai_formatted_messages(conversation)
         tools = None
         if llm_api:
             tools = get_oai_formatted_tools(llm_api, self._async_get_all_exposed_domains())

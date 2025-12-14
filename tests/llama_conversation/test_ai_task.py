@@ -3,6 +3,7 @@
 from typing import Any, cast
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
@@ -82,7 +83,7 @@ async def test_structured_output_success(hass):
         {CONF_AI_TASK_EXTRACTION_METHOD: ResultExtractionMethod.STRUCTURED_OUTPUT},
     )
     chat_log = DummyChatLog()
-    task = DummyGenTask(structure={"foo": int})
+    task = DummyGenTask(structure=vol.Schema({"foo": int}))
 
     result = await entity._async_generate_data(cast(Any, task), cast(Any, chat_log))
 
@@ -97,7 +98,7 @@ async def test_structured_output_invalid_json_raises(hass):
         {CONF_AI_TASK_EXTRACTION_METHOD: ResultExtractionMethod.STRUCTURED_OUTPUT},
     )
     chat_log = DummyChatLog()
-    task = DummyGenTask(structure={"foo": int})
+    task = DummyGenTask(structure=vol.Schema({"foo": int}))
 
     with pytest.raises(HomeAssistantError):
         await entity._async_generate_data(cast(Any, task), cast(Any, chat_log))
@@ -112,7 +113,7 @@ async def test_tool_extraction_success(hass):
         {CONF_AI_TASK_EXTRACTION_METHOD: ResultExtractionMethod.TOOL},
     )
     chat_log = DummyChatLog()
-    task = DummyGenTask(structure={"value": int})
+    task = DummyGenTask(structure=vol.Schema({"value": int}))
 
     result = await entity._async_generate_data(cast(Any, task), cast(Any, chat_log))
 
@@ -133,21 +134,8 @@ async def test_tool_extraction_missing_tool_args_raises(hass):
         {CONF_AI_TASK_EXTRACTION_METHOD: ResultExtractionMethod.TOOL},
     )
     chat_log = DummyChatLog()
-    task = DummyGenTask(structure={"value": int})
+    task = DummyGenTask(structure=vol.Schema({"value": int}))
 
     with pytest.raises(HomeAssistantError):
         await entity._async_generate_data(cast(Any, task), cast(Any, chat_log))
 
-
-@pytest.mark.asyncio
-async def test_tool_extraction_requires_structure(hass):
-    entity = DummyTaskEntity(
-        hass,
-        DummyClient(TextGenerationResult(response="")),
-        {CONF_AI_TASK_EXTRACTION_METHOD: ResultExtractionMethod.TOOL},
-    )
-    chat_log = DummyChatLog()
-    task = DummyGenTask(structure=None)
-
-    with pytest.raises(HomeAssistantError):
-        await entity._async_generate_data(cast(Any, task), cast(Any, chat_log))

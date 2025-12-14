@@ -10,7 +10,6 @@ from typing import Literal, Any, List, Dict, Optional, Sequence, Tuple, AsyncIte
 from dataclasses import dataclass
 
 from homeassistant.components import conversation
-from homeassistant.components.conversation.const import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import MATCH_ALL, CONF_LLM_HASS_API
@@ -352,7 +351,7 @@ class LocalLLMClient:
         """Gather all exposed domains"""
         domains = set()
         for state in self.hass.states.async_all():
-            if async_should_expose(self.hass, CONVERSATION_DOMAIN, state.entity_id):
+            if async_should_expose(self.hass, conversation.DOMAIN, state.entity_id):
                 domains.add(state.domain)
 
         return list(domains)
@@ -365,7 +364,7 @@ class LocalLLMClient:
         area_registry = ar.async_get(self.hass)
 
         for state in self.hass.states.async_all():
-            if not async_should_expose(self.hass, CONVERSATION_DOMAIN, state.entity_id):
+            if not async_should_expose(self.hass, conversation.DOMAIN, state.entity_id):
                 continue
 
             entity = entity_registry.async_get(state.entity_id)

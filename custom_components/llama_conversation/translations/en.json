@@ -177,7 +177,7 @@
                 }
             }
         },
-        "ai_task_data": {
+        "ai_task": {
             "initiate_flow": {
                 "user": "Add AI Task Handler",
                 "reconfigure": "Reconfigure AI Task Handler"

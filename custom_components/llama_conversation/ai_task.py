@@ -18,7 +18,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.json import json_loads
 
-
 from .entity import LocalLLMEntity, LocalLLMClient
 from .const import (
     CONF_RESPONSE_JSON_SCHEMA,
@@ -41,13 +40,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up AI Task entities."""
     for subentry in config_entry.subentries.values():
-        if subentry.subentry_type != "ai_task_data":
+        if subentry.subentry_type != ai_task.DOMAIN:
             continue
 
-        async_add_entities(
-            [LocalLLMTaskEntity(hass, config_entry, subentry, config_entry.runtime_data)],
-            config_subentry_id=subentry.subentry_id,
-        )
+        # create one entity per subentry
+        ai_task_entity = LocalLLMTaskEntity(hass, config_entry, subentry, config_entry.runtime_data)
+
+        # make sure model is loaded
+        await config_entry.runtime_data._async_load_model(dict(subentry.data))
+
+        # register the ai task entity
+        async_add_entities([ai_task_entity], config_subentry_id=subentry.subentry_id)
 
 
 class ResultExtractionMethod(StrEnum):
@@ -88,6 +91,7 @@ class SubmitResponseAPI(llm.API):
             api_prompt="Call submit_response to return the structured AI task result.",
             llm_context=llm_context,
             tools=self._tools,
+            custom_serializer=llm.selector_serializer,
         )
 
 
@@ -152,9 +156,11 @@ class LocalLLMTaskEntity(
         tool_calls: list | None,
         extraction_method: ResultExtractionMethod,
         chat_log: conversation.ChatLog,
+        structure: vol.Schema | None,
     ) -> ai_task.GenDataTaskResult:
         """Extract the final data from the LLM response based on the extraction method."""
-        if extraction_method == ResultExtractionMethod.NONE:
+        
+        if extraction_method == ResultExtractionMethod.NONE or structure is None:
             return ai_task.GenDataTaskResult(
                 conversation_id=chat_log.conversation_id,
                 data=raw_text,
@@ -176,6 +182,7 @@ class LocalLLMTaskEntity(
             first_tool = (tool_calls or [None])[0]
             if not first_tool or not getattr(first_tool, "tool_args", None):
                 raise HomeAssistantError("Error with Local LLM tool response")
+            structure(first_tool.tool_args)  # validate against structure
             return ai_task.GenDataTaskResult(
                 conversation_id=chat_log.conversation_id,
                 data=first_tool.tool_args,
@@ -197,7 +204,8 @@ class LocalLLMTaskEntity(
 
             entity_options = {**self.runtime_options}
             if task.structure and extraction_method == ResultExtractionMethod.STRUCTURED_OUTPUT:
-                entity_options[CONF_RESPONSE_JSON_SCHEMA] = convert_to_openapi(task.structure)
+                _LOGGER.debug("Using structure for AI Task '%s': %s", task.name, task.structure)
+                entity_options[CONF_RESPONSE_JSON_SCHEMA] = convert_to_openapi(task.structure, custom_serializer=llm.selector_serializer)
 
             message_history = list(chat_log.content) if chat_log.content else []
 
@@ -214,21 +222,8 @@ class LocalLLMTaskEntity(
                     )
                 )
 
-            if extraction_method == ResultExtractionMethod.STRUCTURED_OUTPUT and not task.structure:
-                raise HomeAssistantError(
-                    "Structured extraction selected but no task structure was provided"
-                )
-            if extraction_method == ResultExtractionMethod.TOOL:
-                if not task.structure:
-                    raise HomeAssistantError(
-                        "Tool extraction selected but no task structure was provided"
-                    )
-
-                parameters_schema = vol.Schema({}, extra=vol.ALLOW_EXTRA)
-                if isinstance(task.structure, dict):
-                    parameters_schema = vol.Schema(task.structure)
-
-                chat_log.llm_api = await SubmitResponseAPI(self.hass, [SubmitResponseTool(parameters_schema)]).async_get_api_instance(
+            if extraction_method == ResultExtractionMethod.TOOL and task.structure:
+                chat_log.llm_api = await SubmitResponseAPI(self.hass, [SubmitResponseTool(task.structure)]).async_get_api_instance(
                     llm.LLMContext(DOMAIN, context=None, language=None, assistant=None, device_id=None)
                 )
 
@@ -242,7 +237,7 @@ class LocalLLMTaskEntity(
                         max_attempts,
                     )
                     text, tool_calls = await self._generate_once(message_history, chat_log, entity_options)
-                    return self._extract_data(text, tool_calls, extraction_method, chat_log)
+                    return self._extract_data(text, tool_calls, extraction_method, chat_log, task.structure)
                 except HomeAssistantError as err:
                     last_error = err
                     if attempt < max_attempts - 1:

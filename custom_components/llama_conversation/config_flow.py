@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_LLM_HASS_API, UnitOfTime
+from homeassistant.components import conversation, ai_task
 from homeassistant.data_entry_flow import (
     AbortFlow,
 )
@@ -405,8 +406,8 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {
-            "conversation": LocalLLMSubentryFlowHandler,
-            "ai_task_data": LocalLLMSubentryFlowHandler,
+            conversation.DOMAIN: LocalLLMSubentryFlowHandler,
+            ai_task.DOMAIN: LocalLLMSubentryFlowHandler,
         }
 
 
@@ -590,7 +591,7 @@ def local_llama_config_option_schema(
     subentry_type: str,
 ) -> dict:
 
-    is_ai_task = subentry_type == "ai_task_data"
+    is_ai_task = subentry_type == ai_task.DOMAIN
     default_prompt = DEFAULT_AI_TASK_PROMPT if is_ai_task else build_prompt_template(language, DEFAULT_PROMPT)
     prompt_key = CONF_AI_TASK_PROMPT if is_ai_task else CONF_PROMPT
     prompt_selector = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT, multiline=True)) if is_ai_task else TemplateSelector()
@@ -914,7 +915,7 @@ def local_llama_config_option_schema(
             ): NumberSelector(NumberSelectorConfig(min=-1, max=1440, step=1, unit_of_measurement=UnitOfTime.MINUTES, mode=NumberSelectorMode.BOX)),
         })
 
-    if subentry_type == "conversation":
+    if subentry_type == conversation.DOMAIN:
         apis: list[SelectOptionDict] = [
             SelectOptionDict(
                 label=api.name,
@@ -954,8 +955,8 @@ def local_llama_config_option_schema(
                 default=DEFAULT_MAX_TOOL_CALL_ITERATIONS,
             ): int,
         })
-    elif subentry_type == "ai_task_data":
-        # no extra conversation/tool options for ai_task_data beyond schema defaults
+    elif subentry_type == ai_task.DOMAIN:
+        # no extra conversation/tool options for ai_task
         pass
 
     # sort the options
@@ -1155,7 +1156,7 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
         description_placeholders = {}
         entry = self._get_entry()
         backend_type = entry.data[CONF_BACKEND_TYPE]
-        is_ai_task = self._subentry_type == "ai_task_data"
+        is_ai_task = self._subentry_type == ai_task.DOMAIN
 
         if is_ai_task:
             if CONF_AI_TASK_PROMPT not in self.model_config:
