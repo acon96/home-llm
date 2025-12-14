@@ -4,16 +4,17 @@ This project provides the required "glue" components to control your Home Assist
 ## Quick Start
 Please see the [Setup Guide](./docs/Setup.md) for more information on installation.
 
-## Local LLM Conversation Integration
+## Local LLM Integration
 **The latest version of this integration requires Home Assistant 2025.7.0 or newer**
 
-In order to integrate with Home Assistant, we provide a custom component that exposes the locally running LLM as a "conversation agent".
+In order to integrate with Home Assistant, we provide a custom component that exposes the locally running LLM as a "conversation agent" or as an "ai task handler".
 
 This component can be interacted with in a few ways:  
 - using a chat interface so you can chat with it.
 - integrating with Speech-to-Text and Text-to-Speech addons so you can just speak to it.
+- using automations or scripts to trigger "ai tasks"; these process input data with a prompt, and return structured data that can be used in further automations.
 
-The integration can either run the model in 2 different ways:
+The integration can either run the model in a few ways:
 1. Directly as part of the Home Assistant software using llama-cpp-python
 2. On a separate machine using one of the following backends:
     - [Ollama](https://ollama.com/) (easier)
@@ -36,6 +37,7 @@ The latest models can be found on HuggingFace:
 
 **Gemma3**:  
 1B: TBD
+270M: TBD
 
 <details>
 

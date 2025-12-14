@@ -36,6 +36,9 @@ class DummyClient:
     def __init__(self, result: TextGenerationResult):
         self._result = result
 
+    def _generate_system_prompt(self, prompt_template, llm_api, entity_options):
+        return prompt_template
+
     def _supports_vision(self, _options):  # pragma: no cover - not needed for tests
         return False
 
