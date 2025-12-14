@@ -43,8 +43,6 @@ from .const import (
     DEFAULT_TOOL_CALL_PREFIX,
     DEFAULT_TOOL_CALL_SUFFIX,
     DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
-    HOME_LLM_API_ID,
-    SERVICE_TOOL_NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)
