@@ -155,7 +155,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
 
         session = async_get_clientsession(self.hass)
 
-        async def anext_token() -> AsyncGenerator[Tuple[Optional[str], Optional[List[llm.ToolInput]]], None]:
+        async def anext_token() -> AsyncGenerator[Tuple[Optional[str], Optional[List[dict]]], None]:
             response = None
             chunk = None
             try:
@@ -175,7 +175,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
                             break
 
                         if chunk and chunk.strip():
-                            to_say, tool_calls = self._extract_response(json.loads(chunk), llm_api, agent_id)
+                            to_say, tool_calls = self._extract_response(json.loads(chunk))
                             if to_say or tool_calls:
                                 yield to_say, tool_calls
             except asyncio.TimeoutError as err:
@@ -183,14 +183,14 @@ class GenericOpenAIAPIClient(LocalLLMClient):
             except aiohttp.ClientError as err:
                 raise HomeAssistantError(f"Failed to communicate with the API! {err}") from err
 
-        return self._async_parse_completion(llm_api, agent_id, entity_options, anext_token=anext_token())
+        return self._async_stream_parse_completion(llm_api, agent_id, entity_options, anext_token=anext_token())
     
     def _chat_completion_params(self, entity_options: dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
         request_params = {}
         endpoint = "/chat/completions"
         return endpoint, request_params
 
-    def _extract_response(self, response_json: dict, llm_api: llm.APIInstance | None, agent_id: str) -> Tuple[Optional[str], Optional[List[llm.ToolInput]]]:
+    def _extract_response(self, response_json: dict) -> Tuple[Optional[str], Optional[List[dict]]]:
         if "choices" not in response_json or len(response_json["choices"]) == 0: # finished
             _LOGGER.warning("Response missing or empty 'choices'. Keys present: %s. Full response: %s",
                             list(response_json.keys()), response_json)
@@ -204,16 +204,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         elif response_json["object"] == "chat.completion.chunk":
             response_text = choice["delta"].get("content", "")
             if "tool_calls" in choice["delta"] and choice["delta"]["tool_calls"] is not None:
-                tool_calls = []
-                for call in choice["delta"]["tool_calls"]:
-                    tool_call, to_say = parse_raw_tool_call(
-                        call["function"], llm_api, agent_id)
-                    
-                    if tool_call:
-                        tool_calls.append(tool_call)
-                        
-                    if to_say:
-                        response_text += to_say
+                tool_calls = [call["function"] for call in choice["delta"]["tool_calls"]]
             streamed = True
         else:
             response_text = choice["text"]
@@ -398,7 +389,10 @@ class GenericOpenAIResponsesAPIClient(LocalLLMClient):
 
                 try:
                     text = self._extract_response(response_json)
-                    return TextGenerationResult(response=text, response_streamed=False)
+                    if not text:
+                        return TextGenerationResult(raise_error=True, error_msg="The Responses API returned an empty response.")
+                    # return await self._async_parse_completion(llm_api, agent_id, entity_options, text)
+                    return TextGenerationResult(response=text) # Currently we don't extract any info from the response besides the raw model output
                 except Exception as err:
                     _LOGGER.exception("Failed to parse Responses API payload: %s", err)
                     return TextGenerationResult(raise_error=True, error_msg=f"Failed to parse Responses API payload: {err}")

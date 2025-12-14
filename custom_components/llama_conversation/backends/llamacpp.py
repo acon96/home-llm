@@ -464,5 +464,5 @@ class LlamaCppClient(LocalLLMClient):
                     tool_calls = chunk["choices"][0]["delta"].get("tool_calls")
                     yield content, tool_calls
 
-        return self._async_parse_completion(llm_api, agent_id, entity_options, next_token=next_token())
+        return self._async_stream_parse_completion(llm_api, agent_id, entity_options, next_token=next_token())
 

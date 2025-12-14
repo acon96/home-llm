@@ -155,33 +155,20 @@ class OllamaAPIClient(LocalLLMClient):
 
         return models
 
-    def _extract_response(self, response_chunk: ChatResponse) -> Tuple[Optional[str], Optional[List[llm.ToolInput]]]:
-        message = getattr(response_chunk, "message", None)
-        content = getattr(message, "content", None) if message else None
-        raw_tool_calls = getattr(message, "tool_calls", None) if message else None
+    def _extract_response(self, response_chunk: ChatResponse) -> Tuple[Optional[str], Optional[List[dict]]]:
+        content = response_chunk.message.content
+        raw_tool_calls = response_chunk.message.tool_calls
 
-        tool_calls: Optional[List[llm.ToolInput]] = None
         if raw_tool_calls:
-            parsed_tool_calls: list[llm.ToolInput] = []
-            for tool_call in raw_tool_calls:
-                function = getattr(tool_call, "function", None)
-                name = getattr(function, "name", None) if function else None
-                if not name:
-                    continue
-
-                arguments = getattr(function, "arguments", None) or {}
-                if isinstance(arguments, Mapping):
-                    arguments_dict = dict(arguments)
-                else:
-                    arguments_dict = {"raw": arguments}
-
-                parsed_tool_calls.append(llm.ToolInput(tool_name=name, tool_args=arguments_dict))
-
-            if parsed_tool_calls:
-                tool_calls = parsed_tool_calls
-
-        if content is None and not tool_calls:
-            return None, None
+            # return openai formatted tool calls
+            tool_calls = [{
+                "function": {
+                    "name": call.function.name,
+                    "arguments": call.function.arguments,
+                }
+            } for call in raw_tool_calls]
+        else:
+            tool_calls = None
 
         return content, tool_calls
 
@@ -226,7 +213,7 @@ class OllamaAPIClient(LocalLLMClient):
             tools = get_oai_formatted_tools(llm_api, self._async_get_all_exposed_domains())
         keep_alive_payload = self._format_keep_alive(keep_alive)
 
-        async def anext_token() -> AsyncGenerator[Tuple[Optional[str], Optional[List[llm.ToolInput]]], None]:
+        async def anext_token() -> AsyncGenerator[Tuple[Optional[str], Optional[List[dict]]], None]:
             client = self._build_client(timeout=timeout)
             try:
                 stream = await client.chat(
@@ -249,4 +236,4 @@ class OllamaAPIClient(LocalLLMClient):
             except (ResponseError, ConnectionError) as err:
                 raise HomeAssistantError(f"Failed to communicate with the API! {err}") from err
 
-        return self._async_parse_completion(llm_api, agent_id, entity_options, anext_token=anext_token())
+        return self._async_stream_parse_completion(llm_api, agent_id, entity_options, anext_token=anext_token())
