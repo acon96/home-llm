@@ -279,7 +279,8 @@ def get_oai_formatted_tools(llm_api: llm.APIInstance, domains: list[str]) -> Lis
     result: List[ChatCompletionTool] = []
 
     for tool in llm_api.tools:
-        if tool.name == SERVICE_TOOL_NAME:
+        # when combining with home assistant llm APIs, it adds a prefix to differentiate tools; compare against the suffix here
+        if tool.name.endswith(SERVICE_TOOL_NAME):
             result.extend([{
                 "type": "function",
                 "function": {

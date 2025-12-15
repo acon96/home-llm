@@ -156,7 +156,7 @@ class LocalLLMTaskEntity(
     def _extract_data(
         self,
         raw_text: str,
-        tool_calls: list | None,
+        tool_calls: list[llm.ToolInput] | None,
         extraction_method: ResultExtractionMethod,
         chat_log: conversation.ChatLog,
         structure: vol.Schema | None,
@@ -178,8 +178,9 @@ class LocalLLMTaskEntity(
 
             if extraction_method == ResultExtractionMethod.TOOL:
                 first_tool = next(iter(tool_calls or []), None)
-                if not first_tool or not getattr(first_tool, "tool_args", None):
+                if not first_tool:
                     return None, HomeAssistantError("Please produce at least one tool call with the structured response.")
+                
                 structure(first_tool.tool_args) # validate tool call against vol schema structure
                 return ai_task.GenDataTaskResult(
                     conversation_id=chat_log.conversation_id,
