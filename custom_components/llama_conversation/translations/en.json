@@ -70,7 +70,7 @@
                 "model_parameters": {
                     "data": {
                         "max_new_tokens": "Maximum tokens to return in response",
-                        "llm_hass_api": "Selected LLM API",
+                        "llm_hass_api": "Selected LLM API(s)",
                         "prompt": "System Prompt",
                         "temperature": "Temperature",
                         "top_k": "Top K",
@@ -109,7 +109,7 @@
                         "max_tool_call_iterations": "Maximum Tool Call Attempts"
                     },
                     "data_description": {
-                        "llm_hass_api": "Select 'Assist' if you want the model to be able to control devices. If you are using the Home-LLM v1, v2, or v3 model then select 'Home-LLM (v1-3)'",
+                        "llm_hass_api": "Select 'Assist' if you want the model to be able to control devices. If you are using the Home-LLM (v1-3) model then select 'Home Assistant Services'",
                         "prompt": "See [here](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) for more information on model prompting.",
                         "in_context_examples": "If you are using a model that is not specifically fine-tuned for use with this integration: enable this",
                         "extra_attributes_to_expose": "This is the list of Home Assistant 'attributes' that are exposed to the model. This limits how much information the model is able to see and answer questions on.",
@@ -124,7 +124,7 @@
                 "reconfigure": {
                     "data": {
                         "max_new_tokens": "Maximum tokens to return in response",
-                        "llm_hass_api": "Selected LLM API",
+                        "llm_hass_api": "Selected LLM API(s)",
                         "prompt": "System Prompt",
                         "temperature": "Temperature",
                         "top_k": "Top K",
@@ -163,7 +163,7 @@
                         "max_tool_call_iterations": "Maximum Tool Call Attempts"
                     },
                     "data_description": {
-                        "llm_hass_api": "Select 'Assist' if you want the model to be able to control devices. If you are using the Home-LLM v1, v2, or v3 model then select 'Home-LLM (v1-3)'",
+                        "llm_hass_api": "Select 'Assist' if you want the model to be able to control devices. If you are using the Home-LLM (v1-3) model then select 'Home Assistant Services'",
                         "prompt": "See [here](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) for more information on model prompting.",
                         "in_context_examples": "If you are using a model that is not specifically fine-tuned for use with this integration: enable this",
                         "extra_attributes_to_expose": "This is the list of Home Assistant 'attributes' that are exposed to the model. This limits how much information the model is able to see and answer questions on.",
@@ -177,7 +177,7 @@
                 }
             }
         },
-        "ai_task_data": {
+        "ai_task": {
             "initiate_flow": {
                 "user": "Add AI Task Handler",
                 "reconfigure": "Reconfigure AI Task Handler"
@@ -246,7 +246,9 @@
                         "tool_call_prefix": "Tool Call Prefix",
                         "tool_call_suffix": "Tool Call Suffix",
                         "enable_legacy_tool_calling": "Enable Legacy Tool Calling",
-                        "max_tool_call_iterations": "Maximum Tool Call Attempts"
+                        "max_tool_call_iterations": "Maximum Tool Call Attempts",
+                        "ai_task_extraction_method": "Structured Data Extraction Method",
+                        "ai_task_retries": "Retry attempts for structured data extraction"
                     },
                     "data_description": {
                         "prompt": "See [here](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) for more information on model prompting.",
@@ -255,7 +257,8 @@
                         "gbnf_grammar": "Forces the model to output properly formatted responses. Ensure the file specified below exists in the integration directory.",
                         "prompt_caching": "Prompt caching attempts to pre-process the prompt (house state) and cache the processing that needs to be done to understand the prompt. Enabling this will cause the model to re-process the prompt any time an entity state changes in the house, restricted by the interval below.",
                         "enable_legacy_tool_calling": "Prefer to process tool calls locally rather than relying on the backend to handle the tool calling format. Can be more reliable, however it requires properly setting the tool call prefix and suffix.",
-                        "max_tool_call_iterations": "Set to 0 to generate the response and tool call in one attempt, without looping (use this for Home models v1-v3)."
+                        "max_tool_call_iterations": "Set to 0 to generate the response and tool call in one attempt, without looping (use this for Home models v1-v3).",
+                        "ai_task_extraction_method": "Select the method used to extract structured data from the model's response. 'Structured Output' tells the backend to force the model to produce output following the provided JSON Schema; 'Tool Calling' provides a tool to the model that should be called with the appropriate arguments that match the desired output structure."
                     },
                     "description": "Please configure the model according to how it should be prompted. There are many different options and selecting the correct ones for your model is essential to getting optimal performance. See [here](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) for more information about the options on this page.\n\n**Some defaults may have been chosen for you based on the name of the selected model name or filename.** If you renamed a file or are using a fine-tuning of a supported model, then the defaults may not have been detected.",
                     "title": "Configure the selected model"
@@ -263,7 +266,7 @@
                 "reconfigure": {
                     "data": {
                         "max_new_tokens": "Maximum tokens to return in response",
-                        "llm_hass_api": "Selected LLM API",
+                        "llm_hass_api": "Selected LLM API(s)",
                         "prompt": "System Prompt",
                         "temperature": "Temperature",
                         "top_k": "Top K",

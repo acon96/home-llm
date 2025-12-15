@@ -24,7 +24,7 @@ from homeassistant.requirements import pip_kwargs
 from homeassistant.util import color
 from homeassistant.util.package import install_package, is_installed
 
-from voluptuous_openapi import convert
+from voluptuous_openapi import convert as convert_to_openapi
 
 from .const import (
     DOMAIN,
@@ -32,7 +32,7 @@ from .const import (
     ALLOWED_SERVICE_CALL_ARGUMENTS,
     SERVICE_TOOL_ALLOWED_SERVICES,
     SERVICE_TOOL_ALLOWED_DOMAINS,
-    HOME_LLM_API_ID,
+    SERVICE_TOOL_NAME,
 )
 
 from typing import TYPE_CHECKING
@@ -275,26 +275,30 @@ def install_llama_cpp_python(config_dir: str, force_reinstall: bool = False, spe
 def format_url(*, hostname: str, port: str, ssl: bool, path: str):
     return f"{'https' if ssl else 'http'}://{hostname}{ ':' + port if port else ''}{path}"
 
-def get_oai_formatted_tools(llm_api: llm.APIInstance, domains: list[str]) -> List[ChatCompletionTool]:
-    if llm_api.api.id == HOME_LLM_API_ID:
-        result: List[ChatCompletionTool] = [ {
-            "type": "function",
-            "function": {
-                "name": tool["name"],
-                "description": f"Call the Home Assistant service '{tool['name']}'",
-                "parameters": convert(tool["arguments"], custom_serializer=llm_api.custom_serializer)
-            }
-        } for tool in get_home_llm_tools(llm_api, domains) ]
-    
-    else:
-        result: List[ChatCompletionTool] = [ {
-            "type": "function",
-            "function": {
-                "name": tool.name,
-                "description": tool.description or "",
-                "parameters": convert(tool.parameters, custom_serializer=llm_api.custom_serializer)
-            }
-        } for tool in llm_api.tools ]
+def get_oai_formatted_tools(llm_api: llm.APIInstance, domains: list[str]) -> List[ChatCompletionTool]:    
+    result: List[ChatCompletionTool] = []
+
+    for tool in llm_api.tools:
+        # when combining with home assistant llm APIs, it adds a prefix to differentiate tools; compare against the suffix here
+        if tool.name.endswith(SERVICE_TOOL_NAME):
+            result.extend([{
+                "type": "function",
+                "function": {
+                    "name": tool["name"],
+                    "description": f"Call the Home Assistant service '{tool['name']}'",
+                    "parameters": convert_to_openapi(tool["arguments"], custom_serializer=llm_api.custom_serializer)
+                }
+            } for tool in get_home_llm_tools(llm_api, domains) ])
+        else:
+            result.append({
+                "type": "function",
+                "function": {
+                    "name": tool.name,
+                    "description": tool.description or "",
+                    "parameters": convert_to_openapi(tool.parameters, custom_serializer=llm_api.custom_serializer)
+                }
+            })
+
 
     return result
 
@@ -396,41 +400,44 @@ def get_home_llm_tools(llm_api: llm.APIInstance, domains: list[str]) -> List[Dic
 
     return tools
 
-def parse_raw_tool_call(raw_block: str | dict, llm_api: llm.APIInstance, agent_id: str) -> tuple[llm.ToolInput | None, str | None]:
+def parse_raw_tool_call(raw_block: str | dict, agent_id: str) -> tuple[llm.ToolInput | None, str | None]:
     if isinstance(raw_block, dict):
         parsed_tool_call = raw_block
     else:
         parsed_tool_call: dict = json.loads(raw_block)
 
-    if llm_api.api.id == HOME_LLM_API_ID:
-        schema_to_validate = vol.Schema({
-            vol.Required('service'): str,
-            vol.Required('target_device'): str,
-            vol.Optional('rgb_color'): str,
-            vol.Optional('brightness'): vol.Coerce(float),
-            vol.Optional('temperature'): vol.Coerce(float),
-            vol.Optional('humidity'): vol.Coerce(float),
-            vol.Optional('fan_mode'): str,
-            vol.Optional('hvac_mode'): str,
-            vol.Optional('preset_mode'): str,
-            vol.Optional('duration'): str,
-            vol.Optional('item'): str,
-        })
-    else:
-        schema_to_validate = vol.Schema({
+    # try to validate either format
+    is_services_tool_call = False
+    try:
+        base_schema_to_validate = vol.Schema({
             vol.Required("name"): str,
             vol.Required("arguments"): vol.Union(str, dict),
         })
-
-    try:
-        schema_to_validate(parsed_tool_call)
+        base_schema_to_validate(parsed_tool_call)
     except vol.Error as ex:
-        _LOGGER.info(f"LLM produced an improperly formatted response: {repr(ex)}")
-        raise MalformedToolCallException(agent_id, "", "unknown", str(raw_block), "Tool call was not properly formatted")
+        try:
+            home_llm_schema_to_validate = vol.Schema({
+                vol.Required('service'): str,
+                vol.Required('target_device'): str,
+                vol.Optional('rgb_color'): str,
+                vol.Optional('brightness'): vol.Coerce(float),
+                vol.Optional('temperature'): vol.Coerce(float),
+                vol.Optional('humidity'): vol.Coerce(float),
+                vol.Optional('fan_mode'): str,
+                vol.Optional('hvac_mode'): str,
+                vol.Optional('preset_mode'): str,
+                vol.Optional('duration'): str,
+                vol.Optional('item'): str,
+            })
+            home_llm_schema_to_validate(parsed_tool_call)
+            is_services_tool_call = True
+        except vol.Error as ex:
+            _LOGGER.info(f"LLM produced an improperly formatted response: {repr(ex)}")
+            raise MalformedToolCallException(agent_id, "", "unknown", str(raw_block), "Tool call was not properly formatted")
 
     # try to fix certain arguments
-    args_dict = parsed_tool_call if llm_api.api.id == HOME_LLM_API_ID else parsed_tool_call["arguments"]
-    tool_name = parsed_tool_call.get("name", parsed_tool_call.get("service", ""))
+    args_dict = parsed_tool_call if is_services_tool_call else parsed_tool_call["arguments"]
+    tool_name = SERVICE_TOOL_NAME if is_services_tool_call else parsed_tool_call["name"]
 
     if isinstance(args_dict, str):
         if not args_dict.strip():

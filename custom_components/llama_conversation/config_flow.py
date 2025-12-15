@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_LLM_HASS_API, UnitOfTime
+from homeassistant.components import conversation, ai_task
 from homeassistant.data_entry_flow import (
     AbortFlow,
 )
@@ -46,6 +47,11 @@ from .const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
+    DEFAULT_AI_TASK_PROMPT,
+    CONF_AI_TASK_RETRIES,
+    DEFAULT_AI_TASK_RETRIES,
+    CONF_AI_TASK_EXTRACTION_METHOD,
+    DEFAULT_AI_TASK_EXTRACTION_METHOD,
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
@@ -150,7 +156,7 @@ from .const import (
     DEFAULT_OPTIONS,
     option_overrides,
     RECOMMENDED_CHAT_MODELS,
-    EMBEDDED_LLAMA_CPP_PYTHON_VERSION
+    EMBEDDED_LLAMA_CPP_PYTHON_VERSION,
 )
 
 from . import HomeLLMAPI, LocalLLMConfigEntry, LocalLLMClient, BACKEND_TO_CLS
@@ -225,7 +231,7 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
     """Handle a config flow for Local LLM Conversation."""
 
     VERSION = 3
-    MINOR_VERSION = 1
+    MINOR_VERSION = 2
 
     install_wheel_task = None
     install_wheel_error = None
@@ -399,8 +405,8 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {
-            "conversation": LocalLLMSubentryFlowHandler,
-            # "ai_task_data": LocalLLMSubentryFlowHandler,
+            conversation.DOMAIN: LocalLLMSubentryFlowHandler,
+            ai_task.DOMAIN: LocalLLMSubentryFlowHandler,
         }
 
 
@@ -583,40 +589,13 @@ def local_llama_config_option_schema(
     backend_type: str, 
     subentry_type: str,
 ) -> dict:
-
-    default_prompt = build_prompt_template(language, DEFAULT_PROMPT)
-
+    
     result: dict = {
-        vol.Optional(
-            CONF_PROMPT,
-            description={"suggested_value": options.get(CONF_PROMPT, default_prompt)},
-            default=options.get(CONF_PROMPT, default_prompt),
-        ): TemplateSelector(),
         vol.Optional(
             CONF_TEMPERATURE,
             description={"suggested_value": options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)},
             default=options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE),
         ): NumberSelector(NumberSelectorConfig(min=0.0, max=2.0, step=0.05, mode=NumberSelectorMode.BOX)),
-        vol.Required(
-            CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
-            description={"suggested_value": options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES)},
-            default=DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
-        ): BooleanSelector(BooleanSelectorConfig()),
-        vol.Required(
-            CONF_IN_CONTEXT_EXAMPLES_FILE,
-            description={"suggested_value": options.get(CONF_IN_CONTEXT_EXAMPLES_FILE)},
-            default=DEFAULT_IN_CONTEXT_EXAMPLES_FILE,
-        ): str,
-        vol.Required(
-            CONF_NUM_IN_CONTEXT_EXAMPLES,
-            description={"suggested_value": options.get(CONF_NUM_IN_CONTEXT_EXAMPLES)},
-            default=DEFAULT_NUM_IN_CONTEXT_EXAMPLES,
-        ): NumberSelector(NumberSelectorConfig(min=1, max=16, step=1)),
-        vol.Required(
-            CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
-            description={"suggested_value": options.get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE)},
-            default=DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
-        ): TextSelector(TextSelectorConfig(multiple=True)),
         vol.Required(
             CONF_THINKING_PREFIX,
             description={"suggested_value": options.get(CONF_THINKING_PREFIX)},
@@ -644,9 +623,114 @@ def local_llama_config_option_schema(
         ): bool,
     }
 
-    if backend_type == BACKEND_TYPE_LLAMA_CPP:
+    if subentry_type == ai_task.DOMAIN:
         result.update({
+            vol.Optional(
+                CONF_PROMPT,
+                description={"suggested_value": options.get(CONF_PROMPT, DEFAULT_AI_TASK_PROMPT)},
+                default=options.get(CONF_PROMPT, DEFAULT_AI_TASK_PROMPT),
+            ): TemplateSelector(),
+            vol.Required(
+                CONF_AI_TASK_EXTRACTION_METHOD,
+                description={"suggested_value": options.get(CONF_AI_TASK_EXTRACTION_METHOD, DEFAULT_AI_TASK_EXTRACTION_METHOD)},
+                default=options.get(CONF_AI_TASK_EXTRACTION_METHOD, DEFAULT_AI_TASK_EXTRACTION_METHOD),
+            ): SelectSelector(SelectSelectorConfig(
+                options=[
+                    SelectOptionDict(value="none", label="None"),
+                    SelectOptionDict(value="structure", label="Structured output"),
+                    SelectOptionDict(value="tool", label="Tool call"),
+                ],
+                mode=SelectSelectorMode.DROPDOWN,
+            )),
+            vol.Required(
+                CONF_AI_TASK_RETRIES,
+                description={"suggested_value": options.get(CONF_AI_TASK_RETRIES, DEFAULT_AI_TASK_RETRIES)},
+                default=options.get(CONF_AI_TASK_RETRIES, DEFAULT_AI_TASK_RETRIES),
+            ): NumberSelector(NumberSelectorConfig(min=0, max=5, step=1, mode=NumberSelectorMode.BOX)),
+        })
+    elif subentry_type == conversation.DOMAIN:
+        default_prompt = build_prompt_template(language, DEFAULT_PROMPT)
+        apis: list[SelectOptionDict] = [
+            SelectOptionDict(
+                label=api.name,
+                value=api.id,
+            )
+            for api in llm.async_get_apis(hass)
+        ]
+        result.update({
+            vol.Optional(
+                CONF_PROMPT,
+                description={"suggested_value": options.get(CONF_PROMPT, default_prompt)},
+                default=options.get(CONF_PROMPT, default_prompt),
+            ): TemplateSelector(),
+            vol.Required(
+                CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
+                description={"suggested_value": options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES)},
+                default=DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
+            ): BooleanSelector(BooleanSelectorConfig()),
+            vol.Required(
+                CONF_IN_CONTEXT_EXAMPLES_FILE,
+                description={"suggested_value": options.get(CONF_IN_CONTEXT_EXAMPLES_FILE)},
+                default=DEFAULT_IN_CONTEXT_EXAMPLES_FILE,
+            ): str,
+            vol.Required(
+                CONF_NUM_IN_CONTEXT_EXAMPLES,
+                description={"suggested_value": options.get(CONF_NUM_IN_CONTEXT_EXAMPLES)},
+                default=DEFAULT_NUM_IN_CONTEXT_EXAMPLES,
+            ): NumberSelector(NumberSelectorConfig(min=1, max=16, step=1)),
+            vol.Required(
+                CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
+                description={"suggested_value": options.get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE)},
+                default=DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
+            ): TextSelector(TextSelectorConfig(multiple=True)),
+            vol.Optional(
+                CONF_LLM_HASS_API,
+                description={"suggested_value": options.get(CONF_LLM_HASS_API)},
+                default=None,
+            ): SelectSelector(SelectSelectorConfig(options=apis, multiple=True)),
+            vol.Optional(
+                CONF_REFRESH_SYSTEM_PROMPT,
+                description={"suggested_value": options.get(CONF_REFRESH_SYSTEM_PROMPT, DEFAULT_REFRESH_SYSTEM_PROMPT)},
+                default=options.get(CONF_REFRESH_SYSTEM_PROMPT, DEFAULT_REFRESH_SYSTEM_PROMPT),
+            ): BooleanSelector(BooleanSelectorConfig()),
+            vol.Optional(
+                CONF_REMEMBER_CONVERSATION,
+                description={"suggested_value": options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION)},
+                default=options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION),
+            ): BooleanSelector(BooleanSelectorConfig()),
+            vol.Optional(
+                CONF_REMEMBER_NUM_INTERACTIONS,
+                description={"suggested_value": options.get(CONF_REMEMBER_NUM_INTERACTIONS, DEFAULT_REMEMBER_NUM_INTERACTIONS)},
+                default=options.get(CONF_REMEMBER_NUM_INTERACTIONS, DEFAULT_REMEMBER_NUM_INTERACTIONS),
+            ): NumberSelector(NumberSelectorConfig(min=0, max=100, mode=NumberSelectorMode.BOX)),
+            vol.Optional(
+                CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
+                description={"suggested_value": options.get(CONF_REMEMBER_CONVERSATION_TIME_MINUTES, DEFAULT_REMEMBER_CONVERSATION)},
+                default=options.get(CONF_REMEMBER_CONVERSATION_TIME_MINUTES, DEFAULT_REMEMBER_CONVERSATION),
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1440, mode=NumberSelectorMode.BOX)),
+            vol.Required(
+                CONF_MAX_TOOL_CALL_ITERATIONS,
+                description={"suggested_value": options.get(CONF_MAX_TOOL_CALL_ITERATIONS)},
+                default=DEFAULT_MAX_TOOL_CALL_ITERATIONS,
+            ): int,
+        })
+
+    if backend_type == BACKEND_TYPE_LLAMA_CPP:
+        if subentry_type == conversation.DOMAIN:
+            result.update({
                 vol.Required(
+                    CONF_PROMPT_CACHING_ENABLED,
+                    description={"suggested_value": options.get(CONF_PROMPT_CACHING_ENABLED)},
+                    default=DEFAULT_PROMPT_CACHING_ENABLED,
+                ): BooleanSelector(BooleanSelectorConfig()),
+                vol.Required(
+                    CONF_PROMPT_CACHING_INTERVAL,
+                    description={"suggested_value": options.get(CONF_PROMPT_CACHING_INTERVAL)},
+                    default=DEFAULT_PROMPT_CACHING_INTERVAL,
+                ): NumberSelector(NumberSelectorConfig(min=1, max=60, step=1)),
+            })
+        result.update({
+            vol.Required(
                 CONF_MAX_TOKENS,
                 description={"suggested_value": options.get(CONF_MAX_TOKENS)},
                 default=DEFAULT_MAX_TOKENS,
@@ -671,16 +755,6 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options.get(CONF_TYPICAL_P)},
                 default=DEFAULT_TYPICAL_P,
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Required(
-                CONF_PROMPT_CACHING_ENABLED,
-                description={"suggested_value": options.get(CONF_PROMPT_CACHING_ENABLED)},
-                default=DEFAULT_PROMPT_CACHING_ENABLED,
-            ): BooleanSelector(BooleanSelectorConfig()),
-            vol.Required(
-                CONF_PROMPT_CACHING_INTERVAL,
-                description={"suggested_value": options.get(CONF_PROMPT_CACHING_INTERVAL)},
-                default=DEFAULT_PROMPT_CACHING_INTERVAL,
-            ): NumberSelector(NumberSelectorConfig(min=1, max=60, step=1)),
             # TODO: add rope_scaling_type
             vol.Required(
                 CONF_CONTEXT_LENGTH,
@@ -879,60 +953,13 @@ def local_llama_config_option_schema(
             ): NumberSelector(NumberSelectorConfig(min=-1, max=1440, step=1, unit_of_measurement=UnitOfTime.MINUTES, mode=NumberSelectorMode.BOX)),
         })
 
-    if subentry_type == "conversation":
-        apis: list[SelectOptionDict] = [
-            SelectOptionDict(
-                label="No control",
-                value="none",
-            )
-        ]
-        apis.extend(
-            SelectOptionDict(
-                label=api.name,
-                value=api.id,
-            )
-            for api in llm.async_get_apis(hass)
-        )
-        result.update({
-            vol.Optional(
-                CONF_LLM_HASS_API,
-                description={"suggested_value": options.get(CONF_LLM_HASS_API)},
-                default="none",
-            ): SelectSelector(SelectSelectorConfig(options=apis)),
-            vol.Optional(
-                CONF_REFRESH_SYSTEM_PROMPT,
-                description={"suggested_value": options.get(CONF_REFRESH_SYSTEM_PROMPT, DEFAULT_REFRESH_SYSTEM_PROMPT)},
-                default=options.get(CONF_REFRESH_SYSTEM_PROMPT, DEFAULT_REFRESH_SYSTEM_PROMPT),
-            ): BooleanSelector(BooleanSelectorConfig()),
-            vol.Optional(
-                CONF_REMEMBER_CONVERSATION,
-                description={"suggested_value": options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION)},
-                default=options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION),
-            ): BooleanSelector(BooleanSelectorConfig()),
-            vol.Optional(
-                CONF_REMEMBER_NUM_INTERACTIONS,
-                description={"suggested_value": options.get(CONF_REMEMBER_NUM_INTERACTIONS, DEFAULT_REMEMBER_NUM_INTERACTIONS)},
-                default=options.get(CONF_REMEMBER_NUM_INTERACTIONS, DEFAULT_REMEMBER_NUM_INTERACTIONS),
-            ): NumberSelector(NumberSelectorConfig(min=0, max=100, mode=NumberSelectorMode.BOX)),
-            vol.Optional(
-                CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
-                description={"suggested_value": options.get(CONF_REMEMBER_CONVERSATION_TIME_MINUTES, DEFAULT_REMEMBER_CONVERSATION)},
-                default=options.get(CONF_REMEMBER_CONVERSATION_TIME_MINUTES, DEFAULT_REMEMBER_CONVERSATION),
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1440, mode=NumberSelectorMode.BOX)),
-            vol.Required(
-                CONF_MAX_TOOL_CALL_ITERATIONS,
-                description={"suggested_value": options.get(CONF_MAX_TOOL_CALL_ITERATIONS)},
-                default=DEFAULT_MAX_TOOL_CALL_ITERATIONS,
-            ): int,
-        })
-    elif subentry_type == "ai_task_data":
-        pass # no additional options for ai_task_data for now
-
     # sort the options
     global_order = [
         # general
         CONF_LLM_HASS_API,
         CONF_PROMPT,
+        CONF_AI_TASK_EXTRACTION_METHOD,
+        CONF_AI_TASK_RETRIES,
         CONF_CONTEXT_LENGTH,
         CONF_MAX_TOKENS,
         # sampling parameters
@@ -1122,8 +1149,16 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
         description_placeholders = {}
         entry = self._get_entry()
         backend_type = entry.data[CONF_BACKEND_TYPE]
+        is_ai_task = self._subentry_type == ai_task.DOMAIN
 
-        if CONF_PROMPT not in self.model_config:
+        if is_ai_task:
+            if CONF_PROMPT not in self.model_config:
+                self.model_config[CONF_PROMPT] = DEFAULT_AI_TASK_PROMPT
+            if CONF_AI_TASK_RETRIES not in self.model_config:
+                self.model_config[CONF_AI_TASK_RETRIES] = DEFAULT_AI_TASK_RETRIES
+            if CONF_AI_TASK_EXTRACTION_METHOD not in self.model_config:
+                self.model_config[CONF_AI_TASK_EXTRACTION_METHOD] = DEFAULT_AI_TASK_EXTRACTION_METHOD
+        elif CONF_PROMPT not in self.model_config:
             # determine selected language from model config or parent options
             selected_language = self.model_config.get(
                 CONF_SELECTED_LANGUAGE, entry.options.get(CONF_SELECTED_LANGUAGE, "en")
@@ -1156,20 +1191,21 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
         )
 
         if user_input:
-            if not user_input.get(CONF_REFRESH_SYSTEM_PROMPT) and user_input.get(CONF_PROMPT_CACHING_ENABLED):
-                errors["base"] = "sys_refresh_caching_enabled"
+            if not is_ai_task:
+                if not user_input.get(CONF_REFRESH_SYSTEM_PROMPT) and user_input.get(CONF_PROMPT_CACHING_ENABLED):
+                    errors["base"] = "sys_refresh_caching_enabled"
 
-            if user_input.get(CONF_USE_GBNF_GRAMMAR):
-                filename = user_input.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE)
-                if not os.path.isfile(os.path.join(os.path.dirname(__file__), filename)):
-                    errors["base"] = "missing_gbnf_file"
-                    description_placeholders["filename"] = filename
+                if user_input.get(CONF_USE_GBNF_GRAMMAR):
+                    filename = user_input.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE)
+                    if not os.path.isfile(os.path.join(os.path.dirname(__file__), filename)):
+                        errors["base"] = "missing_gbnf_file"
+                        description_placeholders["filename"] = filename
 
-            if user_input.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES):
-                filename = user_input.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE)
-                if not os.path.isfile(os.path.join(os.path.dirname(__file__), filename)):
-                    errors["base"] = "missing_icl_file"
-                    description_placeholders["filename"] = filename
+                if user_input.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES):
+                    filename = user_input.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE)
+                    if not os.path.isfile(os.path.join(os.path.dirname(__file__), filename)):
+                        errors["base"] = "missing_icl_file"
+                        description_placeholders["filename"] = filename
 
             # --- Normalize numeric fields to ints to avoid slice/type errors later ---
             for key in (
@@ -1178,6 +1214,7 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
                 CONF_CONTEXT_LENGTH,
                 CONF_MAX_TOKENS,
                 CONF_REQUEST_TIMEOUT,
+                CONF_AI_TASK_RETRIES,
              ):
                 if key in user_input:
                     user_input[key] = _coerce_int(user_input[key], user_input.get(key) or 0)
@@ -1187,10 +1224,6 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
                     # validate input
                     schema(user_input)
                     self.model_config.update(user_input)
-
-                    # clear LLM API if 'none' selected
-                    if self.model_config.get(CONF_LLM_HASS_API) == "none":
-                        self.model_config.pop(CONF_LLM_HASS_API, None)
                     
                     return await self.async_step_finish()
                 except Exception:

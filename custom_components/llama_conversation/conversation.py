@@ -17,6 +17,7 @@ from custom_components.llama_conversation.utils import MalformedToolCallExceptio
 
 from .entity import LocalLLMEntity, LocalLLMClient, LocalLLMConfigEntry
 from .const import (
+    CONF_CHAT_MODEL,
     CONF_PROMPT,
     CONF_REFRESH_SYSTEM_PROMPT,
     CONF_REMEMBER_CONVERSATION,
@@ -37,6 +38,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry, asy
 
     for subentry in entry.subentries.values():
         if subentry.subentry_type != conversation.DOMAIN:
+            continue
+
+        if CONF_CHAT_MODEL not in subentry.data:
+            _LOGGER.warning("Conversation subentry %s missing required config key %s, You must delete the model and re-create it.", subentry.subentry_id, CONF_CHAT_MODEL)
             continue
 
         # create one agent entity per conversation subentry
