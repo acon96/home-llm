@@ -9,7 +9,6 @@ import time
 from typing import Any, Callable, List, Generator, AsyncGenerator, Optional, cast
 
 from homeassistant.components import conversation as conversation
-from homeassistant.components.conversation.const import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LLM_HASS_API
@@ -57,6 +56,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_LLAMACPP_THREAD_COUNT,
     DEFAULT_LLAMACPP_BATCH_THREAD_COUNT,
     DOMAIN,
+    CONF_RESPONSE_JSON_SCHEMA,
 )
 from custom_components.llama_conversation.entity import LocalLLMClient, TextGenerationResult
 
@@ -64,10 +64,15 @@ from custom_components.llama_conversation.entity import LocalLLMClient, TextGene
 from typing import TYPE_CHECKING
 from types import ModuleType
 if TYPE_CHECKING:
-    from llama_cpp import Llama as LlamaType, LlamaGrammar as LlamaGrammarType
+    from llama_cpp import (
+        Llama as LlamaType,
+        LlamaGrammar as LlamaGrammarType,
+        ChatCompletionRequestResponseFormat
+    )
 else:
     LlamaType = Any
     LlamaGrammarType = Any
+    ChatCompletionRequestResponseFormat = Any
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -283,8 +288,6 @@ class LlamaCppClient(LocalLLMClient):
         # Sort the items based on the sort_key function
         sorted_items = sorted(list(entity_order.items()), key=sort_key)
 
-        _LOGGER.debug(f"sorted_items: {sorted_items}")
-
         sorted_entities: dict[str, dict[str, str]] = {}
         for item_name, _ in sorted_items:
             sorted_entities[item_name] = entities[item_name]
@@ -297,7 +300,7 @@ class LlamaCppClient(LocalLLMClient):
 
             entity_ids = [
                 state.entity_id for state in self.hass.states.async_all() \
-                    if async_should_expose(self.hass, CONVERSATION_DOMAIN, state.entity_id)
+                    if async_should_expose(self.hass, conversation.DOMAIN, state.entity_id)
             ]
 
             _LOGGER.debug(f"watching entities: {entity_ids}")
@@ -434,12 +437,20 @@ class LlamaCppClient(LocalLLMClient):
 
         _LOGGER.debug(f"Options: {entity_options}")
 
-        messages = get_oai_formatted_messages(conversation, user_content_as_list=True)
+        messages = get_oai_formatted_messages(conversation)
         tools = None
         if llm_api:
             tools = get_oai_formatted_tools(llm_api, self._async_get_all_exposed_domains())
 
         _LOGGER.debug(f"Generating completion with {len(messages)} messages and {len(tools) if tools else 0} tools...")
+
+        response_json_schema = entity_options.get(CONF_RESPONSE_JSON_SCHEMA)
+        response_format: Optional[ChatCompletionRequestResponseFormat] = None
+        if response_json_schema:
+            response_format = {
+                "type": "json_object",
+                "schema": response_json_schema,
+            }
 
         chat_completion = self.models[model_name].create_chat_completion(
             messages,
@@ -452,6 +463,7 @@ class LlamaCppClient(LocalLLMClient):
             max_tokens=max_tokens,
             grammar=grammar,
             stream=True,
+            response_format=response_format,
         )
 
         def next_token() -> Generator[tuple[Optional[str], Optional[List]]]:
@@ -464,5 +476,5 @@ class LlamaCppClient(LocalLLMClient):
                     tool_calls = chunk["choices"][0]["delta"].get("tool_calls")
                     yield content, tool_calls
 
-        return self._async_parse_completion(llm_api, agent_id, entity_options, next_token=next_token())
+        return self._async_stream_parse_completion(llm_api, agent_id, entity_options, next_token=next_token())
 

@@ -6,4 +6,5 @@ home-assistant-intents
 # testing requirements
 pytest
 pytest-asyncio
-pytest-homeassistant-custom-component==0.13.260
+# NOTE this must match the version of Home Assistant used for testing
+pytest-homeassistant-custom-component==0.13.272

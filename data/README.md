@@ -28,8 +28,8 @@ Start by installing system dependencies:
 Then create a Python virtual environment and install all necessary library:
 ```
 python3 -m venv .generate_data
-source ./.generate_data/bin/activate
-pip3 install pandas==2.2.2 datasets==2.20.0 webcolors==1.13 babel==2.15.0
+source .generate_data/bin/activate
+pip3 install -r requirements.txt
 ```
 
 ## Generating the dataset from piles

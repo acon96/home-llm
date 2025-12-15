@@ -57,7 +57,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-PLATFORMS = (Platform.CONVERSATION, ) # Platform.AI_TASK)
+PLATFORMS = (Platform.CONVERSATION,  Platform.AI_TASK)
 
 BACKEND_TO_CLS: dict[str, type[LocalLLMClient]] = {
     BACKEND_TYPE_LLAMA_CPP: LlamaCppClient,
@@ -184,6 +184,21 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: LocalLLMConfigE
         
         _LOGGER.debug("Migration to add downloaded model file complete") 
 
+    if config_entry.version == 3 and config_entry.minor_version == 1:
+        # convert selected APIs from single value to list
+        api_to_convert = config_entry.options.get(CONF_LLM_HASS_API)
+        new_options = dict(config_entry.options)
+        if api_to_convert is not None:
+            new_options[CONF_LLM_HASS_API] = [api_to_convert]
+        else:
+            new_options[CONF_LLM_HASS_API] = []
+
+        hass.config_entries.async_update_entry(
+            config_entry, options=MappingProxyType(new_options)
+        )
+        hass.config_entries.async_update_entry(config_entry, minor_version=2)
+
+
     return True
 
 class HassServiceTool(llm.Tool):
@@ -255,14 +270,14 @@ class HomeLLMAPI(llm.API):
         super().__init__(
             hass=hass,
             id=HOME_LLM_API_ID,
-            name="Home-LLM (v1-v3)",
+            name="Home Assistant Services",
         )
 
     async def async_get_api_instance(self, llm_context: llm.LLMContext) -> llm.APIInstance:
         """Return the instance of the API."""
         return llm.APIInstance(
             api=self,
-            api_prompt="Call services in Home Assistant by passing the service name and the device to control.",
+            api_prompt="Call services in Home Assistant by passing the service name and the device to control. Designed for Home-LLM Models (v1-v3)",
             llm_context=llm_context,
             tools=[HassServiceTool()],
         )
