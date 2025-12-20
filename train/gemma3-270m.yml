@@ -10,7 +10,7 @@ chat_template_jinja: |
   {%- if not tools or tools | length == 0 %}No tools were provided. If the user requests you interact with a device, tell them you are unable to do so.{% else %}
   Tools:
   {% for tool in tools %}
-  - {{ tool['name'] }}({{ tool['parameters']['properties'].keys() | join(', ') }}): {{ tool['description'] }}
+  - {{ tool['function']['name'] }}({{ tool['function']['parameters']['properties'].keys() | join(', ') }}): {{ tool['function']['description'] }}
   {% endfor -%}
   {%- endif -%}
   {%- for message in messages -%}
@@ -21,8 +21,7 @@ chat_template_jinja: |
       {%- else -%}
           {%- set role = message['role'] -%}
       {%- endif -%}
-      {{ '<start_of_turn>' + role + '
-  ' }}
+      {{ '<start_of_turn>' + role + '\n' }}
       {%- if role == "tool" -%}
           {{ '<tool_result>' }}
       {%- endif -%}
@@ -49,15 +48,13 @@ chat_template_jinja: |
       {%- endif -%}
       {%- if message['tool_calls'] is defined and message['tool_calls'] | length > 0 %}
           {%- for tool_call in message["tool_calls"] -%}
-              {{ '\n<tool_call>{"name": "' + tool_call['name'] + '", "arguments": ' + ('"' + tool_call['arguments'] + '"' if tool_call['arguments'] is string else tool_call['arguments'] | tojson) + '"}</tool_call>' }}
+              {{ '\n<tool_call>{"name": "' + tool_call['function']['name'] + '", "arguments": ' + ('"' + tool_call['function']['arguments'] + '"' if tool_call['function']['arguments'] is string else tool_call['function']['arguments'] | tojson) + '"}</tool_call>' }}
           {%- endfor %}
       {%- endif -%}
-      {{ '<end_of_turn>
-  ' }}
+      {{ '<end_of_turn>\n' }}
   {%- endfor -%}
   {%- if add_generation_prompt -%}
-      {{'<start_of_turn>model
-  '}}
+      {{'<start_of_turn>model\n'}}
   {%- endif -%}
 special_tokens:
   eot_tokens:

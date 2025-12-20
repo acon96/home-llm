@@ -53,7 +53,7 @@ SERVICE_TO_TOOL_MAP = {
 
 # Home Assistant Intent Tools Definition
 HASS_TOOLS = [
-    {
+    {"function": {
         "name": TOOL_TURN_ON,
         "description": "Turns on/opens/unlocks a device or entity",
         "parameters": {
@@ -67,8 +67,8 @@ HASS_TOOLS = [
             },
             "required": []
         }
-    },
-    {
+    }},
+    {"function": {
         "name": TOOL_TURN_OFF,
         "description": "Turns off/closes/locks a device or entity",
         "parameters": {
@@ -82,8 +82,8 @@ HASS_TOOLS = [
             },
             "required": []
         }
-    },
-    {
+    }},
+    {"function": {
         "name": TOOL_TOGGLE,
         "description": "Toggles a device or entity",
         "parameters": {
@@ -97,8 +97,8 @@ HASS_TOOLS = [
             },
             "required": []
         }
-    },
-    {
+    }},
+    {"function": {
         "name": TOOL_SET_POSITION,
         "description": "Sets the position of a device or entity (e.g., blinds, covers)",
         "parameters": {
@@ -111,8 +111,8 @@ HASS_TOOLS = [
             },
             "required": ["position"]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": TOOL_LIGHT_SET,
         "description": "Sets the brightness or color of a light",
         "parameters": {
@@ -127,8 +127,8 @@ HASS_TOOLS = [
             },
             "required": []
         }
-    },
-    {
+    }},
+    {"function": {
         "name": TOOL_CLIMATE_SET_TEMPERATURE,
         "description": "Sets the target temperature of a climate device",
         "parameters": {
@@ -141,8 +141,8 @@ HASS_TOOLS = [
             },
             "required": ["temperature"]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": TOOL_SET_HUMIDITY,
         "description": "Sets the target humidity level of a humidifier device",
         "parameters": {
@@ -153,8 +153,8 @@ HASS_TOOLS = [
             },
             "required": ["name", "humidity"]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": TOOL_SET_HUMIDIFIER_MODE,
         "description": "Sets the mode of a humidifier device",
         "parameters": {
@@ -165,8 +165,8 @@ HASS_TOOLS = [
             },
             "required": ["name", "mode"]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": TOOL_MEDIA_UNPAUSE,
         "description": "Resumes playback on a media player",
         "parameters": {
@@ -178,8 +178,8 @@ HASS_TOOLS = [
             },
             "required": []
         }
-    },
-    {
+    }},
+    {"function": {
         "name": TOOL_MEDIA_PAUSE,
         "description": "Pauses playback on a media player",
         "parameters": {
@@ -191,8 +191,8 @@ HASS_TOOLS = [
             },
             "required": []
         }
-    },
-    {
+    }},
+    {"function": {
         "name": TOOL_MEDIA_NEXT,
         "description": "Skips to the next media item on a media player",
         "parameters": {
@@ -204,8 +204,8 @@ HASS_TOOLS = [
             },
             "required": []
         }
-    },
-    {
+    }},
+    {"function": {
         "name": TOOL_SET_VOLUME,
         "description": "Sets the volume of a media player",
         "parameters": {
@@ -218,8 +218,8 @@ HASS_TOOLS = [
             },
             "required": ["volume_level"]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": TOOL_VACUUM_START,
         "description": "Starts a vacuum",
         "parameters": {
@@ -231,8 +231,8 @@ HASS_TOOLS = [
             },
             "required": []
         }
-    },
-    {
+    }},
+    {"function": {
         "name": TOOL_VACUUM_RETURN_TO_BASE,
         "description": "Returns a vacuum to its base",
         "parameters": {
@@ -244,8 +244,8 @@ HASS_TOOLS = [
             },
             "required": []
         }
-    },
-    {
+    }},
+    {"function": {
         "name": TOOL_LIST_ADD_ITEM,
         "description": "Adds an item to a todo list",
         "parameters": {
@@ -256,8 +256,8 @@ HASS_TOOLS = [
             },
             "required": ["item"]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": TOOL_START_TIMER,
         "description": "Starts a timer",
         "parameters": {
@@ -268,8 +268,8 @@ HASS_TOOLS = [
             },
             "required": []
         }
-    },
-    {
+    }},
+    {"function": {
         "name": TOOL_CANCEL_TIMER,
         "description": "Cancels a timer",
         "parameters": {
@@ -279,8 +279,8 @@ HASS_TOOLS = [
             },
             "required": []
         }
-    },
-    {
+    }},
+    {"function": {
         "name": TOOL_PAUSE_TIMER,
         "description": "Pauses a timer",
         "parameters": {
@@ -290,8 +290,8 @@ HASS_TOOLS = [
             },
             "required": []
         }
-    },
-    {
+    }},
+    {"function": {
         "name": TOOL_UNPAUSE_TIMER,
         "description": "Resumes a paused timer",
         "parameters": {
@@ -301,7 +301,7 @@ HASS_TOOLS = [
             },
             "required": []
         }
-    }
+    }}
 ]
 
 SERVICE_TOOL_ALLOWED_SERVICES = ["turn_on", "turn_off", "toggle", "press", "increase_speed", "decrease_speed", "open_cover", "close_cover", "stop_cover", "lock", "unlock",
@@ -309,7 +309,7 @@ SERVICE_TOOL_ALLOWED_SERVICES = ["turn_on", "turn_off", "toggle", "press", "incr
 SERVICE_TOOL_ALLOWED_DOMAINS = ["light", "switch", "button", "fan", "cover", "lock", "media_player", "climate", "vacuum", "todo", "timer", "script"]
 
 SERVICE_TOOLS = [
-    { 
+    {"function": { 
         "name": "<sample>",
         "description": "",
         "parameters": {
@@ -330,8 +330,8 @@ SERVICE_TOOLS = [
                 "target_device"
             ]
         }
-    },
-    { 
+    }},
+    {"function": {
         "name": "light.turn_on",
         "description": "",
         "parameters": {
@@ -345,8 +345,8 @@ SERVICE_TOOLS = [
                 "target_device"
             ]
         }
-    },
-    { 
+    }},
+    {"function": {
         "name": "light.turn_off",
         "description": "",
         "parameters": {
@@ -358,8 +358,8 @@ SERVICE_TOOLS = [
                 "target_device"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "light.toggle",
         "description": "",
         "parameters": {
@@ -371,8 +371,8 @@ SERVICE_TOOLS = [
                 "target_device"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "switch.turn_on",
         "description": "",
         "parameters": {
@@ -384,8 +384,8 @@ SERVICE_TOOLS = [
                 "target_device"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "switch.turn_off",
         "description": "",
         "parameters": {
@@ -397,8 +397,8 @@ SERVICE_TOOLS = [
                 "target_device"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "switch.toggle",
         "description": "",
         "parameters": {
@@ -410,8 +410,8 @@ SERVICE_TOOLS = [
                 "target_device"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "fan.turn_on",
         "description": "",
         "parameters": {
@@ -423,8 +423,8 @@ SERVICE_TOOLS = [
                 "target_device"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "fan.turn_off",
         "description": "",
         "parameters": {
@@ -436,8 +436,8 @@ SERVICE_TOOLS = [
                 "target_device"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "fan.toggle",
         "description": "",
         "parameters": {
@@ -449,8 +449,8 @@ SERVICE_TOOLS = [
                 "target_device"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "fan.set_speed",
         "description": "",
         "parameters": {
@@ -464,8 +464,8 @@ SERVICE_TOOLS = [
                 "fan_mode"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "fan.increase_speed",
         "description": "",
         "parameters": {
@@ -477,8 +477,8 @@ SERVICE_TOOLS = [
                 "target_device"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "fan.decrease_speed",
         "description": "",
         "parameters": {
@@ -490,8 +490,8 @@ SERVICE_TOOLS = [
                 "target_device"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "button.press",
         "description": "",
         "parameters": {
@@ -503,8 +503,8 @@ SERVICE_TOOLS = [
                 "target_device"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "cover.open_cover",
         "description": "",
         "parameters": {
@@ -516,8 +516,8 @@ SERVICE_TOOLS = [
                 "target_device"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "cover.close_cover",
         "description": "",
         "parameters": {
@@ -529,8 +529,8 @@ SERVICE_TOOLS = [
                 "target_device"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "cover.stop_cover",
         "description": "",
         "parameters": {
@@ -542,8 +542,8 @@ SERVICE_TOOLS = [
                 "target_device"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "cover.set_cover_position",
         "description": "",
         "parameters": {
@@ -557,8 +557,8 @@ SERVICE_TOOLS = [
                 "position"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "lock.unlock",
         "description": "",
         "parameters": {
@@ -570,8 +570,8 @@ SERVICE_TOOLS = [
                 "target_device"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "lock.lock",
         "description": "",
         "parameters": {
@@ -583,8 +583,8 @@ SERVICE_TOOLS = [
                 "target_device"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "vacuum.start",
         "description": "",
         "parameters": {
@@ -596,8 +596,8 @@ SERVICE_TOOLS = [
                 "target_device"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "vacuum.stop",
         "description": "",
         "parameters": {
@@ -609,8 +609,8 @@ SERVICE_TOOLS = [
                 "target_device"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "vacuum.return_to_base",
         "description": "",
         "parameters": {
@@ -622,8 +622,8 @@ SERVICE_TOOLS = [
                 "target_device"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "media_player.media_play_pause",
         "description": "",
         "parameters": {
@@ -635,8 +635,8 @@ SERVICE_TOOLS = [
                 "target_device"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "media_player.media_pause",
         "description": "",
         "parameters": {
@@ -648,8 +648,8 @@ SERVICE_TOOLS = [
                 "target_device"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "media_player.media_play",
         "description": "",
         "parameters": {
@@ -661,8 +661,8 @@ SERVICE_TOOLS = [
                 "target_device"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "media_player.media_next_track",
         "description": "",
         "parameters": {
@@ -674,8 +674,8 @@ SERVICE_TOOLS = [
                 "target_device"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "media_player.media_previous_track",
         "description": "",
         "parameters": {
@@ -687,8 +687,8 @@ SERVICE_TOOLS = [
                 "target_device"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "media_player.volume_set",
         "description": "",
         "parameters": {
@@ -702,8 +702,8 @@ SERVICE_TOOLS = [
                 "volume_level"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "todo.add_item",
         "description": "",
         "parameters": {
@@ -717,8 +717,8 @@ SERVICE_TOOLS = [
                 "item"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "timer.start",
         "description": "",
         "parameters": {
@@ -731,8 +731,8 @@ SERVICE_TOOLS = [
                 "target_device"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "timer.cancel",
         "description": "",
         "parameters": {
@@ -744,8 +744,8 @@ SERVICE_TOOLS = [
                 "target_device"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "climate.set_temperature",
         "description": "",
         "parameters": {
@@ -759,8 +759,8 @@ SERVICE_TOOLS = [
                 "temperature"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "climate.set_humidity",
         "description": "",
         "parameters": {
@@ -774,8 +774,8 @@ SERVICE_TOOLS = [
                 "humidity"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "climate.set_hvac_mode",
         "description": "",
         "parameters": {
@@ -789,8 +789,8 @@ SERVICE_TOOLS = [
                 "hvac_mode"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "climate.set_preset_mode",
         "description": "",
         "parameters": {
@@ -804,8 +804,8 @@ SERVICE_TOOLS = [
                 "preset_mode"
             ]
         }
-    },
-    {
+    }},
+    {"function": {
         "name": "climate.set_fan_mode",
         "description": "",
         "parameters": {
@@ -819,5 +819,5 @@ SERVICE_TOOLS = [
                 "fan_mode"
             ]
         }
-    }
+    }}
 ]

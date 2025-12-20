@@ -520,7 +520,7 @@ def generate_status_request(template: dict, persona: str, language: str, max_dev
     else:
         return result
 
-def format_example_sharegpt(example, persona, language, use_system_role, use_service_names):
+def format_example_sharegpt(example, persona, language, use_system_role, use_service_names, tool_response_format):
     piles = get_dataset_piles(language)
     sys_prompt = generate_system_prompt(example, persona, language, piles.pile_of_system_prompts)
     question = example["question"]
@@ -567,21 +567,26 @@ def format_example_sharegpt(example, persona, language, use_system_role, use_ser
         ]
     
     if len(tool_calls) > 0:
-        conversation.extend([
-            { 
-                "role": "assistant", 
-                "content": [{ "type": "text", "text": answer_starting }],
-                "tool_calls": tool_calls
-            },
-            {
+        assistant_starting_block = { 
+            "role": "assistant", 
+            "content": [{ "type": "text", "text": answer_starting }],
+            "tool_calls": [ { "function": tc } for tc in tool_calls ]
+        }
+        if tool_response_format == "text":    
+            tool_response_block = {
                 "role": "tool",
                 "content": [{ "type": "text", "text": json.dumps(result) } for result in tool_results]
-            },
-            { 
-                "role": "assistant", 
-                "content": [{ "type": "text", "text": answers }],
-            },
-        ])
+            }
+        elif tool_response_format == "functiongemma":
+            tool_response_block = {
+                "role": "tool",
+                "content": [{ "name": result["tool_name"], "response": {"result": result["tool_result"]} } for result in tool_results]
+            }
+        assistant_confirmation_block = { 
+            "role": "assistant", 
+            "content": [{ "type": "text", "text": answers }],
+        }
+        conversation.extend([assistant_starting_block, tool_response_block, assistant_confirmation_block])
     else:
         conversation.extend([
             { 
@@ -595,7 +600,19 @@ def format_example_sharegpt(example, persona, language, use_system_role, use_ser
         "tools": SERVICE_TOOLS if use_service_names else HASS_TOOLS
     }
 
-def generate_sft_file(filename: str, seed: int, format_func: Callable, use_system_role: bool, use_service_names: bool, personas: list[str], language: str, *, static_factor: float, template_factor: int, status_request_factor: int):
+def generate_sft_file(
+        filename: str,
+        seed: int,
+        format_func: Callable,
+        use_system_role: bool,
+        use_service_names: bool,
+        personas: list[str],
+        language: str,
+        tool_response_format: str,
+        *,
+        static_factor: float,
+        template_factor: int,
+        status_request_factor: int):
     random.seed(seed)
     np.random.seed(seed)
     piles = get_dataset_piles(language)
@@ -605,10 +622,10 @@ def generate_sft_file(filename: str, seed: int, format_func: Callable, use_syste
     def run_factor_times(func, examples, data, persona, factor, language):
         if factor >= 1:
             for i in range(factor):
-                examples.append(format_func(func(data, persona, language, use_service_names=use_service_names), persona, language, use_system_role, use_service_names))
+                examples.append(format_func(func(data, persona, language, use_service_names=use_service_names), persona, language, use_system_role, use_service_names, tool_response_format))
         else:
             if random.random() < factor:
-                examples.append(format_func(func(data, persona, language, use_service_names=use_service_names), persona, language, use_system_role, use_service_names))
+                examples.append(format_func(func(data, persona, language, use_service_names=use_service_names), persona, language, use_system_role, use_service_names, tool_response_format))
     
     generated_examples = []
 
@@ -680,6 +697,7 @@ def main(args=None):
     parser.add_argument("--train", action="store_true", help="Set this flag to enable generation of the train dataset.")
     parser.add_argument("--language", nargs="+", default=["english"], help="List of languages to generate: english, german, french, spanish, polish")
     parser.add_argument("--no-system-role", action="store_true", help="Set this flag to disable the system role. It will be combined with the user role")
+    parser.add_argument("--tool-response-format", default="text", choices=["text", "functiongemma"], help="Format to use for tool responses.")
 
     train_size_group = parser.add_mutually_exclusive_group()
     train_size_group.add_argument('--small', action='store_const', const='small', dest='size')
@@ -704,6 +722,7 @@ def main(args=None):
 
     use_system_role = not args.no_system_role
     use_service_names = args.use_service_names
+    tool_response_format = args.tool_response_format
 
     for language in args.language:
         piles = get_dataset_piles(language)
@@ -711,20 +730,20 @@ def main(args=None):
         suffix = f"_{language}" if len(args.language) > 1 else ""
 
         if args.sample:
-            generate_sft_file(f"sample{suffix}", 42, format_func, use_system_role, use_service_names, personas, language, static_factor=1, template_factor=1, status_request_factor=1)
+            generate_sft_file(f"sample{suffix}", 42, format_func, use_system_role, use_service_names, personas, language, tool_response_format, static_factor=1, template_factor=1, status_request_factor=1)
         if args.train:
             if args.size == "small":
-                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, use_system_role, use_service_names, personas, language, static_factor=1, template_factor=10, status_request_factor=8)
+                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, use_system_role, use_service_names, personas, language, tool_response_format, static_factor=1, template_factor=10, status_request_factor=8)
             elif args.size == "medium":
-                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, use_system_role, use_service_names, personas, language, static_factor=5, template_factor=15, status_request_factor=12)
+                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, use_system_role, use_service_names, personas, language, tool_response_format, static_factor=5, template_factor=15, status_request_factor=12)
             elif args.size == "large":
-                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, use_system_role, use_service_names, personas, language, static_factor=5, template_factor=20, status_request_factor=15)
+                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, use_system_role, use_service_names, personas, language, tool_response_format, static_factor=5, template_factor=20, status_request_factor=15)
             elif args.size == "xl":
-                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, use_system_role, use_service_names, personas, language, static_factor=7, template_factor=25, status_request_factor=18)
+                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, use_system_role, use_service_names, personas, language, tool_response_format, static_factor=7, template_factor=25, status_request_factor=18)
             else:
                 raise Exception(f"Unrecognized dataset size: {args.size}")
         if args.test:
-            generate_sft_file(f"home_assistant_test{suffix}", 12345, format_func, use_system_role, use_service_names, personas, language, static_factor=0.25, template_factor=1, status_request_factor=2)
+            generate_sft_file(f"home_assistant_test{suffix}", 12345, format_func, use_system_role, use_service_names, personas, language, tool_response_format, static_factor=0.25, template_factor=1, status_request_factor=2)
 
     if len(args.language) > 1:
         if args.sample:
