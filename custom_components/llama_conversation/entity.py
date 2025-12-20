@@ -288,7 +288,12 @@ class LocalLLMClient:
                         if isinstance(raw_tool_call, str):
                             tool_call, to_say = parse_raw_tool_call(raw_tool_call, agent_id)
                         else:
-                            tool_call, to_say = parse_raw_tool_call(raw_tool_call["function"], agent_id)
+                            # try multiple dict key names
+                            function_content = raw_tool_call.get("function") or raw_tool_call.get("function_call") or raw_tool_call.get("tool")
+                            if not function_content:
+                                _LOGGER.warning("Received tool call dict without 'function', 'function_call' or 'tool' key: %s", raw_tool_call)
+                                continue
+                            tool_call, to_say = parse_raw_tool_call(function_content, agent_id)
 
                         if tool_call:
                             _LOGGER.debug("Tool call parsed: %s", tool_call)
@@ -336,8 +341,12 @@ class LocalLLMClient:
                     if isinstance(raw_tool_call, str):
                         tool_call, to_say = parse_raw_tool_call(raw_tool_call, agent_id)
                     else:
-                        tool_call, to_say = parse_raw_tool_call(raw_tool_call["function"], agent_id)
-
+                        # try multiple dict key names
+                        function_content = raw_tool_call.get("function") or raw_tool_call.get("function_call") or raw_tool_call.get("tool")
+                        if not function_content:
+                            _LOGGER.warning("Received tool call dict without 'function', 'function_call' or 'tool' key: %s", raw_tool_call)
+                            continue
+                        tool_call, to_say = parse_raw_tool_call(function_content, agent_id)
                     if tool_call:
                         _LOGGER.debug("Tool call parsed: %s", tool_call)
                         parsed_tool_calls.append(tool_call)
