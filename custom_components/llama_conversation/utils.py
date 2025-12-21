@@ -278,7 +278,8 @@ def format_url(*, hostname: str, port: str, ssl: bool, path: str):
 def get_oai_formatted_tools(llm_api: llm.APIInstance, domains: list[str]) -> List[ChatCompletionTool]:    
     result: List[ChatCompletionTool] = []
 
-    for tool in llm_api.tools:
+    # sort tools by name to improve cache hits
+    for tool in sorted(llm_api.tools, key=lambda t: t.name):
         # when combining with home assistant llm APIs, it adds a prefix to differentiate tools; compare against the suffix here
         if tool.name.endswith(SERVICE_TOOL_NAME):
             result.extend([{
@@ -302,7 +303,13 @@ def get_oai_formatted_tools(llm_api: llm.APIInstance, domains: list[str]) -> Lis
 
     return result
 
-def get_oai_formatted_messages(conversation: Sequence[conversation.Content], user_content_as_list: bool = False, tool_args_to_str: bool = True) -> List[ChatCompletionRequestMessage]:
+def get_oai_formatted_messages(
+        conversation: Sequence[conversation.Content],
+        *,
+        user_content_as_list: bool = False,
+        tool_args_to_str: bool = True,
+        tool_result_to_str: bool = True,
+    ) -> List[ChatCompletionRequestMessage]:
     messages: List[ChatCompletionRequestMessage] = []
     for message in conversation:
         if message.role == "system":
@@ -354,14 +361,16 @@ def get_oai_formatted_messages(conversation: Sequence[conversation.Content], use
                     ]
                 })
         elif message.role == "tool_result":
-            messages.append({
-                "role": "tool",
-                # FIXME: what is the correct format for content here? gemma expects name and result
-                # "content": json.dumps(message.tool_result),
-                "content": {
+            if tool_result_to_str:
+                content = json.dumps(message.tool_result)
+            else:
+                content = {
                     "name": message.tool_name,
                     "response": { "result": message.tool_result },
-                },
+                }
+            messages.append({
+                "role": "tool",
+                "content": content,
                 "tool_call_id": message.tool_call_id
             })
 

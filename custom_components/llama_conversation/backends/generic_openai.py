@@ -28,6 +28,7 @@ from custom_components.llama_conversation.const import (
     CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
     CONF_GENERIC_OPENAI_PATH,
     CONF_ENABLE_LEGACY_TOOL_CALLING,
+    CONF_TOOL_RESPONSE_AS_STRING,
     CONF_RESPONSE_JSON_SCHEMA,
     DEFAULT_MAX_TOKENS,
     DEFAULT_TEMPERATURE,
@@ -37,6 +38,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_REMEMBER_CONVERSATION_TIME_MINUTES,
     DEFAULT_GENERIC_OPENAI_PATH,
     DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
+    DEFAULT_TOOL_RESPONSE_AS_STRING,
     RECOMMENDED_CHAT_MODELS,
 )
 from custom_components.llama_conversation.entity import TextGenerationResult, LocalLLMClient
@@ -126,15 +128,18 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         model_name = entity_options[CONF_CHAT_MODEL]
         temperature = entity_options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
         top_p = entity_options.get(CONF_TOP_P, DEFAULT_TOP_P)
+        max_tokens = entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
         timeout = entity_options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
         enable_legacy_tool_calling = entity_options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
+        tool_response_as_string = entity_options.get(CONF_TOOL_RESPONSE_AS_STRING, DEFAULT_TOOL_RESPONSE_AS_STRING)
 
         endpoint, additional_params = self._chat_completion_params(entity_options)
-        messages = get_oai_formatted_messages(conversation, user_content_as_list=True)
+        messages = get_oai_formatted_messages(conversation, user_content_as_list=True, tool_result_to_str=tool_response_as_string)
 
         request_params = {
             "model": model_name,
             "stream": True,
+            "max_tokens": max_tokens,
             "temperature": temperature,
             "top_p": top_p,
             "messages": messages
@@ -152,8 +157,6 @@ class GenericOpenAIAPIClient(LocalLLMClient):
             }
 
         tools = None
-        # "legacy" tool calling passes the tools directly as part of the system prompt instead of as "tools"
-        # most local backends absolutely butcher any sort of prompt formatting when using tool calling
         if llm_api and not enable_legacy_tool_calling:
             tools = get_oai_formatted_tools(llm_api, self._async_get_all_exposed_domains())
             request_params["tools"] = tools

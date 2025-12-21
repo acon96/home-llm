@@ -33,6 +33,7 @@ from custom_components.llama_conversation.const import (
     CONF_OLLAMA_JSON_MODE,
     CONF_CONTEXT_LENGTH,
     CONF_ENABLE_LEGACY_TOOL_CALLING,
+    CONF_TOOL_RESPONSE_AS_STRING,
     CONF_RESPONSE_JSON_SCHEMA,
     DEFAULT_MAX_TOKENS,
     DEFAULT_TEMPERATURE,
@@ -47,6 +48,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_OLLAMA_JSON_MODE,
     DEFAULT_CONTEXT_LENGTH,
     DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
+    DEFAULT_TOOL_RESPONSE_AS_STRING,
 )
 
 from custom_components.llama_conversation.entity import LocalLLMClient, TextGenerationResult
@@ -194,7 +196,8 @@ class OllamaAPIClient(LocalLLMClient):
         typical_p = entity_options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)
         timeout = entity_options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
         keep_alive = entity_options.get(CONF_OLLAMA_KEEP_ALIVE_MIN, DEFAULT_OLLAMA_KEEP_ALIVE_MIN)
-        legacy_tool_calling = entity_options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
+        enable_legacy_tool_calling = entity_options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
+        tool_response_as_string = entity_options.get(CONF_TOOL_RESPONSE_AS_STRING, DEFAULT_TOOL_RESPONSE_AS_STRING)
         think_mode = entity_options.get(CONF_ENABLE_THINK_MODE, DEFAULT_ENABLE_THINK_MODE)
         json_mode = entity_options.get(CONF_OLLAMA_JSON_MODE, DEFAULT_OLLAMA_JSON_MODE)
 
@@ -208,9 +211,9 @@ class OllamaAPIClient(LocalLLMClient):
             "min_p": entity_options.get(CONF_MIN_P, DEFAULT_MIN_P),
         }
 
-        messages = get_oai_formatted_messages(conversation, tool_args_to_str=False)
+        messages = get_oai_formatted_messages(conversation, tool_args_to_str=False, tool_result_to_str=tool_response_as_string)
         tools = None
-        if llm_api and not legacy_tool_calling:
+        if llm_api and not enable_legacy_tool_calling:
             tools = get_oai_formatted_tools(llm_api, self._async_get_all_exposed_domains())
         keep_alive_payload = self._format_keep_alive(keep_alive)
 

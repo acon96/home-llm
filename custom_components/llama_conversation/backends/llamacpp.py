@@ -19,6 +19,8 @@ from homeassistant.helpers.event import async_track_state_change, async_call_lat
 
 from custom_components.llama_conversation.utils import install_llama_cpp_python, validate_llama_cpp_python_installation, get_oai_formatted_messages, get_oai_formatted_tools
 from custom_components.llama_conversation.const import (
+    CONF_ENABLE_LEGACY_TOOL_CALLING,
+    CONF_TOOL_RESPONSE_AS_STRING,
     CONF_INSTALLED_LLAMACPP_VERSION,
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -38,7 +40,10 @@ from custom_components.llama_conversation.const import (
     CONF_LLAMACPP_BATCH_SIZE,
     CONF_LLAMACPP_THREAD_COUNT,
     CONF_LLAMACPP_BATCH_THREAD_COUNT,
+    CONF_LLAMACPP_CACHE_SIZE_MB,
     CONF_INSTALLED_LLAMACPP_VERSION,
+    DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
+    DEFAULT_TOOL_RESPONSE_AS_STRING,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
@@ -55,6 +60,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_LLAMACPP_BATCH_SIZE,
     DEFAULT_LLAMACPP_THREAD_COUNT,
     DEFAULT_LLAMACPP_BATCH_THREAD_COUNT,
+    DEFAULT_LLAMACPP_CACHE_SIZE_MB,
     DOMAIN,
     CONF_RESPONSE_JSON_SCHEMA,
 )
@@ -84,6 +90,7 @@ def snapshot_settings(options: dict[str, Any]) -> dict[str, Any]:
         CONF_LLAMACPP_BATCH_SIZE: options.get(CONF_LLAMACPP_BATCH_SIZE, DEFAULT_LLAMACPP_BATCH_SIZE),
         CONF_LLAMACPP_THREAD_COUNT: options.get(CONF_LLAMACPP_THREAD_COUNT, DEFAULT_LLAMACPP_THREAD_COUNT),
         CONF_LLAMACPP_BATCH_THREAD_COUNT: options.get(CONF_LLAMACPP_BATCH_THREAD_COUNT, DEFAULT_LLAMACPP_BATCH_THREAD_COUNT),
+        CONF_LLAMACPP_CACHE_SIZE_MB: options.get(CONF_LLAMACPP_CACHE_SIZE_MB, DEFAULT_LLAMACPP_CACHE_SIZE_MB),
         CONF_LLAMACPP_ENABLE_FLASH_ATTENTION: options.get(CONF_LLAMACPP_ENABLE_FLASH_ATTENTION, DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION),
         CONF_INSTALLED_LLAMACPP_VERSION: options.get(CONF_INSTALLED_LLAMACPP_VERSION, ""),
         CONF_GBNF_GRAMMAR_FILE: options.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE),
@@ -172,11 +179,13 @@ class LlamaCppClient(LocalLLMClient):
         )
         _LOGGER.debug("Model loaded")
 
-        # FIXME: make cache size configurable (0 means disabled)
-        llm.set_cache(LlamaDiskCache(
-            capacity_bytes=int(512 * 10e8),
-            cache_dir=os.path.join(self.hass.config.media_dirs.get("local", self.hass.config.path("media")), "kv_cache")
-        ))
+        # create disk cache if enabled
+        cache_size = model_settings.get(CONF_LLAMACPP_CACHE_SIZE_MB, DEFAULT_LLAMACPP_CACHE_SIZE_MB)
+        if cache_size > 0:
+            llm.set_cache(LlamaDiskCache(
+                capacity_bytes=int(cache_size * (1024 ** 3)),
+                cache_dir=os.path.join(self.hass.config.media_dirs.get("local", self.hass.config.path("media")), "kv_cache")
+            ))
 
         if model_settings[CONF_PROMPT_CACHING_ENABLED]:
             @callback
@@ -223,6 +232,8 @@ class LlamaCppClient(LocalLLMClient):
         elif loaded_options[CONF_LLAMACPP_BATCH_THREAD_COUNT] != entity_options.get(CONF_LLAMACPP_BATCH_THREAD_COUNT, DEFAULT_LLAMACPP_BATCH_THREAD_COUNT):
             should_reload = True
         elif loaded_options[CONF_LLAMACPP_ENABLE_FLASH_ATTENTION] != entity_options.get(CONF_LLAMACPP_ENABLE_FLASH_ATTENTION, DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION):
+            should_reload = True
+        elif loaded_options[CONF_LLAMACPP_CACHE_SIZE_MB] != entity_options.get(CONF_LLAMACPP_CACHE_SIZE_MB, DEFAULT_LLAMACPP_CACHE_SIZE_MB):
             should_reload = True
         elif loaded_options[CONF_INSTALLED_LLAMACPP_VERSION] != entity_options.get(CONF_INSTALLED_LLAMACPP_VERSION):
             should_reload = True
@@ -437,12 +448,14 @@ class LlamaCppClient(LocalLLMClient):
         min_p = entity_options.get(CONF_MIN_P, DEFAULT_MIN_P)
         typical_p = entity_options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)
         grammar = self.grammars.get(model_name) if entity_options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR) else None
+        enable_legacy_tool_calling = entity_options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
+        tool_response_as_string = entity_options.get(CONF_TOOL_RESPONSE_AS_STRING, DEFAULT_TOOL_RESPONSE_AS_STRING)
 
         _LOGGER.debug(f"Options: {entity_options}")
 
-        messages = get_oai_formatted_messages(conversation)
+        messages = get_oai_formatted_messages(conversation, tool_result_to_str=tool_response_as_string)
         tools = None
-        if llm_api:
+        if llm_api and not enable_legacy_tool_calling:
             tools = get_oai_formatted_tools(llm_api, self._async_get_all_exposed_domains())
 
         _LOGGER.debug(f"Generating completion with {len(messages)} messages and {len(tools) if tools else 0} tools...")

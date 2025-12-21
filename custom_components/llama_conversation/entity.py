@@ -497,7 +497,6 @@ class LocalLLMClient:
         entities_to_expose = self._async_get_exposed_entities()
 
         extra_attributes_to_expose = entity_options.get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE)
-        enable_legacy_tool_calling = entity_options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
         tool_call_prefix = entity_options.get(CONF_TOOL_CALL_PREFIX, DEFAULT_TOOL_CALL_PREFIX)
         tool_call_suffix = entity_options.get(CONF_TOOL_CALL_SUFFIX, DEFAULT_TOOL_CALL_SUFFIX)
 
@@ -571,21 +570,16 @@ class LocalLLMClient:
             "tool_call_suffix": tool_call_suffix,
         }
 
-        if enable_legacy_tool_calling:
-            if llm_api:
-                tools = []
-                for tool in llm_api.tools:
-                    tools.append(f"{tool.name}({','.join(flatten_vol_schema(tool.parameters))})")
-                render_variables["tools"] = tools
-                render_variables["formatted_tools"] = ", ".join(tools)
-            else:
-                message = "No tools were provided. If the user requests you interact with a device, tell them you are unable to do so."
-                render_variables["tools"] = [message]
-                render_variables["formatted_tools"] = message
+        if llm_api:
+            tools = []
+            for tool in llm_api.tools:
+                tools.append(f"{tool.name}({','.join(flatten_vol_schema(tool.parameters))})")
+            render_variables["tools"] = tools
+            render_variables["formatted_tools"] = ", ".join(tools)
         else:
-            # Tools are passed via the API not the prompt
-            render_variables["tools"] = []
-            render_variables["formatted_tools"] = ""
+            message = "No tools were provided. If the user requests you interact with a device, tell them you are unable to do so."
+            render_variables["tools"] = [message]
+            render_variables["formatted_tools"] = message
 
         # only pass examples if there are loaded examples + an API was exposed
         if self.in_context_examples and llm_api:

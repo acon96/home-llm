@@ -101,11 +101,13 @@
                         "batch_size": "(llama.cpp) Batch Size",
                         "n_threads": "(llama.cpp) Thread Count",
                         "n_batch_threads": "(llama.cpp) Batch Thread Count",
+                        "llama_cpp_cache_size_mb": "(llama.cpp) Disk KV Cache Size (MB)",
                         "thinking_prefix": "Reasoning Content Prefix",
                         "thinking_suffix": "Reasoning Content Suffix",
                         "tool_call_prefix": "Tool Call Prefix",
                         "tool_call_suffix": "Tool Call Suffix",
                         "enable_legacy_tool_calling": "Enable Legacy Tool Calling",
+                        "tool_response_as_string": "Tool Response as String",
                         "max_tool_call_iterations": "Maximum Tool Call Attempts"
                     },
                     "data_description": {
@@ -116,6 +118,7 @@
                         "gbnf_grammar": "Forces the model to output properly formatted responses. Ensure the file specified below exists in the integration directory.",
                         "prompt_caching": "Prompt caching attempts to pre-process the prompt (house state) and cache the processing that needs to be done to understand the prompt. Enabling this will cause the model to re-process the prompt any time an entity state changes in the house, restricted by the interval below.",
                         "enable_legacy_tool_calling": "Prefer to process tool calls locally rather than relying on the backend to handle the tool calling format. Can be more reliable, however it requires properly setting the tool call prefix and suffix.",
+                        "tool_response_as_string": "Some prompt templates expect the tool response to be provided as a JSON serialized string, rather than the raw object.",
                         "max_tool_call_iterations": "Set to 0 to generate the response and tool call in one attempt, without looping (use this for Home models v1-v3)."
                     },
                     "description": "Please configure the model according to how it should be prompted. There are many different options and selecting the correct ones for your model is essential to getting optimal performance. See [here](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) for more information about the options on this page.\n\n**Some defaults may have been chosen for you based on the name of the selected model name or filename.** If you renamed a file or are using a fine-tuning of a supported model, then the defaults may not have been detected.",
@@ -155,11 +158,13 @@
                         "batch_size": "(llama.cpp) Batch Size",
                         "n_threads": "(llama.cpp) Thread Count",
                         "n_batch_threads": "(llama.cpp) Batch Thread Count",
+                        "llama_cpp_cache_size_mb": "(llama.cpp) Disk KV Cache Size (MB)",
                         "thinking_prefix": "Reasoning Content Prefix",
                         "thinking_suffix": "Reasoning Content Suffix",
                         "tool_call_prefix": "Tool Call Prefix",
                         "tool_call_suffix": "Tool Call Suffix",
                         "enable_legacy_tool_calling": "Enable Legacy Tool Calling",
+                        "tool_response_as_string": "Tool Response as String",
                         "max_tool_call_iterations": "Maximum Tool Call Attempts"
                     },
                     "data_description": {
@@ -170,6 +175,7 @@
                         "gbnf_grammar": "Forces the model to output properly formatted responses. Ensure the file specified below exists in the integration directory.",
                         "prompt_caching": "Prompt caching attempts to pre-process the prompt (house state) and cache the processing that needs to be done to understand the prompt. Enabling this will cause the model to re-process the prompt any time an entity state changes in the house, restricted by the interval below.",
                         "enable_legacy_tool_calling": "Prefer to process tool calls locally rather than relying on the backend to handle the tool calling format. Can be more reliable, however it requires properly setting the tool call prefix and suffix.",
+                        "tool_response_as_string": "Some prompt templates expect the tool response to be provided as a JSON serialized string, rather than the raw object.",
                         "max_tool_call_iterations": "Set to 0 to generate the response and tool call in one attempt, without looping (use this for Home models v1-v3)."
                     },
                     "description": "Please configure the model according to how it should be prompted. There are many different options and selecting the correct ones for your model is essential to getting optimal performance. See [here](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) for more information about the options on this page.\n\n**Some defaults may have been chosen for you based on the name of the selected model name or filename.** If you renamed a file or are using a fine-tuning of a supported model, then the defaults may not have been detected.",
@@ -241,11 +247,13 @@
                         "batch_size": "(llama.cpp) Batch Size",
                         "n_threads": "(llama.cpp) Thread Count",
                         "n_batch_threads": "(llama.cpp) Batch Thread Count",
+                        "llama_cpp_cache_size_mb": "(llama.cpp) Disk KV Cache Size (MB)",
                         "thinking_prefix": "Reasoning Content Prefix",
                         "thinking_suffix": "Reasoning Content Suffix",
                         "tool_call_prefix": "Tool Call Prefix",
                         "tool_call_suffix": "Tool Call Suffix",
                         "enable_legacy_tool_calling": "Enable Legacy Tool Calling",
+                        "tool_response_as_string": "Tool Response as String",
                         "max_tool_call_iterations": "Maximum Tool Call Attempts",
                         "ai_task_extraction_method": "Structured Data Extraction Method",
                         "ai_task_retries": "Retry attempts for structured data extraction"
@@ -257,6 +265,7 @@
                         "gbnf_grammar": "Forces the model to output properly formatted responses. Ensure the file specified below exists in the integration directory.",
                         "prompt_caching": "Prompt caching attempts to pre-process the prompt (house state) and cache the processing that needs to be done to understand the prompt. Enabling this will cause the model to re-process the prompt any time an entity state changes in the house, restricted by the interval below.",
                         "enable_legacy_tool_calling": "Prefer to process tool calls locally rather than relying on the backend to handle the tool calling format. Can be more reliable, however it requires properly setting the tool call prefix and suffix.",
+                        "tool_response_as_string": "Some prompt templates expect the tool response to be provided as a JSON serialized string, rather than the raw object.",
                         "max_tool_call_iterations": "Set to 0 to generate the response and tool call in one attempt, without looping (use this for Home models v1-v3).",
                         "ai_task_extraction_method": "Select the method used to extract structured data from the model's response. 'Structured Output' tells the backend to force the model to produce output following the provided JSON Schema; 'Tool Calling' provides a tool to the model that should be called with the appropriate arguments that match the desired output structure."
                     },
@@ -297,11 +306,13 @@
                         "batch_size": "(llama.cpp) Batch Size",
                         "n_threads": "(llama.cpp) Thread Count",
                         "n_batch_threads": "(llama.cpp) Batch Thread Count",
+                        "llama_cpp_cache_size_mb": "(llama.cpp) Disk KV Cache Size (MB)",
                         "thinking_prefix": "Reasoning Content Prefix",
                         "thinking_suffix": "Reasoning Content Suffix",
                         "tool_call_prefix": "Tool Call Prefix",
                         "tool_call_suffix": "Tool Call Suffix",
                         "enable_legacy_tool_calling": "Enable Legacy Tool Calling",
+                        "tool_response_as_string": "Tool Response as String",
                         "max_tool_call_iterations": "Maximum Tool Call Attempts"
                     },
                     "data_description": {
@@ -312,6 +323,7 @@
                         "gbnf_grammar": "Forces the model to output properly formatted responses. Ensure the file specified below exists in the integration directory.",
                         "prompt_caching": "Prompt caching attempts to pre-process the prompt (house state) and cache the processing that needs to be done to understand the prompt. Enabling this will cause the model to re-process the prompt any time an entity state changes in the house, restricted by the interval below.",
                         "enable_legacy_tool_calling": "Prefer to process tool calls locally rather than relying on the backend to handle the tool calling format. Can be more reliable, however it requires properly setting the tool call prefix and suffix.",
+                        "tool_response_as_string": "Some prompt templates expect the tool response to be provided as a JSON serialized string, rather than the raw object.",
                         "max_tool_call_iterations": "Set to 0 to generate the response and tool call in one attempt, without looping (use this for Home models v1-v3)."
                     },
                     "description": "Please configure the model according to how it should be prompted. There are many different options and selecting the correct ones for your model is essential to getting optimal performance. See [here](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) for more information about the options on this page.\n\n**Some defaults may have been chosen for you based on the name of the selected model name or filename.** If you renamed a file or are using a fine-tuning of a supported model, then the defaults may not have been detected.",
