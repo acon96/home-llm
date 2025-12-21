@@ -63,7 +63,6 @@ USER_INSTRUCTION = {
     "pl": "Instrukcja użytkownika"
 }
 DEFAULT_PROMPT_BASE = """<persona>
-<current_date>
 <devices>:
 {% for device in devices | selectattr('area_id', 'none'): %}
 {{ device.entity_id }} '{{ device.name }}' = {{ device.state }}{{ ([""] + device.attributes) | join(";") }}
@@ -73,23 +72,19 @@ DEFAULT_PROMPT_BASE = """<persona>
 {% for device in area.list %}
 {{ device.entity_id }} '{{ device.name }}' = {{ device.state }};{{ device.attributes | join(";") }}
 {% endfor %}
-{% endfor %}"""
+{% endfor %}
+<current_date>"""
 DEFAULT_PROMPT_BASE_LEGACY = """<persona>
-<current_date>
 <devices>:
-{{ formatted_devices }}"""
+{{ formatted_devices }}
+<current_date>"""
 ICL_EXTRAS = """
 {% for item in response_examples %}
 {{ item.request }}
 {{ item.response }}
 {{ tool_call_prefix }}{{ item.tool | to_json }}{{ tool_call_suffix }}
 {% endfor %}"""
-ICL_NO_SYSTEM_PROMPT_EXTRAS = """
-{% for item in response_examples %}
-{{ item.request }}
-{{ item.response }}
-{{ tool_call_prefix }}{{ item.tool | to_json }}{{ tool_call_suffix }}
-{% endfor %}
+NO_SYSTEM_PROMPT_EXTRAS = """
 <user_instruction>:"""
 DEFAULT_PROMPT = DEFAULT_PROMPT_BASE + ICL_EXTRAS
 CONF_CHAT_MODEL = "huggingface_model"
@@ -239,6 +234,13 @@ DEFAULT_OPTIONS = types.MappingProxyType(
 
 def option_overrides(backend_type: str) -> dict[str, Any]:
     return {
+        "home-functiongemma": {
+            CONF_PROMPT: DEFAULT_PROMPT_BASE + NO_SYSTEM_PROMPT_EXTRAS,
+            CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
+            CONF_TOOL_CALL_PREFIX: "<start_function_call>",
+            CONF_TOOL_CALL_SUFFIX: "<end_function_call>",
+            CONF_TOOL_RESPONSE_AS_STRING: False, # gemma function calling requires tool responses as a dictionary
+        },
         "home-llama-3.2": {
             CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
             CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
@@ -247,7 +249,7 @@ def option_overrides(backend_type: str) -> dict[str, Any]:
             CONF_CONTEXT_LENGTH: 131072,
             CONF_MAX_TOOL_CALL_ITERATIONS: 0,
             # llama cpp server doesn't support custom tool calling formats. so just use legacy tool calling
-            CONF_ENABLE_LEGACY_TOOL_CALLING: backend_type == BACKEND_TYPE_LLAMA_CPP_SERVER
+            CONF_ENABLE_LEGACY_TOOL_CALLING: True
         },
         "home-3b-v3": {
             CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
@@ -256,7 +258,7 @@ def option_overrides(backend_type: str) -> dict[str, Any]:
             CONF_TOOL_CALL_SUFFIX: "```",
             CONF_MAX_TOOL_CALL_ITERATIONS: 0,
             # llama cpp server doesn't support custom tool calling formats. so just use legacy tool calling
-            CONF_ENABLE_LEGACY_TOOL_CALLING: backend_type == BACKEND_TYPE_LLAMA_CPP_SERVER
+            CONF_ENABLE_LEGACY_TOOL_CALLING: True
         },
         "home-3b-v2": {
             CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
@@ -310,14 +312,14 @@ def option_overrides(backend_type: str) -> dict[str, Any]:
             CONF_TOP_P: 0.95
         },
         "mistral": {
-            CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_NO_SYSTEM_PROMPT_EXTRAS,
+            CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_EXTRAS + NO_SYSTEM_PROMPT_EXTRAS,
             CONF_MIN_P: 0.1,
             CONF_TYPICAL_P: 0.9,
             # no prompt formats with tool calling support, so just use legacy tool calling
             CONF_ENABLE_LEGACY_TOOL_CALLING: True,
         },
         "mixtral": {
-            CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_NO_SYSTEM_PROMPT_EXTRAS,
+            CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_EXTRAS + NO_SYSTEM_PROMPT_EXTRAS,
             CONF_MIN_P: 0.1,
             CONF_TYPICAL_P: 0.9,
             # no prompt formats with tool calling support, so just use legacy tool calling

@@ -1,7 +1,8 @@
 # TODO
-- [ ] new model based on qwen3 0.6b, 1.7b and 4b    
-- [ ] new model based on gemma3 270m  
-- [ ] support AI task API  
+- [ ] new model based on qwen3 0.6b, 1.7b and 4b  
+- [ ] add examples of 'fixing' a failed tool call to the dataset
+- [x] new model based on gemma3 270m  
+- [x] support AI task API  
 - [ ] vision support for remote backends  
 - [ ] vision support for local backend (llama.cpp + llava)  
 - [ ] move llamacpp to a separate process because of all the crashing  
