@@ -650,7 +650,6 @@ def generate_refusal_example(refusal_case: dict, persona: str, language: str, ma
         "available_tools": available_tools,
         "question": question,
         "answers": [response_text],
-        "answer_starting": "",
         "tool_calls": []
     }
 
@@ -853,7 +852,10 @@ def generate_sft_file(
                 missing_responses.add(str(ex))
 
         for refusal_case in tqdm(piles.pile_of_refusals):
-            run_factor_times(generate_refusal_example, generated_examples, refusal_case, person, refusal_factor, language)
+            try:
+                run_factor_times(generate_refusal_example, generated_examples, refusal_case, person, refusal_factor, language)
+            except NoResponseAvailableException as ex:
+                missing_responses.add(str(ex))
 
     for status_request in tqdm(piles.pile_of_status_requests):
         run_factor_times(generate_status_request, generated_examples, status_request, "assistant", status_request_factor, language)
