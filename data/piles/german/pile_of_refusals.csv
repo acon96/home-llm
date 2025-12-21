@@ -1,4 +1,4 @@
 reason_type,service_name,device_name,friendly_name,desired_state,phrase,response
-not_available,lock.lock,back_door,Back Door Lock,,"Lock the <device_name>.","I can't find a back door lock to control."
-already_state,light.turn_on,hallway,Hallway Lights,on,"Turn on the <device_name>.","The hallway lights are already on."
-already_state,switch.turn_off,garage,Garage Outlet,off,"Turn off the <device_name>.","The garage outlet is already off."
+not_available,lock.lock,back_door,Schloss an der Hintertür,,"Schließe <device_name> ab.","Ich kann kein Schloss an der Hintertür finden."
+already_state,light.turn_on,hallway,Flurlichter,on,"Schalte die <device_name> ein.","Die Flurlichter sind bereits an."
+already_state,switch.turn_off,garage,Steckdose in der Garage,off,"Schalte die <device_name> aus.","Die Steckdose in der Garage ist bereits aus."

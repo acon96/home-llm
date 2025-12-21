@@ -561,7 +561,7 @@ def generate_tool_failure_example(failure_case: dict, persona: str, language: st
     response_confirmed = response_confirmed.replace("<device_name>", friendly_name)
 
     tool_args_extra = {}
-    if "climate" in service_action:
+    if device_type == "climate":
         if "<temp_f>" in question or "<temp_f>" in response_starting or "<temp_f>" in response_confirmed:
             temp_f = generate_random_parameter("temp_f", piles)
             question = question.replace("<temp_f>", str(temp_f))

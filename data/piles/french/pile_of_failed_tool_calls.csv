@@ -1,4 +1,4 @@
 service_name,correct_device_name,correct_friendly_name,bad_device_name,phrase,error_result,retry_prompt
-light.turn_on,light.living_room_lamp,Living Room Lamp,light.livng_room_lamp,"Please turn on the <device_name>.","Error: Entity light.livng_room_lamp not found.","Trying the living room lamp instead."
-climate.set_temperature,climate.hallway,Hallway Thermostat,climate.halway,"Set the <device_name> to <temp_f> degrees.","Error: Entity climate.halway not found.","Retrying with the hallway thermostat."
-fan.turn_off,fan.office,Office Fan,fan.offce,"Turn off the <device_name>.","Error: Entity fan.offce not found.","I'll try the office fan again."
+light.turn_on,light.living_room_lamp,Lampe du salon,light.livng_room_lamp,"Veuillez allumer la <device_name>.","Erreur : entité light.livng_room_lamp introuvable.","Je vais essayer la lampe du salon à la place."
+climate.set_temperature,climate.hallway,Thermostat du couloir,climate.halway,"Règle la <device_name> à <temp_f> degrés.","Erreur : entité climate.halway introuvable.","Nouvelle tentative avec le thermostat du couloir."
+fan.turn_off,fan.office,Ventilateur du bureau,fan.offce,"Éteins le <device_name>.","Erreur : entité fan.offce introuvable.","Je vais réessayer avec le ventilateur du bureau."

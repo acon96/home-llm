@@ -1,4 +1,4 @@
 service_name,correct_device_name,correct_friendly_name,bad_device_name,phrase,error_result,retry_prompt
-light.turn_on,light.living_room_lamp,Living Room Lamp,light.livng_room_lamp,"Please turn on the <device_name>.","Error: Entity light.livng_room_lamp not found.","Trying the living room lamp instead."
-climate.set_temperature,climate.hallway,Hallway Thermostat,climate.halway,"Set the <device_name> to <temp_f> degrees.","Error: Entity climate.halway not found.","Retrying with the hallway thermostat."
-fan.turn_off,fan.office,Office Fan,fan.offce,"Turn off the <device_name>.","Error: Entity fan.offce not found.","I'll try the office fan again."
+light.turn_on,light.living_room_lamp,Lampa w salonie,light.livng_room_lamp,"Proszę włącz <device_name>.","Błąd: encja light.livng_room_lamp nie została znaleziona.","Spróbuję zamiast tego lampy w salonie."
+climate.set_temperature,climate.hallway,Termostat w korytarzu,climate.halway,"Ustaw <device_name> na <temp_f> stopni.","Błąd: encja climate.halway nie została znaleziona.","Ponawiam z termostatem w korytarzu."
+fan.turn_off,fan.office,Wentylator w biurze,fan.offce,"Wyłącz <device_name>.","Błąd: encja fan.offce nie została znaleziona.","Spróbuję ponownie z wentylatorem w biurze."
