@@ -1,11 +1,12 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  generateName: training-job-
+  generateName: training-job-MODEL_NAME
   namespace: ai
   labels:
     app: training-job
 spec:
+  ttlSecondsAfterFinished: 604800 # 7 days (7 * 24 * 60 * 60)
   template:
     metadata:
       labels:
@@ -18,7 +19,7 @@ spec:
           command: 
             - axolotl
             - train
-            - /workspace/configs/functiongemma-270m.yml
+            - /workspace/configs/MODEL_NAME.yml
           env:
             - name: AXOLOTL_DO_NOT_TRACK
               value: "1"
@@ -38,7 +39,7 @@ spec:
               mountPath: /workspace/data/huggingface-cache
           resources:
             limits:
-              nvidia.com/gpu: 2
+              nvidia.com/gpu: 2 # number of GPUs to assign to this pod
       initContainers:
         - name: tensorboard
           image: python:3.11-slim
