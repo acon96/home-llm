@@ -147,6 +147,20 @@ class DatasetPiles:
             reader = csv.DictReader(f)
             self.pile_of_hallucinated_service_names = list(reader)
 
+        failed_tool_calls_path = f"{cwd}/piles/{language}/pile_of_failed_tool_calls.csv"
+        self.pile_of_failed_tool_calls = []
+        if os.path.exists(failed_tool_calls_path):
+            with open(failed_tool_calls_path, encoding="utf8") as f:
+                reader = csv.DictReader(f)
+                self.pile_of_failed_tool_calls = list(reader)
+
+        refusals_path = f"{cwd}/piles/{language}/pile_of_refusals.csv"
+        self.pile_of_refusals = []
+        if os.path.exists(refusals_path):
+            with open(refusals_path, encoding="utf8") as f:
+                reader = csv.DictReader(f)
+                self.pile_of_refusals = list(reader)
+
     def __getitem__(self, key):
         return getattr(self, key)
 
