@@ -37,6 +37,7 @@ SERVICE_TO_TOOL_MAP = {
     "unlock": TOOL_TURN_OFF,
     "increase_speed": TOOL_TURN_ON,
     "decrease_speed": TOOL_TURN_OFF,
+    "media_stop": TOOL_TURN_OFF,
     "media_play_pause": TOOL_TOGGLE,
     "media_pause": TOOL_MEDIA_PAUSE,
     "media_play": TOOL_MEDIA_UNPAUSE,
@@ -49,6 +50,13 @@ SERVICE_TO_TOOL_MAP = {
     "set_hvac_mode": TOOL_CLIMATE_SET_TEMPERATURE,
     "set_fan_mode": TOOL_CLIMATE_SET_TEMPERATURE,
     "set_preset_mode": TOOL_CLIMATE_SET_TEMPERATURE,
+    "cancel": TOOL_CANCEL_TIMER,
+    "volume_down": TOOL_SET_VOLUME,
+    "volume_up": TOOL_SET_VOLUME,
+    "volume_mute": TOOL_SET_VOLUME,
+    "stop": TOOL_TURN_OFF,
+    "pause": TOOL_TURN_OFF,
+    "add_item": TOOL_LIST_ADD_ITEM
 }
 
 # Home Assistant Intent Tools Definition

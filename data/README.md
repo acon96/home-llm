@@ -67,6 +67,26 @@ The response pile is a CSV with the following headers: `service,response,languag
 
 Generating the full dataset using the python script will print out a warning for any responses that are missing for a persona.
 
+## Synthesizing new pile data
+You can quickly append fresh examples to the CSV piles without editing them manually by running `synthesize.py`. The script talks to the configured LLM and writes the generated rows directly into the per-language pile files.
+
+Examples:
+
+```bash
+# Append 25 failed tool-call recoveries and 25 refusals in Spanish
+python3 synthesize.py --language spanish --model gpt-oss-120b --failed-tool-calls 25 --refusals 25 --concurrency 6
+
+# Generate new actions plus matching refusal samples in German
+python3 synthesize.py --language german --actions 100 --refusals 40 --model gpt-oss-120b
+```
+
+Useful flags:
+- `--failed-tool-calls`: number of `pile_of_failed_tool_calls.csv` rows to synthesize.
+- `--refusals`: number of `pile_of_refusals.csv` rows to synthesize.
+- `--actions`, `--status`, `--devices`: existing knobs for the other piles.
+
+The script automatically routes generations to the correct language-specific pile under `data/piles/<language>/`.
+
 ## Adding new Home Assistant functionality
 TODO
 <!-- In order to add new home assistant device types, you will need to add data to a handful of piles, as well as make small modifications to the `generate_data.py` script.

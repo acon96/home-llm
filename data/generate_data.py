@@ -3,7 +3,6 @@ import json
 import numpy as np
 import random
 from datasets import load_dataset, concatenate_datasets
-from difflib import SequenceMatcher
 from typing import Callable
 from tqdm import tqdm
 import webcolors
@@ -13,87 +12,13 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from device_types import *
+from devices import SUPPORTED_DEVICES, format_device_line, random_device_list, \
+    TOOL_TURN_ON, TOOL_CLIMATE_SET_TEMPERATURE, TOOL_SET_HUMIDITY, \
+    TOOL_LIGHT_SET, TOOL_START_TIMER, TOOL_LIST_ADD_ITEM, SERVICE_TO_TOOL_MAP, \
+    HASS_TOOLS, SERVICE_TOOLS
 from prompting import generate_system_prompt, USER_INSTRUCTION_PROMPT
-from utils import get_random_response, generate_random_parameter, closest_color, get_dataset_piles, NoResponseAvailableException
-
-SUPPORTED_DEVICES = {
-    "light": LightDeviceType(),
-    "switch": SwitchDeviceType(),
-    "fan": FanDeviceType(),
-    "garage_door": GarageDoorDeviceType(),
-    "blinds": BlindsDeviceType(),
-    "lock": LockDeviceType(),
-    "media_player": MediaPlayerDeviceType(),
-    "climate": ClimateDeviceType(),
-    "vacuum": VacuumDeviceType(),
-    "timer": TimerDeviceType(),
-    "todo": TodoDeviceType(),
-}
-
-def format_device_line(*, device_name: str, friendly_name: str, state: str):
-    return (f"{device_name} '{friendly_name}' = {state}")
-
-# generate a random list of devices for the context
-def random_device_list(max_devices: int, avoid_device_names: list[str], language: str = "english"):
-    num_devices = random.randint(2, max_devices)
-    piles = get_dataset_piles(language)
-
-    local_device_names = { k: v[:] for k,v in piles.stacks_of_device_names.items() }
-
-    avoid_climate = False
-    for avoid_device in avoid_device_names:
-        avoid_type = avoid_device.split(".")[0]
-
-        filtered_possible_devices = []
-        for possible_device in local_device_names[avoid_type]:
-            similarity_ratio = SequenceMatcher(None, avoid_device, possible_device["device_name"].split(".")[1]).ratio()
-
-            if similarity_ratio < 0.4:
-                filtered_possible_devices.append(possible_device)
-        local_device_names[avoid_type] = filtered_possible_devices
-
-        if avoid_type == "climate":
-            avoid_climate = True
-
-    possible_choices = []
-    for device_type in local_device_names.keys():
-        possible_choices.extend(local_device_names[device_type])
-    
-
-    device_types = set()
-    device_list = []
-    device_lines = []
-    # TODO: randomly pick attributes for this list
-    extra_exposed_attributes = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "media_title", "volume_level", "duration", "remaining", "item"]
-
-    while len(device_list) < num_devices:
-        choice = random.choice(possible_choices)
-        if choice["device_name"] in device_list:
-            continue
-
-        try:
-            device_name = choice["device_name"]
-            device_type = device_name.split(".")[0]
-            friendly_name = choice["description"]
-
-            # don't add random thermostats. we need to be careful about how we handle multiple thermostats
-            if avoid_climate and device_type == "climate":
-                continue
-
-            state = SUPPORTED_DEVICES[device_type].get_random_state(language, extra_exposed_attributes=extra_exposed_attributes)
-            device_lines.append(format_device_line(
-                device_name=device_name,
-                friendly_name=friendly_name,
-                state=state
-            ))
-            device_list.append(device_name)
-            device_types.add(device_type)
-        except Exception as ex:
-            print(f"bad device name: {choice}")
-            print(repr(ex))
-
-    return device_lines, list(device_types), list(extra_exposed_attributes)
+from utils import get_random_response, generate_random_parameter, closest_color, \
+    get_dataset_piles, NoResponseAvailableException
 
 def generate_static_example(action: dict, persona: str, language: str, max_devices: int = 128, use_service_names: bool = False):
     question = action["phrase"]
@@ -126,7 +51,7 @@ def generate_static_example(action: dict, persona: str, language: str, max_devic
 
     # Map service name to tool name
     service_action = service_name.split(".")[1]
-    tool_name = SERVICE_TO_TOOL_MAP.get(service_action, TOOL_TURN_ON)
+    tool_name = SERVICE_TO_TOOL_MAP[service_action]
 
     response_starting, response_confirmed = get_random_response(
         piles.pile_of_responses,
@@ -225,13 +150,17 @@ def generate_static_example(action: dict, persona: str, language: str, max_devic
         except Exception as e:
             print(f"Failed to parse arguments for {action}: {e}")
 
+    final_answer = " ".join(answer_list)
+    assistant_turns = [
+        create_assistant_turn(response_starting, [tool_call]),
+        create_assistant_turn(final_answer, [])
+    ]
+
     return {
         "states": device_list,
         "available_tools": available_tools,
         "question": question.lower(),
-        "answers": answer_list,
-        "answer_starting": response_starting,
-        "tool_calls": [ tool_call ]
+        "assistant_turns": assistant_turns
     }
 
 def replace_answer(list_of_answer, var, value):
@@ -239,6 +168,16 @@ def replace_answer(list_of_answer, var, value):
     for answer in list_of_answer:
         new_list.append(answer.replace(var, value))
     return new_list
+
+
+def create_assistant_turn(answer: str, tool_call_sequence=None, *, tool_results=None, train_on_turn: bool = True):
+    """Bundle the assistant utterance with any tool interaction for that turn."""
+    return {
+        "answer": answer,
+        "tool_call_sequence": tool_call_sequence or [],
+        "tool_results": tool_results if tool_results is not None else [],
+        "train_on_turn": train_on_turn,
+    }
 
 def generate_templated_example(template: dict, persona: str, language: str, max_devices: int = 128, use_service_names: bool = False):
     template_device_types: list[str] = template["device_type"].split("|")
@@ -328,7 +267,7 @@ def generate_templated_example(template: dict, persona: str, language: str, max_
     tool_calls = []
     for device_dict, service in zip(chosen_devices, service_names):
         service_action = service.split(".")[1]
-        tool_name = SERVICE_TO_TOOL_MAP.get(service_action, TOOL_TURN_ON)
+        tool_name = SERVICE_TO_TOOL_MAP[service_action]
         tool_call = {
             "tool_name": tool_name,
             "service_name": service,
@@ -415,13 +354,19 @@ def generate_templated_example(template: dict, persona: str, language: str, max_
                 if call["tool_name"] == TOOL_LIST_ADD_ITEM:
                     call["tool_args"]["item"] = todo
 
+    starting_answer = answer_starting.strip().lower()
+    normalized_answers = [ sentence.lower() for sentence in answer_list ]
+    final_answer = " ".join(normalized_answers)
+    assistant_turns = [
+        create_assistant_turn(starting_answer, tool_calls),
+        create_assistant_turn(final_answer, [])
+    ]
+
     return {
         "states": device_list,
         "available_tools": available_tools,
         "question": question.lower(),
-        "answer_starting": answer_starting.lower(),
-        "answers": [ sentence.lower() for sentence in answer_list ],
-        "tool_calls": tool_calls
+        "assistant_turns": assistant_turns
     }
 
 def generate_status_request(template: dict, persona: str, language: str, max_devices: int = 128, return_target_device: bool = False, use_service_names: bool = False):
@@ -509,12 +454,13 @@ def generate_status_request(template: dict, persona: str, language: str, max_dev
     # Remove duplicates while preserving order
     available_tools = list(dict.fromkeys(available_tools))
 
+    assistant_turns = [create_assistant_turn(answer.lower(), [])]
+
     result = {
         "states": device_list,
         "available_tools": available_tools,
         "question": question.lower(),
-        "answers": [ answer.lower() ],
-        "tool_calls": []
+        "assistant_turns": assistant_turns
     }
     if return_target_device:
         return result, chosen_device
@@ -578,42 +524,42 @@ def generate_tool_failure_example(failure_case: dict, persona: str, language: st
     retry_prompt = failure_case.get("retry_prompt", f"Trying again with {friendly_name}.").replace("<device_name>", friendly_name)
     error_result = failure_case.get("error_result", "Error").replace("<device_name>", friendly_name)
 
-    tool_name = SERVICE_TO_TOOL_MAP.get(service_action, TOOL_TURN_ON)
+    tool_name = SERVICE_TO_TOOL_MAP[service_action]
     first_args = {"entity_id": bad_device} if use_service_names else {"name": bad_device}
     retry_args = {"entity_id": target_device} if use_service_names else {"name": target_device}
     first_args.update(tool_args_extra)
     retry_args.update(tool_args_extra)
 
-    tool_call_sequence = [
-        {
-            "answer_starting": response_starting,
-            "tool_calls": [{
-                "tool_name": tool_name,
-                "service_name": service_name,
-                "tool_args": first_args
-            }],
-            "tool_results": [{
-                "tool_name": service_name if use_service_names else tool_name,
-                "tool_result": error_result
-            }]
-        },
-        {
-            "answer_starting": retry_prompt,
-            "tool_calls": [{
-                "tool_name": tool_name,
-                "service_name": service_name,
-                "tool_args": retry_args
-            }]
-        }
-    ]
+    first_turn = create_assistant_turn(
+        response_starting,
+        [{
+            "tool_name": tool_name,
+            "service_name": service_name,
+            "tool_args": first_args
+        }],
+        tool_results=[{
+            "tool_name": service_name if use_service_names else tool_name,
+            "tool_result": error_result
+        }],
+        train_on_turn=False
+    )
+
+    second_turn = create_assistant_turn(
+        retry_prompt,
+        [{
+            "tool_name": tool_name,
+            "service_name": service_name,
+            "tool_args": retry_args
+        }]
+    )
+
+    final_turn = create_assistant_turn(response_confirmed, [])
 
     return {
         "states": device_list,
         "available_tools": available_tools,
         "question": question,
-        "answers": [response_confirmed],
-        "tool_call_sequence": tool_call_sequence,
-        "tool_calls": []
+        "assistant_turns": [first_turn, second_turn, final_turn]
     }
 
 def generate_refusal_example(refusal_case: dict, persona: str, language: str, max_devices: int = 128, use_service_names: bool = False):
@@ -645,41 +591,20 @@ def generate_refusal_example(refusal_case: dict, persona: str, language: str, ma
     response_text = refusal_case["response"].replace("<device_name>", friendly_name).lower()
     question = refusal_case["phrase"].replace("<device_name>", friendly_name).lower()
 
+    assistant_turns = [create_assistant_turn(response_text, [])]
+
     return {
         "states": device_list,
         "available_tools": available_tools,
         "question": question,
-        "answers": [response_text],
-        "tool_calls": []
+        "assistant_turns": assistant_turns
     }
 
 def format_example_sharegpt(example, persona, language, use_system_role, append_user_instruction_prompt, use_service_names, tool_response_format):
     piles = get_dataset_piles(language)
     sys_prompt = generate_system_prompt(example, persona, language, piles.pile_of_system_prompts)
     question = example["question"]
-    answers = " ".join(example["answers"])
-    answer_starting = example.get("answer_starting", "")
-
-    tool_call_sequence = example.get("tool_call_sequence")
-
-    tool_calls = []
-    tool_results = []
-    if not tool_call_sequence:
-        # Add tool use blocks if there are tool calls
-        if len(example["tool_calls"]) > 0:
-            for tool_call in example["tool_calls"]:
-                # Use service_name if in service mode, otherwise use tool_name
-                call_name = tool_call.get("service_name", tool_call["tool_name"]) if use_service_names else tool_call["tool_name"]
-                tool_calls.append({
-                    "name": call_name,
-                    "arguments": json.dumps(tool_call["tool_args"])
-                })
-
-                tool_results.append({
-                    "tool_name": call_name,
-                    "tool_call_id": f"call_{len(tool_results) + 1}",
-                    "tool_result": "Success"
-                })
+    assistant_turns = example["assistant_turns"]
 
     if append_user_instruction_prompt:
         user_instruction_words = USER_INSTRUCTION_PROMPT[language] + ":"
@@ -703,95 +628,64 @@ def format_example_sharegpt(example, persona, language, use_system_role, append_
                 "content": [{ "type": "text", "text": "\n".join([ sys_prompt, question ]) }]
             }
         ]
-
-    if tool_call_sequence:
-        call_id_counter = 1
-        for step in tool_call_sequence:
-            step_tool_calls = []
-            for tool_call in step.get("tool_calls", []):
-                call_name = tool_call.get("service_name", tool_call["tool_name"]) if use_service_names else tool_call["tool_name"]
-                step_tool_calls.append({
-                    "name": call_name,
-                    "arguments": json.dumps(tool_call["tool_args"])
-                })
-
-            assistant_block = {
-                "role": "assistant",
-                "content": [{ "type": "text", "text": step.get("answer_starting", "") }]
-            }
-            if step_tool_calls:
-                assistant_block["tool_calls"] = [ { "function": tc } for tc in step_tool_calls ]
-            conversation.append(assistant_block)
-
-            if step_tool_calls:
-                provided_results = step.get("tool_results")
-                step_tool_results = []
-                if provided_results:
-                    for provided in provided_results:
-                        step_tool_results.append({
-                            "tool_name": provided.get("tool_name", step_tool_calls[0]["name"]),
-                            "tool_call_id": provided.get("tool_call_id", f"call_{call_id_counter}"),
-                            "tool_result": provided.get("tool_result", "Success")
-                        })
-                        call_id_counter += 1
-                else:
-                    for call in step_tool_calls:
-                        step_tool_results.append({
-                            "tool_name": call["name"],
-                            "tool_call_id": f"call_{call_id_counter}",
-                            "tool_result": "Success"
-                        })
-                        call_id_counter += 1
-
-                if tool_response_format == "text":
-                    conversation.append({
-                        "role": "tool",
-                        "content": [{ "type": "text", "text": json.dumps(result) } for result in step_tool_results]
-                    })
-                elif tool_response_format == "functiongemma":
-                    conversation.append({
-                        "role": "tool",
-                        "content": [{ "name": result["tool_name"], "response": {"result": result["tool_result"]} } for result in step_tool_results]
-                    })
-
-            if step.get("post_tool_response"):
-                conversation.append({
-                    "role": "assistant",
-                    "content": [{ "type": "text", "text": step["post_tool_response"] }]
-                })
-
-        conversation.append({
+    
+    call_id_counter = 1
+    for turn in assistant_turns:
+        answer_text = turn.get("answer", "")
+        assistant_block = {
             "role": "assistant",
-            "content": [{ "type": "text", "text": answers }],
-        })
-    elif len(tool_calls) > 0:
-        assistant_starting_block = { 
-            "role": "assistant", 
-            "content": [{ "type": "text", "text": answer_starting }],
-            "tool_calls": [ { "function": tc } for tc in tool_calls ]
+            "content": [{ "type": "text", "text": answer_text }],
+            "train_on_turn": turn.get("train_on_turn", True),
         }
-        if tool_response_format == "text":    
-            tool_response_block = {
-                "role": "tool",
-                "content": [{ "type": "text", "text": json.dumps(result) } for result in tool_results]
-            }
-        elif tool_response_format == "functiongemma":
-            tool_response_block = {
-                "role": "tool",
-                "content": [{ "name": result["tool_name"], "response": {"result": result["tool_result"]} } for result in tool_results]
-            }
-        assistant_confirmation_block = { 
-            "role": "assistant", 
-            "content": [{ "type": "text", "text": answers }],
-        }
-        conversation.extend([assistant_starting_block, tool_response_block, assistant_confirmation_block])
-    else:
-        conversation.extend([
-            { 
-                "role": "assistant", 
-                "content": [{ "type": "text", "text": answer_starting + answers }],
-            }
-        ])
+
+        tool_call_sequence = turn.get("tool_call_sequence", [])
+        formatted_calls = []
+        call_names = []
+        for tool_call in tool_call_sequence:
+            call_name = tool_call.get("service_name", tool_call["tool_name"]) if use_service_names else tool_call["tool_name"]
+            call_names.append(call_name)
+            formatted_calls.append({
+                "name": call_name,
+                "arguments": json.dumps(tool_call["tool_args"])
+            })
+
+        if formatted_calls:
+            assistant_block["tool_calls"] = [{ "function": call } for call in formatted_calls]
+
+        conversation.append(assistant_block)
+
+        if formatted_calls:
+            provided_results = turn.get("tool_results") or []
+            step_tool_results = []
+
+            if provided_results:
+                for idx, provided in enumerate(provided_results):
+                    result = dict(provided)
+                    if "tool_name" not in result and call_names:
+                        result["tool_name"] = call_names[min(idx, len(call_names) - 1)]
+                    if "tool_call_id" not in result:
+                        result["tool_call_id"] = f"call_{call_id_counter}"
+                    call_id_counter += 1
+                    step_tool_results.append(result)
+            else:
+                for call_name in call_names:
+                    step_tool_results.append({
+                        "tool_name": call_name,
+                        "tool_call_id": f"call_{call_id_counter}",
+                        "tool_result": "Success"
+                    })
+                    call_id_counter += 1
+
+            if tool_response_format == "text":
+                conversation.append({
+                    "role": "tool",
+                    "content": [{ "type": "text", "text": json.dumps(result) } for result in step_tool_results]
+                })
+            elif tool_response_format == "functiongemma":
+                conversation.append({
+                    "role": "tool",
+                    "content": [{ "name": result["tool_name"], "response": {"result": result["tool_result"]} } for result in step_tool_results]
+                })
     
     return { 
         "messages": conversation,
@@ -812,8 +706,8 @@ def generate_sft_file(
         static_factor: float,
         template_factor: int,
         status_request_factor: int,
-        failure_factor: float = 1,
-        refusal_factor: float = 1):
+        failure_factor: int,
+        refusal_factor: int):
     random.seed(seed)
     np.random.seed(seed)
     piles = get_dataset_piles(language)
@@ -929,7 +823,7 @@ def main(args=None):
 
     args = parser.parse_args(args=args)
 
-    if not args.sample and not args.train and not args.test and not args.merge:
+    if not args.sample and not args.train and not args.test:
         parser.print_usage()
         exit(-1)
 
@@ -950,20 +844,20 @@ def main(args=None):
         suffix = f"_{language}" if len(args.language) > 1 else ""
 
         if args.sample:
-            generate_sft_file(f"sample{suffix}", 42, format_func, use_system_role, append_user_instruction_prompt, use_service_names, personas, language, tool_response_format, static_factor=1, template_factor=1, status_request_factor=1)
+            generate_sft_file(f"sample{suffix}", 42, format_func, use_system_role, append_user_instruction_prompt, use_service_names, personas, language, tool_response_format, static_factor=1, template_factor=1, status_request_factor=1, refusal_factor=1, failure_factor=1)
         if args.train:
             if args.size == "small":
-                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, use_system_role, append_user_instruction_prompt, use_service_names, personas, language, tool_response_format, static_factor=1, template_factor=10, status_request_factor=8)
+                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, use_system_role, append_user_instruction_prompt, use_service_names, personas, language, tool_response_format, static_factor=1, template_factor=10, status_request_factor=8, refusal_factor=3, failure_factor=1)
             elif args.size == "medium":
-                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, use_system_role, append_user_instruction_prompt, use_service_names, personas, language, tool_response_format, static_factor=5, template_factor=15, status_request_factor=12)
+                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, use_system_role, append_user_instruction_prompt, use_service_names, personas, language, tool_response_format, static_factor=5, template_factor=15, status_request_factor=12, refusal_factor=5, failure_factor=1)
             elif args.size == "large":
-                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, use_system_role, append_user_instruction_prompt, use_service_names, personas, language, tool_response_format, static_factor=5, template_factor=20, status_request_factor=15)
+                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, use_system_role, append_user_instruction_prompt, use_service_names, personas, language, tool_response_format, static_factor=5, template_factor=20, status_request_factor=15, refusal_factor=6, failure_factor=1)
             elif args.size == "xl":
-                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, use_system_role, append_user_instruction_prompt, use_service_names, personas, language, tool_response_format, static_factor=7, template_factor=25, status_request_factor=18)
+                generate_sft_file(f"home_assistant_train{suffix}", 42, format_func, use_system_role, append_user_instruction_prompt, use_service_names, personas, language, tool_response_format, static_factor=7, template_factor=25, status_request_factor=18, refusal_factor=8, failure_factor=2)
             else:
                 raise Exception(f"Unrecognized dataset size: {args.size}")
         if args.test:
-            generate_sft_file(f"home_assistant_test{suffix}", 12345, format_func, use_system_role, append_user_instruction_prompt, use_service_names, personas, language, tool_response_format, static_factor=0.25, template_factor=1, status_request_factor=2)
+            generate_sft_file(f"home_assistant_test{suffix}", 12345, format_func, use_system_role, append_user_instruction_prompt, use_service_names, personas, language, tool_response_format, static_factor=0.25, template_factor=1, status_request_factor=2, refusal_factor=1, failure_factor=1)
     if len(args.language) > 1:
         if args.sample:
             merge_languages("sample", args.language)

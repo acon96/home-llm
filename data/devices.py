@@ -1,6 +1,7 @@
 import random
 from dataclasses import dataclass
 from typing import Final, Callable, List
+from difflib import SequenceMatcher
 
 from tools import *
 from utils import closest_color, generate_random_parameter, get_dataset_piles
@@ -30,6 +31,9 @@ STATE_PROBLEM: Final = "problem"
 STATE_CLEANING: Final = "cleaning"
 STATE_DOCKED: Final = "docked"
 STATE_RETURNING: Final = "returning"
+
+def format_device_line(*, device_name: str, friendly_name: str, state: str):
+    return (f"{device_name} '{friendly_name}' = {state}")
 
 @dataclass
 class DeviceType:
@@ -222,3 +226,79 @@ class MediaPlayerDeviceType(DeviceType):
         if "volume_level" in extra_exposed_attributes:
             tools.append(TOOL_SET_VOLUME)
         return tools
+
+
+SUPPORTED_DEVICES = {
+    "light": LightDeviceType(),
+    "switch": SwitchDeviceType(),
+    "fan": FanDeviceType(),
+    "garage_door": GarageDoorDeviceType(),
+    "blinds": BlindsDeviceType(),
+    "lock": LockDeviceType(),
+    "media_player": MediaPlayerDeviceType(),
+    "climate": ClimateDeviceType(),
+    "vacuum": VacuumDeviceType(),
+    "timer": TimerDeviceType(),
+    "todo": TodoDeviceType(),
+}
+
+# generate a random list of devices for the context
+def random_device_list(max_devices: int, avoid_device_names: list[str], language: str = "english"):
+    num_devices = random.randint(2, max_devices)
+    piles = get_dataset_piles(language)
+
+    local_device_names = { k: v[:] for k,v in piles.stacks_of_device_names.items() }
+
+    avoid_climate = False
+    for avoid_device in avoid_device_names:
+        avoid_type = avoid_device.split(".")[0]
+
+        filtered_possible_devices = []
+        for possible_device in local_device_names[avoid_type]:
+            similarity_ratio = SequenceMatcher(None, avoid_device, possible_device["device_name"].split(".")[1]).ratio()
+
+            if similarity_ratio < 0.4:
+                filtered_possible_devices.append(possible_device)
+        local_device_names[avoid_type] = filtered_possible_devices
+
+        if avoid_type == "climate":
+            avoid_climate = True
+
+    possible_choices = []
+    for device_type in local_device_names.keys():
+        possible_choices.extend(local_device_names[device_type])
+    
+
+    device_types = set()
+    device_list = []
+    device_lines = []
+    # TODO: randomly pick attributes for this list
+    extra_exposed_attributes = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "media_title", "volume_level", "duration", "remaining", "item"]
+
+    while len(device_list) < num_devices:
+        choice = random.choice(possible_choices)
+        if choice["device_name"] in device_list:
+            continue
+
+        try:
+            device_name = choice["device_name"]
+            device_type = device_name.split(".")[0]
+            friendly_name = choice["description"]
+
+            # don't add random thermostats. we need to be careful about how we handle multiple thermostats
+            if avoid_climate and device_type == "climate":
+                continue
+
+            state = SUPPORTED_DEVICES[device_type].get_random_state(language, extra_exposed_attributes=extra_exposed_attributes)
+            device_lines.append(format_device_line(
+                device_name=device_name,
+                friendly_name=friendly_name,
+                state=state
+            ))
+            device_list.append(device_name)
+            device_types.add(device_type)
+        except Exception as ex:
+            print(f"bad device name: {choice}")
+            print(repr(ex))
+
+    return device_lines, list(device_types), list(extra_exposed_attributes)
