@@ -67,6 +67,7 @@ if TYPE_CHECKING:
     from llama_cpp import (
         Llama as LlamaType,
         LlamaGrammar as LlamaGrammarType,
+        LlamaDiskCache as LlamaDiskCacheType,
         ChatCompletionRequestResponseFormat
     )
 else:
@@ -156,6 +157,7 @@ class LlamaCppClient(LocalLLMClient):
                 self.llama_cpp_module = importlib.import_module("llama_cpp")
 
         Llama: type[LlamaType] = getattr(self.llama_cpp_module, "Llama")
+        LlamaDiskCache: type[LlamaDiskCacheType] = getattr(self.llama_cpp_module, "LlamaDiskCache")
 
         _LOGGER.debug(f"Loading model '{model_path}'...")
         model_settings = snapshot_settings(entity_options)
@@ -170,11 +172,11 @@ class LlamaCppClient(LocalLLMClient):
         )
         _LOGGER.debug("Model loaded")
 
-        # TODO: check about disk caching
-        # self.llm.set_cache(self.llama_cpp_module.LlamaDiskCache(
-        #     capacity_bytes=(512 * 10e8),
-        #     cache_dir=os.path.join(self.hass.config.media_dirs.get("local", self.hass.config.path("media")), "kv_cache")
-        # ))
+        # FIXME: make cache size configurable (0 means disabled)
+        llm.set_cache(LlamaDiskCache(
+            capacity_bytes=int(512 * 10e8),
+            cache_dir=os.path.join(self.hass.config.media_dirs.get("local", self.hass.config.path("media")), "kv_cache")
+        ))
 
         if model_settings[CONF_PROMPT_CACHING_ENABLED]:
             @callback
@@ -393,6 +395,7 @@ class LlamaCppClient(LocalLLMClient):
                     max_tokens=1,
                     grammar=grammar,
                     stream=False,
+                    stop=["<end_of_turn>", "<end_function_call>"]
                 )
 
                 self.last_cache_prime = time.time()
@@ -464,6 +467,7 @@ class LlamaCppClient(LocalLLMClient):
             grammar=grammar,
             stream=True,
             response_format=response_format,
+            stop=["<end_of_turn>", "<end_function_call>"] # FIXME: make configurable (pull from tool end token?)
         )
 
         def next_token() -> Generator[tuple[Optional[str], Optional[List]]]:

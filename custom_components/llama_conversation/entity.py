@@ -261,12 +261,15 @@ class LocalLLMClient:
                     tool_content += content
 
                 if think_prefix in potential_block and not in_thinking:
+                    _LOGGER.debug("Entering thinking block")
                     in_thinking = True
                     last_5_tokens.clear()
                 elif think_suffix in potential_block and in_thinking:
+                    _LOGGER.debug("Exiting thinking block")
                     in_thinking = False
                     content = content.replace(think_suffix, "").strip()
                 elif tool_prefix in potential_block and not in_tool_call:
+                    _LOGGER.debug("Entering tool call block")
                     in_tool_call = True
                     last_5_tokens.clear()
                 elif tool_suffix in potential_block and in_tool_call:
@@ -306,6 +309,20 @@ class LocalLLMClient:
 
             if not in_thinking and not in_tool_call and (cur_match_length == 0 or result.tool_calls):
                 yield result
+
+        if in_tool_call and tool_content:
+            # flush any unclosed tool calls because using the tool_suffix as a stop token can
+            # cause the tool_suffix to be omitted when the model streams output
+            tool_block = tool_content.strip().removeprefix(tool_prefix)
+            _LOGGER.debug("Raw tool block extracted at end: %s", tool_block)
+            tool_call, to_say = parse_raw_tool_call(tool_block, agent_id)
+            if tool_call:
+                _LOGGER.debug("Tool call parsed at end: %s", tool_call)
+                yield TextGenerationResult(
+                    response=to_say,
+                    response_streamed=True,
+                    tool_calls=[tool_call]
+                )
 
     async def _async_parse_completion(
             self, 

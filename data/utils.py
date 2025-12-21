@@ -1,5 +1,6 @@
 import random
 import re
+import os
 import csv
 import pandas
 from datetime import datetime, timedelta
@@ -84,23 +85,25 @@ def get_random_response(pile_of_responses, *, service: str, persona: str, questi
 class DatasetPiles:
     def __init__(self, supported_devices, language="english"):
         self.language = language
+
+        cwd = os.path.dirname(__file__)
         
-        with open(f"piles/{language}/pile_of_and_words.csv", encoding="utf8") as f:
+        with open(f"{cwd}/piles/{language}/pile_of_and_words.csv", encoding="utf8") as f:
             self.and_words = [ x.strip() for x in f.readlines() ]
         
-        with open(f"piles/{language}/pile_of_durations.csv", encoding="utf8") as f:
+        with open(f"{cwd}/piles/{language}/pile_of_durations.csv", encoding="utf8") as f:
             reader = csv.DictReader(f)
             self.pile_of_durations = { x["duration"]: x["name"] for x in reader }
             
         # media names are not translated
-        with open(f"piles/english/pile_of_media_names.txt", encoding="utf8") as f:
+        with open(f"{cwd}/piles/english/pile_of_media_names.txt", encoding="utf8") as f:
             self.pile_of_media_names = [ x.strip() for x in f.readlines() ]
 
-        with open(f"piles/{language}/pile_of_todo_items.txt", encoding="utf8") as f:
+        with open(f"{cwd}/piles/{language}/pile_of_todo_items.txt", encoding="utf8") as f:
             self.pile_of_todo_items = [ x.strip() for x in f.readlines() ]
 
         self.stacks_of_device_names = { x: [] for x in supported_devices }
-        with open(f"piles/{language}/pile_of_device_names.csv", encoding="utf8") as f:
+        with open(f"{cwd}/piles/{language}/pile_of_device_names.csv", encoding="utf8") as f:
             reader = csv.DictReader(f)
             pile_of_device_names = list(reader)
             for device_dict in pile_of_device_names:
@@ -110,7 +113,7 @@ class DatasetPiles:
                 except KeyError as ex:
                     print(ex)
 
-        with open(f"piles/{language}/pile_of_templated_actions.csv", encoding="utf8") as f:
+        with open(f"{cwd}/piles/{language}/pile_of_templated_actions.csv", encoding="utf8") as f:
             reader = csv.DictReader(f)
             pile_of_templated_actions = list(reader)
             processed_pile_of_templated_actions = []
@@ -124,23 +127,23 @@ class DatasetPiles:
 
             self.pile_of_templated_actions = processed_pile_of_templated_actions
 
-        with open(f"piles/{language}/pile_of_specific_actions.csv", encoding="utf8") as f:
+        with open(f"{cwd}/piles/{language}/pile_of_specific_actions.csv", encoding="utf8") as f:
             reader = csv.DictReader(f)
             self.pile_of_specific_actions = list(reader)
 
-        self.pile_of_responses = pandas.read_csv(f"piles/{language}/pile_of_responses.csv")
+        self.pile_of_responses = pandas.read_csv(f"{cwd}/piles/{language}/pile_of_responses.csv")
         self.pile_of_responses["contains_vars"] = self.pile_of_responses["response_starting"].apply(get_included_vars)
 
-        with open(f"piles/{language}/pile_of_status_requests.csv", encoding="utf8") as f:
+        with open(f"{cwd}/piles/{language}/pile_of_status_requests.csv", encoding="utf8") as f:
             reader = csv.DictReader(f)
             self.pile_of_status_requests = list(reader)
 
-        with open(f"piles/{language}/pile_of_system_prompts.csv", encoding="utf8") as f:
+        with open(f"{cwd}/piles/{language}/pile_of_system_prompts.csv", encoding="utf8") as f:
             reader = csv.DictReader(f)
             self.pile_of_system_prompts = { line["persona"]: line["prompt"] for line in reader }
 
         # service names are not translated
-        with open(f"piles/english/pile_of_hallucinated_service_names.csv", encoding="utf8") as f:
+        with open(f"{cwd}/piles/english/pile_of_hallucinated_service_names.csv", encoding="utf8") as f:
             reader = csv.DictReader(f)
             self.pile_of_hallucinated_service_names = list(reader)
 

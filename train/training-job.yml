@@ -18,10 +18,15 @@ spec:
           command: 
             - axolotl
             - train
-            - /workspace/configs/gemma3-270m.yml
+            - /workspace/configs/functiongemma-270m.yml
           env:
             - name: AXOLOTL_DO_NOT_TRACK
               value: "1"
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hf-token
+                  key: token
           volumeMounts:
             - name: training-runs
               mountPath: /workspace/data/training-runs
@@ -34,9 +39,11 @@ spec:
           resources:
             limits:
               nvidia.com/gpu: 2
+      initContainers:
         - name: tensorboard
           image: python:3.11-slim
           imagePullPolicy: IfNotPresent
+          restartPolicy: Always # mark as sidecar
           command:
             - bash
             - -c 

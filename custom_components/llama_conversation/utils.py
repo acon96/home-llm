@@ -356,7 +356,12 @@ def get_oai_formatted_messages(conversation: Sequence[conversation.Content], use
         elif message.role == "tool_result":
             messages.append({
                 "role": "tool",
-                "content": json.dumps(message.tool_result),
+                # FIXME: what is the correct format for content here? gemma expects name and result
+                # "content": json.dumps(message.tool_result),
+                "content": {
+                    "name": message.tool_name,
+                    "response": { "result": message.tool_result },
+                },
                 "tool_call_id": message.tool_call_id
             })
 
@@ -404,7 +409,26 @@ def parse_raw_tool_call(raw_block: str | dict, agent_id: str) -> tuple[llm.ToolI
     if isinstance(raw_block, dict):
         parsed_tool_call = raw_block
     else:
-        parsed_tool_call: dict = json.loads(raw_block)
+        try:
+            parsed_tool_call: dict = json.loads(raw_block)
+        except json.JSONDecodeError:
+            # handle the "gemma" tool calling format
+            # call:HassTurnOn{name:<escape>light.living_room_rgbww<escape>}
+            gemma_match = re.finditer(r"call:(?P<name>\w+){(?P<args>.+)}", raw_block)
+            for match in gemma_match:
+                tool_name = match.group("name")
+                raw_args = match.group("args")
+                args_dict = {}
+                for arg_match in re.finditer(r"(?P<key>\w+):<escape>(?P<value>.+?)<escape>", raw_args):
+                    args_dict[arg_match.group("key")] = arg_match.group("value")
+                
+                parsed_tool_call = {
+                    "name": tool_name,
+                    "arguments": args_dict
+                }
+                break # TODO: how do we properly handle multiple tool calls in one response?
+            else:
+                raise MalformedToolCallException(agent_id, "", "unknown", str(raw_block), "Tool call was not properly formatted JSON")
 
     # try to validate either format
     is_services_tool_call = False
