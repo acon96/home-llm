@@ -41,6 +41,31 @@ spec:
             limits:
               nvidia.com/gpu: 2 # number of GPUs to assign to this pod
       initContainers:
+        - name: preprocess-dataset
+          image: axolotlai/axolotl-cloud:main-py3.11-cu128-2.8.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - axolotl
+            - preprocess
+            - /workspace/configs/MODEL_NAME.yml
+            - --debug
+          env:
+            - name: AXOLOTL_DO_NOT_TRACK
+              value: "1"
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hf-token
+                  key: token
+          volumeMounts:
+            - name: training-runs
+              mountPath: /workspace/data/training-runs
+            - name: training-data
+              mountPath: /workspace/data/datasets
+            - name: training-configs
+              mountPath: /workspace/configs
+            - name: hf-cache
+              mountPath: /workspace/data/huggingface-cache
         - name: tensorboard
           image: python:3.11-slim
           imagePullPolicy: IfNotPresent

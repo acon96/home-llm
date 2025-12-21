@@ -305,13 +305,20 @@ special_tokens:
   eos_token: <end_of_turn>
 
 datasets:
-  - path: /workspace/data/datasets/sample.jsonl
-    ds_type: json
-    type: chat_template
-    roles_to_train:
-      - assistant
+- path: /workspace/data/datasets/sample.jsonl
+  ds_type: json
+  type: chat_template
+  # roles_to_train: [ "assistant" ]
+  message_field_training: train_on_turn
 
+dataset_prepared_path: /workspace/data/datasets/prepared/
+
+# test_datasets:
+# - path: /workspace/data/datasets/home_assistant_test.jsonl
+#   ds_type: json
+#   type: chat_template
 val_set_size: 0.0
+
 output_dir: /workspace/data/training-runs/Home-FunctionGemma-270m
 
 sequence_len: 5130

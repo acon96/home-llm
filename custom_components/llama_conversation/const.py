@@ -240,6 +240,9 @@ def option_overrides(backend_type: str) -> dict[str, Any]:
             CONF_TOOL_CALL_PREFIX: "<start_function_call>",
             CONF_TOOL_CALL_SUFFIX: "<end_function_call>",
             CONF_TOOL_RESPONSE_AS_STRING: False, # gemma function calling requires tool responses as a dictionary
+            CONF_TEMPERATURE: 1.0,
+            CONF_TOP_P: 0.95,
+            CONF_TOP_K: 64,
         },
         "home-llama-3.2": {
             CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
