@@ -9,20 +9,24 @@ tags:
   - assistant
 language:
   - en
-pretty_name: Home Assistant Requests
+pretty_name: Home Assistant Requests V2
 size_categories:
   - 10K<n<100k
 ---
 
-# Home Assistant Requests Dataset
+# Home Assistant Requests V2 Dataset
 
 This dataset contains a list of requests and responses for a user interacting with a personal assistant that controls an instance of [Home Assistant](https://www.home-assistant.io/).
 
-This dataset is NOT distributed as a static file, but as a Python script. This is due to the multitude of different formats that are used in the LLM fine-tuning ecosystem. The goal is to be able to support using this dataset to fine-tune any desired model, and to support that, you need to be able to generate the dataset in the exact format that matches the model you want to fine-tune.
+The updated V2 of the dataset is now multilingual, containing data in English, German, French, Spanish, and Polish. The dataset also contains multiple "personalities" for the assistant to respond in, such as a formal assistant, a sarcastic assistant, and a friendly assistant. Lastly, the dataset has been updated to fully support modern tool-calling formats.
+
+## Assembling the dataset
+
+> NOTE: If you are viewing this dataset on HuggingFace, you can download the "small" dataset variant directly from the "Files and versions" tab.
 
 The dataset is generated from the different CSV "piles". The "piles" contain different chunks of requests that are assembled into a final context that is presented to the LLM. For example, `piles/<language>/pile_of_device_names.csv` contains only names of various devices to be used as part of context as well as inserted into `piles/<language>/pile_of_templated_actions.csv` and `piles/<language>/pile_of_status_requests.csv`. The logic for assembling the final dataset from the piles is contained in [generate_data.py](./generate_data.py).
 
-## Prepare environment
+### Prepare environment
 
 Start by installing system dependencies:
 `sudo apt-get install python3-dev`
@@ -34,23 +38,13 @@ source .generate_data/bin/activate
 pip3 install -r requirements.txt
 ```
 
-## Generating the dataset from piles
+### Generating the dataset from piles
 
-`python3 generate_data.py --train --test --large --sharegpt`
+`python3 generate_data.py --train --test --small --language english german french spanish polish`
 
 Supported dataset splits are `--test`, `--train`, & `--sample`
 Arguments to set the train dataset size are `--small`, `--medium`, `--large`, & `--xl`.
 Languages can be enabled using `--language english german french spanish polish`
-
-## Merging with other instruct-datasets for training
-
-`python3 generate_data.py --merge <dataset>`
-
-Supported datasets right now are: 
-- `alpaca`
-- `wizardlm70k`
-
-Please note that the supported datasets all have different licenses. Be aware that the license of the resulting data mixture might be different that the license of this dataset alone.
 
 ## Adding a new personality
 In order to add a new personality, you need to define a new system prompt and new set of responses for the assistant. The system prompt is the description of the assistant's behavior that occurs at the start of the context. The responses are what is said back to the user when performing a task. The model should still respond with the correct service call no matter what the assistant's response is. The list of system prompts are stored in `pile_of_system_prompts.csv`, and the list of responses are stored in `pile_of_responses.csv`
