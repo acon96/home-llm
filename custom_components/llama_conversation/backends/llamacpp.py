@@ -180,11 +180,13 @@ class LlamaCppClient(LocalLLMClient):
         _LOGGER.debug("Model loaded")
 
         # create disk cache if enabled
+        # cache must be per-model to avoid conflicts with different hidden state sizes
         cache_size = model_settings.get(CONF_LLAMACPP_CACHE_SIZE_MB, DEFAULT_LLAMACPP_CACHE_SIZE_MB)
+        cache_dir = model_name.strip().replace(" ", "_").lower()
         if cache_size > 0:
             llm.set_cache(LlamaDiskCache(
-                capacity_bytes=int(cache_size * (1024 ** 3)),
-                cache_dir=os.path.join(self.hass.config.media_dirs.get("local", self.hass.config.path("media")), "kv_cache")
+                capacity_bytes=int(cache_size * (1024 ** 2)), # MB to bytes
+                cache_dir=os.path.join(self.hass.config.media_dirs.get("local", self.hass.config.path("media")), "kv_cache", cache_dir)
             ))
 
         if model_settings[CONF_PROMPT_CACHING_ENABLED]:
@@ -406,7 +408,7 @@ class LlamaCppClient(LocalLLMClient):
                     max_tokens=1,
                     grammar=grammar,
                     stream=False,
-                    stop=["<end_of_turn>", "<end_function_call>"]
+                    # stop=["<end_of_turn>", "<end_function_call>"]
                 )
 
                 self.last_cache_prime = time.time()
@@ -480,7 +482,7 @@ class LlamaCppClient(LocalLLMClient):
             grammar=grammar,
             stream=True,
             response_format=response_format,
-            stop=["<end_of_turn>", "<end_function_call>"] # FIXME: make configurable (pull from tool end token?)
+            # stop=["<end_of_turn>", "<end_function_call>"] # FIXME: make configurable (pull from tool end token?)
         )
 
         def next_token() -> Generator[tuple[Optional[str], Optional[List]]]:

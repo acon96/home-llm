@@ -308,7 +308,7 @@ datasets:
 - path: /workspace/data/datasets/sample.jsonl
   ds_type: json
   type: chat_template
-  # roles_to_train: [ "assistant" ]
+  roles_to_train: []
   message_field_training: train_on_turn
 
 dataset_prepared_path: /workspace/data/datasets/prepared/

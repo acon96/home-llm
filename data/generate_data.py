@@ -614,18 +614,21 @@ def format_example_sharegpt(example, persona, language, use_system_role, append_
         conversation = [
             { 
                 "role": "system", 
-                "content": [{"type": "text", "text": sys_prompt}]
+                "content": [{"type": "text", "text": sys_prompt}],
+                "train_on_turn": False,
             },
             { 
                 "role": "user", 
-                "content": [{ "type": "text", "text": question }]
+                "content": [{ "type": "text", "text": question }],
+                "train_on_turn": False,
             }
         ]
     else:
         conversation = [
             { 
                 "role": "user", 
-                "content": [{ "type": "text", "text": "\n".join([ sys_prompt, question ]) }]
+                "content": [{ "type": "text", "text": "\n".join([ sys_prompt, question ]) }],
+                "train_on_turn": False,
             }
         ]
     
@@ -646,7 +649,7 @@ def format_example_sharegpt(example, persona, language, use_system_role, append_
             call_names.append(call_name)
             formatted_calls.append({
                 "name": call_name,
-                "arguments": json.dumps(tool_call["tool_args"])
+                "arguments": json.dumps(tool_call["tool_args"]),
             })
 
         if formatted_calls:
@@ -679,12 +682,14 @@ def format_example_sharegpt(example, persona, language, use_system_role, append_
             if tool_response_format == "text":
                 conversation.append({
                     "role": "tool",
-                    "content": [{ "type": "text", "text": json.dumps(result) } for result in step_tool_results]
+                    "content": [{ "type": "text", "text": json.dumps(result) } for result in step_tool_results],
+                    "train_on_turn": False,
                 })
             elif tool_response_format == "functiongemma":
                 conversation.append({
                     "role": "tool",
-                    "content": [{ "name": result["tool_name"], "response": {"result": result["tool_result"]} } for result in step_tool_results]
+                    "content": [{ "name": result["tool_name"], "response": {"result": result["tool_result"]} } for result in step_tool_results],
+                    "train_on_turn": False,
                 })
     
     return { 
