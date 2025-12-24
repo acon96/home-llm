@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import os
+import shutil
 from typing import Final
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
@@ -96,9 +97,18 @@ async def _async_update_listener(hass: HomeAssistant, entry: LocalLLMConfigEntry
     await hass.config_entries.async_reload(entry.entry_id)
 
 async def async_unload_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> bool:
-    """Unload Ollama."""
+    """Unload the integration."""
     if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return False
+
+    if entry.data[CONF_BACKEND_TYPE] == BACKEND_TYPE_LLAMA_CPP:
+        # clean up any disk cache resources
+        def cleanup_cache_dir():
+            cache_dir = entry.data[CONF_CHAT_MODEL].strip().replace(" ", "_").lower()
+            full_path = os.path.join(hass.config.media_dirs.get("local", hass.config.path("media")), "kv_cache", cache_dir)
+            shutil.rmtree(full_path, ignore_errors=True)
+
+        await hass.async_add_executor_job(cleanup_cache_dir)
     hass.data[DOMAIN].pop(entry.entry_id)
     return True
 

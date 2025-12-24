@@ -1,0 +1,3 @@
+# Training Home LLM Models
+
+This directory contains resources and instructions for training Home LLM models. Currently, it is recommended to use axolotl via a Docker container for training. There are various examples of model configurations provided in the `config/` folder. Additionally, you can refer to the [Axolotl documentation](https://docs.axolotl.ai/) for more detailed guidance on setting up and running training sessions.

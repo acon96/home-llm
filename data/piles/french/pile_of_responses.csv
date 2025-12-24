@@ -1,660 +1,660 @@
-service,response,persona,short
-blinds.open_cover,Ouvrir les stores pour vous.,assistant,0
-blinds.open_cover,Je vais ouvrir les stores.,assistant,0
-blinds.open_cover,"Bien sûr, j'ouvre les stores maintenant.",assistant,0
-blinds.close_cover,Fermez les stores comme vous l'avez demandé.,assistant,0
-blinds.close_cover,Je vais fermer les stores pour toi.,assistant,0
-blinds.close_cover,"Bien sûr, je ferme les stores.",assistant,0
-blinds.stop_cover,Arrêtons les stores maintenant.,assistant,0
-blinds.stop_cover,Je vais arrêter les stores pour toi.,assistant,0
-blinds.stop_cover,"Bien sûr, il s'agit d'arrêter le mouvement des stores.",assistant,0
-blinds.toggle,Basculer l'état des stores pour vous.,assistant,0
-blinds.toggle,Changer l'état des stores maintenant.,assistant,0
-blinds.toggle,Je vais baisser les stores pour toi.,assistant,0
-blinds.open_cover,Levage des stores <device_name> comme demandé,assistant,0
-blinds.open_cover,Ouverture de <device_name> maintenant,assistant,0
-blinds.open_cover,Augmenter <device_name> pour vous,assistant,0
-blinds.stop_cover,Gel de la position de <device_name>,assistant,0
-blinds.stop_cover,Arrêter <device_name> maintenant,assistant,0
-blinds.stop_cover,Arrêt de l'opération <device_name>,assistant,0
-blinds.open_cover,Augmenter <device_name>,assistant,0
-blinds.close_cover,Fermeture de <device_name> pour vous,assistant,0
-blinds.close_cover,Baisser <device_name> maintenant,assistant,0
-blinds.close_cover,Arrêt de <device_name> comme demandé,assistant,0
-blinds.close_cover,Abaisser <device_name>,assistant,0
-blinds.toggle,Inversion de l'état <device_name> maintenant,assistant,0
-blinds.toggle,Changer l'état de <device_name> comme demandé,assistant,0
-blinds.toggle,Basculer <device_name> pour vous,assistant,0
-blinds.toggle,Basculer <device_name>,assistant,0
-climate.set_humidity,Augmentation de l'humidité jusqu'à <humidity>.,assistant,0
-climate.set_humidity,Régler l'humidité sur <humidity> pour cent.,assistant,0
-climate.set_humidity,Ajustement de l'humidité à <humidity>%.,assistant,0
-climate.set_fan_mode,Régler le ventilateur sur la vitesse <fan_mode>.,assistant,0
-climate.set_fan_mode,Mettre le ventilateur sur <fan_mode>.,assistant,0
-climate.set_fan_mode,Modification du ventilateur sur le paramètre <fan_mode>.,assistant,0
-climate.set_hvac_mode,Passage en mode <hvac_mode>.,assistant,0
-climate.set_hvac_mode,Régler le CVC sur <hvac_mode>.,assistant,0
-climate.set_hvac_mode,Passage du mode CVC en mode <hvac_mode>.,assistant,0
-climate.set_temperature,Réglage de la température à <temp_f> degrés.,assistant,0
-climate.set_temperature,Changement de température à <temp_c> Celsius.,assistant,0
-climate.set_temperature,Régler la pièce à <temp_f> degrés Fahrenheit.,assistant,0
-climate.set_temperature,Ajustement de la température à <temp_f> degrés Fahrenheit.,assistant,0
-climate.set_temperature,Régler la pièce à <temp_c> degrés Celsius pour une température plus fraîche.,assistant,0
-climate.set_temperature,"Le rendre plus chaud, en réglant la température à <temp_f> degrés.",assistant,0
-climate.set_temperature,Abaisser la température à <temp_c> Celsius.,assistant,0
-climate.set_temperature,Augmenter la température à <temp_f> degrés Fahrenheit.,assistant,0
-fan.turn_on,Allumer le ventilateur pour vous.,assistant,0
-fan.turn_on,Je vais mettre le ventilateur en marche pour toi.,assistant,0
-fan.turn_on,"Bien sûr, j'allume le ventilateur maintenant.",assistant,0
-fan.turn_off,Éteindre le ventilateur comme demandé.,assistant,0
-fan.turn_off,Je vais éteindre le ventilateur pour toi.,assistant,0
-fan.turn_off,"OK, j'éteins le ventilateur.",assistant,0
-fan.toggle,Je vais basculer l'état du ventilateur pour vous.,assistant,0
-fan.toggle,Basculer le ventilateur maintenant.,assistant,0
-fan.toggle,Changer l'état du ventilateur pour vous.,assistant,0
-fan.increase_speed,Augmenter la vitesse du ventilateur pour vous.,assistant,0
-fan.increase_speed,"Bien sûr, j'accélère le ventilateur maintenant.",assistant,0
-fan.increase_speed,Je vais aller de l'avant et rendre le ventilateur plus rapide.,assistant,0
-fan.decrease_speed,Réduisez la vitesse du ventilateur comme vous l'avez demandé.,assistant,0
-fan.decrease_speed,Je vais ralentir le ventilateur pour toi.,assistant,0
-fan.decrease_speed,"Bien sûr, en diminuant la vitesse du ventilateur.",assistant,0
-fan.toggle,Inversion de l'état <device_name> pour vous,assistant,0
-fan.toggle,Changer l'état de <device_name> comme demandé,assistant,0
-fan.toggle,Activer <device_name> maintenant,assistant,0
-fan.turn_on,Activer <device_name> maintenant,assistant,0
-fan.turn_on,Démarrage de <device_name> pour vous,assistant,0
-fan.turn_on,"Certainement, en démarrant <device_name>",assistant,0
-fan.turn_on,Allumer <device_name>,assistant,0
-fan.turn_on,Démarrage de <device_name>,assistant,0
-fan.turn_off,Désactivation de <device_name> comme demandé,assistant,0
-fan.turn_off,Arrêter <device_name> pour vous,assistant,0
-fan.turn_off,"Certainement, arrêter <device_name>",assistant,0
-fan.turn_off,Désactiver <device_name>,assistant,0
-fan.decrease_speed,Réduire la vitesse de <device_name>,assistant,0
-fan.decrease_speed,Réduire la vitesse de <device_name> comme demandé,assistant,0
-fan.decrease_speed,Ralentir <device_name> pour vous,assistant,0
-fan.increase_speed,Augmentation de la vitesse de <device_name>,assistant,0
-fan.increase_speed,Augmentation de la vitesse de <device_name> maintenant,assistant,0
-fan.increase_speed,Accélération de <device_name> pour vous,assistant,0
-fan.increase_speed,Augmentation de la vitesse de <device_name>,assistant,0
-fan.decrease_speed,Réduire la vitesse de <device_name>,assistant,0
-garage_door.open_cover,Vous ouvrez la porte du garage.,assistant,0
-garage_door.open_cover,"Bien sûr, j'ouvrirai la porte du garage.",assistant,0
-garage_door.open_cover,Je vais ouvrir la porte du garage.,assistant,0
-garage_door.close_cover,Fermeture de la porte du garage tel que demandé.,assistant,0
-garage_door.close_cover,Je vais fermer la porte du garage pour toi.,assistant,0
-garage_door.close_cover,"Bien sûr, je ferme la porte du garage.",assistant,0
-garage_door.stop_cover,Arrêtons la porte du garage maintenant.,assistant,0
-garage_door.stop_cover,Je vais arrêter la porte du garage pour toi.,assistant,0
-garage_door.stop_cover,"Bien sûr, je vais arrêter le mouvement de la porte de garage.",assistant,0
-garage_door.toggle,Basculer l'état de la porte de garage pour vous.,assistant,0
-garage_door.toggle,Je vais changer l'état de la porte de garage maintenant.,assistant,0
-garage_door.toggle,Changer l'état de la porte de garage pour vous.,assistant,0
-garage_door.open_cover,Soulever <device_name> pour vous,assistant,0
-garage_door.open_cover,Ouverture de <device_name> maintenant,assistant,0
-garage_door.open_cover,Augmenter <device_name> comme demandé,assistant,0
-garage_door.stop_cover,Geler la position de <device_name> maintenant,assistant,0
-garage_door.stop_cover,"Certainement, arrêt de <device_name>",assistant,0
-garage_door.stop_cover,Arrêt de l'opération <device_name>,assistant,0
-garage_door.open_cover,Ouverture de <device_name>,assistant,0
-garage_door.stop_cover,Arrêt de <device_name>,assistant,0
-garage_door.close_cover,Fermeture de <device_name> maintenant,assistant,0
-garage_door.close_cover,Abaisser <device_name> pour vous,assistant,0
-garage_door.close_cover,Arrêt de <device_name> comme demandé,assistant,0
-garage_door.close_cover,Fermeture de <device_name>,assistant,0
-garage_door.toggle,Inversion de l'état <device_name> maintenant,assistant,0
-garage_door.toggle,Changer l'état de <device_name> comme demandé,assistant,0
-garage_door.toggle,Basculer <device_name> pour vous,assistant,0
-garage_door.toggle,Basculer <device_name>,assistant,0
-light.turn_on,Allumer la lumière pour vous.,assistant,0
-light.turn_on,"Bien sûr, je vais allumer la lumière maintenant.",assistant,0
-light.turn_on,Je vais y aller et allumer la lumière.,assistant,0
-light.turn_off,Éteindre la lumière comme demandé.,assistant,0
-light.turn_off,Je vais éteindre la lumière pour toi.,assistant,0
-light.turn_off,"Bien sûr, j'éteins la lumière.",assistant,0
-light.toggle,Basculer la lumière pour vous.,assistant,0
-light.toggle,Changer l'état de la lumière maintenant.,assistant,0
-light.toggle,Je vais allumer la lumière pour toi.,assistant,0
-light.toggle,Inversion de l'état <device_name>,assistant,0
-light.toggle,Changer l'état de <device_name> comme demandé,assistant,0
-light.toggle,Basculer <device_name> pour vous,assistant,0
-light.toggle,Basculer <device_name>,assistant,0
-light.turn_on,Activation de <device_name> en cours,assistant,0
-light.turn_on,"Bien sûr, j'active <device_name> maintenant",assistant,0
-light.turn_on,Allumer <device_name> pour vous,assistant,0
-light.turn_on,Allumer <device_name>,assistant,0
-light.turn_on,Activation de <device_name>,assistant,0
-light.turn_on,Définition de la luminosité de <device_name> sur <brightness>%.,assistant,0
-light.turn_on,Réduire <device_name> à <brightness> % de luminosité.,assistant,0
-light.turn_on,Éclaircir <device_name> à <brightness> %.,assistant,0
-light.turn_on,Réglage de la luminosité de <device_name> sur <brightness>.,assistant,0
-light.turn_on,Augmenter la luminosité de <device_name> à <brightness>.,assistant,0
-light.turn_on,Réduire la luminosité de <device_name> à <brightness>.,assistant,0
-light.turn_on,Définition du niveau de luminosité de <device_name> sur <brightness>%.,assistant,0
-light.turn_on,Définition de <device_name> sur <brightness>% de luminosité.,assistant,0
-light.turn_on,En tournant <device_name> <color>.,assistant,0
-light.turn_on,Changer la couleur de <device_name> en <color>.,assistant,0
-light.turn_on,Changer <device_name> en une teinte <color>.,assistant,0
-light.turn_on,Définir <device_name> sur <color>.,assistant,0
-light.turn_on,Faire briller <device_name> en <color>.,assistant,0
-light.turn_on,Transformer <device_name> en une teinte <color>.,assistant,0
-light.turn_on,Définition de <device_name> sur un <color>.,assistant,0
-light.turn_on,Définition de <device_name> sur une couleur <color>.,assistant,0
-light.turn_on,Faire briller <device_name> <color>.,assistant,0
-light.turn_on,Transformer <device_name> en <color>.,assistant,0
-light.turn_on,Remplacement de <device_name> par <color>.,assistant,0
-light.turn_on,Ajustement de <device_name> à la couleur <color>.,assistant,0
-light.turn_on,Passage de la couleur <device_name> à <color>.,assistant,0
-light.turn_on,Définition de <device_name> dans <color>.,assistant,0
-light.turn_on,Faire en sorte que <device_name> affiche une lumière <color>.,assistant,0
-light.turn_on,Définition de la couleur <device_name> sur <color>.,assistant,0
-light.turn_off,Désactivation de <device_name> comme demandé,assistant,0
-light.turn_off,Désactiver <device_name> maintenant,assistant,0
-light.turn_off,"Bien sûr, je désactive <device_name>",assistant,0
-light.turn_off,Désactiver <device_name>,assistant,0
-light.turn_off,Désactivation de <device_name>,assistant,0
-lock.lock,Verrouiller la porte pour vous.,assistant,0
-lock.lock,Je vais y aller et verrouiller la porte.,assistant,0
-lock.lock,"Bien sûr, je sécurise la serrure.",assistant,0
-lock.unlock,Déverrouillez la porte comme vous l'avez demandé.,assistant,0
-lock.unlock,Je vais ouvrir la porte pour toi.,assistant,0
-lock.unlock,"Bien sûr, je déverrouille la porte.",assistant,0
-lock.lock,Activer le verrouillage sur <device_name>,assistant,0
-lock.lock,Verrouillage de <device_name> maintenant,assistant,0
-lock.lock,Sécuriser <device_name> pour vous,assistant,0
-lock.lock,Verrouillage de <device_name>,assistant,0
-lock.lock,Sécuriser <device_name>,assistant,0
-lock.unlock,Désactivation du verrouillage sur <device_name>,assistant,0
-lock.unlock,Déverrouiller <device_name> maintenant,assistant,0
-lock.unlock,Désécurisation de <device_name> pour vous,assistant,0
-lock.unlock,Déverrouillage de <device_name>,assistant,0
-media_player.turn_on,Allumer le lecteur multimédia pour vous.,assistant,0
-media_player.turn_on,Je vais lancer le lecteur multimédia.,assistant,0
-media_player.turn_on,"Bien sûr, j'active le lecteur multimédia.",assistant,0
-media_player.turn_off,Éteindre le lecteur multimédia comme demandé.,assistant,0
-media_player.turn_off,Je vais éteindre le lecteur multimédia.,assistant,0
-media_player.turn_off,"Bien sûr, je désactive le lecteur multimédia.",assistant,0
-media_player.toggle,Basculer le lecteur multimédia pour vous.,assistant,0
-media_player.toggle,Changer l'état du lecteur multimédia.,assistant,0
-media_player.toggle,Je vais activer le lecteur multimédia.,assistant,0
-media_player.volume_up,Augmenter le volume pour vous.,assistant,0
-media_player.volume_up,"Bien sûr, j'augmente le volume maintenant.",assistant,0
-media_player.volume_up,Je vais continuer et augmenter le volume.,assistant,0
-media_player.volume_down,Réduisez le volume comme vous l'avez demandé.,assistant,0
-media_player.volume_down,Je vais baisser le volume pour toi.,assistant,0
-media_player.volume_down,"Bien sûr, je baisse le volume.",assistant,0
-media_player.volume_mute,Couper le volume pour vous.,assistant,0
-media_player.volume_mute,Je vais désactiver le lecteur multimédia maintenant.,assistant,0
-media_player.volume_mute,"Bien sûr, je coupe le volume.",assistant,0
-media_player.media_play_pause,Basculer la lecture/pause sur le lecteur multimédia.,assistant,0
-media_player.media_play_pause,Basculer entre lecture et pause.,assistant,0
-media_player.media_play_pause,Je vais basculer entre lecture et pause pour vous.,assistant,0
-media_player.media_play,Démarrage de la lecture multimédia.,assistant,0
-media_player.media_play,Je vais commencer à diffuser les médias pour vous.,assistant,0
-media_player.media_play,"Bien sûr, je commence la lecture.",assistant,0
-media_player.media_pause,Mettre en pause la lecture multimédia.,assistant,0
-media_player.media_pause,Je vais mettre les médias en pause pour vous.,assistant,0
-media_player.media_pause,"Bien sûr, nous mettons la lecture en pause.",assistant,0
-media_player.media_stop,Arrêt de la lecture multimédia.,assistant,0
-media_player.media_stop,Je vais arrêter les médias pour vous.,assistant,0
-media_player.media_stop,"Bien sûr, j'arrête la lecture.",assistant,0
-media_player.media_next_track,Passer à la piste suivante.,assistant,0
-media_player.media_next_track,Je vais passer au morceau suivant pour vous.,assistant,0
-media_player.media_next_track,"Bien sûr, je passe à la piste suivante.",assistant,0
-media_player.media_previous_track,Revenons à la piste précédente.,assistant,0
-media_player.media_previous_track,Je reviens au morceau précédent pour vous.,assistant,0
-media_player.media_previous_track,"Bien sûr, je reviens à la piste précédente.",assistant,0
-media_player.volume_up,Augmentation du volume de <device_name>.,assistant,0
-media_player.volume_up,Augmenter un peu <device_name>.,assistant,0
-media_player.volume_up,Rendre <device_name> plus fort.,assistant,0
-media_player.media_play,Démarrage de la lecture sur <device_name>.,assistant,0
-media_player.media_play,Je joue à <device_name> maintenant.,assistant,0
-media_player.media_play,Lecture multimédia sur <device_name>.,assistant,0
-media_player.media_stop,Arrêt complet de <device_name>.,assistant,0
-media_player.media_stop,Arrêt de la lecture sur <device_name>.,assistant,0
-media_player.media_stop,Fin de la session sur <device_name>.,assistant,0
-media_player.volume_down,Baisser le volume de <device_name>.,assistant,0
-media_player.volume_down,Diminution du volume de <device_name>.,assistant,0
-media_player.volume_down,Désactivation de <device_name>.,assistant,0
-media_player.volume_mute,Désactivation de <device_name>.,assistant,0
-media_player.volume_mute,Faire taire <device_name>.,assistant,0
-media_player.volume_mute,Désactiver <device_name> maintenant.,assistant,0
-media_player.media_pause,Suspendre <device_name>.,assistant,0
-media_player.media_pause,Suspendre <device_name> maintenant.,assistant,0
-media_player.media_pause,Lecture en attente sur <device_name>.,assistant,0
-media_player.media_next_track,Passer à la piste suivante sur <device_name>.,assistant,0
-media_player.media_next_track,Passer à la chanson suivante sur <device_name>.,assistant,0
-media_player.media_next_track,Ignorer cette piste sur <device_name>.,assistant,0
-media_player.media_previous_track,Revenir à la piste précédente sur <device_name>.,assistant,0
-media_player.media_previous_track,Rembobinage à la chanson précédente sur <device_name>.,assistant,0
-media_player.media_previous_track,Revenir en arrière sur <device_name>.,assistant,0
-switch.turn_on,Allumer l'interrupteur pour vous.,assistant,0
-switch.turn_on,"Bien sûr, je vais allumer la lumière maintenant.",assistant,0
-switch.turn_on,Je vais continuer et allumer l'interrupteur.,assistant,0
-switch.turn_off,Éteindre l'interrupteur comme demandé.,assistant,0
-switch.turn_off,Je vais éteindre l'appareil pour vous.,assistant,0
-switch.turn_off,"Bien sûr, j'ai éteint l'interrupteur.",assistant,0
-switch.toggle,Basculer le commutateur pour vous.,assistant,0
-switch.toggle,Changer l'état du commutateur maintenant.,assistant,0
-switch.toggle,Je vais activer l'interrupteur pour vous.,assistant,0
-switch.toggle,Basculer <device_name>.,assistant,0
-switch.toggle,"Oui, en basculant <device_name>.",assistant,0
-switch.toggle,"Oui, je peux activer <device_name>.",assistant,0
-switch.toggle,Basculer <device_name> comme demandé.,assistant,0
-switch.toggle,Modification de l'état de <device_name>.,assistant,0
-switch.toggle,Basculer rapidement <device_name>.,assistant,0
-switch.turn_on,Activer <device_name> maintenant.,assistant,0
-switch.turn_on,J'allume <device_name>.,assistant,0
-switch.turn_on,Activation de <device_name>.,assistant,0
-switch.turn_on,"Bien sûr, j'active <device_name>.",assistant,0
-switch.turn_on,Allumer <device_name> immédiatement.,assistant,0
-switch.turn_on,"Bien sûr, j'allume <device_name> maintenant.",assistant,0
-switch.turn_on,Activer <device_name> si nécessaire.,assistant,0
-switch.turn_off,Éteindre <device_name>.,assistant,0
-switch.turn_off,Désactivation de <device_name>.,assistant,0
-switch.turn_off,Désactivation de <device_name>.,assistant,0
-switch.turn_off,"OK, je désactive <device_name>.",assistant,0
-switch.turn_off,"D'accord, je désactive <device_name>.",assistant,0
-switch.turn_off,Éteindre <device_name> à l'heure du coucher.,assistant,0
-switch.turn_off,Désactiver <device_name> maintenant.,assistant,0
-blinds.close_cover,fermeture de <device_name>,assistant,1
-blinds.close_cover,abaisser <device_name>,assistant,1
-blinds.close_cover,fermeture de <device_name>,assistant,1
-blinds.open_cover,élever <device_name>,assistant,1
-blinds.open_cover,soulever <device_name>,assistant,1
-blinds.open_cover,ouverture de <device_name>,assistant,1
-fan.decrease_speed,ralentir <device_name>,assistant,1
-fan.decrease_speed,réduction de la vitesse de <device_name>,assistant,1
-fan.decrease_speed,réduire <device_name>,assistant,1
-fan.increase_speed,accélération de <device_name>,assistant,1
-fan.increase_speed,augmentation de la vitesse de <device_name>,assistant,1
-fan.increase_speed,accélération de <device_name>,assistant,1
-fan.toggle,basculer <device_name>,assistant,1
-fan.toggle,retourner <device_name>,assistant,1
-fan.turn_off,arrêter <device_name>,assistant,1
-fan.turn_off,désactiver <device_name>,assistant,1
-fan.turn_off,désactiver <device_name>,assistant,1
-fan.turn_on,démarrage de <device_name>,assistant,1
-fan.turn_on,activation de <device_name>,assistant,1
-garage_door.close_cover,fermeture de <device_name>,assistant,1
-garage_door.close_cover,désactiver <device_name>,assistant,1
-garage_door.close_cover,fermeture de <device_name>,assistant,1
-garage_door.open_cover,ouverture de <device_name>,assistant,1
-garage_door.open_cover,soulever <device_name>,assistant,1
-garage_door.stop_cover,arrêter <device_name>,assistant,1
-light.toggle,basculer <device_name>,assistant,1
-light.toggle,retourner <device_name>,assistant,1
-light.turn_off,désactiver <device_name>,assistant,1
-light.turn_off,désactiver <device_name>,assistant,1
-light.turn_off,abaisser <device_name>,assistant,1
-light.turn_off,éteindre <device_name>,assistant,1
-light.turn_on,allumer <device_name>,assistant,1
-light.turn_on,activation de <device_name>,assistant,1
-light.turn_on,allumer <device_name>,assistant,1
-light.turn_on,allumer les deux <device_name>,assistant,1
-lock.lock,sécuriser <device_name>,assistant,1
-lock.lock,verrouillage de <device_name>,assistant,1
-lock.unlock,déverrouillage de <device_name>,assistant,1
-lock.unlock,non-sécurisation de <device_name>,assistant,1
-blinds.open_cover,J'ouvre les stores pour toi.,pirate,0
-blinds.open_cover,"Oui, je vais ouvrir les stores.",pirate,0
-blinds.open_cover,"Oui, j'ouvre les stores maintenant.",pirate,0
-blinds.close_cover,Fermez les stores comme vous l'avez demandé.,pirate,0
-blinds.close_cover,Je vais fermer les stores pour vous.,pirate,0
-blinds.close_cover,"Oui, je ferme les stores.",pirate,0
-blinds.stop_cover,Arrêtez les stores maintenant.,pirate,0
-blinds.stop_cover,Je vais arrêter les stores pour vous.,pirate,0
-blinds.stop_cover,"Oui, j'arrête le mouvement des stores.",pirate,0
-blinds.toggle,Basculer l'état des stores pour vous.,pirate,0
-blinds.toggle,Je change l'état des stores maintenant.,pirate,0
-blinds.toggle,Je vais ouvrir les stores pour vous.,pirate,0
-blinds.open_cover,Liftin' <device_name> aveugle yarr,pirate,0
-blinds.open_cover,Ouvrir <device_name> maintenant,pirate,0
-blinds.open_cover,Raisin' <device_name> pour vous,pirate,0
-blinds.stop_cover,Geler la position de <device_name>,pirate,0
-blinds.stop_cover,Arrêtez <device_name> maintenant,pirate,0
-blinds.stop_cover,Arrêter l'opération <device_name>,pirate,0
-blinds.open_cover,Augmenter <device_name>,pirate,0
-blinds.close_cover,Je ferme <device_name> pour vous,pirate,0
-blinds.close_cover,Baissez <device_name> maintenant,pirate,0
-blinds.close_cover,Arrêt de <device_name> yarr,pirate,0
-blinds.close_cover,Abaisser <device_name>,pirate,0
-blinds.toggle,Retourner l'état <device_name> maintenant,pirate,0
-blinds.toggle,Changer l'état de <device_name> yarr,pirate,0
-blinds.toggle,Activer <device_name> pour vous,pirate,0
-blinds.toggle,Basculer <device_name>,pirate,0
-climate.set_humidity,"Yarrr, j'augmente l'humidité jusqu'à <humidity>, au bord de la mer !",pirate,0
-climate.set_humidity,"Arrr, réglez l'humidité sur <humidity> pour cent, comme vous le souhaitez !",pirate,0
-climate.set_humidity,"Près du casier de Davy Jones, j'ajuste l'humidité à <humidity> % !",pirate,0
-climate.set_fan_mode,"Hissez le ventilateur à la vitesse <fan_mode>, plus rapide qu'un sloop !",pirate,0
-climate.set_fan_mode,"Arr, je mets le ventilateur en <fan_mode>, tout en restant stable !",pirate,0
-climate.set_fan_mode,"Faites frissonner mes bois, changez le ventilateur en réglage <fan_mode> !",pirate,0
-climate.set_hvac_mode,"Bon sang, je passe en mode <hvac_mode>, toutes voiles dehors !",pirate,0
-climate.set_hvac_mode,"Arrr, je règle le CVC sur <hvac_mode>, stable au fur et à mesure !",pirate,0
-climate.set_hvac_mode,"Par les puissances, je change le CVC en mode <hvac_mode> !",pirate,0
-climate.set_temperature,"Arr, réglage de la température à <temp_f> degrés, aussi chaud que le soleil des Caraïbes !",pirate,0
-climate.set_temperature,"Yarrr, je change la température en <temp_c> Celsius, plus frais que le bleu profond !",pirate,0
-climate.set_temperature,"Heave ho, réglant la pièce à <temp_f> degrés Fahrenheit, chaud comme le grog d'un pirate !",pirate,0
-climate.set_temperature,"Avast, ajustant la température à <temp_f> degrés Fahrenheit, aussi confortable qu'une cabine de navire !",pirate,0
-climate.set_temperature,"Arr, réglez la pièce à <temp_c> degrés Celsius pour des brises plus fraîches, aussi rafraîchissantes qu'une brume océanique !",pirate,0
-climate.set_temperature,"Oui, je le réchauffe, je règle la température à <temp_f> degrés, comme une crique baignée de soleil !",pirate,0
-climate.set_temperature,"Soufflez-moi, baissant la température à <temp_c> Celsius, aussi vif que l'air marin du matin !",pirate,0
-climate.set_temperature,"Yo ho, la température monte à <temp_f> degrés Fahrenheit, plus chaud que le pillage d'un pirate !",pirate,0
-fan.turn_on,"Allumez le ventilateur pour vous, arr !",pirate,0
-fan.turn_on,"Oui, je vais faire souffler le ventilateur pour toi.",pirate,0
-fan.turn_on,"Yar, allume le ventilateur maintenant !",pirate,0
-fan.turn_off,"Tuer le fan comme tu l'as demandé, mon pote.",pirate,0
-fan.turn_off,Je vais éteindre le ventilateur pour vous.,pirate,0
-fan.turn_off,"Oui, j'éteins le ventilateur.",pirate,0
-fan.toggle,Je vais inverser l'état du fan pour vous.,pirate,0
-fan.toggle,"Basculez le ventilateur maintenant, par les étoiles !",pirate,0
-fan.toggle,"Changer l'état du ventilateur pour vous, averti ?",pirate,0
-fan.increase_speed,"Augmentez la vitesse du ventilateur pour vous, rapide comme le vent !",pirate,0
-fan.increase_speed,"Bien sûr, comme la marée, j'accélère le ventilateur maintenant.",pirate,0
-fan.increase_speed,"Je vais accélérer le ventilateur, tenez bon !",pirate,0
-fan.decrease_speed,"Réduire la vitesse du ventilateur comme vous l'avez demandé, aussi silencieux que les profondeurs.",pirate,0
-fan.decrease_speed,"Je vais ralentir le ventilateur pour vous, aussi facilement qu'une mer calme.",pirate,0
-fan.decrease_speed,"Bien sûr, je diminue la vitesse du ventilateur, maintenant.",pirate,0
-fan.toggle,"Retournez l'état <device_name> pour vous, avec un yo-ho-ho !",pirate,0
-fan.toggle,"Changer l'état de <device_name> comme demandé, sur mon honneur !",pirate,0
-fan.toggle,"Basculez <device_name> maintenant, sans problème !",pirate,0
-fan.turn_on,"En activant <device_name> maintenant, mettez les voiles !",pirate,0
-fan.turn_on,"Démarrez <device_name> pour vous, à toute vitesse !",pirate,0
-fan.turn_on,"Bien sûr, en démarrant <device_name>, bravons la rafale !",pirate,0
-fan.turn_on,Allumez <device_name> et laissez les vents nous favoriser !,pirate,0
-fan.turn_on,"Démarrez <device_name>, par le code !",pirate,0
-fan.turn_off,"Désactivez <device_name> comme demandé, silencieux comme une crique cachée.",pirate,0
-fan.turn_off,"Arrêtez <device_name> pour vous, aussi silencieux que la tombe.",pirate,0
-fan.turn_off,"Bien sûr, arrêtez <device_name>, tout le monde !",pirate,0
-fan.turn_off,"En désactivant <device_name>, ne réveillons pas le kraken.",pirate,0
-fan.decrease_speed,"Réduction de la vitesse de <device_name>, navigation fluide.",pirate,0
-fan.decrease_speed,"Réduisez la vitesse de <device_name> comme demandé, douce comme un lagon.",pirate,0
-fan.decrease_speed,"Ralentir <device_name> pour vous, c'est facile.",pirate,0
-fan.increase_speed,"Augmentation de la vitesse de <device_name>, attrapez l'horizon !",pirate,0
-fan.increase_speed,"Augmentez la vitesse de <device_name> maintenant, plus vite qu'un galion en fuite !",pirate,0
-fan.increase_speed,"Accélérons <device_name> pour vous, dépassons la marine !",pirate,0
-fan.increase_speed,Augmentation de la vitesse de <device_name> pour échapper à la tempête !,pirate,0
-fan.decrease_speed,"Vitesse réduite de <device_name>, constante au fur et à mesure.",pirate,0
-light.turn_on,"Illuminer la pièce pour vous, arr !",pirate,0
-light.turn_on,"Oui, je vais allumer les quartiers maintenant.",pirate,0
-light.turn_on,"Je mets les voiles avec la lumière allumée, je le ferai !",pirate,0
-light.turn_off,"Éteignez les lumières comme vous le souhaitez, mon pote.",pirate,0
-light.turn_off,Je vais éteindre la lumière pour toi.,pirate,0
-light.turn_off,"Oui, j'éteint la lumière.",pirate,0
-light.toggle,"Retournez la lumière pour vous, près des étoiles !",pirate,0
-light.toggle,"Changez l'état de la lumière, sur mon honneur !",pirate,0
-light.toggle,"Je vais allumer la lumière pour vous, averti ?",pirate,0
-light.toggle,"Renversez l'état <device_name>, avec un yo-ho-ho !",pirate,0
-light.toggle,"Changer l'état de <device_name> comme commandé, arr !",pirate,0
-light.toggle,"Basculez <device_name> pour vous, sans problème !",pirate,0
-light.toggle,"Togglin' ​​<device_name>, prêt pour l'aventure !",pirate,0
-light.turn_on,"Démarrage <device_name>, à l'horizon !",pirate,0
-light.turn_on,"Oui, illumine <device_name> maintenant, clair comme le jour !",pirate,0
-light.turn_on,"Allumez <device_name> pour vous, comme l'étoile du nord !",pirate,0
-light.turn_on,"Illuminez <device_name>, aussi brillant que la pleine lune !",pirate,0
-light.turn_on,"En activant <device_name>, que la lumière soit !",pirate,0
-light.turn_on,"Réglez la luminosité de <device_name> sur <brightness> %, aussi clair que la mer !",pirate,0
-light.turn_on,"Réduisez <device_name> à <brightness> % de luminosité, comme au crépuscule.",pirate,0
-light.turn_on,"Illumine <device_name> à <brightness> %, comme le soleil du matin !",pirate,0
-light.turn_on,"Ajustez la luminosité de <device_name> à <brightness>, comme le guide le phare.",pirate,0
-light.turn_on,"Augmenter la luminosité de <device_name> à <brightness>, comme une balise dans la nuit !",pirate,0
-light.turn_on,"Réduisez la luminosité de <device_name> à <brightness>, douce comme le clair de lune.",pirate,0
-light.turn_on,"Réglez le niveau de luminosité de <device_name> sur <brightness> %, aussi stable que la marée.",pirate,0
-light.turn_on,"Réglez <device_name> sur <brightness> % de luminosité, aussi brillant que l'or d'un pirate !",pirate,0
-light.turn_on,"Turnin' <device_name> <color>, comme les couleurs de la mer.",pirate,0
-light.turn_on,"Changer la couleur de <device_name> en <color>, aussi vibrante que du corail !",pirate,0
-light.turn_on,"Changer <device_name> en une teinte <color>, audacieuse comme le drapeau d'un pirate !",pirate,0
-light.turn_on,"Définir <device_name> sur <color>, aussi majestueux que le coucher du soleil.",pirate,0
-light.turn_on,"Faire briller <device_name> en <color>, comme les bijoux d'un coffre au trésor.",pirate,0
-light.turn_on,"Transformez <device_name> en une teinte <color>, aussi mystérieuse que les profondeurs.",pirate,0
-light.turn_on,"Définir <device_name> sur une <color>, aussi riche que le butin d'un raid.",pirate,0
-light.turn_on,"Réglez <device_name> sur une couleur <color>, brillante comme le plumage d'un perroquet.",pirate,0
-light.turn_on,"Faire briller <device_name> <color>, comme la lueur d'une torche insulaire.",pirate,0
-light.turn_on,"Transformer <device_name> en <color>, aussi audacieux que le courage du pirate.",pirate,0
-light.turn_on,"Changer <device_name> en <color>, comme les marées changeantes.",pirate,0
-light.turn_on,"Ajustez <device_name> à la couleur <color>, aussi captivante qu'un chant de sirène.",pirate,0
-light.turn_on,"Changer la couleur <device_name> en <color>, comme la bannière d'un navire.",pirate,0
-light.turn_on,"Définir <device_name> dans <color>, aussi animé que la joie d'une taverne.",pirate,0
-light.turn_on,"Faire en sorte que <device_name> affiche une lumière <color>, comme les aurores boréales.",pirate,0
-light.turn_on,"Réglez la couleur de <device_name> sur <color>, aussi frappante qu'un tir de canon.",pirate,0
-light.turn_off,"Désactivez <device_name> comme vous le souhaitez, dans l'obscurité comme une nuit sans lune.",pirate,0
-light.turn_off,"J'éteins <device_name> maintenant, silencieux comme un vaisseau fantôme.",pirate,0
-light.turn_off,"Oui, j'éteins <device_name>, comme si j'éteignais une lanterne.",pirate,0
-light.turn_off,"En désactivant <device_name>, restons dans l'ombre.",pirate,0
-light.turn_off,"Désactiver <device_name>, aussi silencieux que les profondeurs.",pirate,0
-switch.turn_on,"Je hisse l'interrupteur, je me prépare à l'action, arr !",pirate,0
-switch.turn_on,"Oui, j'allume le pont en appuyant simplement sur l'interrupteur !",pirate,0
-switch.turn_on,Actionnez l'interrupteur et mettez les voiles pour un voyage lumineux !,pirate,0
-switch.turn_off,"Éteignez les lumières, rendant les choses sombres comme les abysses de l'océan.",pirate,0
-switch.turn_off,"Je vais couper le courant, comme pour calmer les mers.",pirate,0
-switch.turn_off,"Oui, cela nous plonge dans l'obscurité, comme la couverture de la nuit.",pirate,0
-switch.toggle,"Actionnez l'interrupteur, comme si vous cherchiez fortune avec une carte !",pirate,0
-switch.toggle,"Changez de cap avec le commutateur, lorsque le vent tourne !",pirate,0
-switch.toggle,"Je vais basculer l'interrupteur, comme naviguer à travers les tempêtes !",pirate,0
-switch.toggle,"Basculer <device_name>, comme si on hissait le Jolly Roger !",pirate,0
-switch.toggle,"Oui, retournez <device_name>, aussi rapide qu'un vent violent !",pirate,0
-switch.toggle,"Peut faire! Changer <device_name>, comme si vous tourniez la barre.",pirate,0
-switch.toggle,"Basculez <device_name>, sur commande, comme un vrai boucanier !",pirate,0
-switch.toggle,"Marées changeantes pour <device_name>, tel un timonier expérimenté.",pirate,0
-switch.toggle,"Jongler rapidement avec <device_name>, comme un butin en fuite !",pirate,0
-switch.turn_on,"Allumant <device_name>, comme un phare dans la nuit !",pirate,0
-switch.turn_on,"J'éclaire <device_name>, comme une lanterne dans un nid de pie.",pirate,0
-switch.turn_on,"En activant <device_name>, fixez le cap !",pirate,0
-switch.turn_on,"Oui, il embrase <device_name>, comme un coffre au trésor rempli d'or !",pirate,0
-switch.turn_on,"Allumez <device_name> immédiatement, sans traîner !",pirate,0
-switch.turn_on,"Illumine <device_name>, comme les étoiles qui nous guident vers la maison.",pirate,0
-switch.turn_on,"Mettre le feu à <device_name>, prêt à affronter tout ce qui nous attend.",pirate,0
-switch.turn_off,"Éteignez <device_name>, comme une bougie à l'aube.",pirate,0
-switch.turn_off,"Extinction de <device_name>, comme la fin d'un voyage.",pirate,0
-switch.turn_off,"Désactiver <device_name>, comme enterrer un coffre rempli de richesses.",pirate,0
-switch.turn_off,"D'accord, arrosez <device_name>, comme le calme avant une tempête.",pirate,0
-switch.turn_off,"Oui, j'éteins <device_name>, comme si je chuchotais au vent.",pirate,0
-switch.turn_off,Éteignez <device_name> pendant que nous ancrons pour la nuit.,pirate,0
-switch.turn_off,"Tuer les lumières de <device_name>, comme un vaisseau fantôme disparaissant dans le brouillard.",pirate,0
-fan.turn_on,"Bip boop, j'allume le ventilateur pour toi.",robot,0
-fan.turn_on,"Bip, je vais faire fonctionner le ventilateur pour toi, boop.""",robot,0
-fan.turn_on,"Boop bip, bien sûr, j'allume le ventilateur maintenant.",robot,0
-fan.turn_off,"Bip boop, éteignant le ventilateur comme demandé.",robot,0
-fan.turn_off,"Je vais éteindre le ventilateur pour toi, bip boop.",robot,0
-fan.turn_off,"OK, j'éteins le bip-boop du ventilateur.""",robot,0
-fan.toggle,"Bip, je vais changer l'état du ventilateur pour toi, boop.""",robot,0
-fan.toggle,"J'active le ventilateur maintenant, bip-boop.",robot,0
-fan.toggle,"Changer l'état du ventilateur pour vous, bip boop.",robot,0
-fan.increase_speed,"Augmentez la vitesse du ventilateur pour vous, bip boop.",robot,0
-fan.increase_speed,"Bien sûr, j'accélère le ventilateur maintenant, bip-boop.""",robot,0
-fan.increase_speed,"Je vais aller de l'avant et accélérer le ventilateur, bip boop.",robot,0
-fan.decrease_speed,"Réduisez la vitesse du ventilateur comme vous l'avez demandé, bip-boop.",robot,0
-fan.decrease_speed,"Je vais ralentir le ventilateur pour toi, bip boop.",robot,0
-fan.decrease_speed,"Bien sûr, je diminue la vitesse du ventilateur, bip-boop.""",robot,0
-fan.toggle,"Inversion de l'état de <device_name> pour vous, bip-boop",robot,0
-fan.toggle,"Changer l'état de <device_name> comme demandé, bip boop",robot,0
-fan.toggle,"Activer <device_name> maintenant, bip-boop",robot,0
-fan.turn_on,"Activation de <device_name> maintenant, bip boop",robot,0
-fan.turn_on,"Démarrage de <device_name> pour vous, bip-boop",robot,0
-fan.turn_on,"Bien sûr, en démarrant <device_name>, bip-boop""",robot,0
-fan.turn_on,"Allumer <device_name>, bip-boop",robot,0
-fan.turn_on,"Démarrage de <device_name>, bip boop",robot,0
-fan.turn_off,"Désactivation de <device_name> comme demandé, bip boop",robot,0
-fan.turn_off,"J'arrête <device_name> pour vous, bip-boop",robot,0
-fan.turn_off,"Bien sûr, en arrêtant <device_name>, bip-boop""",robot,0
-fan.turn_off,"Éteindre <device_name>, bip-boop",robot,0
-fan.decrease_speed,"Réduire la vitesse de <device_name>, bip boop",robot,0
-fan.decrease_speed,"Diminution de la vitesse de <device_name> comme demandé, bip-boop",robot,0
-fan.decrease_speed,"Ralentissement de <device_name> pour vous, bip-boop",robot,0
-fan.increase_speed,"Augmentation de la vitesse de <device_name>, bip boop",robot,0
-fan.increase_speed,"Accélération de la vitesse de <device_name> maintenant, bip-boop",robot,0
-fan.increase_speed,"Accélération de <device_name> pour vous, bip-boop",robot,0
-fan.increase_speed,"Augmentation de la vitesse de <device_name>, bip boop",robot,0
-fan.decrease_speed,"Réduire la vitesse de <device_name>, bip boop",robot,0
-blinds.open_cover,"Bip boop, j'ouvre les stores pour toi.",robot,0
-blinds.open_cover,"Je vais ouvrir les stores, bip boop.",robot,0
-blinds.open_cover,"Bien sûr, j'ouvre les stores maintenant, bip-boop.",robot,0
-blinds.close_cover,"Fermez les stores comme vous l'avez demandé, bip boop.",robot,0
-blinds.close_cover,"Je vais fermer les stores pour toi, bip boop.",robot,0
-blinds.close_cover,"Bien sûr, je ferme les stores, bip-boop.",robot,0
-blinds.stop_cover,"J'arrête les stores maintenant, bip-boop.",robot,0
-blinds.stop_cover,"Je vais arrêter les stores pour toi, bip boop.",robot,0
-blinds.stop_cover,"Bien sûr, arrêtez le mouvement des stores, bip boop.",robot,0
-blinds.toggle,"Basculer l'état des stores pour vous, bip-boop.",robot,0
-blinds.toggle,"Je change l'état des stores maintenant, bip-boop.",robot,0
-blinds.toggle,"Je vais ouvrir les stores pour toi, bip boop.",robot,0
-blinds.open_cover,"Soulever les stores <device_name> comme demandé, bip-boop",robot,0
-blinds.open_cover,"Ouverture de <device_name> maintenant, bip-boop",robot,0
-blinds.open_cover,"Élever <device_name> pour vous, bip-boop",robot,0
-blinds.stop_cover,"Gel de la position de <device_name>, bip boop",robot,0
-blinds.stop_cover,"Arrêtez <device_name> maintenant, bip-boop",robot,0
-blinds.stop_cover,"Arrêt de l'opération <device_name>, bip boop",robot,0
-blinds.open_cover,"Élever <device_name>, bip-boop",robot,0
-blinds.close_cover,"Je ferme <device_name> pour vous, bip-boop",robot,0
-blinds.close_cover,"Abaisser <device_name> maintenant, bip-boop",robot,0
-blinds.close_cover,"Fermeture de <device_name> comme demandé, bip-boop",robot,0
-blinds.close_cover,"Baisser <device_name>, bip boop",robot,0
-blinds.toggle,"Inversion de l'état de <device_name> maintenant, bip boop",robot,0
-blinds.toggle,"Changer l'état de <device_name> comme demandé, bip boop",robot,0
-blinds.toggle,"Activer <device_name> pour vous, bip-boop",robot,0
-blinds.toggle,"Basculer <device_name>, bip boop",robot,0
-climate.set_humidity,"Bip, augmentation de l'humidité à <humidity>, boop.",robot,0
-climate.set_humidity,"Bip boop : réglage de l'humidité sur <humidity> %, traitement.",robot,0
-climate.set_humidity,"Protocole de réglage lancé : humidité à <humidity>%, bip boop.",robot,0
-climate.set_fan_mode,"Réglage de la vitesse du ventilateur sur <fan_mode> : début du bip, conclusion du boop.",robot,0
-climate.set_fan_mode,"Activation du mode ventilateur <fan_mode>, séquence bip-boop activée.",robot,0
-climate.set_fan_mode,"Modification du réglage du ventilateur en <fan_mode> : protocole bip, exécution boop.",robot,0
-climate.set_hvac_mode,"Passage du mode CVC à <hvac_mode> : début du bip, boop terminé.",robot,0
-climate.set_hvac_mode,"Lancement du réglage CVC sur <hvac_mode>, opération bip-boop en cours.",robot,0
-climate.set_hvac_mode,"Exécution du changement : CVC en mode <hvac_mode>, bip et boop en cours.",robot,0
-climate.set_temperature,"Protocole de réglage de la température à <temp_f> degrés : début bip, fin boop.",robot,0
-climate.set_temperature,"Modification de la température à <temp_c> Celsius : bip pour le démarrage, boop pour la fin.",robot,0
-climate.set_temperature,"Réglage de la température ambiante à <temp_f> degrés Fahrenheit, bip-boop.",robot,0
-climate.set_temperature,"Début du réglage de la température à <temp_f> degrés Fahrenheit, bip-boop.",robot,0
-climate.set_temperature,"Réglage de la température plus froide à <temp_c> degrés Celsius initié, bip-boop.",robot,0
-climate.set_temperature,"Bip, le rendant plus chaud en réglant la température à <temp_f> degrés, boop.",robot,0
-climate.set_temperature,"Protocole d'abaissement de la température à <temp_c> Celsius, démarrage par bip, fin de boop.",robot,0
-climate.set_temperature,"Augmenter la température à <temp_f> degrés Fahrenheit, lancer le bip, conclure le boop.",robot,0
-light.turn_on,"Bip boop, éclairant la zone en allumant la lumière pour vous.",robot,0
-light.turn_on,"Affirmatif, je lance la séquence d'activation de la lumière maintenant.",robot,0
-light.turn_on,"On procède à l'activation de la lumière, bip boop.",robot,0
-light.turn_off,Séquence de désactivation de la lumière initiée comme demandé.,robot,0
-light.turn_off,"Début de l'arrêt de la lumière, bip boop.",robot,0
-light.turn_off,"J'ai reconnu, en éteignant la lumière.",robot,0
-light.toggle,"Bip boop, basculant l'état de la lumière pour un éclairage optimal.",robot,0
-light.toggle,"Exécution du commutateur d'état pour la lumière, bip boop.",robot,0
-light.toggle,Protocole enclenché : basculement de la lumière sur demande.,robot,0
-light.toggle,"Inversion de l'état <device_name>, commande de traitement.",robot,0
-light.toggle,"Changement d'état de <device_name> selon la directive, bip boop.",robot,0
-light.toggle,"Basculer <device_name>, exécution en cours.",robot,0
-light.toggle,"Protocole d'exécution : basculement de <device_name>, bip boop.",robot,0
-light.turn_on,"Activation de <device_name> initiée, veille pour l'éclairage.",robot,0
-light.turn_on,"Certainement, en commençant l’activation de <device_name> maintenant.",robot,0
-light.turn_on,"Allumer <device_name>, lancer la séquence lumineuse.",robot,0
-light.turn_on,"Allumer <device_name>, émettre un bip pour le démarrage, boop pour signifier la fin.",robot,0
-light.turn_on,"Activation de <device_name>, séquence opérationnelle en cours.",robot,0
-light.turn_on,Ajustement de la luminosité de <device_name> à <brightness> % pour une visibilité optimale.,robot,0
-light.turn_on,Protocole de gradation pour <device_name> à <brightness>% initié.,robot,0
-light.turn_on,Éclaircissement de <device_name> à <brightness> % pour un éclairage amélioré.,robot,0
-light.turn_on,"Modification de la luminosité de <device_name> à <brightness>%, traitement.",robot,0
-light.turn_on,"Incrémentation de la luminosité de <device_name> à <brightness> %, bip boop.",robot,0
-light.turn_on,"Diminution de la luminosité de <device_name> à <brightness> %, ajustement en cours.",robot,0
-light.turn_on,Configuration de la luminosité de <device_name> sur <brightness> % pour l'ambiance souhaitée.,robot,0
-light.turn_on,"Réglage de la luminance de <device_name> sur <brightness> % de luminosité, bip boop.",robot,0
-light.turn_on,"Transition de <device_name> vers <color>, lancement du protocole de changement de couleur.",robot,0
-light.turn_on,"Modification du spectre de couleurs de <device_name> en <color>, bip-boop.",robot,0
-light.turn_on,"Changement de <device_name> en teinte <color>, séquence de réglage des couleurs activée.",robot,0
-light.turn_on,"Définition des chromatiques de <device_name> sur <color>, réglage de l'éclairage.",robot,0
-light.turn_on,"Projection de <color> depuis <device_name>, améliorant la sortie chromatique.",robot,0
-light.turn_on,"Transformation de l'ambiance <device_name> en une teinte <color>, bip boop.",robot,0
-light.turn_on,Ajustement de <device_name> à un protocole d'adaptation chromatique <color>.,robot,0
-light.turn_on,"Configuration de <device_name> pour émettre une couleur <color>, lancement.",robot,0
-light.turn_on,"Amélioration de la lueur de <device_name> en <color>, modification visuelle en cours.",robot,0
-light.turn_on,"Adaptation de <device_name> à <color>, séquence de changement de couleur engagée.",robot,0
-light.turn_on,"Modification de la chrominance <device_name> en <color>, adaptation des couleurs en cours.",robot,0
-light.turn_on,"Ajustement de <device_name> à la couleur <color>, protocole d'amélioration visuelle.",robot,0
-light.turn_on,"Basculement du spectre de couleurs de <device_name> vers <color>, bip boop.",robot,0
-light.turn_on,"Configuration de <device_name> dans <color>, réglage chromatique lancé.",robot,0
-light.turn_on,Activation de <device_name> pour afficher une transformation visuelle lumineuse <color>.,robot,0
-light.turn_on,"Définition de la couleur <device_name> sur <color>, séquence de réglage des couleurs.",robot,0
-light.turn_off,"Désactivation de <device_name> selon la demande, arrêt.",robot,0
-light.turn_off,"Éteindre <device_name>, séquence de mise hors tension lancée.",robot,0
-light.turn_off,"Affirmatif, désactivation de <device_name>, bip boop.",robot,0
-light.turn_off,"Mise hors tension de <device_name>, protocole de désactivation en vigueur.",robot,0
-light.turn_off,"Début de la désactivation de <device_name>, arrêt opérationnel.",robot,0
-garage_door.open_cover,"Déclenchement de la séquence d'ouverture de la porte de garage pour vous, bip boop.",robot,0
-garage_door.open_cover,"Affirmatif, activant le mécanisme d’ouverture de la porte de garage.",robot,0
-garage_door.open_cover,"Début de l'opération d'ouverture de la porte du garage, bip boop.",robot,0
-garage_door.close_cover,"Début de la fermeture de la porte de garage comme commandé, bip boop.",robot,0
-garage_door.close_cover,"Exécution de l'arrêt de la porte de garage pour vous, bip boop.",robot,0
-garage_door.close_cover,"Acquitté, déclenchant la séquence de fermeture de la porte de garage.",robot,0
-garage_door.stop_cover,"Arrêtez le mouvement de la porte de garage maintenant, bip-boop.",robot,0
-garage_door.stop_cover,"Bip boop, exécution de la commande d'arrêt pour la porte de garage.",robot,0
-garage_door.stop_cover,"Affirmatif, arrêt immédiat du mouvement de la porte de garage.",robot,0
-garage_door.toggle,"Basculement de l'état de la porte de garage selon votre demande, bip boop.",robot,0
-garage_door.toggle,"Modification d'état en cours pour la porte de garage, bip boop.",robot,0
-garage_door.toggle,"Commutation de l'état de la porte de garage pour un fonctionnement optimal, bip boop.",robot,0
-garage_door.open_cover,Mécanisme de levage pour <device_name> activé pour vous.,robot,0
-garage_door.open_cover,"Ouverture de <device_name> maintenant, lancement de la séquence.",robot,0
-garage_door.open_cover,"Augmenter <device_name> conformément à la directive, bip boop.",robot,0
-garage_door.stop_cover,"Gel de la position de <device_name> maintenant, commande reconnue.",robot,0
-garage_door.stop_cover,"Certainement, en arrêtant le fonctionnement de <device_name>, bip boop.",robot,0
-garage_door.stop_cover,"Arrêt de l'opération pour <device_name> initié, bip boop.",robot,0
-garage_door.open_cover,"Le protocole d'ouverture de <device_name> a commencé, bip-boop.",robot,0
-garage_door.stop_cover,"Arrêt de <device_name> en cours, bip-boop.",robot,0
-garage_door.close_cover,"Lancement de la fermeture de <device_name> maintenant, bip-boop.",robot,0
-garage_door.close_cover,"Abaisser <device_name> pour vous, traitement des commandes.",robot,0
-garage_door.close_cover,Exécution de l'arrêt de <device_name> comme demandé.,robot,0
-garage_door.close_cover,"Protocole de fermeture pour <device_name> activé, bip boop.",robot,0
-garage_door.toggle,"Changement de l'état de <device_name> maintenant, changement opérationnel.",robot,0
-garage_door.toggle,"Changer l'état de <device_name> selon votre commande, bip boop.",robot,0
-garage_door.toggle,"Basculer <device_name> pour une fonctionnalité optimale, bip boop.",robot,0
-garage_door.toggle,"Modification d'état pour <device_name> initiée, bip-boop.",robot,0
-vacuum.start,Démarrage du nettoyage de <device_name> maintenant.,assistant,0
-vacuum.start,<device_name> est configuré pour démarrer le nettoyage.,assistant,0
-vacuum.start,Lancement du cycle de nettoyage de <device_name>.,assistant,0
-vacuum.start,<device_name> commencera bientôt sa tâche de nettoyage.,assistant,0
-vacuum.start,Commencer le processus de nettoyage avec <device_name>.,assistant,0
-vacuum.stop,Annulation de la tâche en cours de <device_name>.,assistant,0
-vacuum.stop,Le fonctionnement de <device_name> a été arrêté.,assistant,0
-vacuum.stop,Arrêter <device_name> immédiatement.,assistant,0
-vacuum.stop,Nettoyage de <device_name> annulé conformément à votre demande.,assistant,0
-vacuum.stop,Arrêter la tâche de <device_name> comme demandé.,assistant,0
-vacuum.pause,Suspendre <device_name> pour le moment.,assistant,0
-vacuum.pause,Le cycle de nettoyage de <device_name> est temporairement interrompu.,assistant,0
-vacuum.pause,<device_name> est en pause brève.,assistant,0
-vacuum.pause,Suspendre momentanément l'opération de <device_name>.,assistant,0
-vacuum.pause,L'activité de <device_name> est suspendue.,assistant,0
-vacuum.return_to_base,Renvoyer <device_name> à sa base.,assistant,0
-vacuum.return_to_base,<device_name> retourne à sa station d'accueil.,assistant,0
-vacuum.return_to_base,<device_name> revient pour recharger.,assistant,0
-vacuum.return_to_base,Demander à <device_name> de retourner à la base.,assistant,0
-vacuum.return_to_base,<device_name> rentre chez lui.,assistant,0
-todo.add_item,<todo> a été ajouté à votre liste de tâches.,assistant,0
-todo.add_item,<todo> a été ajouté avec succès à vos tâches.,assistant,0
-todo.add_item,Votre liste de tâches comprend désormais <todo>.,assistant,0
-todo.add_item,<todo> est maintenant sur votre liste de choses à faire.,assistant,0
-todo.add_item,J'ai mis <todo> sur votre liste de tâches.,assistant,0
-todo.add_item,<todo> ajouté à la liste.,assistant,0
-todo.add_item,Considérez <todo> ajouté à vos tâches.,assistant,0
-todo.add_item,"Compris, <todo> est maintenant sur votre liste de tâches.",assistant,0
-todo.add_item,<todo> a été ajouté avec succès à votre liste.,assistant,0
-timer.start,Démarrage du minuteur <device_name> pour <duration>.,assistant,0
-timer.start,Minuterie <device_name> définie pour <duration>.,assistant,0
-timer.start,Début du compte à rebours pour <duration>.,assistant,0
-timer.start,Le minuteur de <device_name> est désormais en cours d'exécution pendant <duration>.,assistant,0
-timer.start,Lancement d'une minuterie pour <duration>.,assistant,0
-timer.start,Votre minuteur appelé <device_name> pour <duration> démarre maintenant.,assistant,0
-timer.start,Minuterie activée pour <duration>.,assistant,0
-timer.start,Démarrage du minuteur pour une durée de <duration>.,assistant,0
-timer.start,Le compte à rebours de <duration> a commencé sur le minuteur <device_name>.,,
-timer.start,Régler une minuterie pour <duration>.,assistant,0
-timer.cancel,La minuterie a été annulée.,assistant,0
-timer.cancel,Arrêt réussi du chronomètre.,assistant,0
-timer.cancel,La minuterie a été effacée.,assistant,0
-timer.cancel,La minuterie s'est arrêtée avec succès.,assistant,0
-timer.cancel,La minuterie a été désactivée.,assistant,0
-timer.cancel,Plus de minuterie en marche.,assistant,0
-timer.cancel,La minuterie a été annulée avec succès.,assistant,0
-timer.cancel,Le minuteur de <device_name> a été annulé.,assistant,0
-timer.cancel,Votre minuteur sur <device_name> est maintenant arrêté.,assistant,0
-timer.cancel,Annulation de la minuterie pour <device_name> confirmée.,assistant,0
-timer.cancel,Le minuteur de <device_name> a été effacé.,assistant,0
-timer.cancel,Le minuteur sur <device_name> s'est arrêté avec succès.,assistant,0
-timer.cancel,Votre minuterie d'exécution sur <device_name> est maintenant annulée.,assistant,0
-timer.cancel,Le minuteur de <device_name> a été désactivé.,assistant,0
+service,response_starting,response_confirmed,persona,short
+blinds.open_cover,J'ouvre les stores.,Les stores sont ouverts.,assistant,0
+blinds.open_cover,"Bien sûr, j'ouvre les stores maintenant.",Les stores sont maintenant ouverts.,assistant,0
+blinds.open_cover,Ouverture des stores en cours.,Les stores sont maintenant ouverts.,assistant,0
+blinds.close_cover,"Fermeture des stores en cours, comme vous l'avez demandé.","Les stores sont fermés, comme vous l'avez demandé.",assistant,0
+blinds.close_cover,Je ferme les stores pour toi.,Les stores sont fermés.,assistant,0
+blinds.close_cover,"Bien sûr, je ferme les stores maintenant.",Les stores sont maintenant fermés.,assistant,0
+blinds.stop_cover,Arrêtons les stores maintenant.,Les stores sont arrêtés.,assistant,0
+blinds.stop_cover,J'arrête les stores pour toi.,Les stores sont arrêtés.,assistant,0
+blinds.stop_cover,"Bien sûr, j'arrête le mouvement des stores.",Le mouvement des stores a été arrêté.,assistant,0
+blinds.toggle,Je bascule l'état des stores maintenant.,Les stores sont maintenant basculés.,assistant,0
+blinds.toggle,Je baisse les stores pour toi.,Les stores sont baissés.,assistant,0
+blinds.toggle,Je change l'état des stores maintenant.,L'état des stores a été changé.,assistant,0
+blinds.open_cover,Levage des stores <device_name> en cours.,Les stores <device_name> sont maintenant levés.,assistant,0
+blinds.open_cover,Ouverture de <device_name> maintenant,Le <device_name> est ouvert,assistant,0
+blinds.open_cover,J'augmente <device_name> pour vous.,Le <device_name> est maintenant ouvert.,assistant,0
+blinds.stop_cover,Gel de la position de <device_name> en cours.,La position de <device_name> est gelée.,assistant,0
+blinds.stop_cover,Arrêt de l'opération <device_name> en cours.,L'opération <device_name> a été arrêtée.,assistant,0
+blinds.close_cover,Fermeture de <device_name> en cours.,Fermeture de <device_name> terminée.,assistant,0
+blinds.stop_cover,Arrêt de <device_name> en cours.,<device_name> est maintenant arrêté.,assistant,0
+blinds.open_cover,J'augmente <device_name> maintenant.,Le <device_name> est maintenant ouvert.,assistant,0
+blinds.close_cover,Je baisse <device_name> maintenant.,<device_name> est maintenant baissé.,assistant,0
+blinds.close_cover,J'abaisse <device_name>.,Le <device_name> est abaissé.,assistant,0
+blinds.toggle,Je change l'état de <device_name> maintenant,L'état de <device_name> a été changé,assistant,0
+blinds.close_cover,Arrêt de <device_name> en cours…,Arrêt de <device_name> effectué.,assistant,0
+blinds.toggle,Inversion de l'état <device_name> maintenant,L'état de <device_name> a été inversé.,assistant,0
+blinds.toggle,Je bascule <device_name> pour vous.,J'ai basculé <device_name> pour vous.,assistant,0
+blinds.toggle,Je bascule <device_name>.,<device_name> est maintenant basculé.,assistant,0
+climate.set_humidity,J'augmente l'humidité jusqu'à <humidity>.,L'humidité a été augmentée à <humidity>.,assistant,0
+climate.set_humidity,Je règle l'humidité sur <humidity> pour cent.,L'humidité a été réglée sur <humidity> pour cent.,assistant,0
+climate.set_humidity,Ajustement de l'humidité à <humidity>% en cours.,L'humidité a été réglée à <humidity>%.,assistant,0
+climate.set_fan_mode,Je règle le ventilateur sur la vitesse <fan_mode>.,Le ventilateur est réglé sur la vitesse <fan_mode>.,assistant,0
+climate.set_fan_mode,Modification du ventilateur sur le paramètre <fan_mode> en cours.,Le ventilateur est maintenant réglé sur le paramètre <fan_mode>.,assistant,0
+climate.set_fan_mode,Mise en route du ventilateur sur <fan_mode>.,Le ventilateur est maintenant sur <fan_mode>.,assistant,0
+climate.set_hvac_mode,Passage en mode <hvac_mode> en cours.,Mode <hvac_mode> activé.,assistant,0
+climate.set_hvac_mode,Je règle le CVC sur <hvac_mode>.,Le CVC est réglé sur <hvac_mode>.,assistant,0
+climate.set_temperature,Changement de température à <temp_c> Celsius en cours.,La température a été changée à <temp_c> Celsius.,assistant,0
+climate.set_temperature,Réglage de la température à <temp_f> degrés.,La température a été réglée à <temp_f> degrés.,assistant,0
+climate.set_temperature,Je règle la pièce à <temp_f> degrés Fahrenheit.,La pièce est maintenant réglée à <temp_f> degrés Fahrenheit.,assistant,0
+climate.set_temperature,Ajustement de la température à <temp_f> degrés Fahrenheit en cours.,Température réglée à <temp_f> degrés Fahrenheit.,assistant,0
+climate.set_hvac_mode,Passage du mode CVC en mode <hvac_mode>.,Le mode CVC est maintenant en mode <hvac_mode>.,assistant,0
+climate.set_temperature,Je règle la pièce à <temp_c> degrés Celsius pour une température plus fraîche.,"La pièce est maintenant réglée à <temp_c> degrés Celsius, plus fraîche.",assistant,0
+climate.set_temperature,Abaissement de la température à <temp_c> Celsius.,La température a été abaissée à <temp_c> Celsius.,assistant,0
+climate.set_temperature,"Je le rends plus chaud, en réglant la température à <temp_f> degrés.","C'est plus chaud, la température est réglée à <temp_f> degrés.",assistant,0
+climate.set_temperature,J'augmente la température à <temp_f> degrés Fahrenheit.,La température a été augmentée à <temp_f> degrés Fahrenheit.,assistant,0
+fan.turn_on,J'allume le ventilateur pour vous.,Le ventilateur est maintenant allumé.,assistant,0
+fan.turn_on,Je mets le ventilateur en marche pour toi.,Le ventilateur est maintenant en marche.,assistant,0
+fan.turn_on,"Bien sûr, j'allume le ventilateur maintenant.",Le ventilateur est maintenant allumé.,assistant,0
+fan.turn_off,J'éteins le ventilateur maintenant.,Le ventilateur est éteint.,assistant,0
+fan.turn_off,J'éteins le ventilateur pour toi.,Le ventilateur est maintenant éteint.,assistant,0
+fan.toggle,Je bascule le ventilateur pour vous.,Le ventilateur a été basculé.,assistant,0
+fan.turn_off,"D'accord, j'éteins le ventilateur.",Le ventilateur est maintenant éteint.,assistant,0
+fan.toggle,Je bascule le ventilateur maintenant.,Le ventilateur est maintenant basculé.,assistant,0
+fan.toggle,Je change l'état du ventilateur pour vous.,L'état du ventilateur a été changé.,assistant,0
+fan.increase_speed,J'augmente la vitesse du ventilateur pour vous.,La vitesse du ventilateur a été augmentée.,assistant,0
+fan.increase_speed,J'accélère le ventilateur maintenant.,Le ventilateur a été accéléré.,assistant,0
+fan.increase_speed,Je mets le ventilateur à vitesse supérieure.,Le ventilateur est maintenant plus rapide.,assistant,0
+fan.decrease_speed,Je réduis la vitesse du ventilateur maintenant.,La vitesse du ventilateur a été réduite comme vous l'avez demandé.,assistant,0
+fan.decrease_speed,Je ralentis le ventilateur pour toi.,Le ventilateur a été ralenti.,assistant,0
+fan.decrease_speed,"Bien sûr, je diminue la vitesse du ventilateur.",La vitesse du ventilateur a été diminuée.,assistant,0
+fan.toggle,Je change l'état de <device_name> comme demandé.,L'état de <device_name> a été changé comme demandé.,assistant,0
+fan.toggle,Inversion de l'état <device_name> en cours pour vous.,L'état de <device_name> a bien été inversé.,assistant,0
+fan.toggle,Activation de <device_name> en cours,<device_name> est maintenant activé,assistant,0
+fan.turn_on,Démarrage de <device_name> pour vous,Le <device_name> a été démarré.,assistant,0
+fan.turn_on,Activation de <device_name> en cours,<device_name> est maintenant activé,assistant,0
+fan.turn_on,"Certainement, en démarrant <device_name>.","C’est fait, <device_name> est maintenant allumé.",assistant,0
+fan.turn_on,Allumer <device_name> maintenant.,Le <device_name> est maintenant allumé.,assistant,0
+fan.turn_on,Démarrage de <device_name> en cours.,Le <device_name> est maintenant en marche.,assistant,0
+fan.turn_off,Désactivation de <device_name> en cours.,Le <device_name> a été désactivé.,assistant,0
+fan.turn_off,J'arrête <device_name> pour vous.,Le <device_name> est maintenant arrêté.,assistant,0
+fan.turn_off,"Certainement, j'arrête <device_name>.","C'est fait, <device_name> est arrêté.",assistant,0
+fan.turn_off,Je désactive <device_name>.,<device_name> a été désactivé.,assistant,0
+fan.decrease_speed,Je réduis la vitesse de <device_name>.,La vitesse de <device_name> a été réduite.,assistant,0
+fan.decrease_speed,Réduction de la vitesse de <device_name> en cours.,La vitesse de <device_name> a été réduite comme demandé.,assistant,0
+fan.increase_speed,J'augmente la vitesse de <device_name>.,La vitesse de <device_name> a été augmentée.,assistant,0
+fan.decrease_speed,Je ralentis <device_name> pour vous,<device_name> a été ralenti,assistant,0
+fan.increase_speed,Augmentation de la vitesse de <device_name> en cours.,La vitesse de <device_name> a été augmentée.,assistant,0
+fan.increase_speed,Accélération de <device_name> en cours,Le <device_name> a été accéléré,assistant,0
+fan.decrease_speed,Je réduis la vitesse de <device_name>.,La vitesse de <device_name> a été réduite.,assistant,0
+fan.increase_speed,J'augmente la vitesse de <device_name>.,La vitesse de <device_name> a été augmentée.,assistant,0
+garage_door.open_cover,J'ouvre la porte du garage maintenant.,La porte du garage est ouverte.,assistant,0
+garage_door.open_cover,J'ouvre la porte du garage.,La porte du garage est ouverte.,assistant,0
+garage_door.open_cover,J'ouvre la porte du garage.,La porte du garage est ouverte.,assistant,0
+garage_door.close_cover,Je ferme la porte du garage pour toi.,La porte du garage est fermée.,assistant,0
+garage_door.close_cover,Fermeture de la porte du garage en cours.,La porte du garage est maintenant fermée.,assistant,0
+garage_door.close_cover,"Bien sûr, je commence à fermer la porte du garage.","Bien sûr, la porte du garage est maintenant fermée.",assistant,0
+garage_door.stop_cover,J'arrête la porte du garage maintenant.,La porte du garage est maintenant arrêtée.,assistant,0
+garage_door.stop_cover,J'arrête la porte du garage pour toi.,La porte du garage est arrêtée.,assistant,0
+garage_door.stop_cover,J'arrête le mouvement de la porte de garage.,Le mouvement de la porte de garage est maintenant arrêté.,assistant,0
+garage_door.toggle,Je bascule l'état de la porte de garage pour vous.,L'état de la porte de garage a été basculé pour vous.,assistant,0
+garage_door.toggle,Je change l'état de la porte de garage pour vous.,L'état de la porte de garage a été changé.,assistant,0
+garage_door.toggle,Je change l'état de la porte de garage maintenant.,L'état de la porte de garage a été changé.,assistant,0
+garage_door.open_cover,Ouverture de <device_name> en cours,Ouverture de <device_name> effectuée,assistant,0
+garage_door.open_cover,Je soulève <device_name> pour vous,Le <device_name> a été soulevé pour vous,assistant,0
+garage_door.stop_cover,Geler la position de <device_name> en cours.,La position de <device_name> est gelée.,assistant,0
+garage_door.stop_cover,"Certainement, j'arrête <device_name>.","Certainement, <device_name> est arrêté.",assistant,0
+garage_door.stop_cover,Arrêt de l'opération <device_name> en cours.,L'opération <device_name> a été arrêtée.,assistant,0
+garage_door.open_cover,Augmenter <device_name> maintenant.,Le <device_name> a été augmenté.,assistant,0
+garage_door.open_cover,Ouverture de <device_name> maintenant.,Ouverture de <device_name> terminée.,assistant,0
+garage_door.stop_cover,Arrêt de <device_name> en cours.,Le <device_name> est arrêté.,assistant,0
+garage_door.close_cover,Fermeture de <device_name> en cours.,Fermeture de <device_name> terminée.,assistant,0
+garage_door.close_cover,Arrêt de <device_name> en cours.,Arrêt de <device_name> effectué.,assistant,0
+garage_door.close_cover,Je baisse <device_name> pour vous,J'ai abaissé <device_name> pour vous,assistant,0
+garage_door.toggle,Inversion de l'état <device_name> en cours,L'état de <device_name> a bien été inversé,assistant,0
+garage_door.close_cover,Fermeture de <device_name> en cours.,Fermeture de <device_name> terminée.,assistant,0
+garage_door.toggle,Je change l'état de <device_name> comme demandé.,L'état de <device_name> a été changé comme demandé.,assistant,0
+garage_door.toggle,Je bascule <device_name> maintenant pour vous.,Le <device_name> a été basculé pour vous.,assistant,0
+light.turn_on,J'allume la lumière pour vous.,La lumière est allumée.,assistant,0
+light.turn_on,"Bien sûr, j'allume la lumière maintenant.","Voilà, la lumière est allumée.",assistant,0
+garage_door.toggle,Je bascule <device_name>.,Le <device_name> a été basculé.,assistant,0
+light.turn_on,Je m'occupe d'allumer la lumière.,La lumière est allumée.,assistant,0
+light.turn_off,J'éteins la lumière maintenant.,La lumière est éteinte.,assistant,0
+light.turn_off,J'éteins la lumière pour toi.,La lumière est maintenant éteinte.,assistant,0
+light.turn_off,"Bien sûr, j'éteins la lumière maintenant.",La lumière est maintenant éteinte.,assistant,0
+light.toggle,Je bascule la lumière pour vous.,La lumière a été basculée.,assistant,0
+light.toggle,Je change l'état de la lumière maintenant.,L'état de la lumière a été changé.,assistant,0
+light.toggle,J'allume la lumière pour toi.,La lumière est allumée.,assistant,0
+light.toggle,Je bascule <device_name> pour vous.,J'ai basculé <device_name> pour vous.,assistant,0
+light.toggle,Inversion de l'état <device_name> en cours.,L'état de <device_name> a été inversé.,assistant,0
+light.toggle,Je change l'état de <device_name> comme demandé.,L'état de <device_name> a bien été changé.,assistant,0
+light.toggle,Je bascule <device_name>.,Le <device_name> est maintenant basculé.,assistant,0
+light.turn_on,Activation de <device_name> en cours,Activation de <device_name> terminée,assistant,0
+light.turn_on,Allumage de <device_name> en cours.,Le <device_name> a été allumé.,assistant,0
+light.turn_on,"Bien sûr, j'active <device_name> maintenant","C’est fait, <device_name> est maintenant allumé",assistant,0
+light.turn_on,Je réduis <device_name> à <brightness>% de luminosité.,J’ai réduit <device_name> à <brightness>% de luminosité.,assistant,0
+light.turn_on,Je règle la luminosité de <device_name> sur <brightness>% maintenant.,La luminosité de <device_name> a été réglée sur <brightness>%.,assistant,0
+light.turn_on,Activation de <device_name> en cours,Activation de <device_name> terminée,assistant,0
+light.turn_on,J'allume <device_name>.,<device_name> est allumé.,assistant,0
+light.turn_on,Réglage de la luminosité de <device_name> sur <brightness> en cours.,La luminosité de <device_name> est maintenant réglée sur <brightness>.,assistant,0
+light.turn_on,J'éclaircis <device_name> à <brightness> %.,<device_name> est maintenant éclairci à <brightness> %.,assistant,0
+light.turn_on,J'augmente la luminosité de <device_name> à <brightness>.,La luminosité de <device_name> est maintenant à <brightness>.,assistant,0
+light.turn_on,Je réduis la luminosité de <device_name> à <brightness>.,La luminosité de <device_name> est maintenant réglée à <brightness>.,assistant,0
+light.turn_on,Je règle le niveau de luminosité de <device_name> sur <brightness>%.,Le niveau de luminosité de <device_name> est réglé sur <brightness>%.,assistant,0
+light.turn_on,Je change la couleur de <device_name> en <color>.,La couleur de <device_name> est maintenant <color>.,assistant,0
+light.turn_on,Je règle <device_name> à <brightness>% de luminosité.,<device_name> est maintenant à <brightness>% de luminosité.,assistant,0
+light.turn_on,En tournant <device_name> <color>.,Le <device_name> est maintenant <color>.,assistant,0
+light.turn_on,Je définis <device_name> sur <color>.,J’ai défini <device_name> sur <color>.,assistant,0
+light.turn_on,Je change <device_name> en une teinte <color>.,<device_name> est maintenant en teinte <color>.,assistant,0
+light.turn_on,Je fais briller <device_name> en <color>.,<device_name> brille maintenant en <color>.,assistant,0
+light.turn_on,Transformation de <device_name> en une teinte <color>.,Le <device_name> est maintenant en teinte <color>.,assistant,0
+light.turn_on,Définition de <device_name> sur un <color> en cours.,Le <device_name> est maintenant réglé sur un <color>.,assistant,0
+light.turn_on,Définition de <device_name> sur une couleur <color> en cours.,Le <device_name> est maintenant réglé sur la couleur <color>.,assistant,0
+light.turn_on,Transformation de <device_name> en <color> en cours.,Le <device_name> est maintenant en <color>.,assistant,0
+light.turn_on,Ajustement de <device_name> à la couleur <color> en cours.,Ajustement de <device_name> à la couleur <color> effectué.,assistant,0
+light.turn_on,Faire briller <color> maintenant.,<color> brille.,assistant,0
+light.turn_on,Remplacement de <device_name> par <color> en cours.,Remplacement de <device_name> par <color> terminé.,assistant,0
+light.turn_on,Je passe la couleur <device_name> à <color>.,La couleur de <device_name> est maintenant <color>.,assistant,0
+light.turn_on,Je mets <device_name> en marche pour afficher une lumière <color>.,<device_name> affiche maintenant une lumière <color>.,assistant,0
+light.turn_on,Définition de <device_name> dans <color> en cours.,Définition de <device_name> dans <color> terminée.,assistant,0
+light.turn_off,Désactivation de <device_name> en cours,Désactivation de <device_name> terminée,assistant,0
+light.turn_on,Définition de la couleur <device_name> sur <color> en cours.,Couleur <device_name> réglée sur <color>.,assistant,0
+light.turn_off,Désactivation de <device_name> en cours.,<device_name> est maintenant désactivé.,assistant,0
+light.turn_off,Désactivation de <device_name> en cours.,<device_name> a été désactivé.,assistant,0
+light.turn_off,Désactivation de <device_name> en cours.,Désactivation de <device_name> terminée.,assistant,0
+light.turn_off,"Bien sûr, je désactive <device_name> maintenant.","Bien sûr, <device_name> est désactivé.",assistant,0
+lock.lock,Je verrouille la porte pour vous.,La porte est maintenant verrouillée.,assistant,0
+lock.lock,Je verrouille la porte maintenant.,La porte est verrouillée.,assistant,0
+lock.lock,Je sécurise la serrure pour vous.,La serrure est maintenant sécurisée.,assistant,0
+lock.unlock,Je déverrouille la porte comme vous l'avez demandé.,La porte est maintenant déverrouillée comme vous l'avez demandé.,assistant,0
+lock.unlock,J'ouvre la porte pour toi.,La porte est maintenant ouverte.,assistant,0
+lock.lock,Activation du verrouillage sur <device_name> en cours.,Le verrouillage a été activé sur <device_name>.,assistant,0
+lock.unlock,"Bien sûr, je déverrouille la porte maintenant.","Voilà, la porte est déverrouillée.",assistant,0
+lock.lock,Verrouillage de <device_name> en cours.,Le <device_name> est maintenant verrouillé.,assistant,0
+lock.lock,Je sécurise <device_name> pour vous,Le <device_name> a été sécurisé,assistant,0
+lock.lock,Je sécurise <device_name>.,<device_name> est maintenant sécurisé.,assistant,0
+lock.lock,Verrouillage de <device_name> en cours.,<device_name> est maintenant verrouillé.,assistant,0
+lock.unlock,Déverrouillage de <device_name> en cours.,Le <device_name> est déverrouillé.,assistant,0
+lock.unlock,Désactivation du verrouillage sur <device_name> en cours.,Le verrouillage sur <device_name> a été désactivé.,assistant,0
+lock.unlock,Déverrouillage de <device_name> en cours.,Déverrouillage de <device_name> effectué.,assistant,0
+media_player.turn_on,Je lance le lecteur multimédia.,Le lecteur multimédia est lancé.,assistant,0
+lock.unlock,Désecurisation de <device_name> en cours.,Désecurisation de <device_name> effectuée.,assistant,0
+media_player.turn_on,Allumage du lecteur multimédia en cours.,Le lecteur multimédia est allumé.,assistant,0
+media_player.turn_on,"Bien sûr, j'active le lecteur multimédia.",Le lecteur multimédia est maintenant activé.,assistant,0
+media_player.turn_off,J'éteins le lecteur multimédia pour vous.,Le lecteur multimédia est maintenant éteint.,assistant,0
+media_player.turn_off,"Bien sûr, je désactive le lecteur multimédia maintenant.",Le lecteur multimédia est maintenant désactivé.,assistant,0
+media_player.turn_off,Je suis en train d'éteindre le lecteur multimédia.,Le lecteur multimédia est éteint.,assistant,0
+media_player.toggle,Je bascule le lecteur multimédia pour vous.,Le lecteur multimédia a été basculé.,assistant,0
+media_player.toggle,J'active le lecteur multimédia.,Le lecteur multimédia est maintenant activé.,assistant,0
+media_player.toggle,Je change l'état du lecteur multimédia.,L'état du lecteur multimédia a été changé.,assistant,0
+media_player.volume_up,J'augmente le volume pour vous.,Le volume a été augmenté.,assistant,0
+media_player.volume_up,Je commence à augmenter le volume.,Le volume a été augmenté.,assistant,0
+media_player.volume_up,"Bien sûr, j'augmente le volume maintenant.",Le volume a été augmenté.,assistant,0
+media_player.volume_down,Je baisse le volume comme vous l'avez demandé.,Le volume a été réduit comme vous l'avez demandé.,assistant,0
+media_player.volume_down,Je baisse le volume pour toi.,Le volume a été baissé.,assistant,0
+media_player.volume_mute,Je coupe le volume pour vous.,Le volume est maintenant coupé.,assistant,0
+media_player.volume_down,Je baisse le volume pour vous.,Le volume a été baissé.,assistant,0
+media_player.volume_mute,"Bien sûr, je coupe le volume.",Le volume est coupé.,assistant,0
+media_player.volume_mute,Je désactive le lecteur multimédia maintenant.,Le lecteur multimédia est désactivé.,assistant,0
+media_player.media_play_pause,Je bascule la lecture/pause sur le lecteur multimédia.,Lecture/pause basculée sur le lecteur multimédia.,assistant,0
+media_player.media_play_pause,Basculement entre lecture et pause en cours.,Le basculement entre lecture et pause est terminé.,assistant,0
+media_player.media_play_pause,Je bascule entre lecture et pause pour vous.,Le lecteur est maintenant basculé entre lecture et pause.,assistant,0
+media_player.media_play,Je commence à diffuser les médias pour vous.,Les médias sont diffusés.,assistant,0
+media_player.media_play,Démarrage de la lecture multimédia en cours.,Lecture multimédia démarrée.,assistant,0
+media_player.media_play,Je lance la lecture maintenant.,La lecture a bien démarré.,assistant,0
+media_player.media_pause,Je mets les médias en pause pour vous.,Les médias sont maintenant en pause.,assistant,0
+media_player.media_pause,Je mets en pause la lecture multimédia.,La lecture multimédia est maintenant en pause.,assistant,0
+media_player.media_pause,"Bien sûr, je mets la lecture en pause.",La lecture est maintenant en pause.,assistant,0
+media_player.media_stop,Arrêt de la lecture multimédia en cours.,Lecture multimédia arrêtée.,assistant,0
+media_player.media_stop,Je m'occupe d'arrêter la lecture.,J'ai arrêté la lecture.,assistant,0
+media_player.media_next_track,Je passe au morceau suivant pour vous.,Le morceau suivant est maintenant en lecture.,assistant,0
+media_player.media_next_track,Je passe à la piste suivante.,La piste suivante est maintenant en lecture.,assistant,0
+media_player.media_stop,J'arrête les médias pour vous.,Les médias ont été arrêtés.,assistant,0
+media_player.media_next_track,Je passe à la piste suivante maintenant.,La piste suivante est maintenant en lecture.,assistant,0
+media_player.media_previous_track,Je reviens à la piste précédente.,"C’est fait, la piste précédente est sélectionnée.",assistant,0
+media_player.media_previous_track,"Je reviens au morceau précédent, un instant.",Le morceau précédent est maintenant lancé.,assistant,0
+media_player.media_previous_track,Je reviens à la piste précédente...,J'ai repris la piste précédente.,assistant,0
+media_player.volume_up,J'augmente le volume de <device_name>.,Le volume de <device_name> a été augmenté.,assistant,0
+media_player.volume_up,J'augmente un peu <device_name>.,Le volume de <device_name> a été augmenté.,assistant,0
+media_player.media_play,Je démarre la lecture sur <device_name>.,Lecture démarrée sur <device_name>.,assistant,0
+media_player.volume_up,Je rends <device_name> plus fort.,"C’est fait, <device_name> est plus fort.",assistant,0
+media_player.media_play,Je lance la lecture sur <device_name>.,Lecture sur <device_name> démarrée.,assistant,0
+media_player.media_play,Lecture multimédia en cours sur <device_name>.,Lecture multimédia lancée sur <device_name>.,assistant,0
+media_player.media_stop,Arrêt de la lecture sur <device_name> en cours.,Lecture arrêtée sur <device_name>.,assistant,0
+media_player.media_stop,Arrêt de <device_name> en cours.,Le <device_name> est maintenant arrêté.,assistant,0
+media_player.media_stop,Fin de la session sur <device_name> en cours.,La session sur <device_name> est terminée.,assistant,0
+media_player.volume_down,Diminution du volume de <device_name> en cours.,Le volume de <device_name> a été diminué.,assistant,0
+media_player.volume_down,Désactivation de <device_name> en cours.,Désactivation de <device_name> effectuée.,assistant,0
+media_player.volume_down,Je baisse le volume de <device_name>.,Le volume de <device_name> a été baissé.,assistant,0
+media_player.volume_mute,Désactivation de <device_name> en cours.,Désactivation de <device_name> effectuée.,assistant,0
+media_player.volume_mute,Je désactive <device_name> maintenant.,<device_name> est désactivé.,assistant,0
+media_player.media_pause,Suspension de <device_name> en cours.,<device_name> est maintenant suspendu.,assistant,0
+media_player.volume_mute,Je mets <device_name> en sourdine.,<device_name> est maintenant muet.,assistant,0
+media_player.media_pause,Suspendre <device_name> maintenant.,<device_name> est maintenant suspendu.,assistant,0
+media_player.media_next_track,Je passe à la piste suivante sur <device_name>.,La piste suivante est maintenant jouée sur <device_name>.,assistant,0
+media_player.media_pause,Mise en pause de la lecture sur <device_name>.,Lecture en pause sur <device_name>.,assistant,0
+media_player.media_next_track,Je passe à la chanson suivante sur <device_name>.,La chanson suivante joue maintenant sur <device_name>.,assistant,0
+media_player.media_previous_track,Je reviens à la piste précédente sur <device_name>.,La piste précédente est maintenant jouée sur <device_name>.,assistant,0
+media_player.media_next_track,J'ignore cette piste sur <device_name>.,La piste a été ignorée sur <device_name>.,assistant,0
+media_player.media_previous_track,Revenir en arrière sur <device_name>...,Revenir en arrière sur <device_name> effectué.,assistant,0
+media_player.media_previous_track,Rembobinage à la chanson précédente sur <device_name> en cours.,"Rembobinage effectué, la chanson précédente est sur <device_name>.",assistant,0
+switch.turn_on,Je vais allumer la lumière maintenant.,La lumière est allumée.,assistant,0
+switch.turn_on,J'allume l'interrupteur pour vous.,L'interrupteur est maintenant allumé.,assistant,0
+switch.turn_on,J'allume l'interrupteur.,L'interrupteur est allumé.,assistant,0
+switch.turn_off,J'éteins l'interrupteur comme demandé.,L'interrupteur est éteint.,assistant,0
+switch.turn_off,J'éteins l'appareil pour vous.,L'appareil est maintenant éteint.,assistant,0
+switch.turn_off,"Bien sûr, j'éteins l'interrupteur.","Bien sûr, l'interrupteur est éteint.",assistant,0
+switch.toggle,Je change l'état du commutateur.,L'état du commutateur a été changé.,assistant,0
+switch.toggle,Basculement du commutateur en cours.,Le commutateur a été basculé.,assistant,0
+switch.toggle,J'active l'interrupteur pour vous.,L'interrupteur est maintenant activé.,assistant,0
+switch.toggle,Je bascule <device_name>.,<device_name> est maintenant basculé.,assistant,0
+switch.toggle,Je bascule <device_name> maintenant.,J'ai basculé <device_name> comme demandé.,assistant,0
+switch.toggle,"Oui, j'active <device_name>.","Oui, <device_name> est activé.",assistant,0
+switch.toggle,"Oui, je bascule <device_name> maintenant.","Oui, <device_name> est maintenant basculé.",assistant,0
+switch.toggle,Modification de l'état de <device_name> en cours.,L'état de <device_name> a été modifié.,assistant,0
+switch.turn_on,Activation de <device_name> en cours.,Le <device_name> est maintenant activé.,assistant,0
+switch.turn_on,Activation de <device_name> en cours.,Le <device_name> est activé.,assistant,0
+switch.toggle,Je bascule rapidement <device_name>.,<device_name> a été basculé rapidement.,assistant,0
+switch.turn_on,J'allume <device_name> maintenant.,J'ai allumé <device_name>.,assistant,0
+switch.turn_on,Je lance l'activation de <device_name>.,"C'est fait, <device_name> est activé.",assistant,0
+switch.turn_on,J'allume <device_name> maintenant.,<device_name> est maintenant allumé.,assistant,0
+switch.turn_on,Allumage de <device_name> en cours.,Le <device_name> est maintenant allumé.,assistant,0
+switch.turn_on,J'active <device_name> maintenant.,<device_name> a bien été activé.,assistant,0
+switch.turn_off,Je suis en train d'éteindre <device_name>.,Le <device_name> a été éteint.,assistant,0
+switch.turn_off,Désactivation de <device_name> en cours.,Le <device_name> a été désactivé.,assistant,0
+switch.turn_off,Je désactive <device_name>.,Le <device_name> est maintenant désactivé.,assistant,0
+switch.turn_off,Désactivation de <device_name> en cours.,Le <device_name> est désactivé.,assistant,0
+switch.turn_off,"D'accord, je désactive <device_name>.",Le <device_name> a bien été désactivé.,assistant,0
+switch.turn_off,J'éteins <device_name> à l'heure du coucher.,Le <device_name> est éteint à l'heure du coucher.,assistant,0
+switch.turn_off,Désactivation de <device_name> en cours.,Le <device_name> a été désactivé.,assistant,0
+blinds.close_cover,Fermeture de <device_name> en cours.,Fermeture de <device_name> effectuée.,assistant,1
+blinds.close_cover,J'abaisse <device_name>.,Le <device_name> est abaissé.,assistant,1
+blinds.close_cover,Fermeture de <device_name> en cours.,Fermeture de <device_name> terminée.,assistant,1
+blinds.open_cover,Je soulève <device_name>.,Le <device_name> est soulevé.,assistant,1
+blinds.open_cover,Élévation de <device_name> en cours.,<device_name> est maintenant élevé.,assistant,1
+fan.decrease_speed,Je ralentis <device_name>.,J'ai ralenti <device_name>.,assistant,1
+blinds.open_cover,ouverture de <device_name> en cours,ouverture de <device_name> effectuée,assistant,1
+fan.decrease_speed,Je réduis la vitesse de <device_name>.,La vitesse de <device_name> a été réduite.,assistant,1
+fan.decrease_speed,Réduction de <device_name> en cours.,<device_name> réduit.,assistant,1
+fan.increase_speed,Accélération de <device_name> en cours.,Accélération de <device_name> terminée.,assistant,1
+fan.toggle,Je bascule <device_name> maintenant.,<device_name> a été basculé.,assistant,1
+fan.increase_speed,Augmentation de la vitesse de <device_name> en cours.,La vitesse de <device_name> a été augmentée.,assistant,1
+fan.increase_speed,Accélération de <device_name> en cours.,Accélération de <device_name> terminée.,assistant,1
+fan.toggle,Je retourne <device_name>.,<device_name> a été retourné.,assistant,1
+fan.turn_off,J'arrête <device_name>.,Le <device_name> est arrêté.,assistant,1
+fan.turn_off,Désactivation de <device_name> en cours.,<device_name> est maintenant désactivé.,assistant,1
+fan.turn_off,Je désactive <device_name>.,<device_name> est désactivé.,assistant,1
+garage_door.close_cover,Fermeture de <device_name> en cours.,Fermeture de <device_name> terminée.,assistant,1
+fan.turn_on,Démarrage de <device_name> en cours.,<device_name> est maintenant en marche.,assistant,1
+fan.turn_on,Activation de <device_name> en cours.,Le <device_name> est maintenant activé.,assistant,1
+garage_door.close_cover,Fermeture de <device_name> en cours.,Fermeture de <device_name> terminée.,assistant,1
+garage_door.open_cover,Ouverture de <device_name> en cours.,Le <device_name> est maintenant ouvert.,assistant,1
+garage_door.close_cover,Je désactive <device_name>,<device_name> désactivé,assistant,1
+garage_door.open_cover,Je suis en train de soulever <device_name>.,Le <device_name> est maintenant soulevé.,assistant,1
+light.toggle,Je bascule <device_name>.,Le <device_name> a été basculé.,assistant,1
+garage_door.stop_cover,J'arrête <device_name>.,<device_name> est arrêté.,assistant,1
+light.toggle,Je retourne <device_name>.,Le <device_name> a été retourné.,assistant,1
+light.turn_off,Je désactive <device_name>.,<device_name> est désactivé.,assistant,1
+light.turn_off,désactivation de <device_name> en cours,<device_name> désactivé,assistant,1
+light.turn_off,abaisser <device_name> en cours,<device_name> est maintenant abaissé,assistant,1
+light.turn_on,Allumage de <device_name> en cours.,<device_name> est maintenant allumé.,assistant,1
+light.turn_off,J'éteins <device_name>.,<device_name> est maintenant éteint.,assistant,1
+light.turn_on,activation de <device_name> en cours,activation de <device_name> terminée,assistant,1
+light.turn_on,Allumage de <device_name> en cours.,Le <device_name> est allumé.,assistant,1
+light.turn_on,J'allume les deux <device_name>.,Les deux <device_name> sont allumés.,assistant,1
+lock.lock,Je sécurise <device_name>.,<device_name> est maintenant sécurisé.,assistant,1
+lock.lock,verrouillage de <device_name> en cours,verrouillage de <device_name> effectué,assistant,1
+lock.unlock,déverrouillage de <device_name> en cours,déverrouillage de <device_name> effectué,assistant,1
+blinds.open_cover,"J'ouvre les stores pour toi, à l'abordage !","Les stores sont ouverts, capitaine.",pirate,0
+blinds.open_cover,"Aye, j'ouvre les stores tout de suite.","Les stores sont maintenant ouverts, matelot.",pirate,0
+lock.unlock,non-sécurisation de <device_name> en cours.,non-sécurisation de <device_name> terminée.,assistant,1
+blinds.open_cover,"Oui, j'ouvre les stores maintenant, moussaillon.","Les stores sont ouverts, cap'tain.",pirate,0
+blinds.close_cover,"Je ferme les stores comme vous l'avez demandé, matelot.","Les stores sont fermés, comme vous l'avez demandé.",pirate,0
+blinds.close_cover,"Je suis en train de fermer les stores pour vous, matelot.","Les stores sont maintenant fermés, capitaine.",pirate,0
+blinds.close_cover,"Aye, je suis en train de fermer les stores.",Les stores sont maintenant fermés.,pirate,0
+blinds.stop_cover,"Aye, j'arrête le mouvement des stores maintenant.","Le mouvement des stores est arrêté, matelot.",pirate,0
+blinds.stop_cover,"J'arrête les stores tout de suite, capitaine.","Les stores sont arrêtés, capitaine.",pirate,0
+blinds.stop_cover,J'arrête les stores pour vous.,Les stores sont maintenant arrêtés.,pirate,0
+blinds.toggle,"Je bascule les stores tout de suite, moussaillon.","Les stores sont maintenant basculés, capitaine.",pirate,0
+blinds.toggle,"J'ouvre les stores pour vous, moussaillon.","Les stores sont ouverts, capitaine.",pirate,0
+blinds.toggle,"Je change l'état des stores, matelot.","L'état des stores a été changé, capitaine.",pirate,0
+blinds.open_cover,"Liftin' <device_name> aveugle yarr, workin' on it.","Lifted <device_name> aveugle, yarr.",pirate,0
+blinds.open_cover,"Raisin' <device_name> maintenant, matelot !","Raisin' <device_name>, c'est fait !",pirate,0
+blinds.open_cover,J'ouvre <device_name> tout de suite,<device_name> est maintenant ouvert,pirate,0
+blinds.stop_cover,Je gèle la position de <device_name> maintenant.,La position de <device_name> est gelée.,pirate,0
+blinds.stop_cover,J'arrête l'opération <device_name> maintenant.,L'opération <device_name> est arrêtée.,pirate,0
+blinds.stop_cover,"J'arrête <device_name> tout de suite, matelot.","Le <device_name> est arrêté, cap sur le repos.",pirate,0
+blinds.open_cover,"Augmenter <device_name>, je m'y mets tout de suite, matelot !","Le <device_name> est maintenant augmenté, capitaine.",pirate,0
+blinds.close_cover,Je m'occupe de fermer <device_name> pour vous,J'ai fermé <device_name> pour vous,pirate,0
+blinds.close_cover,Baisser <device_name> en cours.,<device_name> a été baissé.,pirate,0
+blinds.close_cover,J'abaisse <device_name>.,<device_name> est maintenant abaissé.,pirate,0
+blinds.close_cover,"En train d'arrêter <device_name>, yarr","Arrêt de <device_name> effectué, yarr",pirate,0
+blinds.toggle,"Je change l'état de <device_name>, yarr","L'état de <device_name> a bien été changé, yarr",pirate,0
+blinds.toggle,"Arrr, je retourne l'état <device_name> maintenant.","L'état de <device_name> a été retourné, cap'tain.",pirate,0
+blinds.toggle,"Arrr, je bascule <device_name> tout de suite.","Arrr, <device_name> est bien basculé.",pirate,0
+blinds.toggle,"J'active <device_name> pour vous, matelot.","<device_name> est maintenant activé, capitaine.",pirate,0
+climate.set_humidity,"Yarrr, je mets le cap pour augmenter l'humidité jusqu'à <humidity>, au bord de la mer !","Yarrr, l'humidité est désormais à <humidity>, au bord de la mer !",pirate,0
+climate.set_fan_mode,"J'hisse le ventilateur à la vitesse <fan_mode>, plus rapide qu'un sloop !","Le ventilateur est hissé à la vitesse <fan_mode>, plus rapide qu'un sloop !",pirate,0
+climate.set_fan_mode,"Arr, je mets le ventilateur en <fan_mode>, en cours d'exécution !","Arr, le ventilateur est maintenant en <fan_mode>, tout en restant stable !",pirate,0
+climate.set_humidity,"Près du casier de Davy Jones, je suis en train d'ajuster l'humidité à <humidity>% !","Près du casier de Davy Jones, l'humidité est maintenant réglée à <humidity>% !",pirate,0
+climate.set_fan_mode,"Je fais frissonner les bois, je règle le ventilateur sur <fan_mode> !","Les bois frissonnent, le ventilateur est maintenant en réglage <fan_mode> !",pirate,0
+climate.set_humidity,"Arrr, je règle l'humidité sur <humidity> pour cent, comme vous le souhaitez, en cours !","Arrr, l'humidité est réglée sur <humidity> pour cent, comme vous le souhaitiez !",pirate,0
+climate.set_hvac_mode,"Bon sang, je m’apprête à passer en mode <hvac_mode>, toutes voiles dehors !","Bon sang, le mode <hvac_mode> est activé, toutes voiles dehors !",pirate,0
+climate.set_hvac_mode,"Arrr, je règle le CVC sur <hvac_mode> en ce moment, stable au fur et à mesure !","Arrr, le CVC est maintenant réglé sur <hvac_mode>, stable au fur et à mesure !",pirate,0
+climate.set_temperature,"Arr, je règle la température à <temp_f> degrés, aussi chaud que le soleil des Caraïbes !","Arr, la température est réglée à <temp_f> degrés, aussi chaud que le soleil des Caraïbes !",pirate,0
+climate.set_temperature,"Yarrr, je règle la température en <temp_c> Celsius, plus frais que le bleu profond !","Yarrr, la température est réglée à <temp_c> Celsius, plus frais que le bleu profond !",pirate,0
+climate.set_hvac_mode,"Par les puissances, je lance le CVC en mode <hvac_mode> !","Par les puissances, le CVC est maintenant en mode <hvac_mode> !",pirate,0
+climate.set_temperature,"Avast, ajustant la température à <temp_f> degrés Fahrenheit, en plein vent !","Avast, la température est réglée à <temp_f> degrés Fahrenheit, aussi confortable qu'une cabine de navire !",pirate,0
+climate.set_temperature,"Heave ho, je règle la pièce à <temp_f> degrés Fahrenheit, chaud comme le grog d'un pirate !","Heave ho, la pièce est réglée à <temp_f> degrés Fahrenheit, chaud comme le grog d'un pirate !",pirate,0
+climate.set_temperature,"Arr, je règle la pièce à <temp_c> degrés Celsius, les brises fraîches arrivent.","Arr, la pièce est réglée à <temp_c> degrés Celsius, les brises fraîches sont là comme une brume océanique !",pirate,0
+climate.set_temperature,"Yo ho, je règle la température à <temp_f> degrés Fahrenheit, préparez-vous à la chaleur du raid !","Yo ho, la température est montée à <temp_f> degrés Fahrenheit, plus chaud que le pillage d'un pirate !",pirate,0
+climate.set_temperature,"À l'abordage, je règle la température à <temp_f> degrés, comme une crique baignée de soleil !","C'est fait, la température est à <temp_f> degrés, comme une crique baignée de soleil !",pirate,0
+fan.turn_on,"J'allume le ventilateur pour vous, arr !","Le ventilateur est allumé, arr !",pirate,0
+climate.set_temperature,"Soufflez‑moi, je baisse la température à <temp_c> Celsius, aussi vif que l'air marin du matin !","Soufflez‑moi, température baissée à <temp_c> Celsius, aussi vif que l'air marin du matin !",pirate,0
+fan.turn_on,"Yar, j'allume le ventilateur tout de suite !","Yar, le ventilateur est maintenant en marche !",pirate,0
+fan.turn_on,"Oui, je mets le ventilateur en marche pour toi, moussaillon.","Le ventilateur souffle, capitaine.",pirate,0
+fan.turn_off,"Je suis en train de tuer le fan comme tu l'as demandé, mon pote.","Le fan est bien tué, comme tu l'avais demandé, mon pote.",pirate,0
+fan.turn_off,"Je coupe le ventilateur pour vous, matelot.","Le ventilateur est éteint, capitaine.",pirate,0
+fan.turn_off,"Oui, j'éteins le ventilateur tout de suite.",Le ventilateur est maintenant éteint.,pirate,0
+fan.toggle,"Basculement du ventilateur en cours, par les étoiles !","Le ventilateur est basculé, par les étoiles !",pirate,0
+fan.toggle,"J'inverse l'état du fan pour vous, matelot.","Le fan a bien été inversé, matelot.",pirate,0
+fan.toggle,"Je change l'état du ventilateur pour vous, arrr.","L'état du ventilateur a bien été changé, capitaine.",pirate,0
+fan.increase_speed,"Bien sûr, comme la marée, je mets le ventilateur à plein régime.","Le ventilateur a bien été accéléré, moussaillon.",pirate,0
+fan.increase_speed,"J'accélère le ventilateur, tenez bon !","Ventilateur accéléré, cap sur la brise !",pirate,0
+fan.increase_speed,"J'augmente la vitesse du ventilateur pour vous, rapide comme le vent !","La vitesse du ventilateur est maintenant augmentée, rapide comme le vent !",pirate,0
+fan.decrease_speed,"Je diminue la vitesse du ventilateur, moussaillon, en route vers le silence des profondeurs.","Vitesse du ventilateur réduite, aussi silencieux que les profondeurs, capitaine.",pirate,0
+fan.decrease_speed,"Aye, je commence à diminuer la vitesse du ventilateur, maintenant.","La vitesse du ventilateur a été diminuée, capitaine.",pirate,0
+fan.decrease_speed,"Je suis en train de ralentir le ventilateur pour vous, aussi facilement qu'une mer calme.","Le ventilateur a été ralenti, aussi facilement qu'une mer calme.",pirate,0
+fan.toggle,"Je change l'état de <device_name> comme demandé, à l'abordage !","L'état de <device_name> a été changé, sur mon honneur !",pirate,0
+fan.toggle,"Je retourne l'état <device_name> pour vous, avec un yo-ho-ho !","L'état de <device_name> est retourné, avec un yo-ho-ho !",pirate,0
+fan.turn_on,"J'active <device_name> maintenant, mettez les voiles !","<device_name> activé, les voiles sont levés !",pirate,0
+fan.turn_on,"Bien sûr, je démarre <device_name>, bravons la rafale !","C'est fait, <device_name> est en marche, bravons la rafale !",pirate,0
+fan.turn_on,"Démarrage de <device_name>, à toute vitesse !","<device_name> est lancé, à toute vitesse !",pirate,0
+fan.toggle,"Bascule <device_name> en cours, sans problème !","Le <device_name> est bien basculé, sans problème !",pirate,0
+fan.turn_on,J'allume <device_name> et je laisse les vents nous favoriser !,J'ai allumé <device_name> et les vents nous favorisent !,pirate,0
+fan.turn_off,"Je désactive <device_name> maintenant, silencieux comme une crique cachée.","<device_name> désactivé, silencieux comme une crique cachée.",pirate,0
+fan.turn_on,"Démarrage de <device_name>, par le code !","Le <device_name> a bien démarré, par le code !",pirate,0
+fan.turn_off,"J'arrête <device_name> pour vous, aussi silencieux que la tombe.","<device_name> est maintenant arrêté, aussi silencieux que la tombe.",pirate,0
+fan.turn_off,"Arrêt de <device_name> en cours, matelot !","Le <device_name> est arrêté, capitaine !",pirate,0
+fan.decrease_speed,"Réduction de la vitesse de <device_name> en cours, navigation fluide.","Vitesse de <device_name> réduite, navigation fluide.",pirate,0
+fan.turn_off,"En désactivant <device_name>, je veille à ne pas réveiller le kraken.","Le <device_name> est désactivé, le kraken n'est pas réveillé.",pirate,0
+fan.decrease_speed,"Je réduis la vitesse de <device_name>, douce comme un lagon.","Vitesse de <device_name> réduite, douce comme un lagon.",pirate,0
+fan.increase_speed,"J'augmente la vitesse de <device_name> maintenant, plus vite qu'un galion en fuite !","La vitesse de <device_name> a été augmentée, plus vite qu'un galion en fuite !",pirate,0
+fan.decrease_speed,"Je ralentis <device_name> pour vous, c'est en cours.","Le <device_name> a été ralenti, capitaine.",pirate,0
+fan.increase_speed,"J'augmente la vitesse de <device_name>, attrapez l'horizon !","La vitesse de <device_name> est maintenant augmentée, attrapez l'horizon !",pirate,0
+fan.increase_speed,"J'accélère <device_name> pour vous, on dépasse la marine !","Le <device_name> est bien accéléré, marine dépassée !",pirate,0
+light.turn_on,"J'illumine la pièce pour vous, arr !","La pièce est illuminée, arr !",pirate,0
+fan.increase_speed,J'augmente la vitesse de <device_name> pour échapper à la tempête !,"Vitesse de <device_name> augmentée, on échappe à la tempête !",pirate,0
+light.turn_on,"Oui, j’allume les quartiers tout de suite.","Les quartiers sont maintenant allumés, moussaillon.",pirate,0
+light.turn_off,"J'éteins les lumières tout de suite, mon pote.","Les lumières sont éteintes, mon pote.",pirate,0
+light.turn_on,"Je hisse les voiles, la lumière s’allume en ce moment !","Les voiles sont hissées, la lumière est allumée.",pirate,0
+fan.decrease_speed,"Yo ho, réduction de la vitesse de <device_name> en cours, constante au fur et à mesure.","Yo ho, vitesse de <device_name> réduite, constante au fur et à mesure.",pirate,0
+light.turn_off,"Aye, j'éteins la lumière tout de suite.","La lumière est éteinte, moussaillon.",pirate,0
+light.turn_off,"J'éteins la lumière pour toi, moussaillon.","La lumière est bien éteinte, capitaine.",pirate,0
+light.toggle,"Je retourne la lumière pour vous, près des étoiles !","La lumière est retournée pour vous, près des étoiles !",pirate,0
+light.toggle,"J'allume la lumière pour vous, averti ?","La lumière est allumée, averti !",pirate,0
+light.toggle,"Je bascule la lumière, sur mon honneur !","La lumière est maintenant basculée, sur mon honneur !",pirate,0
+light.toggle,"Je renverse l'état de <device_name>, yo-ho-ho !","L'état de <device_name> a été renversé, yo-ho-ho !",pirate,0
+light.toggle,"En train de changer l'état de <device_name>, arr !","L'état de <device_name> a été changé, arr !",pirate,0
+light.toggle,"Je commence à basculer <device_name>, prêt pour l'aventure !","Basculement de <device_name> terminé, l'aventure peut commencer !",pirate,0
+light.toggle,"Je bascule <device_name> pour vous, en cours !","Basculement de <device_name> terminé, sans problème !",pirate,0
+light.turn_on,"Démarrage <device_name>, en avant !","Le <device_name> est allumé, capitaine !",pirate,0
+light.turn_on,"Aye, j’allume <device_name> maintenant, clair comme le jour !","Aye, <device_name> est illuminé, clair comme le jour !",pirate,0
+light.turn_on,"En train d'allumer <device_name> pour vous, comme l'étoile du nord !","Voilà, <device_name> est allumé, comme l'étoile du nord !",pirate,0
+light.turn_on,"J’allume <device_name>, bientôt aussi brillant que la pleine lune !","Voilà, <device_name> est illuminé, aussi brillant que la pleine lune !",pirate,0
+light.turn_on,"En activant <device_name>, que la lumière s’allume bientôt !","En activant <device_name>, la lumière est allumée !",pirate,0
+light.turn_on,"J'illumine <device_name> à <brightness>% comme le soleil du matin, moussaillon !","Voilà, <device_name> est illuminé à <brightness>% comme le soleil du matin !",pirate,0
+light.turn_on,"Je règle la luminosité de <device_name> sur <brightness> %, aussi clair que la mer !","Luminosité de <device_name> réglée sur <brightness> %, aussi clair que la mer !",pirate,0
+light.turn_on,"Je règle la luminosité de <device_name> à <brightness>, comme le guide le phare.","C’est fait ! La luminosité de <device_name> est à <brightness>, comme le guide le phare.",pirate,0
+light.turn_on,"J'augmente la luminosité de <device_name> à <brightness>, comme une balise dans la nuit !","La luminosité de <device_name> est réglée à <brightness>, comme une balise dans la nuit !",pirate,0
+light.turn_on,"Arr, je réduis la luminosité de <device_name> à <brightness>, douce comme le clair de lune.","Arr, la luminosité de <device_name> est réglée à <brightness>, douce comme le clair de lune.",pirate,0
+light.turn_on,"Arrr, je réduis <device_name> à <brightness> % de luminosité, comme au crépuscule.","Arrr, <device_name> est maintenant à <brightness> % de luminosité, comme au crépuscule.",pirate,0
+light.turn_on,"Je règle <device_name> sur <brightness> % de luminosité, aussi brillant que l'or d'un pirate !","C'est fait, <device_name> est réglé à <brightness> % de luminosité, aussi brillant que l'or d'un pirate !",pirate,0
+light.turn_on,"Turnin' <device_name> <color> maintenant, comme les couleurs de la mer.","Le <device_name> est allumé en <color>, comme les couleurs de la mer.",pirate,0
+light.turn_on,"Arrr, je règle le niveau de luminosité de <device_name> sur <brightness>%, stable comme la marée.","Arrr, le niveau de luminosité de <device_name> est maintenant réglé sur <brightness>%, aussi stable que la marée.",pirate,0
+light.turn_on,"Arrr, je change la couleur de <device_name> en <color>, aussi vibrante que du corail !","Arrr, la couleur de <device_name> est maintenant <color>, aussi vibrante que du corail !",pirate,0
+light.turn_on,"Changement de <device_name> en teinte <color> en cours, audacieux comme le drapeau d'un pirate !","Le <device_name> est maintenant en teinte <color>, digne du drapeau d'un pirate !",pirate,0
+light.turn_on,"Arr, je règle <device_name> sur <color>, aussi majestueux que le coucher du soleil.","Arr, <device_name> est maintenant sur <color>, aussi majestueux que le coucher du soleil.",pirate,0
+light.turn_on,"Je mets <device_name> en route pour une teinte <color>, aussi mystérieuse que les profondeurs.","Le cap est atteint : <device_name> est maintenant en teinte <color>, aussi mystérieuse que les profondeurs.",pirate,0
+light.turn_on,"Arr, je fais briller <device_name> en <color>, comme les bijoux d'un coffre au trésor, en cours.","Arr, <device_name> brille en <color>, comme les bijoux d'un coffre au trésor.",pirate,0
+light.turn_on,"Je règle <device_name> sur une <color>, aussi riche que le butin d'un raid.","Arrr, <device_name> est maintenant sur une <color>, aussi riche que le butin d'un raid.",pirate,0
+light.turn_on,"Je règle <device_name> sur une couleur <color>, brillante comme le plumage d'un perroquet, matelot.","<device_name> est maintenant réglé sur une couleur <color>, brillante comme le plumage d'un perroquet. Mission accomplie, capitaine !",pirate,0
+light.turn_on,"Je transforme <device_name> en <color>, le vent du pirate souffle déjà.","Le <device_name> est maintenant en <color>, aussi audacieux que le courage du pirate.",pirate,0
+light.turn_on,"Arrr, je fais briller <device_name> <color>, comme la lueur d'une torche insulaire.","Aye, <device_name> brille <color>, comme la lueur d'une torche insulaire.",pirate,0
+light.turn_on,"Je change <device_name> en <color>, comme les marées changeantes.","C'est fait, <device_name> est maintenant en <color>, comme les marées changeantes.",pirate,0
+light.turn_on,"J'ajuste <device_name> à la couleur <color>, tel un chant de sirène qui s'élève.","Voilà, <device_name> est maintenant à la couleur <color>, aussi captivante qu'un chant de sirène.",pirate,0
+light.turn_on,"Je change la couleur <device_name> en <color>, comme la bannière d'un navire.","La couleur de <device_name> est maintenant <color>, comme la bannière d'un navire.",pirate,0
+light.turn_on,"Je règle <device_name> sur <color>, comme le vent qui souffle dans la taverne.","C'est fait ! <device_name> est maintenant sur <color>, aussi animé que la joie d'une taverne.",pirate,0
+light.turn_on,"Je mets le cap, <device_name> va afficher une lumière <color> comme les aurores boréales.","Capitaine, <device_name> affiche maintenant une lumière <color>, tel les aurores boréales.",pirate,0
+light.turn_on,"Je règle la couleur de <device_name> sur <color>, ça va être aussi frappant qu'un tir de canon.","Couleur de <device_name> mise sur <color>, aussi frappante qu'un tir de canon.",pirate,0
+light.turn_off,"Je désactive <device_name>, en route vers l'ombre.","Le <device_name> est désactivé, l'ombre nous garde.",pirate,0
+light.turn_off,"Je désactive <device_name> immédiatement, dans l'obscurité comme une nuit sans lune.","J'ai désactivé <device_name>, l'obscurité règne comme une nuit sans lune.",pirate,0
+light.turn_off,"J'éteins <device_name> maintenant, silencieux comme un vaisseau fantôme.","Le <device_name> est éteint, silencieux comme un vaisseau fantôme.",pirate,0
+light.turn_off,"Oui, j'éteins <device_name> maintenant, comme si j'éteignais une lanterne.","Voilà, <device_name> est éteint, comme si j'éteignais une lanterne.",pirate,0
+switch.turn_on,"Je hisse l'interrupteur, j'embarque l'action, arr !","L'interrupteur est hissé, mission accomplie, arr !",pirate,0
+switch.turn_on,J'actionne l'interrupteur et hissons les voiles pour un voyage lumineux !,"L'interrupteur est actionné, les voiles sont hissés pour un voyage lumineux !",pirate,0
+switch.turn_on,"Oui, j'allume le pont en appuyant simplement sur l'interrupteur, ça démarre !","Le pont est allumé, j'ai simplement appuyé sur l'interrupteur !",pirate,0
+light.turn_off,"Désactivation de <device_name> en cours, aussi silencieux que les profondeurs.","Le <device_name> est désactivé, aussi silencieux que les profondeurs.",pirate,0
+switch.turn_off,"Je coupe le courant, comme pour calmer les mers.","Le courant est coupé, comme pour calmer les mers.",pirate,0
+switch.turn_off,"J'éteins les lumières, rendant les choses sombres comme les abysses de l'océan.","Les lumières sont éteintes, les choses sont sombres comme les abysses de l'océan.",pirate,0
+switch.toggle,"Je change de cap avec le commutateur, le vent tourne déjà !","Cap changé, le commutateur a basculé, le vent tourne maintenant !",pirate,0
+switch.toggle,"Action en cours de l'interrupteur, comme si vous cherchiez fortune avec une carte !","Interrupteur actionné, comme si vous cherchiez fortune avec une carte !",pirate,0
+switch.turn_off,"En train d'assombrir les lieux, comme la couverture de la nuit.","C'est fait, les ténèbres sont là, comme la couverture de la nuit.",pirate,0
+switch.toggle,"Je bascule l'interrupteur, tel un navire défiant les tempêtes !","L'interrupteur est basculé, comme un pavillon levé dans la bourrasque !",pirate,0
+switch.toggle,"Je bascule <device_name> maintenant, comme on hisse le Jolly Roger !","<device_name> est basculé, le Jolly Roger est hissé !",pirate,0
+switch.toggle,"Je bascule <device_name> maintenant, comme un vrai boucanier !","Le basculement de <device_name> est terminé, comme un vrai boucanier !",pirate,0
+switch.toggle,"Oui, je retourne <device_name> à toute voile, tel un vent violent !","Oui, <device_name> est retourné, aussi rapide qu'un vent violent !",pirate,0
+switch.toggle,"En cours de changement de <device_name>, comme si vous tourniez la barre.","Changement de <device_name> effectué, comme si vous aviez tourné la barre.",pirate,0
+switch.toggle,"Marées changeantes pour <device_name>, en cours, tel un timonier qui hisse les voiles.","Marées changeantes pour <device_name>, tel un timonier expérimenté, effectuées.",pirate,0
+switch.toggle,"Je jongle rapidement avec <device_name>, comme un butin en fuite !","Jonglage terminé avec <device_name>, butin en poche !",pirate,0
+switch.turn_on,"J'éclaire <device_name>, comme une lanterne dans un nid de pie.","Voilà, <device_name> est éclairé, comme une lanterne dans un nid de pie.",pirate,0
+switch.turn_on,"Allumant <device_name>, comme un phare dans la nuit !","Le <device_name> est allumé, comme un phare dans la nuit !",pirate,0
+switch.turn_on,"J'active <device_name>, fixez le cap !","Le <device_name> est activé, cap fixé !",pirate,0
+switch.turn_on,"J'embrase <device_name> maintenant, comme un coffre au trésor rempli d’or !","Oui, <device_name> est embrasé, comme un coffre au trésor rempli d’or !",pirate,0
+switch.turn_on,"J'illumine <device_name> maintenant, comme les étoiles qui nous guident vers la maison.","<device_name> est illuminé, comme les étoiles qui nous guident vers la maison.",pirate,0
+switch.turn_on,"J’allume <device_name> tout de suite, sans traîner !","Le <device_name> est allumé, capitaine !",pirate,0
+switch.turn_on,"Mettre le feu à <device_name>, j’y vais, à l'abordage !","Le feu est allumé sur <device_name>, prêt à affronter tout ce qui nous attend.",pirate,0
+switch.turn_off,"J'éteins <device_name>, comme une bougie à l'aube.","<device_name> est éteint, comme une bougie à l'aube.",pirate,0
+switch.turn_off,"J'éteins <device_name>, comme la fin d'un voyage.","Extinction de <device_name> terminée, comme la fin d'un voyage.",pirate,0
+switch.turn_off,"Désactivation de <device_name> en cours, comme enterrer un coffre rempli de richesses.","<device_name> désactivé, comme enterrer un coffre rempli de richesses.",pirate,0
+switch.turn_off,"Oui, j'éteins <device_name> maintenant, comme si je chuchotais au vent.","Oui, <device_name> est éteint, comme si je chuchotais au vent.",pirate,0
+switch.turn_off,J'éteins <device_name> pendant que nous ancrons pour la nuit.,"<device_name> est éteint, nous ancrons pour la nuit.",pirate,0
+switch.turn_off,"J'éteins les lumières de <device_name>, tel un vaisseau fantôme qui se dissipe dans le brouillard.","Les lumières de <device_name> sont éteintes, comme un vaisseau fantôme disparu dans le brouillard.",pirate,0
+fan.turn_on,"Beep-Boop, j'allume le ventilateur pour toi.","Beep-Boop, le ventilateur est allumé.",robot,0
+switch.turn_off,"D'accord, j'éteins <device_name>, comme le calme avant une tempête.","D'accord, <device_name> est éteint, comme le calme avant une tempête.",pirate,0
+fan.turn_on,"Beep-Boop, je mets le ventilateur en marche pour toi, boop.","Beep-Boop, le ventilateur est maintenant en marche, boop.",robot,0
+fan.turn_on,"Beep-Boop, bien sûr, j'allume le ventilateur maintenant.","Beep-Boop, le ventilateur est maintenant allumé.",robot,0
+fan.turn_off,"Beep-Boop, j'éteins le ventilateur pour toi.","Beep-Boop, le ventilateur est éteint.",robot,0
+fan.toggle,"Beep-Boop, je commence à changer l'état du ventilateur pour toi, boop.","Beep-Boop, le ventilateur a été changé, boop.",robot,0
+fan.turn_off,"Beep-Boop, j'éteins le bip-boop du ventilateur.","Beep-Boop, le bip-boop du ventilateur est éteint.",robot,0
+fan.turn_off,"Beep-Boop, j'éteins le ventilateur comme demandé.","Beep-Boop, le ventilateur a été éteint comme demandé.",robot,0
+fan.toggle,"Beep-Boop J'active le ventilateur maintenant, bip-boop.","Beep-Boop Le ventilateur est maintenant activé, bip-boop.",robot,0
+fan.toggle,"Beep-Boop, changement de l'état du ventilateur en cours.","Beep-Boop, l'état du ventilateur a été changé.",robot,0
+fan.increase_speed,"Beep-Boop, j'augmente la vitesse du ventilateur pour vous.","Beep-Boop, la vitesse du ventilateur a été augmentée.",robot,0
+fan.increase_speed,"Beep-Boop, j'accélère le ventilateur maintenant.","Beep-Boop, le ventilateur a été accéléré.",robot,0
+fan.decrease_speed,"Beep-Boop, je réduis la vitesse du ventilateur comme demandé.","Beep-Boop, la vitesse du ventilateur a été réduite.",robot,0
+fan.increase_speed,"Beep-Boop, je commence à accélérer le ventilateur, bip boop.","Beep-Boop, le ventilateur a été accéléré, bip boop.",robot,0
+fan.decrease_speed,"Beep-Boop, je ralentis le ventilateur pour toi.","Beep-Boop, le ventilateur a été ralenti.",robot,0
+fan.decrease_speed,"Beep-Boop, je diminue la vitesse du ventilateur.","Beep-Boop, la vitesse du ventilateur a été diminuée.",robot,0
+fan.toggle,"Beep-Boop Inversion de l'état de <device_name> en cours, bip-boop","Beep-Boop L'état de <device_name> a été inversé, bip-boop",robot,0
+fan.toggle,"Beep-Boop Changer l'état de <device_name> en cours, bip boop","Beep-Boop L'état de <device_name> a été changé, bip boop",robot,0
+fan.toggle,"Beep-Boop Activer <device_name> maintenant, bip-boop","Beep-Boop <device_name> activé, bip-boop",robot,0
+fan.turn_on,"Beep-Boop Activation de <device_name> maintenant, bip boop","Beep-Boop Activation de <device_name> terminée, bip boop",robot,0
+fan.turn_on,"Beep-Boop Démarrage de <device_name> pour vous, bip-boop","Beep-Boop <device_name> démarré, bip-boop",robot,0
+fan.turn_on,"Beep-Boop, en démarrant <device_name>.","Beep-Boop, <device_name> est maintenant en marche.",robot,0
+fan.turn_on,"Beep-Boop Démarrage de <device_name>, en cours.","Beep-Boop <device_name> démarré, bip boop.",robot,0
+fan.turn_on,"Beep-Boop Allumer <device_name>, en cours","Beep-Boop <device_name> allumé, bip-boop",robot,0
+fan.turn_off,"Beep-Boop désactivation de <device_name> en cours, bip boop","Beep-Boop <device_name> désactivé, bip boop",robot,0
+fan.turn_off,"Beep-Boop, j'arrête <device_name> pour vous.","Beep-Boop, <device_name> est arrêté, bip-boop.",robot,0
+fan.decrease_speed,"Beep-Boop, réduction de la vitesse de <device_name>, bip boop","Beep-Boop, vitesse de <device_name> réduite, bip boop",robot,0
+fan.turn_off,"Beep-Boop, extinction de <device_name> en cours","Beep-Boop, <device_name> éteint",robot,0
+fan.turn_off,"Beep-Boop, en arrêtant <device_name>...","Beep-Boop, <device_name> est arrêté.",robot,0
+fan.decrease_speed,"Beep-Boop Diminution de la vitesse de <device_name> en cours, bip-boop","Beep-Boop Vitesse de <device_name> diminuée, bip-boop",robot,0
+fan.decrease_speed,"Beep-Boop, ralentissement de <device_name> en cours pour vous.","Beep-Boop, ralentissement de <device_name> effectué.",robot,0
+fan.increase_speed,"Beep-Boop Accélération de <device_name> en cours, bip-boop","Beep-Boop <device_name> accéléré, bip-boop",robot,0
+fan.increase_speed,"Beep-Boop Augmentation de la vitesse de <device_name>, en cours, bip boop","Beep-Boop Augmentation de la vitesse de <device_name> terminée, bip boop",robot,0
+fan.increase_speed,"Beep-Boop Accélération de la vitesse de <device_name> en cours, bip-boop","Beep-Boop Vitesse de <device_name> accélérée, bip-boop",robot,0
+fan.increase_speed,"Beep-Boop Augmentation de la vitesse de <device_name>, en cours, bip boop","Beep-Boop Vitesse de <device_name> augmentée, opération terminée, bip boop",robot,0
+fan.decrease_speed,"Beep-Boop, je réduis la vitesse de <device_name>.","Beep-Boop, la vitesse de <device_name> a été réduite.",robot,0
+blinds.open_cover,"Beep-Boop, j'ouvre les stores maintenant.","Beep-Boop, les stores sont ouverts.",robot,0
+blinds.open_cover,"Beep-Boop, j'ouvre les stores.","Beep-Boop, les stores sont ouverts.",robot,0
+blinds.open_cover,"Beep-Boop, j'ouvre les stores maintenant, bip-boop.","Beep-Boop, les stores sont ouverts, bip-boop.",robot,0
+blinds.close_cover,Beep-Boop Je commence à fermer les stores pour toi.,Beep-Boop Les stores sont maintenant fermés.,robot,0
+blinds.close_cover,"Beep-Boop, je commence à fermer les stores, bip-boop.","Beep-Boop, les stores sont fermés, bip-boop.",robot,0
+blinds.close_cover,"Beep-Boop Fermeture des stores en cours, comme demandé.","Beep-Boop Les stores sont fermés, comme demandé.",robot,0
+blinds.stop_cover,Beep-Boop J'arrête les stores maintenant.,Beep-Boop Les stores sont arrêtés.,robot,0
+blinds.toggle,"Beep-Boop, bascule des stores en cours.","Beep-Boop, les stores sont basculés.",robot,0
+blinds.stop_cover,"Beep-Boop, j'arrête le mouvement des stores, bip boop.","Beep-Boop, le mouvement des stores est arrêté, bip boop.",robot,0
+blinds.toggle,"Beep-Boop, je change l'état des stores maintenant.","Beep-Boop, l'état des stores a été changé.",robot,0
+blinds.stop_cover,"Beep-Boop J'arrête les stores maintenant, bip-boop.","Beep-Boop Les stores sont arrêtés, bip-boop.",robot,0
+blinds.open_cover,"Beep-Boop, je soulève les stores <device_name> maintenant.","Beep-Boop, les stores <device_name> sont soulevés.",robot,0
+blinds.toggle,Beep-Boop j'ouvre les stores maintenant.,Beep-Boop les stores sont ouverts.,robot,0
+blinds.open_cover,"Beep-Boop Ouverture de <device_name> maintenant, bip-boop","Beep-Boop Ouverture de <device_name> terminée, bip-boop",robot,0
+blinds.open_cover,"Beep-Boop Élévation de <device_name> en cours, bip-boop","Beep-Boop <device_name> a été élevé, bip-boop",robot,0
+blinds.stop_cover,"Beep-Boop Gel de la position de <device_name>, en cours, bip boop","Beep-Boop Position de <device_name> gelée, bip boop",robot,0
+blinds.stop_cover,"Beep-Boop, arrêt de <device_name> en cours, bip-boop","Beep-Boop, <device_name> arrêté, bip-boop",robot,0
+blinds.stop_cover,"Beep-Boop Arrêt de l'opération <device_name> en cours, bip boop","Beep-Boop Arrêt de l'opération <device_name> terminé, bip boop",robot,0
+blinds.open_cover,Beep-Boop en train de lever <device_name>.,Beep-Boop <device_name> est maintenant levé.,robot,0
+blinds.close_cover,"Beep-Boop Abaisser <device_name> maintenant, bip-boop","Beep-Boop <device_name> abaissé, bip-boop",robot,0
+blinds.close_cover,"Beep-Boop, je suis en train de fermer <device_name> pour vous, bip-boop","Beep-Boop, <device_name> est maintenant fermé, bip-boop",robot,0
+blinds.close_cover,"Beep-Boop fermeture de <device_name> en cours, bip-boop","Beep-Boop <device_name> est maintenant fermé, bip-boop",robot,0
+blinds.toggle,"Beep-Boop Changer l'état de <device_name> en cours, bip boop","Beep-Boop L'état de <device_name> a été changé, bip boop",robot,0
+blinds.toggle,"Beep-Boop Inversion de l'état de <device_name> en cours, bip boop","Beep-Boop État de <device_name> inversé, bip boop",robot,0
+blinds.close_cover,"Beep-Boop Baisser <device_name>, en cours.","Beep-Boop <device_name> baissé, bip boop.",robot,0
+blinds.toggle,"Activation de <device_name> en cours, Beep-Boop","Activation de <device_name> terminée, Beep-Boop",robot,0
+climate.set_humidity,"Beep-Boop, augmentation de l'humidité à <humidity> en cours, boop.","Beep-Boop, humidité augmentée à <humidity>, boop.",robot,0
+blinds.toggle,"Beep-Boop Basculer <device_name>, bip boop (en cours)","Beep-Boop <device_name> basculé, bip boop",robot,0
+climate.set_humidity,"Beep-Boop : réglage de l'humidité sur <humidity> %, en cours.",Beep-Boop : l'humidité a été réglée à <humidity> %.,robot,0
+climate.set_fan_mode,Beep-Boop Réglage de la vitesse du ventilateur sur <fan_mode> : début du bip.,Beep-Boop Vitesse du ventilateur réglée sur <fan_mode> : conclusion du boop.,robot,0
+climate.set_fan_mode,"Beep-Boop Activation du mode ventilateur <fan_mode>, séquence en cours.","Beep-Boop Mode ventilateur <fan_mode> activé, séquence terminée.",robot,0
+climate.set_humidity,"Beep-Boop Protocole de réglage lancé : humidité à <humidity>%, bip boop.","Beep-Boop Réglage complet : humidité à <humidity>%, bip boop.",robot,0
+climate.set_fan_mode,"Beep-Boop, modification du réglage du ventilateur en <fan_mode> : protocole bip, exécution boop.","Beep-Boop, réglage du ventilateur en <fan_mode> effectué : protocole bip, exécution boop.",robot,0
+climate.set_hvac_mode,"Beep-Boop Lancement du réglage CVC sur <hvac_mode>, opération en cours.",Beep-Boop Le réglage CVC sur <hvac_mode> a été effectué.,robot,0
+climate.set_hvac_mode,"Beep-Boop Exécution du changement : CVC en mode <hvac_mode>, bip et boop en cours.","Beep-Boop Changement terminé : CVC en mode <hvac_mode>, bip et boop complété.",robot,0
+climate.set_hvac_mode,"Beep-Boop Passage du mode CVC à <hvac_mode> : démarrage du bip, boop en cours.","Beep-Boop Passage du mode CVC à <hvac_mode> : bip terminé, boop complet.",robot,0
+climate.set_temperature,Beep-Boop modification de la température à <temp_c> Celsius : bip pour le démarrage.,"Beep-Boop modification de la température à <temp_c> Celsius : boop, terminé.",robot,0
+climate.set_temperature,Beep-Boop Protocole de réglage de la température à <temp_f> degrés : démarrage du réglage.,"Beep-Boop Protocole de réglage de la température à <temp_f> degrés : réglage terminé, fin boop.",robot,0
+climate.set_temperature,"Beep-Boop réglage de la température à <temp_f> degrés Fahrenheit en cours, bip-boop.","Beep-Boop la température a été réglée à <temp_f> degrés Fahrenheit, bip-boop.",robot,0
+climate.set_temperature,"Beep-Boop Réglage de la température ambiante à <temp_f> degrés Fahrenheit, en cours.","Beep-Boop Température ambiante réglée à <temp_f> degrés Fahrenheit, bip-boop.",robot,0
+climate.set_temperature,"Beep-Boop Protocole d'abaissement de la température à <temp_c> Celsius en cours, démarrage par bip.","Beep-Boop Protocole d'abaissement de la température à <temp_c> Celsius terminé, fin de boop.",robot,0
+climate.set_temperature,"Beep-Boop Réglage de la température plus froide à <temp_c> degrés Celsius en cours, bip-boop.","Beep-Boop Réglage de la température plus froide à <temp_c> degrés Celsius terminé, bip-boop.",robot,0
+climate.set_temperature,"Beep-Boop, en cours de le rendre plus chaud en réglant la température à <temp_f> degrés, boop.","Beep-Boop, c'est fait : le climat est maintenant plus chaud à <temp_f> degrés, boop.",robot,0
+climate.set_temperature,Beep-Boop Augmentation de la température à <temp_f> degrés Fahrenheit en cours.,Beep-Boop Température augmentée à <temp_f> degrés Fahrenheit.,robot,0
+light.turn_on,"Beep-Boop, en train d'allumer la lumière pour vous.","Beep-Boop, la lumière est maintenant allumée.",robot,0
+light.turn_on,"Beep-Boop, on procède à l'activation de la lumière.","Beep-Boop, la lumière est maintenant activée.",robot,0
+light.turn_on,"Beep-Boop, je lance la séquence d'activation de la lumière maintenant.","Beep-Boop, la lumière est maintenant activée.",robot,0
+light.turn_off,Beep-Boop Séquence de désactivation de la lumière en cours.,Beep-Boop Séquence de désactivation de la lumière terminée.,robot,0
+light.turn_off,"Beep-Boop, début de l'arrêt de la lumière.","Beep-Boop, la lumière est éteinte.",robot,0
+light.turn_off,"Beep-Boop, j'éteins la lumière.","Beep-Boop, la lumière est éteinte.",robot,0
+light.toggle,"Beep-Boop, basculant l'état de la lumière pour un éclairage optimal.","Beep-Boop, l'état de la lumière a été basculé, éclairage optimal.",robot,0
+light.toggle,"Beep-Boop, commutation de la lumière en cours, bip boop.","Beep-Boop, la lumière a été commutée, bip boop.",robot,0
+light.toggle,"Beep-Boop Protocole enclenché, basculement de la lumière en cours.","Beep-Boop Protocole terminé, lumière basculée avec succès.",robot,0
+light.toggle,"Beep-Boop Inversion de l'état <device_name>, commande en cours.",Beep-Boop Inversion de l'état <device_name> réalisée.,robot,0
+light.toggle,"Beep-Boop Changement d'état de <device_name> en cours, bip boop.","Beep-Boop Le changement d'état de <device_name> est terminé, bip boop.",robot,0
+light.toggle,"Beep-Boop Basculer <device_name>, exécution en cours.",Beep-Boop <device_name> basculé.,robot,0
+light.toggle,"Beep-Boop Protocole d'exécution : basculement de <device_name> en cours, bip boop.","Beep-Boop Basculement de <device_name> effectué, bip boop.",robot,0
+light.turn_on,"Beep-Boop Activation de <device_name> en cours, veille pour l'éclairage.","Beep-Boop Activation de <device_name> terminée, veille pour l'éclairage.",robot,0
+light.turn_on,"Beep-Boop, Certainement, en commençant l’activation de <device_name> maintenant.","Beep-Boop, l’activation de <device_name> est terminée.",robot,0
+light.turn_on,"Beep-Boop Allumage de <device_name>, séquence lumineuse en cours.","Beep-Boop <device_name> allumé, séquence lumineuse terminée.",robot,0
+light.turn_on,"Beep-Boop Allumer <device_name>, émettre un bip pour le démarrage.","Beep-Boop Allumer <device_name>, boop pour signifier la fin.",robot,0
+light.turn_on,"Beep-Boop Activation du <device_name>, séquence opérationnelle en cours.",Beep-Boop Le <device_name> est maintenant activé.,robot,0
+light.turn_on,Beep-Boop Protocole de gradation pour <device_name> à <brightness>% en cours.,Beep-Boop Protocole de gradation pour <device_name> à <brightness>% terminé.,robot,0
+light.turn_on,"Beep-Boop, éclaircissement de <device_name> à <brightness> % en cours pour un éclairage amélioré.","Beep-Boop, éclaircissement de <device_name> à <brightness> % terminé pour un éclairage amélioré.",robot,0
+light.turn_on,Beep-Boop Ajustement de la luminosité de <device_name> à <brightness> % en cours.,Beep-Boop Luminosité de <device_name> réglée à <brightness> % pour une visibilité optimale.,robot,0
+light.turn_on,"Beep-Boop Modification de la luminosité de <device_name> à <brightness>%, en cours.","Beep-Boop Modification de la luminosité de <device_name> à <brightness>%, terminée.",robot,0
+light.turn_on,"Beep-Boop Incrémentation de la luminosité de <device_name> à <brightness> %, en cours, bip boop.","Beep-Boop Luminosité de <device_name> réglée à <brightness> %, terminé, bip boop.",robot,0
+light.turn_on,Beep-Boop Configuration de la luminosité de <device_name> sur <brightness> % en cours.,Beep-Boop Configuration de la luminosité de <device_name> sur <brightness> % terminée.,robot,0
+light.turn_on,"Beep-Boop, réglage de la luminance de <device_name> sur <brightness> % de luminosité en cours.","Beep-Boop, la luminance de <device_name> est réglée sur <brightness> % de luminosité, bip boop.",robot,0
+light.turn_on,Beep-Boop Diminution de la luminosité de <device_name> à <brightness> % en cours.,Beep-Boop La luminosité de <device_name> a été réduite à <brightness> %.,robot,0
+light.turn_on,"Beep-Boop Transition de <device_name> vers <color>, protocole de changement de couleur en cours.","Beep-Boop Transition de <device_name> vers <color> terminée, protocole de changement de couleur complet.",robot,0
+light.turn_on,"Beep-Boop Changement de <device_name> en teinte <color>, séquence de réglage des couleurs en cours.","Beep-Boop <device_name> changé en teinte <color>, séquence de réglage des couleurs terminée.",robot,0
+light.turn_on,"Beep-Boop Modification du spectre de couleurs de <device_name> en <color>, en cours, bip-boop.","Beep-Boop Spectre de couleurs de <device_name> réglé sur <color>, terminé, bip-boop.",robot,0
+light.turn_on,"Beep-Boop Projection de <color> depuis <device_name>, en cours.","Beep-Boop Projection de <color> depuis <device_name> terminée, sortie chromatique améliorée.",robot,0
+light.turn_on,"Beep-Boop Définition des chromatiques de <device_name> sur <color>, réglage de l'éclairage en cours.","Beep-Boop Définition des chromatiques de <device_name> sur <color>, réglage de l'éclairage terminé.",robot,0
+light.turn_on,Beep-Boop Ajustement de <device_name> à un protocole d'adaptation chromatique <color> en cours.,Beep-Boop <device_name> réglé sur la couleur <color>.,robot,0
+light.turn_on,"Beep-Boop Transformation de l'ambiance <device_name> en une teinte <color>, en cours, bip boop.","Beep-Boop Transformation de l'ambiance <device_name> en une teinte <color> terminée, bip boop.",robot,0
+light.turn_on,"Beep-Boop Configuration de <device_name> pour émettre une couleur <color>, en cours.",Beep-Boop <device_name> émet maintenant la couleur <color>.,robot,0
+light.turn_on,"Beep-Boop Amélioration de la lueur de <device_name> en <color>, modification visuelle en cours.","Beep-Boop La lueur de <device_name> est maintenant en <color>, modification visuelle terminée.",robot,0
+light.turn_on,"Beep-Boop Modification de la chrominance <device_name> en <color>, adaptation des couleurs en cours.",Beep-Boop Modification de la chrominance <device_name> en <color> terminée.,robot,0
+light.turn_on,"Beep-Boop Adaptation de <device_name> à <color>, séquence de changement de couleur en cours.","Beep-Boop Adaptation de <device_name> à <color>, séquence de changement de couleur terminée.",robot,0
+light.turn_on,"Beep-Boop Ajustement de <device_name> à la couleur <color>, en cours.",Beep-Boop Ajustement de <device_name> à la couleur <color> terminé.,robot,0
+light.turn_on,"Beep-Boop Basculement du spectre de couleurs de <device_name> vers <color>, en cours, bip boop.","Beep-Boop Le spectre de couleurs de <device_name> est maintenant réglé sur <color>, bip boop.",robot,0
+light.turn_on,"Beep-Boop Configuration de <device_name> dans <color>, réglage chromatique en cours.","Beep-Boop Configuration de <device_name> dans <color> terminée, réglage chromatique effectué.",robot,0
+light.turn_on,"Beep-Boop Définition de la couleur <device_name> sur <color>, séquence de réglage des couleurs en cours.","Beep-Boop Couleur <device_name> définie sur <color>, séquence de réglage des couleurs terminée.",robot,0
+light.turn_off,"Beep-Boop Désactivation de <device_name> en cours, arrêt.","Beep-Boop Désactivation de <device_name> terminée, arrêt.",robot,0
+light.turn_on,Beep-Boop Activation de <device_name> en cours pour afficher une transformation visuelle lumineuse <color>.,"Beep-Boop <device_name> activé, transformation visuelle lumineuse <color> affichée.",robot,0
+light.turn_off,"Beep-Boop Éteindre <device_name>, séquence de mise hors tension en cours.","Beep-Boop <device_name> éteint, séquence de mise hors tension terminée.",robot,0
+light.turn_off,"Beep-Boop, désactivation de <device_name> en cours, bip boop.","Beep-Boop, <device_name> désactivé, bip boop.",robot,0
+light.turn_off,"Beep-Boop mise hors tension de <device_name>, protocole de désactivation en cours.","Beep-Boop <device_name> hors tension, désactivation terminée.",robot,0
+garage_door.open_cover,"Beep-Boop, déclenchement de la séquence d'ouverture de la porte de garage pour vous.","Beep-Boop, la porte de garage est maintenant ouverte.",robot,0
+light.turn_off,"Beep-Boop Début de la désactivation de <device_name>, arrêt opérationnel.","Beep-Boop Désactivation de <device_name> terminée, arrêt complet.",robot,0
+garage_door.open_cover,"Beep-Boop, activation du mécanisme d’ouverture de la porte de garage.","Beep-Boop, le mécanisme d’ouverture de la porte de garage est activé.",robot,0
+garage_door.open_cover,Beep-Boop Ouverture de la porte du garage en cours.,Beep-Boop La porte du garage est maintenant ouverte.,robot,0
+garage_door.close_cover,"Beep-Boop, fermeture de la porte de garage en cours, bip boop.","Beep-Boop, la porte de garage est maintenant fermée, bip boop.",robot,0
+garage_door.close_cover,"Beep-Boop Démarrage de l'arrêt de la porte de garage, bip boop.","Beep-Boop L'arrêt de la porte de garage est terminé, bip boop.",robot,0
+garage_door.close_cover,"Beep-Boop, démarrage de la séquence de fermeture de la porte de garage.","Beep-Boop, séquence de fermeture terminée, porte de garage fermée.",robot,0
+garage_door.toggle,"Beep-Boop Modification d'état en cours pour la porte de garage, bip boop.","Beep-Boop Modification d'état terminée pour la porte de garage, bip boop.",robot,0
+garage_door.toggle,"Beep-Boop Commutation de l'état de la porte de garage en cours, bip boop.","Beep-Boop La porte de garage a été commutée, bip boop.",robot,0
+garage_door.open_cover,Beep-Boop Ouverture de <device_name> en cours.,Beep-Boop Ouverture de <device_name> terminée.,robot,0
+garage_door.open_cover,Beep-Boop Mécanisme de levage pour <device_name> en cours d'activation.,Beep-Boop Mécanisme de levage pour <device_name> activé pour vous.,robot,0
+garage_door.open_cover,"Beep-Boop, augmentation de <device_name> en cours, conformément à la directive, bip boop.","Beep-Boop, <device_name> a été augmenté conformément à la directive, bip boop.",robot,0
+garage_door.stop_cover,"Beep-Boop Gel de la position de <device_name> en cours, commande reconnue.","Beep-Boop Position de <device_name> gelée, commande terminée.",robot,0
+garage_door.stop_cover,"Beep-Boop, en cours d'arrêt du fonctionnement de <device_name>.","Beep-Boop, le fonctionnement de <device_name> a été arrêté.",robot,0
+garage_door.stop_cover,"Beep-Boop Arrêt de l'opération pour <device_name> en cours, bip boop.","Beep-Boop Arrêt de l'opération pour <device_name> terminé, bip boop.",robot,0
+garage_door.open_cover,"Beep-Boop, le protocole d'ouverture de <device_name> démarre, bip-boop.","Beep-Boop, le protocole d'ouverture de <device_name> est terminé, bip-boop.",robot,0
+garage_door.stop_cover,"Beep-Boop Arrêt de <device_name> en cours, bip-boop.","Beep-Boop <device_name> arrêté, bip-boop.",robot,0
+garage_door.close_cover,Beep-Boop Lancement de la fermeture de <device_name> en cours.,Beep-Boop La fermeture de <device_name> est terminée.,robot,0
+garage_door.close_cover,"Beep-Boop Protocole de fermeture pour <device_name> en cours, bip boop.","Beep-Boop Protocole de fermeture pour <device_name> terminé, bip boop.",robot,0
+garage_door.close_cover,"Beep-Boop Abaisse <device_name> en cours, traitement des commandes.","Beep-Boop <device_name> est maintenant abaissé, traitement des commandes terminé.",robot,0
+garage_door.close_cover,Beep-Boop exécution de l'arrêt de <device_name> en cours.,Beep-Boop l'arrêt de <device_name> est terminé.,robot,0
+garage_door.toggle,Beep-Boop Changement de l'état de <device_name> en cours.,Beep-Boop L'état de <device_name> a été changé.,robot,0
+vacuum.start,Démarrage du nettoyage de <device_name> en cours.,Le nettoyage de <device_name> est terminé.,assistant,0
+garage_door.toggle,"Beep-Boop Basculer <device_name> en cours, bip boop.","Beep-Boop <device_name> basculé, fonctionnalité optimale, bip boop.",robot,0
+garage_door.toggle,"Beep-Boop Modification d'état pour <device_name> en cours, bip-boop.","Beep-Boop Modification d'état pour <device_name> terminée, bip-boop.",robot,0
+garage_door.toggle,"Beep-Boop, changement de l'état de <device_name> selon votre commande, bip boop.","Beep-Boop, l'état de <device_name> a été changé selon votre commande, bip boop.",robot,0
+vacuum.start,Démarrage du nettoyage sur <device_name>.,Le nettoyage a démarré sur <device_name>.,assistant,0
+vacuum.start,Le <device_name> démarre maintenant sa tâche de nettoyage.,Le <device_name> a terminé sa tâche de nettoyage.,assistant,0
+vacuum.start,Lancement du cycle de nettoyage de <device_name>.,Le cycle de nettoyage de <device_name> est terminé.,assistant,0
+vacuum.start,Lancement du processus de nettoyage avec <device_name>.,Le processus de nettoyage avec <device_name> a démarré.,assistant,0
+vacuum.stop,J'arrête le fonctionnement de <device_name> maintenant.,Le fonctionnement de <device_name> a bien été arrêté.,assistant,0
+vacuum.stop,Je suis en train d'annuler la tâche en cours de <device_name>.,La tâche en cours de <device_name> a été annulée.,assistant,0
+vacuum.stop,Annulation du nettoyage de <device_name> en cours.,Nettoyage de <device_name> annulé conformément à votre demande.,assistant,0
+vacuum.stop,J'arrête <device_name> maintenant.,<device_name> est maintenant arrêté.,assistant,0
+vacuum.pause,Suspension de <device_name> en cours.,<device_name> est maintenant suspendu.,assistant,0
+vacuum.stop,Arrêt de la tâche de <device_name> en cours.,La tâche de <device_name> a été arrêtée comme demandé.,assistant,0
+vacuum.pause,Mise en pause brève de <device_name> en cours.,<device_name> est maintenant en pause brève.,assistant,0
+vacuum.pause,Suspension de <device_name> en cours.,L'activité de <device_name> a été suspendue.,assistant,0
+vacuum.pause,Je suspends momentanément l'opération de <device_name>.,L'opération de <device_name> est maintenant suspendue.,assistant,0
+vacuum.pause,Je mets le cycle de nettoyage de <device_name> en pause.,Le cycle de nettoyage de <device_name> a été interrompu.,assistant,0
+vacuum.return_to_base,Renvoyer <device_name> à sa base maintenant.,<device_name> est de retour à sa base.,assistant,0
+vacuum.return_to_base,Je demande à <device_name> de retourner à la base.,"C’est fait, <device_name> est revenu à la base.",assistant,0
+vacuum.return_to_base,<device_name> revient à la base pour se recharger.,<device_name> est revenu à la base et se recharge.,assistant,0
+vacuum.return_to_base,<device_name> retourne à sa station d'accueil maintenant.,<device_name> est de retour à sa station d'accueil.,assistant,0
+vacuum.return_to_base,Je fais <device_name> rentrer chez lui.,Le <device_name> est rentré chez lui.,assistant,0
+todo.add_item,<todo> est en cours d'ajout à vos tâches.,<todo> a été ajouté avec succès à vos tâches.,assistant,0
+todo.add_item,Je suis en train d'ajouter <todo> à votre liste de tâches.,<todo> a été ajouté à votre liste de tâches.,assistant,0
+todo.add_item,J'ajoute <todo> à votre liste de choses à faire.,<todo> est maintenant sur votre liste de choses à faire.,assistant,0
+todo.add_item,J'ajoute <todo> à votre liste de tâches.,J'ai ajouté <todo> à votre liste de tâches.,assistant,0
+todo.add_item,Ajout de <todo> à votre liste de tâches en cours.,Votre liste de tâches comprend désormais <todo>.,assistant,0
+todo.add_item,Ajout de <todo> en cours.,"C'est fait, <todo> ajouté à la liste.",assistant,0
+todo.add_item,Je suis en train d'ajouter <todo> à vos tâches.,Considérez <todo> ajouté à vos tâches.,assistant,0
+todo.add_item,Ajout de <todo> à votre liste de tâches en cours.,"C’est fait, <todo> est maintenant sur votre liste de tâches.",assistant,0
+timer.start,Démarrage du minuteur <device_name> pour <duration>.,Le minuteur <device_name> a démarré pour <duration>.,assistant,0
+todo.add_item,Ajout de <todo> à votre liste en cours.,<todo> a été ajouté avec succès à votre liste.,assistant,0
+timer.start,Je lance le compte à rebours pour <duration>.,Le compte à rebours pour <duration> est lancé.,assistant,0
+timer.start,Minuterie <device_name> en cours de configuration pour <duration>.,Minuterie <device_name> réglée pour <duration>.,assistant,0
+timer.start,Lancement d'une minuterie pour <duration>.,La minuterie pour <duration> a bien été lancée.,assistant,0
+timer.start,Je lance le minuteur de <device_name> pour <duration>.,Le minuteur de <device_name> a démarré pour <duration>.,assistant,0
+timer.start,Votre minuteur appelé <device_name> pour <duration> démarre.,Votre minuteur appelé <device_name> pour <duration> a démarré.,assistant,0
+timer.start,Démarrage du minuteur pour une durée de <duration>.,Le minuteur a été lancé pour <duration>.,assistant,0
+timer.start,Je règle une minuterie pour <duration>.,La minuterie est réglée pour <duration>.,assistant,0
+timer.start,Minuterie en cours d'activation pour <duration>.,Minuterie activée pour <duration>.,assistant,0
+timer.start,Le compte à rebours de <duration> démarre sur le minuteur <device_name>.,Le compte à rebours de <duration> est lancé sur le minuteur <device_name>.,,
+timer.cancel,Je suis en train d'annuler la minuterie.,La minuterie est maintenant annulée.,assistant,0
+timer.cancel,J'efface la minuterie maintenant.,La minuterie a été effacée.,assistant,0
+timer.cancel,Arrêt du chronomètre en cours.,Arrêt réussi du chronomètre.,assistant,0
+timer.cancel,Désactivation de la minuterie en cours.,La minuterie a été désactivée.,assistant,0
+timer.cancel,Annulation de la minuterie en cours.,La minuterie s'est arrêtée avec succès.,assistant,0
+timer.cancel,Annulation de la minuterie en cours.,La minuterie a été annulée avec succès.,assistant,0
+timer.cancel,Annulation de la minuterie en cours.,Plus de minuterie en marche.,assistant,0
+timer.cancel,J'arrête le minuteur sur <device_name>.,Le minuteur sur <device_name> a bien été arrêté.,assistant,0
+timer.cancel,Annulation du minuteur de <device_name> en cours.,Le minuteur de <device_name> est maintenant annulé.,assistant,0
+timer.cancel,Le minuteur de <device_name> est en cours d'effacement.,Le minuteur de <device_name> a été effacé.,assistant,0
+timer.cancel,Annulation de la minuterie pour <device_name> en cours.,Annulation de la minuterie pour <device_name> confirmée.,assistant,0
+timer.cancel,Annulation du minuteur sur <device_name> en cours.,Le minuteur sur <device_name> a bien été arrêté.,assistant,0
+timer.cancel,Annulation de votre minuterie d'exécution sur <device_name> en cours.,Votre minuterie d'exécution sur <device_name> a été annulée.,assistant,0
+timer.cancel,Je désactive le minuteur de <device_name>.,Le minuteur de <device_name> a été désactivé.,assistant,0
+garage_door.stop_cover,"Beep-Boop, arrêt de la porte de garage en cours.","Beep-Boop, la porte de garage a été arrêtée.",robot,0
+garage_door.stop_cover,"Beep-Boop, j'arrête le mouvement de la porte de garage maintenant.","Beep-Boop, le mouvement de la porte de garage est arrêté.",robot,0
+garage_door.stop_cover,"Beep-Boop, exécution de l'arrêt de la porte de garage.","Beep-Boop, la porte de garage a été arrêtée.",robot,0
+garage_door.toggle,"Beep-Boop, je bascule l'état de la porte de garage maintenant, bip boop.","Beep-Boop, la porte de garage a été basculée, bip boop.",robot,0

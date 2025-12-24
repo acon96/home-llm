@@ -70,6 +70,7 @@ from .const import (
     CONF_TOOL_CALL_PREFIX,
     CONF_TOOL_CALL_SUFFIX,
     CONF_ENABLE_LEGACY_TOOL_CALLING,
+    CONF_TOOL_RESPONSE_AS_STRING,
     CONF_LLAMACPP_ENABLE_FLASH_ATTENTION,
     CONF_USE_GBNF_GRAMMAR,
     CONF_GBNF_GRAMMAR_FILE,
@@ -96,6 +97,7 @@ from .const import (
     CONF_LLAMACPP_THREAD_COUNT,
     CONF_LLAMACPP_BATCH_THREAD_COUNT,
     CONF_LLAMACPP_REINSTALL,
+    CONF_LLAMACPP_CACHE_SIZE_MB,
     DEFAULT_CHAT_MODEL,
     DEFAULT_PORT,
     DEFAULT_SSL,
@@ -121,6 +123,7 @@ from .const import (
     DEFAULT_TOOL_CALL_PREFIX,
     DEFAULT_TOOL_CALL_SUFFIX,
     DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
+    DEFAULT_TOOL_RESPONSE_AS_STRING,
     DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION,
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_GBNF_GRAMMAR_FILE,
@@ -142,6 +145,7 @@ from .const import (
     DEFAULT_LLAMACPP_BATCH_SIZE,
     DEFAULT_LLAMACPP_THREAD_COUNT,
     DEFAULT_LLAMACPP_BATCH_THREAD_COUNT,
+    DEFAULT_LLAMACPP_CACHE_SIZE_MB,
     BACKEND_TYPE_LLAMA_CPP,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
     BACKEND_TYPE_GENERIC_OPENAI,
@@ -621,6 +625,11 @@ def local_llama_config_option_schema(
             description={"suggested_value": options.get(CONF_ENABLE_LEGACY_TOOL_CALLING)},
             default=DEFAULT_ENABLE_LEGACY_TOOL_CALLING
         ): bool,
+        vol.Required(
+            CONF_TOOL_RESPONSE_AS_STRING,
+            description={"suggested_value": options.get(CONF_TOOL_RESPONSE_AS_STRING)},
+            default=DEFAULT_TOOL_RESPONSE_AS_STRING
+        ): bool,
     }
 
     if subentry_type == ai_task.DOMAIN:
@@ -727,7 +736,7 @@ def local_llama_config_option_schema(
                     CONF_PROMPT_CACHING_INTERVAL,
                     description={"suggested_value": options.get(CONF_PROMPT_CACHING_INTERVAL)},
                     default=DEFAULT_PROMPT_CACHING_INTERVAL,
-                ): NumberSelector(NumberSelectorConfig(min=1, max=60, step=1)),
+                ): NumberSelector(NumberSelectorConfig(min=1, max=60, step=1))
             })
         result.update({
             vol.Required(
@@ -781,6 +790,11 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options.get(CONF_LLAMACPP_ENABLE_FLASH_ATTENTION)},
                 default=DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION,
             ): BooleanSelector(BooleanSelectorConfig()),
+            vol.Required(
+                CONF_LLAMACPP_CACHE_SIZE_MB,
+                description={"suggested_value": options.get(CONF_LLAMACPP_CACHE_SIZE_MB)},
+                default=DEFAULT_LLAMACPP_CACHE_SIZE_MB,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1024, step=1)),
             vol.Required(
                 CONF_USE_GBNF_GRAMMAR,
                 description={"suggested_value": options.get(CONF_USE_GBNF_GRAMMAR)},
@@ -975,6 +989,7 @@ def local_llama_config_option_schema(
         CONF_TOOL_CALL_SUFFIX,
         CONF_MAX_TOOL_CALL_ITERATIONS,
         CONF_ENABLE_LEGACY_TOOL_CALLING,
+        CONF_TOOL_RESPONSE_AS_STRING,
         CONF_USE_GBNF_GRAMMAR,
         CONF_GBNF_GRAMMAR_FILE,
         # integration specific options
@@ -989,6 +1004,7 @@ def local_llama_config_option_schema(
         CONF_IN_CONTEXT_EXAMPLES_FILE,
         CONF_NUM_IN_CONTEXT_EXAMPLES,
         # backend specific options
+        CONF_LLAMACPP_CACHE_SIZE_MB,
         CONF_LLAMACPP_BATCH_SIZE,
         CONF_LLAMACPP_THREAD_COUNT,
         CONF_LLAMACPP_BATCH_THREAD_COUNT,
