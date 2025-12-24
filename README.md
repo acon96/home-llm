@@ -70,8 +70,7 @@ The source for the dataset is in the [data](/data) of this repository.
 
 ### Training
 
-If you want to prepare your own training environment, see the details on how to do it in the [Training Guide](./docs/Training.md) document.
-
+If you want to fine-tune a model yourself, see the details on how to do it in the [Training README](./train/README.md).
 
 ## Version History
 | Version | Description                                                                                                                                                                                                                                           |
