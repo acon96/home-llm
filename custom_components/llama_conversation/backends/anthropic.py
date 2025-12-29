@@ -160,19 +160,22 @@ class AnthropicAPIClient(LocalLLMClient):
     async def _async_build_client(self, timeout: float | None = None) -> AsyncAnthropic:
         """Build an async Anthropic client (runs in executor to avoid blocking SSL ops)."""
         effective_timeout = timeout or DEFAULT_REQUEST_TIMEOUT
+        is_custom_api = self.base_url and self.base_url != DEFAULT_ANTHROPIC_BASE_URL
 
-        # Only pass base_url if it's different from the default
         kwargs: Dict[str, Any] = {
-            "api_key": self.api_key,
             "timeout": effective_timeout,
         }
 
-        if self.base_url and self.base_url != DEFAULT_ANTHROPIC_BASE_URL:
+        if is_custom_api:
             kwargs["base_url"] = self.base_url
-            # For compatible APIs, also try Bearer auth header
+            # For compatible APIs, use dummy key and set auth via headers
+            kwargs["api_key"] = "dummy-key-for-sdk"
             kwargs["default_headers"] = {
                 "Authorization": f"Bearer {self.api_key}",
+                "x-api-key": self.api_key,
             }
+        else:
+            kwargs["api_key"] = self.api_key
 
         def create_client():
             return AsyncAnthropic(**kwargs)
@@ -198,16 +201,22 @@ class AnthropicAPIClient(LocalLLMClient):
             return "API key is required"
 
         try:
+            is_custom_api = base_url and base_url != DEFAULT_ANTHROPIC_BASE_URL
+
             kwargs: Dict[str, Any] = {
-                "api_key": api_key,
                 "timeout": 10.0,
             }
-            if base_url and base_url != DEFAULT_ANTHROPIC_BASE_URL:
+
+            if is_custom_api:
                 kwargs["base_url"] = base_url
-                # For compatible APIs, also try Bearer auth header
+                # For compatible APIs, use dummy key and set auth via headers
+                kwargs["api_key"] = "dummy-key-for-sdk"
                 kwargs["default_headers"] = {
                     "Authorization": f"Bearer {api_key}",
+                    "x-api-key": api_key,  # Also try Anthropic's native header
                 }
+            else:
+                kwargs["api_key"] = api_key
 
             # Create client in executor to avoid blocking SSL operations
             def create_client():
@@ -216,8 +225,10 @@ class AnthropicAPIClient(LocalLLMClient):
             client = await hass.async_add_executor_job(create_client)
 
             # Test the connection with a minimal request
+            # Use a model that's likely available on compatible APIs
+            test_model = "claude-3-5-haiku-20241022" if not is_custom_api else "claude-3-5-sonnet-20241022"
             await client.messages.create(
-                model="claude-3-5-haiku-20241022",
+                model=test_model,
                 max_tokens=1,
                 messages=[{"role": "user", "content": "hi"}],
             )
