@@ -157,8 +157,8 @@ class AnthropicAPIClient(LocalLLMClient):
         self.api_key = client_options.get(CONF_ANTHROPIC_API_KEY, "")
         self.base_url = client_options.get(CONF_ANTHROPIC_BASE_URL, DEFAULT_ANTHROPIC_BASE_URL)
 
-    def _build_client(self, timeout: float | None = None) -> AsyncAnthropic:
-        """Build an async Anthropic client."""
+    async def _async_build_client(self, timeout: float | None = None) -> AsyncAnthropic:
+        """Build an async Anthropic client (runs in executor to avoid blocking SSL ops)."""
         effective_timeout = timeout or DEFAULT_REQUEST_TIMEOUT
 
         # Only pass base_url if it's different from the default
@@ -170,7 +170,10 @@ class AnthropicAPIClient(LocalLLMClient):
         if self.base_url and self.base_url != DEFAULT_ANTHROPIC_BASE_URL:
             kwargs["base_url"] = self.base_url
 
-        return AsyncAnthropic(**kwargs)
+        def create_client():
+            return AsyncAnthropic(**kwargs)
+
+        return await self.hass.async_add_executor_job(create_client)
 
     @staticmethod
     def get_name(client_options: dict[str, Any]) -> str:
@@ -198,7 +201,12 @@ class AnthropicAPIClient(LocalLLMClient):
             if base_url and base_url != DEFAULT_ANTHROPIC_BASE_URL:
                 kwargs["base_url"] = base_url
 
-            client = AsyncAnthropic(**kwargs)
+            # Create client in executor to avoid blocking SSL operations
+            def create_client():
+                return AsyncAnthropic(**kwargs)
+
+            client = await hass.async_add_executor_job(create_client)
+
             # Test the connection with a minimal request
             await client.messages.create(
                 model="claude-3-5-haiku-20241022",
@@ -266,7 +274,7 @@ class AnthropicAPIClient(LocalLLMClient):
         )
 
         async def anext_token() -> AsyncGenerator[Tuple[Optional[str], Optional[List[dict]]], None]:
-            client = self._build_client(timeout=timeout)
+            client = await self._async_build_client(timeout=timeout)
 
             request_params: Dict[str, Any] = {
                 "model": model_name,
