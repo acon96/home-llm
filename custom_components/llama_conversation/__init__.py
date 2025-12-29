@@ -82,7 +82,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> 
 
     def create_client(backend_type):
         _LOGGER.debug("Creating Local LLM client of type %s", backend_type)
-        return BACKEND_TO_CLS[backend_type](hass, dict(entry.options))
+        # Merge entry.data and entry.options - data has connection info, options has model settings
+        client_options = {**dict(entry.data), **dict(entry.options)}
+        return BACKEND_TO_CLS[backend_type](hass, client_options)
 
     # create the agent in an executor job because the constructor calls `open()`
     backend_type = entry.data.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE)
