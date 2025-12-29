@@ -171,7 +171,7 @@ class AnthropicAPIClient(LocalLLMClient):
             # For compatible APIs, use dummy key and set auth via headers
             kwargs["api_key"] = "dummy-key-for-sdk"
             kwargs["default_headers"] = {
-                "Authorization": f"Bearer {self.api_key}",
+                "Authorization": self.api_key,  # No "Bearer" prefix for z.ai compatibility
                 "x-api-key": self.api_key,
             }
         else:
@@ -212,8 +212,8 @@ class AnthropicAPIClient(LocalLLMClient):
                 # For compatible APIs, use dummy key and set auth via headers
                 kwargs["api_key"] = "dummy-key-for-sdk"
                 kwargs["default_headers"] = {
-                    "Authorization": f"Bearer {api_key}",
-                    "x-api-key": api_key,  # Also try Anthropic's native header
+                    "Authorization": api_key,  # No "Bearer" prefix for z.ai compatibility
+                    "x-api-key": api_key,
                 }
             else:
                 kwargs["api_key"] = api_key
