@@ -156,6 +156,7 @@ class AnthropicAPIClient(LocalLLMClient):
 
         self.api_key = client_options.get(CONF_ANTHROPIC_API_KEY, "")
         self.base_url = client_options.get(CONF_ANTHROPIC_BASE_URL, DEFAULT_ANTHROPIC_BASE_URL)
+        _LOGGER.debug("AnthropicAPIClient init: base_url=%s, has_api_key=%s", self.base_url, bool(self.api_key))
 
     async def _async_build_client(self, timeout: float | None = None) -> AsyncAnthropic:
         """Build an async Anthropic client (runs in executor to avoid blocking SSL ops)."""
@@ -252,6 +253,8 @@ class AnthropicAPIClient(LocalLLMClient):
     async def async_get_available_models(self) -> List[str]:
         """Return available models from the API."""
         is_custom_api = self.base_url and self.base_url != DEFAULT_ANTHROPIC_BASE_URL
+
+        _LOGGER.debug("async_get_available_models: base_url=%s, is_custom_api=%s", self.base_url, is_custom_api)
 
         if not is_custom_api:
             # Official Anthropic API doesn't have a models list endpoint
