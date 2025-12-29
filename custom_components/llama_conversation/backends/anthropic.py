@@ -250,8 +250,42 @@ class AnthropicAPIClient(LocalLLMClient):
             return f"Unexpected error: {err}"
 
     async def async_get_available_models(self) -> List[str]:
-        """Return available Anthropic models."""
-        # Anthropic doesn't have a models list endpoint, so return recommended models
+        """Return available models from the API."""
+        is_custom_api = self.base_url and self.base_url != DEFAULT_ANTHROPIC_BASE_URL
+
+        if not is_custom_api:
+            # Official Anthropic API doesn't have a models list endpoint
+            return RECOMMENDED_ANTHROPIC_MODELS
+
+        # Try to fetch models from compatible API
+        try:
+            import aiohttp
+
+            headers = {
+                "Authorization": self.api_key,
+                "x-api-key": self.api_key,
+                "Content-Type": "application/json",
+            }
+
+            # Construct models endpoint URL
+            base = self.base_url.rstrip("/")
+            models_url = f"{base}/v1/models"
+
+            async with aiohttp.ClientSession() as session:
+                async with session.get(models_url, headers=headers, timeout=aiohttp.ClientTimeout(total=10)) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        models = []
+                        for model in data.get("data", []):
+                            model_id = model.get("id")
+                            if model_id:
+                                models.append(model_id)
+                        if models:
+                            return models
+        except Exception as err:
+            _LOGGER.debug("Failed to fetch models from API, using defaults: %s", err)
+
+        # Fallback to recommended models
         return RECOMMENDED_ANTHROPIC_MODELS
 
     def _supports_vision(self, entity_options: dict[str, Any]) -> bool:
