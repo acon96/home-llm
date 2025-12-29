@@ -1,6 +1,5 @@
 """Defines the OpenAI API compatible agents"""
 from __future__ import annotations
-import json
 
 import aiohttp
 import asyncio
@@ -11,12 +10,12 @@ from typing import List, Dict, Tuple, AsyncGenerator, Any, Optional
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.components import conversation
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import llm
+from openai import AsyncOpenAI, OpenAIError
 
-from custom_components.llama_conversation.utils import format_url, get_oai_formatted_messages, get_oai_formatted_tools, parse_raw_tool_call
+from custom_components.llama_conversation.utils import format_url, get_oai_formatted_messages, get_oai_formatted_tools
 from custom_components.llama_conversation.const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -74,50 +73,17 @@ class GenericOpenAIAPIClient(LocalLLMClient):
     
     @staticmethod
     async def async_validate_connection(hass: HomeAssistant, user_input: Dict[str, Any]) -> str | None:
-        headers = {}
         api_key = user_input.get(CONF_OPENAI_API_KEY)
         api_base_path = user_input.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
-        if api_key:
-            headers["Authorization"] = f"Bearer {api_key}"
-
         try:
-            session = async_get_clientsession(hass)
-            async with session.get(
-                format_url(
-                    hostname=user_input[CONF_HOST],
-                    port=user_input[CONF_PORT],
-                    ssl=user_input[CONF_SSL],
-                    path=f"/{api_base_path}/models"
-                ),
-                timeout=aiohttp.ClientTimeout(total=5), # quick timeout
-                headers=headers
-            ) as response:
-                if response.ok:
-                    return None
-                else:
-                    return f"HTTP Status {response.status}"
+            async with AsyncOpenAI(api_key=api_key, base_url=api_base_path) as client:
+                await client.models.list()
         except Exception as ex:
             return str(ex)
 
     async def async_get_available_models(self) -> List[str]:
-        headers = {}
-        if self.api_key:
-            headers["Authorization"] = f"Bearer {self.api_key}"
-
-        try:
-            session = async_get_clientsession(self.hass)
-            async with session.get(
-                f"{self.api_host}/models",
-                timeout=aiohttp.ClientTimeout(total=5), # quick timeout
-                headers=headers
-            ) as response:
-                response.raise_for_status()
-                models_result = await response.json()
-        except (asyncio.TimeoutError, aiohttp.ClientResponseError):
-            _LOGGER.exception("Failed to get available models")
-            return RECOMMENDED_CHAT_MODELS
-            
-        return [ model["id"] for model in models_result["data"] ]
+        async with AsyncOpenAI(api_key=self.api_key, base_url=self.api_host) as client:
+            return [m.id async for m in client.models.list()]
 
     def _generate_stream(self, 
                          conversation: List[conversation.Content],
@@ -138,7 +104,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
 
         request_params = {
             "model": model_name,
-            "stream": True,
+            # "stream": True, # we are using the streaming method, therefore we dont need to specify it
             "max_tokens": max_tokens,
             "temperature": temperature,
             "top_p": top_p,
@@ -161,42 +127,20 @@ class GenericOpenAIAPIClient(LocalLLMClient):
             tools = get_oai_formatted_tools(llm_api, self._async_get_all_exposed_domains())
             request_params["tools"] = tools
 
-        request_params.update(additional_params)
-
-        headers = {}
-        if self.api_key:
-            headers["Authorization"] = f"Bearer {self.api_key}"
-
         _LOGGER.debug(f"Generating completion with {len(messages)} messages and {len(tools) if tools else 0} tools...")
 
-        session = async_get_clientsession(self.hass)
-
         async def anext_token() -> AsyncGenerator[Tuple[Optional[str], Optional[List[dict]]], None]:
-            response = None
-            chunk = None
-            try:
-                async with session.post(
-                    f"{self.api_host}{endpoint}",
-                    json=request_params,
-                    timeout=timeout,
-                    headers=headers
-                ) as response:
-                    response.raise_for_status()
-                    async for line_bytes in response.content:
-                        raw_line = line_bytes.decode("utf-8").strip()
-                        if raw_line.startswith("error: "):
-                            raise Exception(f"Error from server: {raw_line}")
-                        chunk = raw_line.removeprefix("data: ")
-                        if "[DONE]" in chunk:
-                            break
-
-                        if chunk and chunk.strip():
-                            to_say, tool_calls = self._extract_response(json.loads(chunk))
-                            if to_say or tool_calls:
-                                yield to_say, tool_calls
+            try:                    
+                async with AsyncOpenAI(api_key=self.api_key, base_url=self.api_host, timeout=timeout) as client:
+                    async with client.chat.completions.stream(**request_params, extra_body=additional_params) as stream:
+                        async for event in stream:
+                            if event.type == "content.delta": # normal text chunks we can yield
+                                yield event.delta, None
+                            elif event.type == "tool_calls.function.arguments.done": # function calls need to wait until complete to be yielded
+                                yield None, [event.to_dict()]
             except asyncio.TimeoutError as err:
                 raise HomeAssistantError("The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities.") from err
-            except aiohttp.ClientError as err:
+            except OpenAIError as err:
                 raise HomeAssistantError(f"Failed to communicate with the API! {err}") from err
 
         return self._async_stream_parse_completion(llm_api, agent_id, entity_options, anext_token=anext_token())
@@ -205,33 +149,6 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         request_params = {}
         endpoint = "/chat/completions"
         return endpoint, request_params
-
-    def _extract_response(self, response_json: dict) -> Tuple[Optional[str], Optional[List[dict]]]:
-        if "choices" not in response_json or len(response_json["choices"]) == 0: # finished
-            _LOGGER.warning("Response missing or empty 'choices'. Keys present: %s. Full response: %s",
-                            list(response_json.keys()), response_json)
-            return None, None
-        
-        choice = response_json["choices"][0]
-        tool_calls = None
-        if response_json["object"] == "chat.completion":
-            response_text = choice["message"]["content"]
-            streamed = False
-        elif response_json["object"] == "chat.completion.chunk":
-            response_text = choice["delta"].get("content", "")
-            if "tool_calls" in choice["delta"] and choice["delta"]["tool_calls"] is not None:
-                tool_calls = [call["function"] for call in choice["delta"]["tool_calls"]]
-            streamed = True
-        else:
-            response_text = choice["text"]
-            streamed = False
-
-        if not streamed or (streamed and choice.get("finish_reason")):
-            finish_reason = choice.get("finish_reason")
-            if finish_reason in ("length", "content_filter"):
-                _LOGGER.warning("Model response did not end on a stop token (unfinished sentence)")
-
-        return response_text, tool_calls
 
 
 class GenericOpenAIResponsesAPIClient(LocalLLMClient):

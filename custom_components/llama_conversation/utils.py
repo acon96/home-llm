@@ -287,7 +287,8 @@ def get_oai_formatted_tools(llm_api: llm.APIInstance, domains: list[str]) -> Lis
                 "function": {
                     "name": tool["name"],
                     "description": f"Call the Home Assistant service '{tool['name']}'",
-                    "parameters": convert_to_openapi(tool["arguments"], custom_serializer=llm_api.custom_serializer)
+                    "parameters": convert_to_openapi(tool["arguments"], custom_serializer=llm_api.custom_serializer),
+                    "strict": True,
                 }
             } for tool in get_home_llm_tools(llm_api, domains) ])
         else:
@@ -296,7 +297,8 @@ def get_oai_formatted_tools(llm_api: llm.APIInstance, domains: list[str]) -> Lis
                 "function": {
                     "name": tool.name,
                     "description": tool.description or "",
-                    "parameters": convert_to_openapi(tool.parameters, custom_serializer=llm_api.custom_serializer)
+                    "parameters": convert_to_openapi(tool.parameters, custom_serializer=llm_api.custom_serializer),
+                    "strict": True,
                 }
             })
 
@@ -348,7 +350,7 @@ def get_oai_formatted_messages(
             if message.tool_calls:
                 messages.append({
                     "role": "assistant",
-                    "content": str(message.content),
+                    "content": str(message.content) if message.content else None, # we dont want a str(None)
                     "tool_calls": [
                         {
                             "type" : "function",
@@ -364,12 +366,14 @@ def get_oai_formatted_messages(
             if tool_result_to_str:
                 content = json.dumps(message.tool_result)
             else:
-                content = {
+                content = [{
                     "name": message.tool_name,
                     "response": { "result": message.tool_result },
-                }
+                    }
+                ]
             messages.append({
                 "role": "tool",
+                "name": message.tool_name, # functiongemma compat https://huggingface.co/google/functiongemma-270m-it/blob/main/chat_template.jinja#L232
                 "content": content,
                 "tool_call_id": message.tool_call_id
             })
