@@ -169,6 +169,10 @@ class AnthropicAPIClient(LocalLLMClient):
 
         if self.base_url and self.base_url != DEFAULT_ANTHROPIC_BASE_URL:
             kwargs["base_url"] = self.base_url
+            # For compatible APIs, also try Bearer auth header
+            kwargs["default_headers"] = {
+                "Authorization": f"Bearer {self.api_key}",
+            }
 
         def create_client():
             return AsyncAnthropic(**kwargs)
@@ -200,6 +204,10 @@ class AnthropicAPIClient(LocalLLMClient):
             }
             if base_url and base_url != DEFAULT_ANTHROPIC_BASE_URL:
                 kwargs["base_url"] = base_url
+                # For compatible APIs, also try Bearer auth header
+                kwargs["default_headers"] = {
+                    "Authorization": f"Bearer {api_key}",
+                }
 
             # Create client in executor to avoid blocking SSL operations
             def create_client():
