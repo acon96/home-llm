@@ -5,7 +5,7 @@ import json
 import logging
 from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
 
-from anthropic import AsyncAnthropic, APIError, APIConnectionError, APITimeoutError
+from anthropic import AsyncAnthropic, APIError, APIConnectionError, APITimeoutError, AuthenticationError
 
 from homeassistant.components import conversation as conversation
 from homeassistant.core import HomeAssistant
@@ -214,16 +214,21 @@ class AnthropicAPIClient(LocalLLMClient):
                 messages=[{"role": "user", "content": "hi"}],
             )
             return None
+        except AuthenticationError as err:
+            _LOGGER.error("Anthropic authentication error: %s", err)
+            return f"Invalid API key: {err}"
         except APIConnectionError as err:
+            _LOGGER.error("Anthropic connection error: %s", err)
             return f"Connection error: {err}"
-        except APITimeoutError:
+        except APITimeoutError as err:
+            _LOGGER.error("Anthropic timeout error: %s", err)
             return "Connection timed out"
         except APIError as err:
-            if hasattr(err, 'status_code') and err.status_code == 401:
-                return "Invalid API key"
-            return f"API error: {err}"
+            _LOGGER.error("Anthropic API error: status=%s, message=%s", getattr(err, 'status_code', 'N/A'), err)
+            return f"API error ({getattr(err, 'status_code', 'unknown')}): {err}"
         except Exception as err:
-            return str(err)
+            _LOGGER.exception("Unexpected error validating Anthropic connection")
+            return f"Unexpected error: {err}"
 
     async def async_get_available_models(self) -> List[str]:
         """Return available Anthropic models."""
