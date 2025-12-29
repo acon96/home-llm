@@ -22,7 +22,9 @@
                     "openai_path": "API Path",
                     "text_generation_webui_admin_key": "Admin Key",
                     "text_generation_webui_preset": "Generation Preset/Character Name",
-                    "text_generation_webui_chat_mode": "Chat Mode"
+                    "text_generation_webui_chat_mode": "Chat Mode",
+                    "anthropic_api_key": "Anthropic API Key",
+                    "anthropic_base_url": "Anthropic API Base URL (leave default for official API)"
                 },
                 "description": "Please select the backend and/or provide the connection details to connect to the API that is hosting the model.",
                 "title": "Configure Backend"
@@ -376,8 +378,8 @@
                 "generic_openai_responses": "Generic OpenAPI Compatible Responses API",
                 "llama_cpp_server": "Llama.cpp Server",
                 "ollama": "Ollama API",
-                "text-generation-webui_api": "text-generation-webui API"
-
+                "text-generation-webui_api": "text-generation-webui API",
+                "anthropic": "Anthropic API (Claude)"
             }
         },
         "text_generation_webui_chat_mode": {

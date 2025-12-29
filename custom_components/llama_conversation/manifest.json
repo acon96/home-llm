@@ -12,6 +12,7 @@
   "requirements": [
       "huggingface-hub>=0.23.0",
       "webcolors>=24.8.0",
-      "ollama>=0.5.1"
+      "ollama>=0.5.1",
+      "anthropic>=0.40.0"
   ]
 }
