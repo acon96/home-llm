@@ -153,10 +153,7 @@ from .const import (
     BACKEND_TYPE_LLAMA_CPP_SERVER,
     BACKEND_TYPE_OLLAMA,
     BACKEND_TYPE_ANTHROPIC,
-    CONF_ANTHROPIC_API_KEY,
     CONF_ANTHROPIC_BASE_URL,
-    DEFAULT_ANTHROPIC_BASE_URL,
-    RECOMMENDED_ANTHROPIC_MODELS,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT,
     TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT,
@@ -207,11 +204,22 @@ def pick_backend_schema(backend_type=None, selected_language=None):
         }
     )
 
-def remote_connection_schema(backend_type: str, *, host=None, port=None, ssl=None, selected_path=None):
+def remote_connection_schema(backend_type: str, *, host=None, port=None, ssl=None, selected_path=None, api_key=None, base_url=None):
 
     extra = {}
     default_port = DEFAULT_PORT
     default_path = DEFAULT_GENERIC_OPENAI_PATH
+
+    # Anthropic uses a different schema - base URL + API key only (no host/port/ssl)
+    if backend_type == BACKEND_TYPE_ANTHROPIC:
+        return vol.Schema({
+            vol.Required(CONF_ANTHROPIC_BASE_URL, default=base_url if base_url else ""): TextSelector(
+                TextSelectorConfig()
+            ),
+            vol.Required(CONF_OPENAI_API_KEY, default=api_key if api_key else ""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.PASSWORD)
+            ),
+        })
 
     if backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
         extra[vol.Optional(CONF_TEXT_GEN_WEBUI_ADMIN_KEY)] = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
@@ -236,18 +244,6 @@ def remote_connection_schema(backend_type: str, *, host=None, port=None, ssl=Non
             **extra
         }
     )
-
-def anthropic_connection_schema(*, api_key=None, base_url=None):
-    """Schema for Anthropic API connection configuration."""
-    return vol.Schema({
-        vol.Required(CONF_ANTHROPIC_API_KEY, default=api_key if api_key else ""): TextSelector(
-            TextSelectorConfig(type=TextSelectorType.PASSWORD)
-        ),
-        vol.Optional(
-            CONF_ANTHROPIC_BASE_URL,
-            default=base_url if base_url else DEFAULT_ANTHROPIC_BASE_URL
-        ): TextSelector(TextSelectorConfig()),
-    })
 
 class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
     """Handle a config flow for Local LLM Conversation."""
@@ -315,10 +311,7 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
                         )
                 else:
                     self.internal_step = "configure_connection"
-                    if backend == BACKEND_TYPE_ANTHROPIC:
-                        schema = anthropic_connection_schema()
-                    else:
-                        schema = remote_connection_schema(self.client_config[CONF_BACKEND_TYPE])
+                    schema = remote_connection_schema(self.client_config[CONF_BACKEND_TYPE])
                     return self.async_show_form(
                         step_id="user", data_schema=schema, last_step=True
                     )
@@ -388,19 +381,15 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
                             return await self.async_step_finish()
 
             # Use appropriate schema for the backend type
-            if backend == BACKEND_TYPE_ANTHROPIC:
-                schema = anthropic_connection_schema(
-                    api_key=self.client_config.get(CONF_ANTHROPIC_API_KEY),
-                    base_url=self.client_config.get(CONF_ANTHROPIC_BASE_URL),
-                )
-            else:
-                schema = remote_connection_schema(
-                    backend,
-                    host=self.client_config.get(CONF_HOST),
-                    port=self.client_config.get(CONF_PORT),
-                    ssl=self.client_config.get(CONF_SSL),
-                    selected_path=self.client_config.get(CONF_GENERIC_OPENAI_PATH)
-                )
+            schema = remote_connection_schema(
+                backend,
+                host=self.client_config.get(CONF_HOST),
+                port=self.client_config.get(CONF_PORT),
+                ssl=self.client_config.get(CONF_SSL),
+                selected_path=self.client_config.get(CONF_GENERIC_OPENAI_PATH),
+                api_key=self.client_config.get(CONF_OPENAI_API_KEY),
+                base_url=self.client_config.get(CONF_ANTHROPIC_BASE_URL),
+            )
 
             return self.async_show_form(
                 step_id="user",
@@ -518,7 +507,9 @@ class OptionsFlow(BaseOptionsFlow):
                 host=client_config.get(CONF_HOST),
                 port=client_config.get(CONF_PORT),
                 ssl=client_config.get(CONF_SSL),
-                selected_path=client_config.get(CONF_GENERIC_OPENAI_PATH)
+                selected_path=client_config.get(CONF_GENERIC_OPENAI_PATH),
+                api_key=client_config.get(CONF_OPENAI_API_KEY),
+                base_url=client_config.get(CONF_ANTHROPIC_BASE_URL),
             )
 
             return self.async_show_form(

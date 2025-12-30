@@ -1,6 +1,7 @@
-"""Defines the Anthropic API backend using the official Python SDK."""
+"""Defines the Anthropic-compatible Messages API backend."""
 from __future__ import annotations
 
+import aiohttp
 import json
 import logging
 from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
@@ -23,7 +24,7 @@ from custom_components.llama_conversation.const import (
     CONF_REQUEST_TIMEOUT,
     CONF_ENABLE_LEGACY_TOOL_CALLING,
     CONF_TOOL_RESPONSE_AS_STRING,
-    CONF_ANTHROPIC_API_KEY,
+    CONF_OPENAI_API_KEY,
     CONF_ANTHROPIC_BASE_URL,
     DEFAULT_MAX_TOKENS,
     DEFAULT_TEMPERATURE,
@@ -32,11 +33,10 @@ from custom_components.llama_conversation.const import (
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
     DEFAULT_TOOL_RESPONSE_AS_STRING,
-    DEFAULT_ANTHROPIC_BASE_URL,
-    RECOMMENDED_ANTHROPIC_MODELS,
 )
 
 from custom_components.llama_conversation.entity import LocalLLMClient, TextGenerationResult
+from custom_components.llama_conversation.utils import get_file_contents_base64
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,12 +68,15 @@ def _convert_to_anthropic_messages(
 
             # Handle image attachments (Anthropic supports vision)
             if hasattr(message, 'attachments') and message.attachments:
-                import base64
                 for attachment in message.attachments:
                     if hasattr(attachment, 'mime_type') and attachment.mime_type.startswith("image/"):
                         try:
-                            with open(attachment.path, "rb") as f:
-                                image_data = base64.b64encode(f.read()).decode("utf-8")
+                            image_data = get_file_contents_base64(attachment.path)
+                            # get_file_contents_base64 returns data:mime;base64,xxx format
+                            # Extract just the base64 part for Anthropic
+                            if image_data.startswith("data:"):
+                                # Remove the data URI prefix
+                                image_data = image_data.split(",", 1)[1] if "," in image_data else image_data
                             content.append({
                                 "type": "image",
                                 "source": {
@@ -146,7 +149,7 @@ def _convert_tools_to_anthropic_format(
 
 
 class AnthropicAPIClient(LocalLLMClient):
-    """Implements the Anthropic Messages API backend."""
+    """Implements the Anthropic-compatible Messages API backend."""
 
     api_key: str
     base_url: str
@@ -154,28 +157,23 @@ class AnthropicAPIClient(LocalLLMClient):
     def __init__(self, hass: HomeAssistant, client_options: dict[str, Any]) -> None:
         super().__init__(hass, client_options)
 
-        self.api_key = client_options.get(CONF_ANTHROPIC_API_KEY, "")
-        self.base_url = client_options.get(CONF_ANTHROPIC_BASE_URL, DEFAULT_ANTHROPIC_BASE_URL)
+        self.api_key = client_options.get(CONF_OPENAI_API_KEY, "")
+        self.base_url = client_options.get(CONF_ANTHROPIC_BASE_URL, "")
 
     async def _async_build_client(self, timeout: float | None = None) -> AsyncAnthropic:
         """Build an async Anthropic client (runs in executor to avoid blocking SSL ops)."""
         effective_timeout = timeout or DEFAULT_REQUEST_TIMEOUT
-        is_custom_api = self.base_url and self.base_url != DEFAULT_ANTHROPIC_BASE_URL
 
         kwargs: Dict[str, Any] = {
             "timeout": effective_timeout,
-        }
-
-        if is_custom_api:
-            kwargs["base_url"] = self.base_url
-            # For compatible APIs, use dummy key and set auth via headers
-            kwargs["api_key"] = "dummy-key-for-sdk"
-            kwargs["default_headers"] = {
-                "Authorization": self.api_key,  # No "Bearer" prefix for z.ai compatibility
+            "base_url": self.base_url,
+            # Use dummy key for SDK, set auth via headers for compatible API support
+            "api_key": "dummy-key-for-sdk",
+            "default_headers": {
+                "Authorization": self.api_key,
                 "x-api-key": self.api_key,
-            }
-        else:
-            kwargs["api_key"] = self.api_key
+            },
+        }
 
         def create_client():
             return AsyncAnthropic(**kwargs)
@@ -184,39 +182,33 @@ class AnthropicAPIClient(LocalLLMClient):
 
     @staticmethod
     def get_name(client_options: dict[str, Any]) -> str:
-        base_url = client_options.get(CONF_ANTHROPIC_BASE_URL, DEFAULT_ANTHROPIC_BASE_URL)
-        if base_url == DEFAULT_ANTHROPIC_BASE_URL:
-            return "Anthropic API"
+        base_url = client_options.get(CONF_ANTHROPIC_BASE_URL, "")
         return f"Anthropic-compatible API at '{base_url}'"
 
     @staticmethod
     async def async_validate_connection(
         hass: HomeAssistant, user_input: Dict[str, Any]
     ) -> str | None:
-        """Validate connection to the Anthropic API."""
-        api_key = user_input.get(CONF_ANTHROPIC_API_KEY, "")
-        base_url = user_input.get(CONF_ANTHROPIC_BASE_URL, DEFAULT_ANTHROPIC_BASE_URL)
+        """Validate connection to the Anthropic-compatible API."""
+        api_key = user_input.get(CONF_OPENAI_API_KEY, "")
+        base_url = user_input.get(CONF_ANTHROPIC_BASE_URL, "")
 
         if not api_key:
             return "API key is required"
 
-        try:
-            is_custom_api = base_url and base_url != DEFAULT_ANTHROPIC_BASE_URL
+        if not base_url:
+            return "Base URL is required"
 
+        try:
             kwargs: Dict[str, Any] = {
                 "timeout": 10.0,
-            }
-
-            if is_custom_api:
-                kwargs["base_url"] = base_url
-                # For compatible APIs, use dummy key and set auth via headers
-                kwargs["api_key"] = "dummy-key-for-sdk"
-                kwargs["default_headers"] = {
-                    "Authorization": api_key,  # No "Bearer" prefix for z.ai compatibility
+                "base_url": base_url,
+                "api_key": "dummy-key-for-sdk",
+                "default_headers": {
+                    "Authorization": api_key,
                     "x-api-key": api_key,
-                }
-            else:
-                kwargs["api_key"] = api_key
+                },
+            }
 
             # Create client in executor to avoid blocking SSL operations
             def create_client():
@@ -224,14 +216,8 @@ class AnthropicAPIClient(LocalLLMClient):
 
             client = await hass.async_add_executor_job(create_client)
 
-            # Test the connection with a minimal request
-            # Use a model that's likely available on compatible APIs
-            test_model = "claude-3-5-haiku-20241022" if not is_custom_api else "claude-3-5-sonnet-20241022"
-            await client.messages.create(
-                model=test_model,
-                max_tokens=1,
-                messages=[{"role": "user", "content": "hi"}],
-            )
+            # Fetch models to validate connection
+            await client.models.list()
             return None
         except AuthenticationError as err:
             _LOGGER.error("Anthropic authentication error: %s", err)
@@ -251,23 +237,27 @@ class AnthropicAPIClient(LocalLLMClient):
 
     async def async_get_available_models(self) -> List[str]:
         """Return available models from the API."""
-        is_custom_api = self.base_url and self.base_url != DEFAULT_ANTHROPIC_BASE_URL
-
-        if not is_custom_api:
-            # Official Anthropic API doesn't have a models list endpoint
-            return RECOMMENDED_ANTHROPIC_MODELS
-
-        # Try to fetch models from compatible API
         try:
-            import aiohttp
+            client = await self._async_build_client(timeout=10)
+            response = await client.models.list()
+            models = []
+            for model in response.data:
+                model_id = getattr(model, 'id', None)
+                if model_id:
+                    models.append(model_id)
+            if models:
+                return models
+        except Exception as err:
+            _LOGGER.warning("Failed to fetch models from API: %s", err)
 
+        # Try fallback with aiohttp direct request
+        try:
             headers = {
                 "Authorization": self.api_key,
                 "x-api-key": self.api_key,
                 "Content-Type": "application/json",
             }
 
-            # Construct models endpoint URL
             base = self.base_url.rstrip("/")
             models_url = f"{base}/v1/models"
 
@@ -283,10 +273,9 @@ class AnthropicAPIClient(LocalLLMClient):
                         if models:
                             return models
         except Exception as err:
-            _LOGGER.debug("Failed to fetch models from API, using defaults: %s", err)
+            _LOGGER.debug("Fallback models fetch also failed: %s", err)
 
-        # Fallback to recommended models
-        return RECOMMENDED_ANTHROPIC_MODELS
+        return []
 
     def _supports_vision(self, entity_options: dict[str, Any]) -> bool:
         """Anthropic models support vision."""
@@ -301,7 +290,7 @@ class AnthropicAPIClient(LocalLLMClient):
     ) -> AsyncGenerator[TextGenerationResult, None]:
         """Generate streaming response using Anthropic's Messages API."""
 
-        model_name = entity_options.get(CONF_CHAT_MODEL, RECOMMENDED_ANTHROPIC_MODELS[0])
+        model_name = entity_options.get(CONF_CHAT_MODEL, "")
         max_tokens = int(entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS))
         temperature = entity_options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
         top_p = entity_options.get(CONF_TOP_P, DEFAULT_TOP_P)
@@ -407,7 +396,7 @@ class AnthropicAPIClient(LocalLLMClient):
                 ) from err
             except APIConnectionError as err:
                 raise HomeAssistantError(
-                    f"Failed to connect to the Anthropic API: {err}"
+                    f"Failed to connect to the Anthropic-compatible API: {err}"
                 ) from err
             except APIError as err:
                 raise HomeAssistantError(

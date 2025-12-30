@@ -118,16 +118,8 @@ BACKEND_TYPE_OLLAMA = "ollama"
 BACKEND_TYPE_ANTHROPIC = "anthropic"
 DEFAULT_BACKEND_TYPE = BACKEND_TYPE_LLAMA_CPP
 
-# Anthropic-specific configuration
-CONF_ANTHROPIC_API_KEY = "anthropic_api_key"
+# Anthropic-compatible API configuration
 CONF_ANTHROPIC_BASE_URL = "anthropic_base_url"
-DEFAULT_ANTHROPIC_BASE_URL = "https://api.anthropic.com"
-RECOMMENDED_ANTHROPIC_MODELS = [
-    "claude-sonnet-4-20250514",
-    "claude-3-5-sonnet-20241022",
-    "claude-3-5-haiku-20241022",
-    "claude-3-opus-20240229",
-]
 CONF_INSTALLED_LLAMACPP_VERSION = "installed_llama_cpp_version"
 CONF_SELECTED_LANGUAGE = "selected_language"
 CONF_SELECTED_LANGUAGE_OPTIONS = [ "en", "de", "fr", "es", "pl"]
