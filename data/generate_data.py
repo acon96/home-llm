@@ -189,7 +189,6 @@ def generate_templated_example(template: dict, persona: str, language: str, max_
     chosen_devices = []
     for device_type in template_device_types:
         device_dict = random.choice(piles.stacks_of_device_names[device_type])
-        device_dict["type"] = device_type
         chosen_devices.append(device_dict)
 
     device_list, device_types, extra_exposed_attributes = random_device_list(
