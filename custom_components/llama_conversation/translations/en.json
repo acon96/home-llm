@@ -378,7 +378,7 @@
                 "llama_cpp_server": "Llama.cpp Server",
                 "ollama": "Ollama API",
                 "text-generation-webui_api": "text-generation-webui API",
-                "anthropic": "Anthropic Compatible Messages API"
+                "anthropic": "Anthropic API"
             }
         },
         "text_generation_webui_chat_mode": {
