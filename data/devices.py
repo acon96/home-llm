@@ -1,10 +1,11 @@
+from collections import defaultdict
 import random
 from dataclasses import dataclass
 from typing import Final, Callable, List
 from difflib import SequenceMatcher
 
 from tools import *
-from utils import closest_color, generate_random_parameter, get_dataset_piles
+from utils import PileOfDeviceType, closest_color, generate_random_parameter, get_dataset_piles
 
 # STATES
 STATE_ON: Final = "on"
@@ -40,7 +41,7 @@ class DeviceType:
     name: str
     possible_states: list[tuple[str, float]]
 
-    def get_random_state(self, language: str, extra_exposed_attributes: list | None = None):
+    def get_random_state(self, language: str, extra_exposed_attributes: list[str] | None = None):
         states = [ x[0] for x in self.possible_states ]
         weights = [ x[1] for x in self.possible_states ]
         return random.choices(states, weights=weights, k=1)[0]
@@ -64,7 +65,7 @@ class LightDeviceType(DeviceType):
             ]
         )
 
-    def get_random_state(self, language: str, extra_exposed_attributes: list | None = None):
+    def get_random_state(self, language: str, extra_exposed_attributes: list[str] | None = None):
         extra_exposed_attributes = extra_exposed_attributes or []
         state = super().get_random_state(language, extra_exposed_attributes=extra_exposed_attributes)
 
@@ -172,7 +173,7 @@ class ClimateDeviceType(DeviceType):
     def __init__(self):
         super().__init__("climate", [])
 
-    def get_random_state(self, language: str, extra_exposed_attributes: list | None = None):
+    def get_random_state(self, language: str, extra_exposed_attributes: list[str] | None = None):
         """state;fan_mode;temperature;humidity"""
         extra_exposed_attributes = extra_exposed_attributes or []
         state = generate_random_parameter("hvac_mode", get_dataset_piles(language))
@@ -213,7 +214,7 @@ class MediaPlayerDeviceType(DeviceType):
             (STATE_BUFFERING, 0.01),
         ])
 
-    def get_random_state(self, language: str, extra_exposed_attributes: list | None = None):
+    def get_random_state(self, language: str, extra_exposed_attributes: list[str] | None = None):
         extra_exposed_attributes = extra_exposed_attributes or []
         state = super().get_random_state(language, extra_exposed_attributes=extra_exposed_attributes)
 
@@ -267,14 +268,14 @@ def random_device_list(max_devices: int, avoid_device_names: list[str], language
         if avoid_type == "climate":
             avoid_climate = True
 
-    possible_choices = []
+    possible_choices: list[PileOfDeviceType] = []
     for device_type in local_device_names.keys():
         possible_choices.extend(local_device_names[device_type])
     
 
     device_types = set()
     device_list = []
-    device_lines = []
+    device_lines: list[str] = []
     # TODO: randomly pick attributes for this list
     extra_exposed_attributes = ["rgb_color", "brightness", "temperature", "humidity", "fan_mode", "media_title", "volume_level", "duration", "remaining", "item"]
 
