@@ -40,7 +40,7 @@ class DeviceType:
     name: str
     possible_states: list[tuple[str, float]]
 
-    def get_random_state(self, language: str, extra_exposed_attributes=[]):
+    def get_random_state(self, language: str, extra_exposed_attributes: list | None = None):
         states = [ x[0] for x in self.possible_states ]
         weights = [ x[1] for x in self.possible_states ]
         return random.choices(states, weights=weights, k=1)[0]
@@ -64,7 +64,8 @@ class LightDeviceType(DeviceType):
             ]
         )
 
-    def get_random_state(self, language: str, extra_exposed_attributes=[]):
+    def get_random_state(self, language: str, extra_exposed_attributes: list | None = None):
+        extra_exposed_attributes = extra_exposed_attributes or []
         state = super().get_random_state(language, extra_exposed_attributes=extra_exposed_attributes)
 
         if random.random() < 0.5 and "rgb_color" in extra_exposed_attributes:
@@ -171,8 +172,9 @@ class ClimateDeviceType(DeviceType):
     def __init__(self):
         super().__init__("climate", [])
 
-    def get_random_state(self, language: str, extra_exposed_attributes=[]):
+    def get_random_state(self, language: str, extra_exposed_attributes: list | None = None):
         """state;fan_mode;temperature;humidity"""
+        extra_exposed_attributes = extra_exposed_attributes or []
         state = generate_random_parameter("hvac_mode", get_dataset_piles(language))
 
         if "fan_mode" in extra_exposed_attributes:
@@ -211,7 +213,8 @@ class MediaPlayerDeviceType(DeviceType):
             (STATE_BUFFERING, 0.01),
         ])
 
-    def get_random_state(self, language: str, extra_exposed_attributes=[]):
+    def get_random_state(self, language: str, extra_exposed_attributes: list | None = None):
+        extra_exposed_attributes = extra_exposed_attributes or []
         state = super().get_random_state(language, extra_exposed_attributes=extra_exposed_attributes)
 
         if "media_title" in extra_exposed_attributes and state in [STATE_PLAYING, STATE_PAUSED, STATE_BUFFERING, STATE_ON]:
@@ -228,7 +231,7 @@ class MediaPlayerDeviceType(DeviceType):
         return tools
 
 
-SUPPORTED_DEVICES = {
+SUPPORTED_DEVICES: dict[str, DeviceType] = {
     "light": LightDeviceType(),
     "switch": SwitchDeviceType(),
     "fan": FanDeviceType(),
