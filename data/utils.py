@@ -84,38 +84,38 @@ def get_random_response(pile_of_responses, *, service: str, persona: str, questi
     return possible_results.sample()["response_starting"].values[0], possible_results.sample()["response_confirmed"].values[0]
 
 
-class DeviceType(TypedDict):
+class PileOfDeviceType(TypedDict):
     device_name: str
     description: str
     type: str
 
 
-class SpecificActionType(TypedDict):
+class PileOfSpecificActionType(TypedDict):
     service_name: str
     device_name: str
     phrase: str
 
 
-class TemplatedActionType(TypedDict):
+class PileOfTemplatedActionType(TypedDict):
     device_type: str
     service: str
     phrase: str
     multiplier: int
 
 
-class StatusRequestType(TypedDict):
+class PileOfStatusRequestType(TypedDict):
     device_type: str
     state: str
     phrase: str
     assistant_response: str
 
 
-class HallucinatedServiceType(TypedDict):
+class PileOfHallucinatedServiceType(TypedDict):
     real_service: str
     hallucinated_service: str
 
 
-class FailedToolcallType(TypedDict):
+class PileOfFailedToolcallType(TypedDict):
     service_name: str
     correct_device_name: str
     correct_friendly_name: str
@@ -125,7 +125,7 @@ class FailedToolcallType(TypedDict):
     retry_prompt: str
 
 
-class RefusalsType(TypedDict):
+class PileOfRefusalsType(TypedDict):
     reason_type: str
     service_name: str
     device_name: str
@@ -155,7 +155,7 @@ class DatasetPiles:
         with open(f"{cwd}/piles/{language}/pile_of_todo_items.txt", encoding="utf8") as f:
             self.pile_of_todo_items = [ x.strip() for x in f.readlines() ]
 
-        self.stacks_of_device_names: dict[str, list[DeviceType]] = { x: [] for x in supported_devices }
+        self.stacks_of_device_names: dict[str, list[PileOfDeviceType]] = { x: [] for x in supported_devices }
         with open(f"{cwd}/piles/{language}/pile_of_device_names.csv", encoding="utf8") as f:
             reader = csv.DictReader(f)
             pile_of_device_names = list(reader)
@@ -179,18 +179,18 @@ class DatasetPiles:
                 for x in range(multiplier):
                     processed_pile_of_templated_actions.append(action)
 
-            self.pile_of_templated_actions: list[TemplatedActionType] = processed_pile_of_templated_actions
+            self.pile_of_templated_actions: list[PileOfTemplatedActionType] = processed_pile_of_templated_actions
 
         with open(f"{cwd}/piles/{language}/pile_of_specific_actions.csv", encoding="utf8") as f:
             reader = csv.DictReader(f)
-            self.pile_of_specific_actions: list[SpecificActionType] = list(reader) # type: ignore
+            self.pile_of_specific_actions: list[PileOfSpecificActionType] = list(reader) # type: ignore
 
         self.pile_of_responses = pandas.read_csv(f"{cwd}/piles/{language}/pile_of_responses.csv")
         self.pile_of_responses["contains_vars"] = self.pile_of_responses["response_starting"].apply(get_included_vars)
 
         with open(f"{cwd}/piles/{language}/pile_of_status_requests.csv", encoding="utf8") as f:
             reader = csv.DictReader(f)
-            self.pile_of_status_requests: list[StatusRequestType] = list(reader) # type: ignore
+            self.pile_of_status_requests: list[PileOfStatusRequestType] = list(reader) # type: ignore
 
         with open(f"{cwd}/piles/{language}/pile_of_system_prompts.csv", encoding="utf8") as f:
             reader = csv.DictReader(f)
@@ -199,21 +199,21 @@ class DatasetPiles:
         # service names are not translated
         with open(f"{cwd}/piles/english/pile_of_hallucinated_service_names.csv", encoding="utf8") as f:
             reader = csv.DictReader(f)
-            self.pile_of_hallucinated_service_names: list[HallucinatedServiceType] = list(reader) # type: ignore
+            self.pile_of_hallucinated_service_names: list[PileOfHallucinatedServiceType] = list(reader) # type: ignore
 
         failed_tool_calls_path = f"{cwd}/piles/{language}/pile_of_failed_tool_calls.csv"
         self.pile_of_failed_tool_calls = []
         if os.path.exists(failed_tool_calls_path):
             with open(failed_tool_calls_path, encoding="utf8") as f:
                 reader = csv.DictReader(f)
-                self.pile_of_failed_tool_calls: list[FailedToolcallType] = list(reader) # type: ignore
+                self.pile_of_failed_tool_calls: list[PileOfFailedToolcallType] = list(reader) # type: ignore
 
         refusals_path = f"{cwd}/piles/{language}/pile_of_refusals.csv"
         self.pile_of_refusals = []
         if os.path.exists(refusals_path):
             with open(refusals_path, encoding="utf8") as f:
                 reader = csv.DictReader(f)
-                self.pile_of_refusals: list[RefusalsType] = list(reader) # type: ignore
+                self.pile_of_refusals: list[PileOfRefusalsType] = list(reader) # type: ignore
 
     def __getitem__(self, key):
         return getattr(self, key)
