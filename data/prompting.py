@@ -1,6 +1,6 @@
 import babel.dates
 
-from utils import generate_random_datetime
+from utils import Example, generate_random_datetime
 
 CURRENT_DATE_PROMPT = {
     "english": "The current time and date is",
@@ -51,7 +51,7 @@ USER_INSTRUCTION_PROMPT = {
 }
 
 
-def generate_system_prompt(example: dict, persona: str, language: str, pile_of_system_prompts: dict) -> str:
+def generate_system_prompt(example: Example, persona: str, language: str, pile_of_system_prompts: dict[str, str]) -> str:
     sys_prompt = pile_of_system_prompts[persona]
     random_datetime = generate_random_datetime()
     translate_datetime = babel.dates.format_datetime(random_datetime, BABEL_FORMAT[language], locale=BABEL_LOCALE[language])
