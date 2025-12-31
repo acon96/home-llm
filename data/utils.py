@@ -45,7 +45,7 @@ def get_included_vars(response: str):
 
     return ",".join(sorted(result))
 
-def generate_random_parameter(param_name, piles_of_data):
+def generate_random_parameter(param_name: str, piles_of_data: "DatasetPiles"):
     RANDOM_PARAMETER_GENERATORS = {
         "rgb_color": lambda: (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)),
         "brightness": lambda: random.randint(0, 100),
@@ -68,7 +68,7 @@ def generate_random_parameter(param_name, piles_of_data):
     
     return param_generator()
 
-def get_random_response(pile_of_responses, *, service: str, persona: str, question_template: str, short: bool) -> tuple[str, str]:
+def get_random_response(pile_of_responses: pandas.DataFrame, *, service: str, persona: str, question_template: str, short: bool) -> tuple[str, str]:
 
     required_vars = list(set([var for var in var_pattern.findall(question_template) if "device_name" not in var]))
     
