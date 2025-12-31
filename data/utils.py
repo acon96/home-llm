@@ -2,7 +2,7 @@ import random
 import re
 import os
 import csv
-from typing import TypedDict
+from typing import Any, TypedDict
 import pandas
 from datetime import datetime, timedelta
 import webcolors
@@ -227,3 +227,33 @@ def get_dataset_piles(language: str) -> DatasetPiles:
             "lock","media_player", "climate", "vacuum", "timer", "todo",
         ], language)
     return _piles_cache[language]
+
+
+
+class ToolCall(TypedDict):
+    tool_name: str
+    service_name: str
+    tool_args: dict[str, Any]
+
+
+class ToolResult(TypedDict):
+    tool_name: str
+    tool_result: str
+
+class AssistantTurn(TypedDict):
+    answer: str
+    tool_call_sequence: list[ToolCall]
+    tool_results: list[ToolResult]
+    train_on_turn: bool
+
+
+class Example(TypedDict):
+    states: list[str]
+    available_tools: list[str]
+    question: str
+    assistant_turns: list[AssistantTurn]
+
+
+class DatasetEntry(TypedDict):
+    messages: list[dict[str, Any]]
+    tools: list[dict[str, Any]]

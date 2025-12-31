@@ -3,7 +3,7 @@ import json
 import numpy as np
 import random
 from datasets import load_dataset, concatenate_datasets
-from typing import Any, Callable, TypedDict
+from typing import Any, Callable
 from tqdm import tqdm
 import webcolors
 
@@ -17,33 +17,8 @@ from devices import SUPPORTED_DEVICES, format_device_line, random_device_list, \
     TOOL_LIGHT_SET, TOOL_START_TIMER, TOOL_LIST_ADD_ITEM, SERVICE_TO_TOOL_MAP, \
     HASS_TOOLS, SERVICE_TOOLS
 from prompting import generate_system_prompt, USER_INSTRUCTION_PROMPT
-from utils import PileOfDeviceType, PileOfFailedToolcallType, PileOfRefusalsType, PileOfSpecificActionType, PileOfStatusRequestType, PileOfTemplatedActionType, PileOfType, get_random_response, generate_random_parameter, closest_color, \
+from utils import AssistantTurn, DatasetEntry, Example, PileOfDeviceType, PileOfFailedToolcallType, PileOfRefusalsType, PileOfSpecificActionType, PileOfStatusRequestType, PileOfTemplatedActionType, ToolCall, ToolResult, get_random_response, generate_random_parameter, closest_color, \
     get_dataset_piles, NoResponseAvailableException
-
-
-class ToolCall(TypedDict):
-    tool_name: str
-    service_name: str
-    tool_args: dict[str, Any]
-
-
-class ToolResult(TypedDict):
-    tool_name: str
-    tool_result: str
-
-class AssistantTurn(TypedDict):
-    answer: str
-    tool_call_sequence: list[ToolCall]
-    tool_results: list[ToolResult]
-    train_on_turn: bool
-
-
-class Example(TypedDict):
-    states: list[str]
-    available_tools: list[str]
-    question: str
-    assistant_turns: list[AssistantTurn]
-
 
 def create_assistant_turn(answer: str, tool_call_sequence: list[ToolCall] | None = None, *, tool_results: list[ToolResult] | None = None, train_on_turn: bool = True) -> AssistantTurn:
     """Bundle the assistant utterance with any tool interaction for that turn."""
