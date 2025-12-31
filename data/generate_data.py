@@ -197,8 +197,8 @@ def generate_static_example(action: PileOfSpecificActionType, persona: str, lang
         "assistant_turns": assistant_turns
     }
 
-def replace_answer(list_of_answer, var, value):
-    new_list = []
+def replace_answer(list_of_answer: list[str], var: str, value: str):
+    new_list: list[str] = []
     for answer in list_of_answer:
         new_list.append(answer.replace(var, value))
     return new_list
@@ -529,7 +529,7 @@ def generate_tool_failure_example(failure_case: PileOfFailedToolcallType, person
     response_starting = response_starting.replace("<device_name>", friendly_name)
     response_confirmed = response_confirmed.replace("<device_name>", friendly_name)
 
-    tool_args_extra = {}
+    tool_args_extra: dict[str, Any] = {}
     if device_type == "climate":
         if "<temp_f>" in question or "<temp_f>" in response_starting or "<temp_f>" in response_confirmed:
             temp_f = generate_random_parameter("temp_f", piles)

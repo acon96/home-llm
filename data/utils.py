@@ -14,8 +14,8 @@ class NoServicesAvailableException(Exception):
     pass
 
 
-def closest_color(requested_color):
-    min_colors = {}
+def closest_color(requested_color: tuple[int, int, int]):
+    min_colors: dict[int, str] = {}
     color_names = webcolors.names("css3")
     
     for name in color_names:

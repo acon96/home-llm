@@ -273,7 +273,7 @@ def random_device_list(max_devices: int, avoid_device_names: list[str], language
         possible_choices.extend(local_device_names[device_type])
     
 
-    device_types = set()
+    device_types: set[str] = set()
     device_list = []
     device_lines: list[str] = []
     # TODO: randomly pick attributes for this list
