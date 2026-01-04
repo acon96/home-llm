@@ -1,10 +1,10 @@
 # TODO
-- [ ] add examples of 'fixing' a failed tool call to the dataset
-- [ ] add proper 'refusals' to the dataset (i.e. tool/device not available or device is already in the desired state)
+- [x] add examples of 'fixing' a failed tool call to the dataset
+- [x] add proper 'refusals' to the dataset (i.e. tool/device not available or device is already in the desired state)
 - [ ] new model based on qwen3 0.6b, 1.7b and 4b  
 - [x] new model based on gemma3 270m  
 - [x] support AI task API  
-- [ ] vision support for remote backends  
+- [x] vision support for remote backends  
 - [ ] vision support for local backend (llama.cpp + llava)  
 - [ ] move llamacpp to a separate process because of all the crashing  
 - [ ] optional sampling parameters in options panel (don't pass to backend if not set)  
