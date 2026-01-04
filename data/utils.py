@@ -2,6 +2,7 @@ import random
 import re
 import os
 import csv
+from typing import Any, TypedDict
 import pandas
 from datetime import datetime, timedelta
 import webcolors
@@ -13,8 +14,8 @@ class NoServicesAvailableException(Exception):
     pass
 
 
-def closest_color(requested_color):
-    min_colors = {}
+def closest_color(requested_color: tuple[int, int, int]):
+    min_colors: dict[int, str] = {}
     color_names = webcolors.names("css3")
     
     for name in color_names:
@@ -44,7 +45,7 @@ def get_included_vars(response: str):
 
     return ",".join(sorted(result))
 
-def generate_random_parameter(param_name, piles_of_data):
+def generate_random_parameter(param_name: str, piles_of_data: "DatasetPiles"):
     RANDOM_PARAMETER_GENERATORS = {
         "rgb_color": lambda: (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)),
         "brightness": lambda: random.randint(0, 100),
@@ -67,7 +68,7 @@ def generate_random_parameter(param_name, piles_of_data):
     
     return param_generator()
 
-def get_random_response(pile_of_responses, *, service: str, persona: str, question_template: str, short: bool) -> tuple[str, str]:
+def get_random_response(pile_of_responses: pandas.DataFrame, *, service: str, persona: str, question_template: str, short: bool) -> tuple[str, str]:
 
     required_vars = list(set([var for var in var_pattern.findall(question_template) if "device_name" not in var]))
     
@@ -82,6 +83,58 @@ def get_random_response(pile_of_responses, *, service: str, persona: str, questi
     
     return possible_results.sample()["response_starting"].values[0], possible_results.sample()["response_confirmed"].values[0]
 
+
+class PileOfDeviceType(TypedDict):
+    device_name: str
+    description: str
+    type: str
+
+
+class PileOfSpecificActionType(TypedDict):
+    service_name: str
+    device_name: str
+    phrase: str
+
+
+class PileOfTemplatedActionType(TypedDict):
+    device_type: str
+    service: str
+    phrase: str
+    multiplier: int
+
+
+class PileOfStatusRequestType(TypedDict):
+    device_type: str
+    state: str
+    phrase: str
+    assistant_response: str
+
+
+class PileOfHallucinatedServiceType(TypedDict):
+    real_service: str
+    hallucinated_service: str
+
+
+class PileOfFailedToolcallType(TypedDict):
+    service_name: str
+    correct_device_name: str
+    correct_friendly_name: str
+    bad_device_name: str
+    phrase: str
+    error_result: str
+    retry_prompt: str
+
+
+class PileOfRefusalsType(TypedDict):
+    reason_type: str
+    service_name: str
+    device_name: str
+    friendly_name: str
+    desired_state: str
+    phrase: str
+    response: str
+
+
 class DatasetPiles:
     def __init__(self, supported_devices, language="english"):
         self.language = language
@@ -93,7 +146,7 @@ class DatasetPiles:
         
         with open(f"{cwd}/piles/{language}/pile_of_durations.csv", encoding="utf8") as f:
             reader = csv.DictReader(f)
-            self.pile_of_durations = { x["duration"]: x["name"] for x in reader }
+            self.pile_of_durations: dict[str, str] = { x["duration"]: x["name"] for x in reader }
             
         # media names are not translated
         with open(f"{cwd}/piles/english/pile_of_media_names.txt", encoding="utf8") as f:
@@ -102,14 +155,15 @@ class DatasetPiles:
         with open(f"{cwd}/piles/{language}/pile_of_todo_items.txt", encoding="utf8") as f:
             self.pile_of_todo_items = [ x.strip() for x in f.readlines() ]
 
-        self.stacks_of_device_names = { x: [] for x in supported_devices }
+        self.stacks_of_device_names: dict[str, list[PileOfDeviceType]] = { x: [] for x in supported_devices }
         with open(f"{cwd}/piles/{language}/pile_of_device_names.csv", encoding="utf8") as f:
             reader = csv.DictReader(f)
             pile_of_device_names = list(reader)
             for device_dict in pile_of_device_names:
                 try:
                     device_type = device_dict["device_name"].split(".")[0]
-                    self.stacks_of_device_names[device_type].append(device_dict)
+                    device_dict["type"] = device_type
+                    self.stacks_of_device_names[device_type].append(device_dict) # type: ignore
                 except KeyError as ex:
                     print(ex)
 
@@ -125,41 +179,41 @@ class DatasetPiles:
                 for x in range(multiplier):
                     processed_pile_of_templated_actions.append(action)
 
-            self.pile_of_templated_actions = processed_pile_of_templated_actions
+            self.pile_of_templated_actions: list[PileOfTemplatedActionType] = processed_pile_of_templated_actions
 
         with open(f"{cwd}/piles/{language}/pile_of_specific_actions.csv", encoding="utf8") as f:
             reader = csv.DictReader(f)
-            self.pile_of_specific_actions = list(reader)
+            self.pile_of_specific_actions: list[PileOfSpecificActionType] = list(reader) # type: ignore
 
         self.pile_of_responses = pandas.read_csv(f"{cwd}/piles/{language}/pile_of_responses.csv")
         self.pile_of_responses["contains_vars"] = self.pile_of_responses["response_starting"].apply(get_included_vars)
 
         with open(f"{cwd}/piles/{language}/pile_of_status_requests.csv", encoding="utf8") as f:
             reader = csv.DictReader(f)
-            self.pile_of_status_requests = list(reader)
+            self.pile_of_status_requests: list[PileOfStatusRequestType] = list(reader) # type: ignore
 
         with open(f"{cwd}/piles/{language}/pile_of_system_prompts.csv", encoding="utf8") as f:
             reader = csv.DictReader(f)
-            self.pile_of_system_prompts = { line["persona"]: line["prompt"] for line in reader }
+            self.pile_of_system_prompts: dict[str, str] = { line["persona"]: line["prompt"] for line in reader }
 
         # service names are not translated
         with open(f"{cwd}/piles/english/pile_of_hallucinated_service_names.csv", encoding="utf8") as f:
             reader = csv.DictReader(f)
-            self.pile_of_hallucinated_service_names = list(reader)
+            self.pile_of_hallucinated_service_names: list[PileOfHallucinatedServiceType] = list(reader) # type: ignore
 
         failed_tool_calls_path = f"{cwd}/piles/{language}/pile_of_failed_tool_calls.csv"
         self.pile_of_failed_tool_calls = []
         if os.path.exists(failed_tool_calls_path):
             with open(failed_tool_calls_path, encoding="utf8") as f:
                 reader = csv.DictReader(f)
-                self.pile_of_failed_tool_calls = list(reader)
+                self.pile_of_failed_tool_calls: list[PileOfFailedToolcallType] = list(reader) # type: ignore
 
         refusals_path = f"{cwd}/piles/{language}/pile_of_refusals.csv"
         self.pile_of_refusals = []
         if os.path.exists(refusals_path):
             with open(refusals_path, encoding="utf8") as f:
                 reader = csv.DictReader(f)
-                self.pile_of_refusals = list(reader)
+                self.pile_of_refusals: list[PileOfRefusalsType] = list(reader) # type: ignore
 
     def __getitem__(self, key):
         return getattr(self, key)
@@ -173,3 +227,33 @@ def get_dataset_piles(language: str) -> DatasetPiles:
             "lock","media_player", "climate", "vacuum", "timer", "todo",
         ], language)
     return _piles_cache[language]
+
+
+
+class ToolCall(TypedDict):
+    tool_name: str
+    service_name: str
+    tool_args: dict[str, Any]
+
+
+class ToolResult(TypedDict):
+    tool_name: str
+    tool_result: str
+
+class AssistantTurn(TypedDict):
+    answer: str
+    tool_call_sequence: list[ToolCall]
+    tool_results: list[ToolResult]
+    train_on_turn: bool
+
+
+class Example(TypedDict):
+    states: list[str]
+    available_tools: list[str]
+    question: str
+    assistant_turns: list[AssistantTurn]
+
+
+class DatasetEntry(TypedDict):
+    messages: list[dict[str, Any]]
+    tools: list[dict[str, Any]]
