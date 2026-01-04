@@ -86,12 +86,12 @@ from .const import (
     CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
     CONF_IN_CONTEXT_EXAMPLES_FILE,
     CONF_NUM_IN_CONTEXT_EXAMPLES,
-    CONF_OPENAI_API_KEY,
+    CONF_API_KEY,
     CONF_TEXT_GEN_WEBUI_ADMIN_KEY,
     CONF_TEXT_GEN_WEBUI_CHAT_MODE,
     CONF_OLLAMA_KEEP_ALIVE_MIN,
     CONF_OLLAMA_JSON_MODE,
-    CONF_GENERIC_OPENAI_PATH,
+    CONF_API_PATH,
     CONF_CONTEXT_LENGTH,
     CONF_LLAMACPP_BATCH_SIZE,
     CONF_LLAMACPP_THREAD_COUNT,
@@ -140,7 +140,7 @@ from .const import (
     DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
     DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
     DEFAULT_OLLAMA_JSON_MODE,
-    DEFAULT_GENERIC_OPENAI_PATH,
+    DEFAULT_API_PATH,
     DEFAULT_CONTEXT_LENGTH,
     DEFAULT_LLAMACPP_BATCH_SIZE,
     DEFAULT_LLAMACPP_THREAD_COUNT,
@@ -153,7 +153,7 @@ from .const import (
     BACKEND_TYPE_LLAMA_CPP_SERVER,
     BACKEND_TYPE_OLLAMA,
     BACKEND_TYPE_ANTHROPIC,
-    CONF_ANTHROPIC_BASE_URL,
+    CONF_BASE_URL,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT,
     TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT,
@@ -208,15 +208,15 @@ def remote_connection_schema(backend_type: str, *, host=None, port=None, ssl=Non
 
     extra = {}
     default_port = DEFAULT_PORT
-    default_path = DEFAULT_GENERIC_OPENAI_PATH
+    default_path = DEFAULT_API_PATH
 
     # Anthropic uses a different schema - base URL + API key only (no host/port/ssl)
     if backend_type == BACKEND_TYPE_ANTHROPIC:
         return vol.Schema({
-            vol.Required(CONF_ANTHROPIC_BASE_URL, default=base_url if base_url else ""): TextSelector(
+            vol.Required(CONF_BASE_URL, default=base_url if base_url else ""): TextSelector(
                 TextSelectorConfig()
             ),
-            vol.Required(CONF_OPENAI_API_KEY, default=api_key if api_key else ""): TextSelector(
+            vol.Required(CONF_API_KEY, default=api_key if api_key else ""): TextSelector(
                 TextSelectorConfig(type=TextSelectorType.PASSWORD)
             ),
         })
@@ -236,9 +236,9 @@ def remote_connection_schema(backend_type: str, *, host=None, port=None, ssl=Non
             vol.Required(CONF_HOST, default=host if host else ""): str,
             vol.Optional(CONF_PORT, default=port if port else default_port): str,
             vol.Required(CONF_SSL, default=ssl if ssl else DEFAULT_SSL): bool,
-            vol.Optional(CONF_OPENAI_API_KEY): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
+            vol.Optional(CONF_API_KEY): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
             vol.Optional(
-                CONF_GENERIC_OPENAI_PATH,
+                CONF_API_PATH,
                 default=selected_path if selected_path else default_path
             ): TextSelector(TextSelectorConfig(prefix="/")),
             **extra
@@ -386,9 +386,9 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
                 host=self.client_config.get(CONF_HOST),
                 port=self.client_config.get(CONF_PORT),
                 ssl=self.client_config.get(CONF_SSL),
-                selected_path=self.client_config.get(CONF_GENERIC_OPENAI_PATH),
-                api_key=self.client_config.get(CONF_OPENAI_API_KEY),
-                base_url=self.client_config.get(CONF_ANTHROPIC_BASE_URL),
+                selected_path=self.client_config.get(CONF_API_PATH),
+                api_key=self.client_config.get(CONF_API_KEY),
+                base_url=self.client_config.get(CONF_BASE_URL),
             )
 
             return self.async_show_form(
@@ -507,9 +507,9 @@ class OptionsFlow(BaseOptionsFlow):
                 host=client_config.get(CONF_HOST),
                 port=client_config.get(CONF_PORT),
                 ssl=client_config.get(CONF_SSL),
-                selected_path=client_config.get(CONF_GENERIC_OPENAI_PATH),
-                api_key=client_config.get(CONF_OPENAI_API_KEY),
-                base_url=client_config.get(CONF_ANTHROPIC_BASE_URL),
+                selected_path=client_config.get(CONF_API_PATH),
+                api_key=client_config.get(CONF_API_KEY),
+                base_url=client_config.get(CONF_BASE_URL),
             )
 
             return self.async_show_form(

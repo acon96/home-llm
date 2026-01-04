@@ -27,7 +27,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION,
     DEFAULT_GBNF_GRAMMAR_FILE,
     DEFAULT_PROMPT_CACHING_ENABLED,
-    CONF_GENERIC_OPENAI_PATH,
+    CONF_API_PATH,
 )
 
 
@@ -82,7 +82,7 @@ def test_generic_openai_name_and_path(hass_defaults):
             CONF_HOST: "localhost",
             CONF_PORT: "8080",
             CONF_SSL: False,
-            CONF_GENERIC_OPENAI_PATH: "v1",
+            CONF_API_PATH: "v1",
             CONF_CHAT_MODEL: "demo",
         },
     )
@@ -91,7 +91,7 @@ def test_generic_openai_name_and_path(hass_defaults):
             CONF_HOST: "localhost",
             CONF_PORT: "8080",
             CONF_SSL: False,
-            CONF_GENERIC_OPENAI_PATH: "v1",
+            CONF_API_PATH: "v1",
         }
     )
     assert "Generic OpenAI" in name

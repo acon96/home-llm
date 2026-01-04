@@ -24,8 +24,9 @@ from custom_components.llama_conversation.const import (
     CONF_REQUEST_TIMEOUT,
     CONF_ENABLE_LEGACY_TOOL_CALLING,
     CONF_TOOL_RESPONSE_AS_STRING,
-    CONF_OPENAI_API_KEY,
-    CONF_ANTHROPIC_BASE_URL,
+    CONF_API_KEY,
+    CONF_API_PATH,
+    CONF_BASE_URL,
     DEFAULT_MAX_TOKENS,
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_P,
@@ -33,6 +34,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
     DEFAULT_TOOL_RESPONSE_AS_STRING,
+    DEFAULT_API_PATH,
 )
 
 from custom_components.llama_conversation.entity import LocalLLMClient, TextGenerationResult
@@ -153,12 +155,14 @@ class AnthropicAPIClient(LocalLLMClient):
 
     api_key: str
     base_url: str
+    api_path: str
 
     def __init__(self, hass: HomeAssistant, client_options: dict[str, Any]) -> None:
         super().__init__(hass, client_options)
 
-        self.api_key = client_options.get(CONF_OPENAI_API_KEY, "")
-        self.base_url = client_options.get(CONF_ANTHROPIC_BASE_URL, "")
+        self.api_key = client_options.get(CONF_API_KEY, "")
+        self.base_url = client_options.get(CONF_BASE_URL, "")
+        self.api_path = client_options.get(CONF_API_PATH, DEFAULT_API_PATH)
 
     async def _async_build_client(self, timeout: float | None = None) -> AsyncAnthropic:
         """Build an async Anthropic client (runs in executor to avoid blocking SSL ops)."""
@@ -182,7 +186,7 @@ class AnthropicAPIClient(LocalLLMClient):
 
     @staticmethod
     def get_name(client_options: dict[str, Any]) -> str:
-        base_url = client_options.get(CONF_ANTHROPIC_BASE_URL, "")
+        base_url = client_options.get(CONF_BASE_URL, "")
         return f"Anthropic-compatible API at '{base_url}'"
 
     @staticmethod
@@ -190,8 +194,8 @@ class AnthropicAPIClient(LocalLLMClient):
         hass: HomeAssistant, user_input: Dict[str, Any]
     ) -> str | None:
         """Validate connection to the Anthropic-compatible API."""
-        api_key = user_input.get(CONF_OPENAI_API_KEY, "")
-        base_url = user_input.get(CONF_ANTHROPIC_BASE_URL, "")
+        api_key = user_input.get(CONF_API_KEY, "")
+        base_url = user_input.get(CONF_BASE_URL, "")
 
         if not api_key:
             return "API key is required"
@@ -222,12 +226,12 @@ class AnthropicAPIClient(LocalLLMClient):
         except AuthenticationError as err:
             _LOGGER.error("Anthropic authentication error: %s", err)
             return f"Invalid API key: {err}"
-        except APIConnectionError as err:
-            _LOGGER.error("Anthropic connection error: %s", err)
-            return f"Connection error: {err}"
         except APITimeoutError as err:
             _LOGGER.error("Anthropic timeout error: %s", err)
             return "Connection timed out"
+        except APIConnectionError as err:
+            _LOGGER.error("Anthropic connection error: %s", err)
+            return f"Connection error: {err}"
         except APIError as err:
             _LOGGER.error("Anthropic API error: status=%s, message=%s", getattr(err, 'status_code', 'N/A'), err)
             return f"API error ({getattr(err, 'status_code', 'unknown')}): {err}"
@@ -259,7 +263,8 @@ class AnthropicAPIClient(LocalLLMClient):
             }
 
             base = self.base_url.rstrip("/")
-            models_url = f"{base}/v1/models"
+            path = self.api_path.strip("/")
+            models_url = f"{base}/{path}/models"
 
             async with aiohttp.ClientSession() as session:
                 async with session.get(models_url, headers=headers, timeout=aiohttp.ClientTimeout(total=10)) as response:

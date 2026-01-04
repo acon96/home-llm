@@ -27,8 +27,8 @@ from custom_components.llama_conversation.const import (
     CONF_MIN_P,
     CONF_ENABLE_THINK_MODE,
     CONF_REQUEST_TIMEOUT,
-    CONF_OPENAI_API_KEY,
-    CONF_GENERIC_OPENAI_PATH,
+    CONF_API_KEY,
+    CONF_API_PATH,
     CONF_OLLAMA_KEEP_ALIVE_MIN,
     CONF_OLLAMA_JSON_MODE,
     CONF_CONTEXT_LENGTH,
@@ -43,7 +43,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_MIN_P,
     DEFAULT_ENABLE_THINK_MODE,
     DEFAULT_REQUEST_TIMEOUT,
-    DEFAULT_GENERIC_OPENAI_PATH,
+    DEFAULT_API_PATH,
     DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
     DEFAULT_OLLAMA_JSON_MODE,
     DEFAULT_CONTEXT_LENGTH,
@@ -77,14 +77,14 @@ class OllamaAPIClient(LocalLLMClient):
 
     def __init__(self, hass: HomeAssistant, client_options: dict[str, Any]) -> None:
         super().__init__(hass, client_options)
-        base_path = _normalize_path(client_options.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH))
+        base_path = _normalize_path(client_options.get(CONF_API_PATH, DEFAULT_API_PATH))
         self.api_host = format_url(
             hostname=client_options[CONF_HOST],
             port=client_options[CONF_PORT],
             ssl=client_options[CONF_SSL],
             path=base_path,
         )
-        self.api_key = client_options.get(CONF_OPENAI_API_KEY) or None
+        self.api_key = client_options.get(CONF_API_KEY) or None
         self._headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else None
         self._ssl_context = _build_default_ssl_context() if client_options.get(CONF_SSL) else None
 
@@ -105,13 +105,13 @@ class OllamaAPIClient(LocalLLMClient):
         host = client_options[CONF_HOST]
         port = client_options[CONF_PORT]
         ssl = client_options[CONF_SSL]
-        path = _normalize_path(client_options.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH))
+        path = _normalize_path(client_options.get(CONF_API_PATH, DEFAULT_API_PATH))
         return f"Ollama at '{format_url(hostname=host, port=port, ssl=ssl, path=path)}'"
 
     @staticmethod
     async def async_validate_connection(hass: HomeAssistant, user_input: Dict[str, Any]) -> str | None:
-        api_key = user_input.get(CONF_OPENAI_API_KEY)
-        base_path = _normalize_path(user_input.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH))
+        api_key = user_input.get(CONF_API_KEY)
+        base_path = _normalize_path(user_input.get(CONF_API_PATH, DEFAULT_API_PATH))
         timeout_config: httpx.Timeout | float | None = httpx.Timeout(5)
 
         verify_context = None

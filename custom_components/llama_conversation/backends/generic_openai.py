@@ -23,10 +23,10 @@ from custom_components.llama_conversation.const import (
     CONF_TEMPERATURE,
     CONF_TOP_P,
     CONF_REQUEST_TIMEOUT,
-    CONF_OPENAI_API_KEY,
+    CONF_API_KEY,
     CONF_REMEMBER_CONVERSATION,
     CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
-    CONF_GENERIC_OPENAI_PATH,
+    CONF_API_PATH,
     CONF_ENABLE_LEGACY_TOOL_CALLING,
     CONF_TOOL_RESPONSE_AS_STRING,
     CONF_RESPONSE_JSON_SCHEMA,
@@ -36,7 +36,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_REMEMBER_CONVERSATION,
     DEFAULT_REMEMBER_CONVERSATION_TIME_MINUTES,
-    DEFAULT_GENERIC_OPENAI_PATH,
+    DEFAULT_API_PATH,
     DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
     DEFAULT_TOOL_RESPONSE_AS_STRING,
     RECOMMENDED_CHAT_MODELS,
@@ -59,24 +59,24 @@ class GenericOpenAIAPIClient(LocalLLMClient):
             hostname=client_options[CONF_HOST],
             port=client_options[CONF_PORT],
             ssl=client_options[CONF_SSL],
-            path="/" + client_options.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
+            path="/" + client_options.get(CONF_API_PATH, DEFAULT_API_PATH)
         )
 
-        self.api_key = client_options.get(CONF_OPENAI_API_KEY, "")
+        self.api_key = client_options.get(CONF_API_KEY, "")
 
     @staticmethod
     def get_name(client_options: dict[str, Any]):
         host = client_options[CONF_HOST]
         port = client_options[CONF_PORT]
         ssl = client_options[CONF_SSL]
-        path = "/" + client_options[CONF_GENERIC_OPENAI_PATH]
+        path = "/" + client_options[CONF_API_PATH]
         return f"Generic OpenAI at '{format_url(hostname=host, port=port, ssl=ssl, path=path)}'"
     
     @staticmethod
     async def async_validate_connection(hass: HomeAssistant, user_input: Dict[str, Any]) -> str | None:
         headers = {}
-        api_key = user_input.get(CONF_OPENAI_API_KEY)
-        api_base_path = user_input.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
+        api_key = user_input.get(CONF_API_KEY)
+        api_base_path = user_input.get(CONF_API_PATH, DEFAULT_API_PATH)
         if api_key:
             headers["Authorization"] = f"Bearer {api_key}"
 
@@ -251,17 +251,17 @@ class GenericOpenAIResponsesAPIClient(LocalLLMClient):
             hostname=client_options[CONF_HOST],
             port=client_options[CONF_PORT],
             ssl=client_options[CONF_SSL],
-            path="/" + client_options.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH)
+            path="/" + client_options.get(CONF_API_PATH, DEFAULT_API_PATH)
         )
 
-        self.api_key = client_options.get(CONF_OPENAI_API_KEY, "")
+        self.api_key = client_options.get(CONF_API_KEY, "")
 
     @staticmethod
     def get_name(client_options: dict[str, Any]):
         host = client_options[CONF_HOST]
         port = client_options[CONF_PORT]
         ssl = client_options[CONF_SSL]
-        path = "/" + client_options[CONF_GENERIC_OPENAI_PATH]
+        path = "/" + client_options[CONF_API_PATH]
         return f"Generic OpenAI at '{format_url(hostname=host, port=port, ssl=ssl, path=path)}'"
 
     def _responses_params(self, conversation: List[conversation.Content], entity_options: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
