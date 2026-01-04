@@ -63,7 +63,6 @@ USER_INSTRUCTION = {
     "pl": "Instrukcja użytkownika"
 }
 DEFAULT_PROMPT_BASE = """<persona>
-<current_date>
 <devices>:
 {% for device in devices | selectattr('area_id', 'none'): %}
 {{ device.entity_id }} '{{ device.name }}' = {{ device.state }}{{ ([""] + device.attributes) | join(";") }}
@@ -73,23 +72,19 @@ DEFAULT_PROMPT_BASE = """<persona>
 {% for device in area.list %}
 {{ device.entity_id }} '{{ device.name }}' = {{ device.state }};{{ device.attributes | join(";") }}
 {% endfor %}
-{% endfor %}"""
+{% endfor %}
+<current_date>"""
 DEFAULT_PROMPT_BASE_LEGACY = """<persona>
-<current_date>
 <devices>:
-{{ formatted_devices }}"""
+{{ formatted_devices }}
+<current_date>"""
 ICL_EXTRAS = """
 {% for item in response_examples %}
 {{ item.request }}
 {{ item.response }}
 {{ tool_call_prefix }}{{ item.tool | to_json }}{{ tool_call_suffix }}
 {% endfor %}"""
-ICL_NO_SYSTEM_PROMPT_EXTRAS = """
-{% for item in response_examples %}
-{{ item.request }}
-{{ item.response }}
-{{ tool_call_prefix }}{{ item.tool | to_json }}{{ tool_call_suffix }}
-{% endfor %}
+NO_SYSTEM_PROMPT_EXTRAS = """
 <user_instruction>:"""
 DEFAULT_PROMPT = DEFAULT_PROMPT_BASE + ICL_EXTRAS
 CONF_CHAT_MODEL = "huggingface_model"
@@ -120,7 +115,9 @@ BACKEND_TYPE_GENERIC_OPENAI = "generic_openai"
 BACKEND_TYPE_GENERIC_OPENAI_RESPONSES = "generic_openai_responses"
 BACKEND_TYPE_LLAMA_CPP_SERVER = "llama_cpp_server"
 BACKEND_TYPE_OLLAMA = "ollama"
+BACKEND_TYPE_ANTHROPIC = "anthropic"
 DEFAULT_BACKEND_TYPE = BACKEND_TYPE_LLAMA_CPP
+CONF_BASE_URL = "base_url"
 CONF_INSTALLED_LLAMACPP_VERSION = "installed_llama_cpp_version"
 CONF_SELECTED_LANGUAGE = "selected_language"
 CONF_SELECTED_LANGUAGE_OPTIONS = [ "en", "de", "fr", "es", "pl"]
@@ -149,6 +146,8 @@ CONF_TOOL_CALL_SUFFIX = "tool_call_suffix"
 DEFAULT_TOOL_CALL_SUFFIX = "</tool_call>"
 CONF_ENABLE_LEGACY_TOOL_CALLING = "enable_legacy_tool_calling"
 DEFAULT_ENABLE_LEGACY_TOOL_CALLING = False
+CONF_TOOL_RESPONSE_AS_STRING = "tool_response_as_string"
+DEFAULT_TOOL_RESPONSE_AS_STRING = True
 CONF_LLAMACPP_ENABLE_FLASH_ATTENTION = "enable_flash_attention"
 DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION = False
 CONF_USE_GBNF_GRAMMAR = "gbnf_grammar"
@@ -162,7 +161,7 @@ DEFAULT_IN_CONTEXT_EXAMPLES_FILE = "in_context_examples.csv"
 CONF_NUM_IN_CONTEXT_EXAMPLES = "num_in_context_examples"
 DEFAULT_NUM_IN_CONTEXT_EXAMPLES = 4
 CONF_TEXT_GEN_WEBUI_PRESET = "text_generation_webui_preset"
-CONF_OPENAI_API_KEY = "openai_api_key"
+CONF_API_KEY = "openai_api_key"
 CONF_TEXT_GEN_WEBUI_ADMIN_KEY = "text_generation_webui_admin_key"
 CONF_REFRESH_SYSTEM_PROMPT = "refresh_prompt_per_turn"
 DEFAULT_REFRESH_SYSTEM_PROMPT = True
@@ -187,8 +186,8 @@ CONF_OLLAMA_KEEP_ALIVE_MIN = "ollama_keep_alive"
 DEFAULT_OLLAMA_KEEP_ALIVE_MIN = 30
 CONF_OLLAMA_JSON_MODE = "ollama_json_mode"
 DEFAULT_OLLAMA_JSON_MODE = False
-CONF_GENERIC_OPENAI_PATH = "openai_path"
-DEFAULT_GENERIC_OPENAI_PATH = "v1"
+CONF_API_PATH = "openai_path"
+DEFAULT_API_PATH = "v1"
 CONF_GENERIC_OPENAI_VALIDATE_MODEL = "openai_validate_model"
 DEFAULT_GENERIC_OPENAI_VALIDATE_MODEL = True
 CONF_CONTEXT_LENGTH = "context_length"
@@ -201,6 +200,8 @@ DEFAULT_LLAMACPP_THREAD_COUNT = os.cpu_count()
 CONF_LLAMACPP_BATCH_THREAD_COUNT = "n_batch_threads"
 DEFAULT_LLAMACPP_BATCH_THREAD_COUNT = os.cpu_count()
 CONF_LLAMACPP_REINSTALL = "reinstall_llama_cpp"
+CONF_LLAMACPP_CACHE_SIZE_MB = "llama_cpp_cache_size_mb"
+DEFAULT_LLAMACPP_CACHE_SIZE_MB = 128
 
 DEFAULT_OPTIONS = types.MappingProxyType(
     {
@@ -235,6 +236,16 @@ DEFAULT_OPTIONS = types.MappingProxyType(
 
 def option_overrides(backend_type: str) -> dict[str, Any]:
     return {
+        "home-functiongemma": {
+            CONF_PROMPT: DEFAULT_PROMPT_BASE + NO_SYSTEM_PROMPT_EXTRAS,
+            CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
+            CONF_TOOL_CALL_PREFIX: "<start_function_call>",
+            CONF_TOOL_CALL_SUFFIX: "<end_function_call>",
+            CONF_TOOL_RESPONSE_AS_STRING: False, # gemma function calling requires tool responses as a dictionary
+            CONF_TEMPERATURE: 1.0,
+            CONF_TOP_P: 0.95,
+            CONF_TOP_K: 64,
+        },
         "home-llama-3.2": {
             CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
             CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False,
@@ -243,7 +254,7 @@ def option_overrides(backend_type: str) -> dict[str, Any]:
             CONF_CONTEXT_LENGTH: 131072,
             CONF_MAX_TOOL_CALL_ITERATIONS: 0,
             # llama cpp server doesn't support custom tool calling formats. so just use legacy tool calling
-            CONF_ENABLE_LEGACY_TOOL_CALLING: backend_type == BACKEND_TYPE_LLAMA_CPP_SERVER
+            CONF_ENABLE_LEGACY_TOOL_CALLING: True
         },
         "home-3b-v3": {
             CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
@@ -252,7 +263,7 @@ def option_overrides(backend_type: str) -> dict[str, Any]:
             CONF_TOOL_CALL_SUFFIX: "```",
             CONF_MAX_TOOL_CALL_ITERATIONS: 0,
             # llama cpp server doesn't support custom tool calling formats. so just use legacy tool calling
-            CONF_ENABLE_LEGACY_TOOL_CALLING: backend_type == BACKEND_TYPE_LLAMA_CPP_SERVER
+            CONF_ENABLE_LEGACY_TOOL_CALLING: True
         },
         "home-3b-v2": {
             CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
@@ -306,14 +317,14 @@ def option_overrides(backend_type: str) -> dict[str, Any]:
             CONF_TOP_P: 0.95
         },
         "mistral": {
-            CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_NO_SYSTEM_PROMPT_EXTRAS,
+            CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_EXTRAS + NO_SYSTEM_PROMPT_EXTRAS,
             CONF_MIN_P: 0.1,
             CONF_TYPICAL_P: 0.9,
             # no prompt formats with tool calling support, so just use legacy tool calling
             CONF_ENABLE_LEGACY_TOOL_CALLING: True,
         },
         "mixtral": {
-            CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_NO_SYSTEM_PROMPT_EXTRAS,
+            CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_EXTRAS + NO_SYSTEM_PROMPT_EXTRAS,
             CONF_MIN_P: 0.1,
             CONF_TYPICAL_P: 0.9,
             # no prompt formats with tool calling support, so just use legacy tool calling

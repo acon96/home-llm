@@ -70,6 +70,7 @@ from .const import (
     CONF_TOOL_CALL_PREFIX,
     CONF_TOOL_CALL_SUFFIX,
     CONF_ENABLE_LEGACY_TOOL_CALLING,
+    CONF_TOOL_RESPONSE_AS_STRING,
     CONF_LLAMACPP_ENABLE_FLASH_ATTENTION,
     CONF_USE_GBNF_GRAMMAR,
     CONF_GBNF_GRAMMAR_FILE,
@@ -85,17 +86,18 @@ from .const import (
     CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
     CONF_IN_CONTEXT_EXAMPLES_FILE,
     CONF_NUM_IN_CONTEXT_EXAMPLES,
-    CONF_OPENAI_API_KEY,
+    CONF_API_KEY,
     CONF_TEXT_GEN_WEBUI_ADMIN_KEY,
     CONF_TEXT_GEN_WEBUI_CHAT_MODE,
     CONF_OLLAMA_KEEP_ALIVE_MIN,
     CONF_OLLAMA_JSON_MODE,
-    CONF_GENERIC_OPENAI_PATH,
+    CONF_API_PATH,
     CONF_CONTEXT_LENGTH,
     CONF_LLAMACPP_BATCH_SIZE,
     CONF_LLAMACPP_THREAD_COUNT,
     CONF_LLAMACPP_BATCH_THREAD_COUNT,
     CONF_LLAMACPP_REINSTALL,
+    CONF_LLAMACPP_CACHE_SIZE_MB,
     DEFAULT_CHAT_MODEL,
     DEFAULT_PORT,
     DEFAULT_SSL,
@@ -121,6 +123,7 @@ from .const import (
     DEFAULT_TOOL_CALL_PREFIX,
     DEFAULT_TOOL_CALL_SUFFIX,
     DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
+    DEFAULT_TOOL_RESPONSE_AS_STRING,
     DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION,
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_GBNF_GRAMMAR_FILE,
@@ -137,17 +140,20 @@ from .const import (
     DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
     DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
     DEFAULT_OLLAMA_JSON_MODE,
-    DEFAULT_GENERIC_OPENAI_PATH,
+    DEFAULT_API_PATH,
     DEFAULT_CONTEXT_LENGTH,
     DEFAULT_LLAMACPP_BATCH_SIZE,
     DEFAULT_LLAMACPP_THREAD_COUNT,
     DEFAULT_LLAMACPP_BATCH_THREAD_COUNT,
+    DEFAULT_LLAMACPP_CACHE_SIZE_MB,
     BACKEND_TYPE_LLAMA_CPP,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
     BACKEND_TYPE_GENERIC_OPENAI,
     BACKEND_TYPE_GENERIC_OPENAI_RESPONSES,
     BACKEND_TYPE_LLAMA_CPP_SERVER,
     BACKEND_TYPE_OLLAMA,
+    BACKEND_TYPE_ANTHROPIC,
+    CONF_BASE_URL,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT,
     TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT,
@@ -182,7 +188,8 @@ def pick_backend_schema(backend_type=None, selected_language=None):
                     BACKEND_TYPE_GENERIC_OPENAI,
                     BACKEND_TYPE_GENERIC_OPENAI_RESPONSES,
                     BACKEND_TYPE_LLAMA_CPP_SERVER,
-                    BACKEND_TYPE_OLLAMA
+                    BACKEND_TYPE_OLLAMA,
+                    BACKEND_TYPE_ANTHROPIC,
                 ],
                 translation_key=CONF_BACKEND_TYPE,
                 multiple=False,
@@ -197,11 +204,22 @@ def pick_backend_schema(backend_type=None, selected_language=None):
         }
     )
 
-def remote_connection_schema(backend_type: str, *, host=None, port=None, ssl=None, selected_path=None):
+def remote_connection_schema(backend_type: str, *, host=None, port=None, ssl=None, selected_path=None, api_key=None, base_url=None):
 
     extra = {}
     default_port = DEFAULT_PORT
-    default_path = DEFAULT_GENERIC_OPENAI_PATH
+    default_path = DEFAULT_API_PATH
+
+    # Anthropic uses a different schema - base URL + API key only (no host/port/ssl)
+    if backend_type == BACKEND_TYPE_ANTHROPIC:
+        return vol.Schema({
+            vol.Required(CONF_BASE_URL, default=base_url if base_url else ""): TextSelector(
+                TextSelectorConfig()
+            ),
+            vol.Required(CONF_API_KEY, default=api_key if api_key else ""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.PASSWORD)
+            ),
+        })
 
     if backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
         extra[vol.Optional(CONF_TEXT_GEN_WEBUI_ADMIN_KEY)] = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
@@ -218,9 +236,9 @@ def remote_connection_schema(backend_type: str, *, host=None, port=None, ssl=Non
             vol.Required(CONF_HOST, default=host if host else ""): str,
             vol.Optional(CONF_PORT, default=port if port else default_port): str,
             vol.Required(CONF_SSL, default=ssl if ssl else DEFAULT_SSL): bool,
-            vol.Optional(CONF_OPENAI_API_KEY): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
+            vol.Optional(CONF_API_KEY): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
             vol.Optional(
-                CONF_GENERIC_OPENAI_PATH,
+                CONF_API_PATH,
                 default=selected_path if selected_path else default_path
             ): TextSelector(TextSelectorConfig(prefix="/")),
             **extra
@@ -293,8 +311,9 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
                         )
                 else:
                     self.internal_step = "configure_connection"
+                    schema = remote_connection_schema(self.client_config[CONF_BACKEND_TYPE])
                     return self.async_show_form(
-                        step_id="user", data_schema=remote_connection_schema(self.client_config[CONF_BACKEND_TYPE]), last_step=True
+                        step_id="user", data_schema=schema, last_step=True
                     )
             elif self.install_wheel_error:
                 errors["base"] = str(self.install_wheel_error)
@@ -335,31 +354,46 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
             self.internal_step = next_step
             return self.async_show_progress_done(next_step_id="finish")
         elif self.internal_step == "configure_connection":
+            backend = self.client_config[CONF_BACKEND_TYPE]
             if user_input:
                 self.client_config.update(user_input)
 
-                hostname = user_input.get(CONF_HOST, "")
-                if not is_valid_hostname(hostname):
-                    errors["base"] = "invalid_hostname"
-                else:
-                    # validate remote connections
-                    connect_err = await BACKEND_TO_CLS[self.client_config[CONF_BACKEND_TYPE]].async_validate_connection(self.hass, self.client_config)
-
+                # Anthropic doesn't use hostname - skip hostname validation
+                if backend == BACKEND_TYPE_ANTHROPIC:
+                    connect_err = await BACKEND_TO_CLS[backend].async_validate_connection(self.hass, self.client_config)
                     if connect_err:
                         errors["base"] = "failed_to_connect"
                         description_placeholders["exception"] = str(connect_err)
                     else:
                         return await self.async_step_finish()
-            
+                else:
+                    hostname = user_input.get(CONF_HOST, "")
+                    if not is_valid_hostname(hostname):
+                        errors["base"] = "invalid_hostname"
+                    else:
+                        # validate remote connections
+                        connect_err = await BACKEND_TO_CLS[backend].async_validate_connection(self.hass, self.client_config)
+
+                        if connect_err:
+                            errors["base"] = "failed_to_connect"
+                            description_placeholders["exception"] = str(connect_err)
+                        else:
+                            return await self.async_step_finish()
+
+            # Use appropriate schema for the backend type
+            schema = remote_connection_schema(
+                backend,
+                host=self.client_config.get(CONF_HOST),
+                port=self.client_config.get(CONF_PORT),
+                ssl=self.client_config.get(CONF_SSL),
+                selected_path=self.client_config.get(CONF_API_PATH),
+                api_key=self.client_config.get(CONF_API_KEY),
+                base_url=self.client_config.get(CONF_BASE_URL),
+            )
+
             return self.async_show_form(
-                step_id="user", 
-                data_schema=remote_connection_schema(
-                    self.client_config[CONF_BACKEND_TYPE],
-                    host=self.client_config.get(CONF_HOST),
-                    port=self.client_config.get(CONF_PORT),
-                    ssl=self.client_config.get(CONF_SSL),
-                    selected_path=self.client_config.get(CONF_GENERIC_OPENAI_PATH)
-                ), 
+                step_id="user",
+                data_schema=schema,
                 errors=errors,
                 description_placeholders=description_placeholders,
                 last_step=True
@@ -473,7 +507,9 @@ class OptionsFlow(BaseOptionsFlow):
                 host=client_config.get(CONF_HOST),
                 port=client_config.get(CONF_PORT),
                 ssl=client_config.get(CONF_SSL),
-                selected_path=client_config.get(CONF_GENERIC_OPENAI_PATH)
+                selected_path=client_config.get(CONF_API_PATH),
+                api_key=client_config.get(CONF_API_KEY),
+                base_url=client_config.get(CONF_BASE_URL),
             )
 
             return self.async_show_form(
@@ -621,6 +657,11 @@ def local_llama_config_option_schema(
             description={"suggested_value": options.get(CONF_ENABLE_LEGACY_TOOL_CALLING)},
             default=DEFAULT_ENABLE_LEGACY_TOOL_CALLING
         ): bool,
+        vol.Required(
+            CONF_TOOL_RESPONSE_AS_STRING,
+            description={"suggested_value": options.get(CONF_TOOL_RESPONSE_AS_STRING)},
+            default=DEFAULT_TOOL_RESPONSE_AS_STRING
+        ): bool,
     }
 
     if subentry_type == ai_task.DOMAIN:
@@ -727,7 +768,7 @@ def local_llama_config_option_schema(
                     CONF_PROMPT_CACHING_INTERVAL,
                     description={"suggested_value": options.get(CONF_PROMPT_CACHING_INTERVAL)},
                     default=DEFAULT_PROMPT_CACHING_INTERVAL,
-                ): NumberSelector(NumberSelectorConfig(min=1, max=60, step=1)),
+                ): NumberSelector(NumberSelectorConfig(min=1, max=60, step=1))
             })
         result.update({
             vol.Required(
@@ -781,6 +822,11 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options.get(CONF_LLAMACPP_ENABLE_FLASH_ATTENTION)},
                 default=DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION,
             ): BooleanSelector(BooleanSelectorConfig()),
+            vol.Required(
+                CONF_LLAMACPP_CACHE_SIZE_MB,
+                description={"suggested_value": options.get(CONF_LLAMACPP_CACHE_SIZE_MB)},
+                default=DEFAULT_LLAMACPP_CACHE_SIZE_MB,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1024, step=1)),
             vol.Required(
                 CONF_USE_GBNF_GRAMMAR,
                 description={"suggested_value": options.get(CONF_USE_GBNF_GRAMMAR)},
@@ -952,6 +998,29 @@ def local_llama_config_option_schema(
                 default=DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
             ): NumberSelector(NumberSelectorConfig(min=-1, max=1440, step=1, unit_of_measurement=UnitOfTime.MINUTES, mode=NumberSelectorMode.BOX)),
         })
+    elif backend_type == BACKEND_TYPE_ANTHROPIC:
+        result.update({
+            vol.Required(
+                CONF_MAX_TOKENS,
+                description={"suggested_value": options.get(CONF_MAX_TOKENS)},
+                default=DEFAULT_MAX_TOKENS,
+            ): NumberSelector(NumberSelectorConfig(min=1, max=8192, step=1)),
+            vol.Required(
+                CONF_TOP_K,
+                description={"suggested_value": options.get(CONF_TOP_K)},
+                default=DEFAULT_TOP_K,
+            ): NumberSelector(NumberSelectorConfig(min=1, max=256, step=1)),
+            vol.Required(
+                CONF_TOP_P,
+                description={"suggested_value": options.get(CONF_TOP_P)},
+                default=DEFAULT_TOP_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Required(
+                CONF_REQUEST_TIMEOUT,
+                description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
+                default=DEFAULT_REQUEST_TIMEOUT,
+            ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
+        })
 
     # sort the options
     global_order = [
@@ -975,6 +1044,7 @@ def local_llama_config_option_schema(
         CONF_TOOL_CALL_SUFFIX,
         CONF_MAX_TOOL_CALL_ITERATIONS,
         CONF_ENABLE_LEGACY_TOOL_CALLING,
+        CONF_TOOL_RESPONSE_AS_STRING,
         CONF_USE_GBNF_GRAMMAR,
         CONF_GBNF_GRAMMAR_FILE,
         # integration specific options
@@ -989,6 +1059,7 @@ def local_llama_config_option_schema(
         CONF_IN_CONTEXT_EXAMPLES_FILE,
         CONF_NUM_IN_CONTEXT_EXAMPLES,
         # backend specific options
+        CONF_LLAMACPP_CACHE_SIZE_MB,
         CONF_LLAMACPP_BATCH_SIZE,
         CONF_LLAMACPP_THREAD_COUNT,
         CONF_LLAMACPP_BATCH_THREAD_COUNT,

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import os
+import shutil
 from typing import Final
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
@@ -24,8 +25,8 @@ from .const import (
     CONF_BACKEND_TYPE,
     CONF_INSTALLED_LLAMACPP_VERSION,
     CONF_SELECTED_LANGUAGE,
-    CONF_OPENAI_API_KEY,
-    CONF_GENERIC_OPENAI_PATH,
+    CONF_API_KEY,
+    CONF_API_PATH,
     CONF_CHAT_MODEL, CONF_DOWNLOADED_MODEL_QUANTIZATION, CONF_DOWNLOADED_MODEL_FILE, CONF_REQUEST_TIMEOUT, CONF_MAX_TOOL_CALL_ITERATIONS,
     CONF_REFRESH_SYSTEM_PROMPT, CONF_REMEMBER_CONVERSATION, CONF_REMEMBER_NUM_INTERACTIONS, CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
     CONF_PROMPT, CONF_TEMPERATURE, CONF_TOP_K, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P, CONF_MAX_TOKENS,
@@ -43,6 +44,7 @@ from .const import (
     BACKEND_TYPE_GENERIC_OPENAI_RESPONSES,
     BACKEND_TYPE_LLAMA_CPP_SERVER,
     BACKEND_TYPE_OLLAMA,
+    BACKEND_TYPE_ANTHROPIC,
     BACKEND_TYPE_LLAMA_EXISTING_OLD,
     BACKEND_TYPE_LLAMA_HF_OLD,
 )
@@ -51,6 +53,7 @@ from .backends.llamacpp import LlamaCppClient
 from .backends.generic_openai import GenericOpenAIAPIClient, GenericOpenAIResponsesAPIClient
 from .backends.tailored_openai import TextGenerationWebuiClient, LlamaCppServerClient
 from .backends.ollama import OllamaAPIClient
+from .backends.anthropic import AnthropicAPIClient
 from .utils import get_llama_cpp_python_version, download_model_from_hf
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,9 +66,10 @@ BACKEND_TO_CLS: dict[str, type[LocalLLMClient]] = {
     BACKEND_TYPE_LLAMA_CPP: LlamaCppClient,
     BACKEND_TYPE_GENERIC_OPENAI: GenericOpenAIAPIClient,
     BACKEND_TYPE_GENERIC_OPENAI_RESPONSES: GenericOpenAIResponsesAPIClient,
-    BACKEND_TYPE_TEXT_GEN_WEBUI: TextGenerationWebuiClient, 
+    BACKEND_TYPE_TEXT_GEN_WEBUI: TextGenerationWebuiClient,
     BACKEND_TYPE_LLAMA_CPP_SERVER: LlamaCppServerClient,
     BACKEND_TYPE_OLLAMA: OllamaAPIClient,
+    BACKEND_TYPE_ANTHROPIC: AnthropicAPIClient,
 }
 
 async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> bool:
@@ -78,7 +82,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> 
 
     def create_client(backend_type):
         _LOGGER.debug("Creating Local LLM client of type %s", backend_type)
-        return BACKEND_TO_CLS[backend_type](hass, dict(entry.options))
+        # Merge entry.data and entry.options - data has connection info, options has model settings
+        client_options = {**dict(entry.data), **dict(entry.options)}
+        return BACKEND_TO_CLS[backend_type](hass, client_options)
 
     # create the agent in an executor job because the constructor calls `open()`
     backend_type = entry.data.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE)
@@ -96,9 +102,18 @@ async def _async_update_listener(hass: HomeAssistant, entry: LocalLLMConfigEntry
     await hass.config_entries.async_reload(entry.entry_id)
 
 async def async_unload_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> bool:
-    """Unload Ollama."""
+    """Unload the integration."""
     if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return False
+
+    if entry.data[CONF_BACKEND_TYPE] == BACKEND_TYPE_LLAMA_CPP:
+        # clean up any disk cache resources
+        def cleanup_cache_dir():
+            cache_dir = entry.data[CONF_CHAT_MODEL].strip().replace(" ", "_").lower()
+            full_path = os.path.join(hass.config.media_dirs.get("local", hass.config.path("media")), "kv_cache", cache_dir)
+            shutil.rmtree(full_path, ignore_errors=True)
+
+        await hass.async_add_executor_job(cleanup_cache_dir)
     hass.data[DOMAIN].pop(entry.entry_id)
     return True
 
@@ -115,7 +130,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: LocalLLMConfigE
     # Migrate the config_entry to be an entry + sub-entry
     if config_entry.version == 2:
         ENTRY_DATA_KEYS = [CONF_BACKEND_TYPE]
-        ENTRY_OPTIONS_KEYS = [CONF_SELECTED_LANGUAGE, CONF_HOST, CONF_PORT, CONF_SSL, CONF_OPENAI_API_KEY, CONF_GENERIC_OPENAI_PATH]
+        ENTRY_OPTIONS_KEYS = [CONF_SELECTED_LANGUAGE, CONF_HOST, CONF_PORT, CONF_SSL, CONF_API_KEY, CONF_API_PATH]
         SUBENTRY_KEYS = [
             CONF_CHAT_MODEL, CONF_DOWNLOADED_MODEL_QUANTIZATION, CONF_DOWNLOADED_MODEL_FILE, CONF_REQUEST_TIMEOUT, CONF_MAX_TOOL_CALL_ITERATIONS,
             CONF_REFRESH_SYSTEM_PROMPT, CONF_REMEMBER_CONVERSATION, CONF_REMEMBER_NUM_INTERACTIONS, CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
@@ -144,7 +159,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: LocalLLMConfigE
             entry_options[CONF_INSTALLED_LLAMACPP_VERSION] = await hass.async_add_executor_job(get_llama_cpp_python_version)
         else:
             # ensure all remote backends have a path set
-            entry_options[CONF_GENERIC_OPENAI_PATH] = entry_options.get(CONF_GENERIC_OPENAI_PATH, "")
+            entry_options[CONF_API_PATH] = entry_options.get(CONF_API_PATH, "")
         
         entry_title = BACKEND_TO_CLS[backend].get_name(entry_options)
 

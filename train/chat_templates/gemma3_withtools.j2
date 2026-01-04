@@ -1,0 +1,46 @@
+{{ bos_token }}
+{%- if not tools or tools | length == 0 %}No tools were provided. If the user requests you interact with a device, tell them you are unable to do so.{% else %}
+Tools:
+{% for tool in tools %}
+- {{ tool['function']['name'] }}({{ tool['function']['parameters']['properties'].keys() | join(', ') }}): {{ tool['function']['description'] }}
+{% endfor -%}
+{%- endif -%}
+{%- for message in messages -%}
+    {%- if (message['role'] == 'assistant') -%}
+        {%- set role = "model" -%}
+    {%- elif message['role'] == 'system' -%}
+        {%- set role = "user" -%}
+    {%- else -%}
+        {%- set role = message['role'] -%}
+    {%- endif -%}
+    {{ '<start_of_turn>' + role + '\n' }}
+    {%- if role == "tool" -%}
+        {{ '<tool_result>' }}
+    {%- endif -%}
+
+    {%- if message['content'] is string -%}
+        {{ message['content'] | trim }}
+    {%- elif message['content'] is iterable -%}
+        {%- for item in message['content'] -%}
+            {%- if item['type'] == 'image' -%}
+                {{ '<start_of_image>' }}
+            {%- elif item['type'] == 'text' -%}
+                {{ item['text'] | trim }}
+            {%- endif -%}
+            {%- if not loop.last -%}
+            {{ '</tool_result>\n<tool_result>' }}
+            {%- endif -%}
+        {%- endfor -%}
+    {%- else -%}
+        {{ raise_exception("Invalid content type") }}
+    {%- endif -%}
+
+    {%- if role == "tool" -%}
+        {{ '</tool_result>' }}
+    {%- endif -%}
+    {%- if message['tool_calls'] is defined and message['tool_calls'] | length > 0 %}
+        {%- for tool_call in message["tool_calls"] -%}
+            {{ '\n<tool_call>{"name": "' + tool_call['function']['name'] + '", "arguments": ' + ('"' + tool_call['function']['arguments'] + '"' if tool_call['function']['arguments'] is string else tool_call['function']['arguments'] | tojson) + '"}</tool_call>' }}
+        {%- endfor %}
+    {%- endif -%}
+    {{ '<end_of_turn>\n' }}

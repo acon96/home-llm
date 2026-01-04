@@ -22,7 +22,7 @@ from custom_components.llama_conversation.const import (
     CONF_TEXT_GEN_WEBUI_ADMIN_KEY,
     CONF_TEXT_GEN_WEBUI_CHAT_MODE,
     CONF_CONTEXT_LENGTH,
-    CONF_GENERIC_OPENAI_PATH,
+    CONF_API_PATH,
     DEFAULT_MAX_TOKENS,
     DEFAULT_TOP_K,
     DEFAULT_MIN_P,
@@ -53,7 +53,7 @@ class TextGenerationWebuiClient(GenericOpenAIAPIClient):
         host = client_options[CONF_HOST]
         port = client_options[CONF_PORT]
         ssl = client_options[CONF_SSL]
-        path = "/" + client_options[CONF_GENERIC_OPENAI_PATH]
+        path = "/" + client_options[CONF_API_PATH]
         return f"Text-Gen WebUI at '{format_url(hostname=host, port=port, ssl=ssl, path=path)}'"
 
     async def _async_load_model(self, entity_options: dict[str, Any]) -> None:
@@ -126,7 +126,7 @@ class LlamaCppServerClient(GenericOpenAIAPIClient):
         host = client_options[CONF_HOST]
         port = client_options[CONF_PORT]
         ssl = client_options[CONF_SSL]
-        path = "/" + client_options[CONF_GENERIC_OPENAI_PATH]
+        path = "/" + client_options[CONF_API_PATH]
         return f"Llama.cpp Server at '{format_url(hostname=host, port=port, ssl=ssl, path=path)}'"
     
     def _chat_completion_params(self, entity_options: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:

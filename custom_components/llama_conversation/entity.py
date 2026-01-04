@@ -261,12 +261,15 @@ class LocalLLMClient:
                     tool_content += content
 
                 if think_prefix in potential_block and not in_thinking:
+                    _LOGGER.debug("Entering thinking block")
                     in_thinking = True
                     last_5_tokens.clear()
                 elif think_suffix in potential_block and in_thinking:
+                    _LOGGER.debug("Exiting thinking block")
                     in_thinking = False
                     content = content.replace(think_suffix, "").strip()
                 elif tool_prefix in potential_block and not in_tool_call:
+                    _LOGGER.debug("Entering tool call block")
                     in_tool_call = True
                     last_5_tokens.clear()
                 elif tool_suffix in potential_block and in_tool_call:
@@ -288,7 +291,12 @@ class LocalLLMClient:
                         if isinstance(raw_tool_call, str):
                             tool_call, to_say = parse_raw_tool_call(raw_tool_call, agent_id)
                         else:
-                            tool_call, to_say = parse_raw_tool_call(raw_tool_call["function"], agent_id)
+                            # try multiple dict key names
+                            function_content = raw_tool_call.get("function") or raw_tool_call.get("function_call") or raw_tool_call.get("tool")
+                            if not function_content:
+                                _LOGGER.warning("Received tool call dict without 'function', 'function_call' or 'tool' key: %s", raw_tool_call)
+                                continue
+                            tool_call, to_say = parse_raw_tool_call(function_content, agent_id)
 
                         if tool_call:
                             _LOGGER.debug("Tool call parsed: %s", tool_call)
@@ -301,6 +309,20 @@ class LocalLLMClient:
 
             if not in_thinking and not in_tool_call and (cur_match_length == 0 or result.tool_calls):
                 yield result
+
+        if in_tool_call and tool_content:
+            # flush any unclosed tool calls because using the tool_suffix as a stop token can
+            # cause the tool_suffix to be omitted when the model streams output
+            tool_block = tool_content.strip().removeprefix(tool_prefix)
+            _LOGGER.debug("Raw tool block extracted at end: %s", tool_block)
+            tool_call, to_say = parse_raw_tool_call(tool_block, agent_id)
+            if tool_call:
+                _LOGGER.debug("Tool call parsed at end: %s", tool_call)
+                yield TextGenerationResult(
+                    response=to_say,
+                    response_streamed=True,
+                    tool_calls=[tool_call]
+                )
 
     async def _async_parse_completion(
             self, 
@@ -336,8 +358,12 @@ class LocalLLMClient:
                     if isinstance(raw_tool_call, str):
                         tool_call, to_say = parse_raw_tool_call(raw_tool_call, agent_id)
                     else:
-                        tool_call, to_say = parse_raw_tool_call(raw_tool_call["function"], agent_id)
-
+                        # try multiple dict key names
+                        function_content = raw_tool_call.get("function") or raw_tool_call.get("function_call") or raw_tool_call.get("tool")
+                        if not function_content:
+                            _LOGGER.warning("Received tool call dict without 'function', 'function_call' or 'tool' key: %s", raw_tool_call)
+                            continue
+                        tool_call, to_say = parse_raw_tool_call(function_content, agent_id)
                     if tool_call:
                         _LOGGER.debug("Tool call parsed: %s", tool_call)
                         parsed_tool_calls.append(tool_call)
@@ -471,7 +497,6 @@ class LocalLLMClient:
         entities_to_expose = self._async_get_exposed_entities()
 
         extra_attributes_to_expose = entity_options.get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE)
-        enable_legacy_tool_calling = entity_options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
         tool_call_prefix = entity_options.get(CONF_TOOL_CALL_PREFIX, DEFAULT_TOOL_CALL_PREFIX)
         tool_call_suffix = entity_options.get(CONF_TOOL_CALL_SUFFIX, DEFAULT_TOOL_CALL_SUFFIX)
 
@@ -545,21 +570,16 @@ class LocalLLMClient:
             "tool_call_suffix": tool_call_suffix,
         }
 
-        if enable_legacy_tool_calling:
-            if llm_api:
-                tools = []
-                for tool in llm_api.tools:
-                    tools.append(f"{tool.name}({','.join(flatten_vol_schema(tool.parameters))})")
-                render_variables["tools"] = tools
-                render_variables["formatted_tools"] = ", ".join(tools)
-            else:
-                message = "No tools were provided. If the user requests you interact with a device, tell them you are unable to do so."
-                render_variables["tools"] = [message]
-                render_variables["formatted_tools"] = message
+        if llm_api:
+            tools = []
+            for tool in llm_api.tools:
+                tools.append(f"{tool.name}({','.join(flatten_vol_schema(tool.parameters))})")
+            render_variables["tools"] = tools
+            render_variables["formatted_tools"] = ", ".join(tools)
         else:
-            # Tools are passed via the API not the prompt
-            render_variables["tools"] = []
-            render_variables["formatted_tools"] = ""
+            message = "No tools were provided. If the user requests you interact with a device, tell them you are unable to do so."
+            render_variables["tools"] = [message]
+            render_variables["formatted_tools"] = message
 
         # only pass examples if there are loaded examples + an API was exposed
         if self.in_context_examples and llm_api:

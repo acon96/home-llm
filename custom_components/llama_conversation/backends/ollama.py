@@ -27,12 +27,13 @@ from custom_components.llama_conversation.const import (
     CONF_MIN_P,
     CONF_ENABLE_THINK_MODE,
     CONF_REQUEST_TIMEOUT,
-    CONF_OPENAI_API_KEY,
-    CONF_GENERIC_OPENAI_PATH,
+    CONF_API_KEY,
+    CONF_API_PATH,
     CONF_OLLAMA_KEEP_ALIVE_MIN,
     CONF_OLLAMA_JSON_MODE,
     CONF_CONTEXT_LENGTH,
     CONF_ENABLE_LEGACY_TOOL_CALLING,
+    CONF_TOOL_RESPONSE_AS_STRING,
     CONF_RESPONSE_JSON_SCHEMA,
     DEFAULT_MAX_TOKENS,
     DEFAULT_TEMPERATURE,
@@ -42,11 +43,12 @@ from custom_components.llama_conversation.const import (
     DEFAULT_MIN_P,
     DEFAULT_ENABLE_THINK_MODE,
     DEFAULT_REQUEST_TIMEOUT,
-    DEFAULT_GENERIC_OPENAI_PATH,
+    DEFAULT_API_PATH,
     DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
     DEFAULT_OLLAMA_JSON_MODE,
     DEFAULT_CONTEXT_LENGTH,
     DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
+    DEFAULT_TOOL_RESPONSE_AS_STRING,
 )
 
 from custom_components.llama_conversation.entity import LocalLLMClient, TextGenerationResult
@@ -75,14 +77,14 @@ class OllamaAPIClient(LocalLLMClient):
 
     def __init__(self, hass: HomeAssistant, client_options: dict[str, Any]) -> None:
         super().__init__(hass, client_options)
-        base_path = _normalize_path(client_options.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH))
+        base_path = _normalize_path(client_options.get(CONF_API_PATH, DEFAULT_API_PATH))
         self.api_host = format_url(
             hostname=client_options[CONF_HOST],
             port=client_options[CONF_PORT],
             ssl=client_options[CONF_SSL],
             path=base_path,
         )
-        self.api_key = client_options.get(CONF_OPENAI_API_KEY) or None
+        self.api_key = client_options.get(CONF_API_KEY) or None
         self._headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else None
         self._ssl_context = _build_default_ssl_context() if client_options.get(CONF_SSL) else None
 
@@ -103,13 +105,13 @@ class OllamaAPIClient(LocalLLMClient):
         host = client_options[CONF_HOST]
         port = client_options[CONF_PORT]
         ssl = client_options[CONF_SSL]
-        path = _normalize_path(client_options.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH))
+        path = _normalize_path(client_options.get(CONF_API_PATH, DEFAULT_API_PATH))
         return f"Ollama at '{format_url(hostname=host, port=port, ssl=ssl, path=path)}'"
 
     @staticmethod
     async def async_validate_connection(hass: HomeAssistant, user_input: Dict[str, Any]) -> str | None:
-        api_key = user_input.get(CONF_OPENAI_API_KEY)
-        base_path = _normalize_path(user_input.get(CONF_GENERIC_OPENAI_PATH, DEFAULT_GENERIC_OPENAI_PATH))
+        api_key = user_input.get(CONF_API_KEY)
+        base_path = _normalize_path(user_input.get(CONF_API_PATH, DEFAULT_API_PATH))
         timeout_config: httpx.Timeout | float | None = httpx.Timeout(5)
 
         verify_context = None
@@ -194,7 +196,8 @@ class OllamaAPIClient(LocalLLMClient):
         typical_p = entity_options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)
         timeout = entity_options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
         keep_alive = entity_options.get(CONF_OLLAMA_KEEP_ALIVE_MIN, DEFAULT_OLLAMA_KEEP_ALIVE_MIN)
-        legacy_tool_calling = entity_options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
+        enable_legacy_tool_calling = entity_options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
+        tool_response_as_string = entity_options.get(CONF_TOOL_RESPONSE_AS_STRING, DEFAULT_TOOL_RESPONSE_AS_STRING)
         think_mode = entity_options.get(CONF_ENABLE_THINK_MODE, DEFAULT_ENABLE_THINK_MODE)
         json_mode = entity_options.get(CONF_OLLAMA_JSON_MODE, DEFAULT_OLLAMA_JSON_MODE)
 
@@ -208,9 +211,9 @@ class OllamaAPIClient(LocalLLMClient):
             "min_p": entity_options.get(CONF_MIN_P, DEFAULT_MIN_P),
         }
 
-        messages = get_oai_formatted_messages(conversation, tool_args_to_str=False)
+        messages = get_oai_formatted_messages(conversation, tool_args_to_str=False, tool_result_to_str=tool_response_as_string)
         tools = None
-        if llm_api and not legacy_tool_calling:
+        if llm_api and not enable_legacy_tool_calling:
             tools = get_oai_formatted_tools(llm_api, self._async_get_all_exposed_domains())
         keep_alive_payload = self._format_keep_alive(keep_alive)
 
