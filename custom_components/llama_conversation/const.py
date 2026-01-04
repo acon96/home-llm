@@ -115,7 +115,11 @@ BACKEND_TYPE_GENERIC_OPENAI = "generic_openai"
 BACKEND_TYPE_GENERIC_OPENAI_RESPONSES = "generic_openai_responses"
 BACKEND_TYPE_LLAMA_CPP_SERVER = "llama_cpp_server"
 BACKEND_TYPE_OLLAMA = "ollama"
+BACKEND_TYPE_ANTHROPIC = "anthropic"
 DEFAULT_BACKEND_TYPE = BACKEND_TYPE_LLAMA_CPP
+
+# Anthropic-compatible API configuration
+CONF_ANTHROPIC_BASE_URL = "anthropic_base_url"
 CONF_INSTALLED_LLAMACPP_VERSION = "installed_llama_cpp_version"
 CONF_SELECTED_LANGUAGE = "selected_language"
 CONF_SELECTED_LANGUAGE_OPTIONS = [ "en", "de", "fr", "es", "pl"]

@@ -152,6 +152,8 @@ from .const import (
     BACKEND_TYPE_GENERIC_OPENAI_RESPONSES,
     BACKEND_TYPE_LLAMA_CPP_SERVER,
     BACKEND_TYPE_OLLAMA,
+    BACKEND_TYPE_ANTHROPIC,
+    CONF_ANTHROPIC_BASE_URL,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT,
     TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT,
@@ -186,7 +188,8 @@ def pick_backend_schema(backend_type=None, selected_language=None):
                     BACKEND_TYPE_GENERIC_OPENAI,
                     BACKEND_TYPE_GENERIC_OPENAI_RESPONSES,
                     BACKEND_TYPE_LLAMA_CPP_SERVER,
-                    BACKEND_TYPE_OLLAMA
+                    BACKEND_TYPE_OLLAMA,
+                    BACKEND_TYPE_ANTHROPIC,
                 ],
                 translation_key=CONF_BACKEND_TYPE,
                 multiple=False,
@@ -201,11 +204,22 @@ def pick_backend_schema(backend_type=None, selected_language=None):
         }
     )
 
-def remote_connection_schema(backend_type: str, *, host=None, port=None, ssl=None, selected_path=None):
+def remote_connection_schema(backend_type: str, *, host=None, port=None, ssl=None, selected_path=None, api_key=None, base_url=None):
 
     extra = {}
     default_port = DEFAULT_PORT
     default_path = DEFAULT_GENERIC_OPENAI_PATH
+
+    # Anthropic uses a different schema - base URL + API key only (no host/port/ssl)
+    if backend_type == BACKEND_TYPE_ANTHROPIC:
+        return vol.Schema({
+            vol.Required(CONF_ANTHROPIC_BASE_URL, default=base_url if base_url else ""): TextSelector(
+                TextSelectorConfig()
+            ),
+            vol.Required(CONF_OPENAI_API_KEY, default=api_key if api_key else ""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.PASSWORD)
+            ),
+        })
 
     if backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
         extra[vol.Optional(CONF_TEXT_GEN_WEBUI_ADMIN_KEY)] = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
@@ -297,8 +311,9 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
                         )
                 else:
                     self.internal_step = "configure_connection"
+                    schema = remote_connection_schema(self.client_config[CONF_BACKEND_TYPE])
                     return self.async_show_form(
-                        step_id="user", data_schema=remote_connection_schema(self.client_config[CONF_BACKEND_TYPE]), last_step=True
+                        step_id="user", data_schema=schema, last_step=True
                     )
             elif self.install_wheel_error:
                 errors["base"] = str(self.install_wheel_error)
@@ -339,31 +354,46 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
             self.internal_step = next_step
             return self.async_show_progress_done(next_step_id="finish")
         elif self.internal_step == "configure_connection":
+            backend = self.client_config[CONF_BACKEND_TYPE]
             if user_input:
                 self.client_config.update(user_input)
 
-                hostname = user_input.get(CONF_HOST, "")
-                if not is_valid_hostname(hostname):
-                    errors["base"] = "invalid_hostname"
-                else:
-                    # validate remote connections
-                    connect_err = await BACKEND_TO_CLS[self.client_config[CONF_BACKEND_TYPE]].async_validate_connection(self.hass, self.client_config)
-
+                # Anthropic doesn't use hostname - skip hostname validation
+                if backend == BACKEND_TYPE_ANTHROPIC:
+                    connect_err = await BACKEND_TO_CLS[backend].async_validate_connection(self.hass, self.client_config)
                     if connect_err:
                         errors["base"] = "failed_to_connect"
                         description_placeholders["exception"] = str(connect_err)
                     else:
                         return await self.async_step_finish()
-            
+                else:
+                    hostname = user_input.get(CONF_HOST, "")
+                    if not is_valid_hostname(hostname):
+                        errors["base"] = "invalid_hostname"
+                    else:
+                        # validate remote connections
+                        connect_err = await BACKEND_TO_CLS[backend].async_validate_connection(self.hass, self.client_config)
+
+                        if connect_err:
+                            errors["base"] = "failed_to_connect"
+                            description_placeholders["exception"] = str(connect_err)
+                        else:
+                            return await self.async_step_finish()
+
+            # Use appropriate schema for the backend type
+            schema = remote_connection_schema(
+                backend,
+                host=self.client_config.get(CONF_HOST),
+                port=self.client_config.get(CONF_PORT),
+                ssl=self.client_config.get(CONF_SSL),
+                selected_path=self.client_config.get(CONF_GENERIC_OPENAI_PATH),
+                api_key=self.client_config.get(CONF_OPENAI_API_KEY),
+                base_url=self.client_config.get(CONF_ANTHROPIC_BASE_URL),
+            )
+
             return self.async_show_form(
-                step_id="user", 
-                data_schema=remote_connection_schema(
-                    self.client_config[CONF_BACKEND_TYPE],
-                    host=self.client_config.get(CONF_HOST),
-                    port=self.client_config.get(CONF_PORT),
-                    ssl=self.client_config.get(CONF_SSL),
-                    selected_path=self.client_config.get(CONF_GENERIC_OPENAI_PATH)
-                ), 
+                step_id="user",
+                data_schema=schema,
                 errors=errors,
                 description_placeholders=description_placeholders,
                 last_step=True
@@ -477,7 +507,9 @@ class OptionsFlow(BaseOptionsFlow):
                 host=client_config.get(CONF_HOST),
                 port=client_config.get(CONF_PORT),
                 ssl=client_config.get(CONF_SSL),
-                selected_path=client_config.get(CONF_GENERIC_OPENAI_PATH)
+                selected_path=client_config.get(CONF_GENERIC_OPENAI_PATH),
+                api_key=client_config.get(CONF_OPENAI_API_KEY),
+                base_url=client_config.get(CONF_ANTHROPIC_BASE_URL),
             )
 
             return self.async_show_form(
@@ -965,6 +997,29 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options.get(CONF_OLLAMA_KEEP_ALIVE_MIN)},
                 default=DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
             ): NumberSelector(NumberSelectorConfig(min=-1, max=1440, step=1, unit_of_measurement=UnitOfTime.MINUTES, mode=NumberSelectorMode.BOX)),
+        })
+    elif backend_type == BACKEND_TYPE_ANTHROPIC:
+        result.update({
+            vol.Required(
+                CONF_MAX_TOKENS,
+                description={"suggested_value": options.get(CONF_MAX_TOKENS)},
+                default=DEFAULT_MAX_TOKENS,
+            ): NumberSelector(NumberSelectorConfig(min=1, max=8192, step=1)),
+            vol.Required(
+                CONF_TOP_K,
+                description={"suggested_value": options.get(CONF_TOP_K)},
+                default=DEFAULT_TOP_K,
+            ): NumberSelector(NumberSelectorConfig(min=1, max=256, step=1)),
+            vol.Required(
+                CONF_TOP_P,
+                description={"suggested_value": options.get(CONF_TOP_P)},
+                default=DEFAULT_TOP_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Required(
+                CONF_REQUEST_TIMEOUT,
+                description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
+                default=DEFAULT_REQUEST_TIMEOUT,
+            ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
         })
 
     # sort the options

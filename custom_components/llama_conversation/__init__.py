@@ -44,6 +44,7 @@ from .const import (
     BACKEND_TYPE_GENERIC_OPENAI_RESPONSES,
     BACKEND_TYPE_LLAMA_CPP_SERVER,
     BACKEND_TYPE_OLLAMA,
+    BACKEND_TYPE_ANTHROPIC,
     BACKEND_TYPE_LLAMA_EXISTING_OLD,
     BACKEND_TYPE_LLAMA_HF_OLD,
 )
@@ -52,6 +53,7 @@ from .backends.llamacpp import LlamaCppClient
 from .backends.generic_openai import GenericOpenAIAPIClient, GenericOpenAIResponsesAPIClient
 from .backends.tailored_openai import TextGenerationWebuiClient, LlamaCppServerClient
 from .backends.ollama import OllamaAPIClient
+from .backends.anthropic import AnthropicAPIClient
 from .utils import get_llama_cpp_python_version, download_model_from_hf
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,9 +66,10 @@ BACKEND_TO_CLS: dict[str, type[LocalLLMClient]] = {
     BACKEND_TYPE_LLAMA_CPP: LlamaCppClient,
     BACKEND_TYPE_GENERIC_OPENAI: GenericOpenAIAPIClient,
     BACKEND_TYPE_GENERIC_OPENAI_RESPONSES: GenericOpenAIResponsesAPIClient,
-    BACKEND_TYPE_TEXT_GEN_WEBUI: TextGenerationWebuiClient, 
+    BACKEND_TYPE_TEXT_GEN_WEBUI: TextGenerationWebuiClient,
     BACKEND_TYPE_LLAMA_CPP_SERVER: LlamaCppServerClient,
     BACKEND_TYPE_OLLAMA: OllamaAPIClient,
+    BACKEND_TYPE_ANTHROPIC: AnthropicAPIClient,
 }
 
 async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> bool:
@@ -79,7 +82,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> 
 
     def create_client(backend_type):
         _LOGGER.debug("Creating Local LLM client of type %s", backend_type)
-        return BACKEND_TO_CLS[backend_type](hass, dict(entry.options))
+        # Merge entry.data and entry.options - data has connection info, options has model settings
+        client_options = {**dict(entry.data), **dict(entry.options)}
+        return BACKEND_TO_CLS[backend_type](hass, client_options)
 
     # create the agent in an executor job because the constructor calls `open()`
     backend_type = entry.data.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE)
