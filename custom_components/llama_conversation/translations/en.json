@@ -373,12 +373,12 @@
         "model_backend": {
             "options": {
                 "llama_cpp_python": "Llama.cpp",
-                "generic_openai": "Generic OpenAI Compatible API",
-                "generic_openai_responses": "Generic OpenAPI Compatible Responses API",
+                "generic_openai": "OpenAI Compatible 'Conversations' API",
+                "generic_openai_responses": "OpenAPI Compatible 'Responses' API",
                 "llama_cpp_server": "Llama.cpp Server",
                 "ollama": "Ollama API",
                 "text-generation-webui_api": "text-generation-webui API",
-                "anthropic": "Anthropic API"
+                "anthropic": "Anthropic Compatible 'Messages' API"
             }
         },
         "text_generation_webui_chat_mode": {
