@@ -1,115 +1,157 @@
 # Home LLM
-This project provides the required "glue" components to control your Home Assistant installation with a **completely local** Large Language Model acting as a personal assistant. The goal is to provide a drop in solution to be used as a "conversation agent" component by Home Assistant.  The 2 main pieces of this solution are the Home LLM model and Local LLM Conversation integration.
+
+Control your Home Assistant smart home with a **completely local** Large Language Model. No cloud services and no subscriptions needed. Just privacy-focused AI running entirely on your own hardware.
+
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?category=Integration&repository=home-llm&owner=acon96)
+
+## What is Home LLM?
+
+Home LLM is a complete solution for adding AI-powered voice and chat control to Home Assistant. It consists of two parts:
+
+1. **Local LLM Integration** – A Home Assistant custom component that connects local language models to your smart home
+2. **Home Models** – Small, efficient AI models fine-tuned specifically for smart home control
+
+### Key Features
+
+- 🏠 **Fully Local** – Everything runs on your hardware. Your data never leaves your control (unless you want to!)
+- 🗣️ **Voice & Chat Control** – Use as a conversation agent with voice assistants or chat interfaces
+- 🤖 **AI Task Automation** – Generate dynamic content and structured data for automations
+- 🌍 **Multi-Language Support** – Built-in support for English, German, French, Spanish, and Polish (better translations are welcome!)
+- ⚡ **Runs on Low-Power Devices** – Models work on Raspberry Pi and other modest hardware -- no GPU required!
+- 🔌 **Flexible Backends** – Run models locally as part of Home Assistant **or** connect to external model providers
 
 ## Quick Start
-Please see the [Setup Guide](./docs/Setup.md) for more information on installation.
+
+See the [Setup Guide](./docs/Setup.md) for detailed installation instructions.
+
+**Requirements:** Home Assistant 2025.7.0 or newer
+
+---
 
 ## Local LLM Integration
-**The latest version of this integration requires Home Assistant 2025.7.0 or newer**
 
-In order to integrate with Home Assistant, we provide a custom component that exposes the locally running LLM as a "conversation agent" or as an "ai task handler".
+The integration connects language models to Home Assistant, enabling them to understand your requests and control your smart devices.
 
-This component can be interacted with in a few ways:  
-- using a chat interface so you can chat with it.
-- integrating with Speech-to-Text and Text-to-Speech addons so you can just speak to it.
-- using automations or scripts to trigger "ai tasks"; these process input data with a prompt, and return structured data that can be used in further automations.
+### Supported Backends
 
-The integration can either run the model in a few ways:
-1. Directly as part of the Home Assistant software using llama-cpp-python
-2. On a separate machine using one of the following backends:
-    - [Ollama](https://ollama.com/) (easier)
-    - [LocalAI](https://localai.io/) via the Generic OpenAI backend (easier)
-    - [oobabooga/text-generation-webui](https://github.com/oobabooga/text-generation-webui) project (advanced)
-    - [llama.cpp example server](https://github.com/ggml-org/llama.cpp/tree/master/tools/server#readme) (advanced)
+Choose how and where you want to run your models:
 
-## Home LLM Model
-The "Home" models are a fine tuning of various Large Languages Models that are under 5B parameters.  The models are able to control devices in the user's house as well as perform basic question and answering.  The fine tuning dataset is a [custom synthetic dataset](./data) designed to teach the model function calling based on the device information in the context.
+| Backend                                                                                             | Best For                                                                      |
+|-----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
+| **Llama.cpp** (built-in)                                                                            | Running models directly in Home Assistant                                     |
+| **[Ollama](https://ollama.com/)**                                                                   | Easy setup on a separate GPU machine                                          |
+| **[Generic OpenAI API](https://platform.openai.com/docs/api-reference/conversations/create)**       | LM Studio, LocalAI, vLLM, and other OpenAI-compatible servers                 |
+| **[llama.cpp server](https://github.com/ggml-org/llama.cpp/tree/master/tools/server)**              | Heterogeneous (non-uniform) GPU compute setups, including CPU + GPU inference |
+| **[OpenAI 'Responses' Style API](https://platform.openai.com/docs/api-reference/responses/create)** | Cloud services supporting the 'responses' style API                           |
+| **[Anthropic 'Messages' Style API](https://platform.claude.com/docs/en/api/messages)**              | Cloud services supporting the 'messages' style API                            |
+| **[text-generation-webui](https://github.com/oobabooga/text-generation-webui)**                     | Advanced users with existing setups                                           |
 
-The latest models can be found on HuggingFace:
+> NOTE: When utilizing **external** APIs or model providers, your data will be transmitted over the internet and shared with the respective service providers. Ensure you understand the privacy implications of using these third-party services, since they will be able to see the status of all exposed entities in your Home Assistant instance, which can potentially include your current location.
 
-**Llama 3.2**:  
-3B: https://huggingface.co/acon96/Home-Llama-3.2-3B  
-1B: TBD  
+### Supported Device Types
 
-**Qwen 3**:  
-0.6B: TBD  
-1.5B: TBD  
+The integration can control: **lights, switches, fans, covers, locks, climate, media players, vacuums, buttons, timers, todo lists, and scripts**
 
-**Gemma3**:  
-1B: TBD
-270M: https://huggingface.co/acon96/Home-FunctionGemma-270m
+### Using the Integration
+
+**As a Conversation Agent:**
+- Chat with your assistant through the Home Assistant UI
+- Connect to voice pipelines with Speech-to-Text and Text-to-Speech
+- Supports voice streaming for faster responses
+
+**As an AI Task Handler:**
+- Create automations that use AI to process data and generate structured responses
+- Perfect for dynamic content generation, data extraction, and intelligent decision making
+- See [AI Tasks documentation](./docs/AI%20Tasks.md) for examples
+
+---
+
+## Home LLM Models
+
+The "Home" models are small language models (under 5B parameters) fine-tuned specifically for smart home control. They understand natural language commands and translate them into Home Assistant service calls.
+
+### Latest Models
+
+| Model Family  | Size | Link                                                                                    |
+|---------------|------|-----------------------------------------------------------------------------------------|
+| **Llama 3.2** | 3B   | [acon96/Home-Llama-3.2-3B](https://huggingface.co/acon96/Home-Llama-3.2-3B)             |
+| **Gemma**     | 270M | [acon96/Home-FunctionGemma-270m](https://huggingface.co/acon96/Home-FunctionGemma-270m) |
 
 <details>
+<summary>Previous Model Versions</summary>
 
-<summary>Old Models</summary>  
+**Stable Models:**
+- 3B v3 (StableLM-Zephyr-3B): [acon96/Home-3B-v3-GGUF](https://huggingface.co/acon96/Home-3B-v3-GGUF)
+- 1B v3 (TinyLlama-1.1B): [acon96/Home-1B-v3-GGUF](https://huggingface.co/acon96/Home-1B-v3-GGUF)
+- 3B v2 (Phi-2): [acon96/Home-3B-v2-GGUF](https://huggingface.co/acon96/Home-3B-v2-GGUF)
+- 1B v2 (Phi-1.5): [acon96/Home-1B-v2-GGUF](https://huggingface.co/acon96/Home-1B-v2-GGUF)
+- 1B v1 (Phi-1.5): [acon96/Home-1B-v1-GGUF](https://huggingface.co/acon96/Home-1B-v1-GGUF)
 
-3B v3 (Based on StableLM-Zephyr-3B): https://huggingface.co/acon96/Home-3B-v3-GGUF  (Zephyr prompt format)  
-1B v3 (Based on TinyLlama-1.1B): https://huggingface.co/acon96/Home-1B-v3-GGUF  (Zephyr prompt format)  
-3B v2 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v2-GGUF  (ChatML prompt format)  
-1B v2 (Based on Phi-1.5): https://huggingface.co/acon96/Home-1B-v2-GGUF  (ChatML prompt format)  
-1B v1 (Based on Phi-1.5): https://huggingface.co/acon96/Home-1B-v1-GGUF  (ChatML prompt format)  
+**Multilingual Experiments:**
+- German, French, & Spanish (3B): [acon96/stablehome-multilingual-experimental](https://huggingface.co/acon96/stablehome-multilingual-experimental)
+- Polish (1B): [acon96/tinyhome-polish-experimental](https://huggingface.co/acon96/tinyhome-polish-experimental)
 
-Non English experiments:  
-German, French, & Spanish (3B): https://huggingface.co/acon96/stablehome-multilingual-experimental  
-Polish (1B): https://huggingface.co/acon96/tinyhome-polish-experimental  
-
-NOTE: The models below are only compatible with version 0.2.17 and older!  
-3B v1 (Based on Phi-2): https://huggingface.co/acon96/Home-3B-v1-GGUF  (ChatML prompt format)  
-
+> **Note:** Models v1 (3B) and earlier are only compatible with integration version 0.2.17 and older.
 
 </details>
 
-The model is quantized using Llama.cpp in order to enable running the model in super low resource environments that are common with Home Assistant installations such as Raspberry Pis.
+### Using Other Models
 
-### Synthetic Dataset
-The synthetic dataset is aimed at covering basic day to day operations in home assistant such as turning devices on and off.
-The supported entity types are: light, fan, cover, lock, media_player, climate, switch
+Don't have dedicated hardware? You can use any instruction-tuned model with **in-context learning (ICL)**. The integration provides examples that teach general-purpose models (like Qwen3, Llama 3, Mistral) how to control your smart home. See the [Setup Guide](./docs/Setup.md) for configuration details.
 
-The dataset is available on HuggingFace: https://huggingface.co/datasets/acon96/Home-Assistant-Requests-V2  
-The source for the dataset is in the [data](/data) of this repository.
+### Training Your Own
 
-### Training
+The fine-tuning dataset and training scripts are included in this repository:
+- **Dataset:** [Home-Assistant-Requests-V2](https://huggingface.co/datasets/acon96/Home-Assistant-Requests-V2) on HuggingFace
+- **Source:** [data/](./data) directory
+- **Training:** See [train/README.md](./train/README.md)
 
-If you want to fine-tune a model yourself, see the details on how to do it in the [Training README](./train/README.md).
+---
+
+## Documentation
+
+- [Setup Guide](./docs/Setup.md) – Installation and configuration
+- [Backend Configuration](./docs/Backend%20Configuration.md) – Detailed backend options
+- [Model Prompting](./docs/Model%20Prompting.md) – Customize system prompts
+- [AI Tasks](./docs/AI%20Tasks.md) – Using AI in automations
+
+---
 
 ## Version History
-| Version | Description                                                                                                                                                                                                                                           |
-|---------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| v0.4.6  | New dataset supporting proper tool calling, Add Anthropic "messages" style API support, Add on-disk caching for Llama.cpp backend                                                                                                                     |
-| v0.4.5  | Add support for AI Task entities, Replace custom Ollama API implementation with the official `ollama-python` package to avoid future compatibility issues, Support multiple LLM APIs at once, Fix issues in tool call handling for various backends   | 
-| v0.4.4  | Fix issue with OpenAI backends appending `/v1` to all URLs, and fix an issue with tools being serialized into the system prompt.                                                                                                                      |
-| v0.4.3  | Fix an issue with the integration not creating model configs properly during setup                                                                                                                                                                    |
-| v0.4.2  | Fix the following issues: not correctly setting default model settings during initial setup, non-integers being allowed in numeric config fields, being too strict with finish_reason requirements, and not letting the user clear the active LLM API |
-| v0.4.1  | Fix an issue with using Llama.cpp models downloaded from HuggingFace                                                                                                                                                                                  |
-| v0.4    | Rewrite integration to support tool calling models/agentic tool use loop, voice streaming, multiple config sub-entries per backend, and dynamic llama.cpp processor selection                                                                         |
-| v0.3.11 | Bug-fixes and llama.cpp version update                                                                                                                                                                                                                |
-| v0.3.10 | Add support for the OpenAI "Responses" API endpoint, Update llama.cpp version, Fix for breaking change in HA version 2025.7.0                                                                                                                         |
-| v0.3.9  | Update llama.cpp version, fix installation bugs, fix conversation history not working                                                                                                                                                                 |
-| v0.3.8  | Update llama.cpp, remove think blocks from "thinking" models, fix wheel detection for some Intel CPUs, Fixes for compatibility with latest Home Assistant version (2025.4), other small bug fixes                                                     |
-| v0.3.7  | Update llama.cpp version to support newer models, Update minimum Home Assistant version to 2024.12.3, Add German In-Context Learning examples, Fix multi-turn use, Fix an issue with webcolors                                                        | 
-| v0.3.6  | Small llama.cpp backend fixes                                                                                                                                                                                                                         |
-| v0.3.5  | Fix for llama.cpp backend installation, Fix for Home LLM v1-3 API parameters, add Polish ICL examples                                                                                                                                                 |
-| v0.3.4  | Significantly improved language support including full Polish translation, Update bundled llama-cpp-python to support new models, various bug fixes                                                                                                   |
-| v0.3.3  | Improvements to the Generic OpenAI Backend, improved area handling, fix issue using RGB colors, remove EOS token from responses, replace requests dependency with aiohttp included with Home Assistant                                                |
-| v0.3.2  | Fix for exposed script entities causing errors, fix missing GBNF error, trim whitespace from model output                                                                                                                                             |
-| v0.3.1  | Adds basic area support in prompting, Fix for broken requirements, fix for issue with formatted tools, fix custom API not registering on startup properly                                                                                             |
-| v0.3    | Adds support for Home Assistant LLM APIs, improved model prompting and tool formatting options, and automatic detection of GGUF quantization levels on HuggingFace                                                                                    |
-| v0.2.17 | Disable native llama.cpp wheel optimizations, add Command R prompt format                                                                                                                                                                             |
-| v0.2.16 | Fix for missing huggingface_hub package preventing startup                                                                                                                                                                                            |
-| v0.2.15 | Fix startup error when using llama.cpp backend and add flash attention to llama.cpp backend                                                                                                                                                           |
-| v0.2.14 | Fix llama.cpp wheels + AVX detection                                                                                                                                                                                                                  |
-| v0.2.13 | Add support for Llama 3, build llama.cpp wheels that are compatible with non-AVX systems, fix an error with exposing script entities, fix multiple small Ollama backend issues, and add basic multi-language support                                  |
-| v0.2.12 | Fix cover ICL examples, allow setting number of ICL examples, add min P and typical P sampler options, recommend models during setup, add JSON mode for Ollama backend, fix missing default options                                                   |
-| v0.2.11 | Add prompt caching, expose llama.cpp runtime settings, build llama-cpp-python wheels using GitHub actions, and install wheels directly from GitHub                                                                                                    |
-| v0.2.10 | Allow configuring the model parameters during initial setup, attempt to auto-detect defaults for recommended models, Fix to allow lights to be set to max brightness                                                                                  |
-| v0.2.9  | Fix HuggingFace Download, Fix llama.cpp wheel installation, Fix light color changing, Add in-context-learning support                                                                                                                                 |
-| v0.2.8  | Fix ollama model names with colons                                                                                                                                                                                                                    |
-| v0.2.7  | Publish model v3, Multiple Ollama backend improvements, Updates for HA 2024.02, support for voice assistant aliases                                                                                                                                   |
-| v0.2.6  | Bug fixes, add options for limiting chat history, HTTPS endpoint support, added zephyr prompt format.                                                                                                                                                 |
-| v0.2.5  | Fix Ollama max tokens parameter, fix GGUF download from Hugging Face, update included llama-cpp-python to 0.2.32, and add parameters to function calling for dataset + component, & model update                                                      |
-| v0.2.4  | Fix API key auth on model load for text-generation-webui, and add support for Ollama API backend                                                                                                                                                      |
-| v0.2.3  | Fix API key auth, Support chat completion endpoint, and refactor to make it easier to add more remote backends                                                                                                                                        |
-| v0.2.2  | Fix options window after upgrade, fix training script for new Phi model format, and release new models                                                                                                                                                |
-| v0.2.1  | Properly expose generation parameters for each backend, handle config entry updates without reloading, support remote backends with an API key                                                                                                        |
-| v0.2    | Bug fixes, support more backends, support for climate + switch devices, JSON style function calling with parameters, GBNF grammars                                                                                                                    |
-| v0.1    | Initial Release                                                                                                                                                                                                                                       |
+
+| Version    | Highlights                                                                                 |
+|------------|--------------------------------------------------------------------------------------------|
+| **v0.4.6** | Anthropic API support, on-disk caching for Llama.cpp, new tool calling dataset             |
+| **v0.4.5** | AI Task entities, multiple LLM APIs at once, official Ollama package                       |
+| **v0.4**   | Tool calling rewrite, voice streaming, agentic tool use loop, multiple configs per backend |
+| **v0.3**   | Home Assistant LLM API support, improved prompting, HuggingFace GGUF auto-detection        |
+
+<details>
+<summary>Full Version History</summary>
+
+| Version | Description                                                                                                                                             |
+|---------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| v0.4.6  | New dataset supporting proper tool calling, Add Anthropic "messages" style API support, Add on-disk caching for Llama.cpp backend                       |
+| v0.4.5  | Add support for AI Task entities, Replace custom Ollama API implementation with the official `ollama-python` package, Support multiple LLM APIs at once |
+| v0.4.4  | Fix issue with OpenAI backends appending `/v1` to all URLs                                                                                              |
+| v0.4.3  | Fix model config creation during setup                                                                                                                  |
+| v0.4.2  | Fix default model settings, numeric config fields, finish_reason handling                                                                               |
+| v0.4.1  | Fix Llama.cpp models downloaded from HuggingFace                                                                                                        |
+| v0.4    | Rewrite for tool calling models, agentic tool use loop, voice streaming, multiple config sub-entries                                                    |
+| v0.3.11 | Bug-fixes and llama.cpp version update                                                                                                                  |
+| v0.3.10 | OpenAI "Responses" API support, HA 2025.7.0 compatibility                                                                                               |
+| v0.3.9  | Fix conversation history                                                                                                                                |
+| v0.3.8  | Thinking model support, HA 2025.4 compatibility                                                                                                         |
+| v0.3.7  | German ICL examples, multi-turn fixes                                                                                                                   |
+| v0.3.6  | Small llama.cpp backend fixes                                                                                                                           |
+| v0.3.5  | Polish ICL examples                                                                                                                                     |
+| v0.3.4  | Full Polish translation, improved language support                                                                                                      |
+| v0.3.3  | Generic OpenAI improvements, area handling                                                                                                              |
+| v0.3.2  | Script entity fixes                                                                                                                                     |
+| v0.3.1  | Basic area support in prompting                                                                                                                         |
+| v0.3    | Home Assistant LLM API support, improved prompting                                                                                                      |
+| v0.2.x  | Ollama support, in-context learning, flash attention, prompt caching                                                                                    |
+| v0.1    | Initial Release                                                                                                                                         |
+
+</details>
+
