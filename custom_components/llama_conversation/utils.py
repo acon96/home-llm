@@ -1,3 +1,4 @@
+from functools import partial
 import time
 import os
 import re
@@ -209,6 +210,9 @@ def get_runtime_and_platform_suffix() -> Tuple[str, str]:
 
     return runtime_version, platform_suffix
 
+def get_potential_wheels(folder: str, platform_suffix: str) -> List[str]:
+    return sorted([ path for path in os.listdir(folder) if path.endswith(f"{platform_suffix}.whl") ], reverse=True)
+
 async def get_available_llama_cpp_versions(hass: HomeAssistant) -> List[Tuple[str, bool]]:
     github_index_url = "https://acon96.github.io/llama-cpp-python/whl/ha/llama-cpp-python/"
     session = aiohttp_client.async_get_clientsession(hass)
@@ -226,9 +230,8 @@ async def get_available_llama_cpp_versions(hass: HomeAssistant) -> List[Tuple[st
 
     runtime_version, platform_suffix = get_runtime_and_platform_suffix()
     folder = os.path.dirname(__file__)
-    potential_wheels = sorted([ path for path in os.listdir(folder) if path.endswith(f"{platform_suffix}.whl") ], reverse=True)
+    potential_wheels = await hass.async_add_executor_job(partial(get_potential_wheels, folder, platform_suffix))
     local = [ (wheel, True) for wheel in potential_wheels if runtime_version in wheel and "llama_cpp_python" in wheel]
-    
     return remote + local
 
 def install_llama_cpp_python(config_dir: str, force_reinstall: bool = False, specific_version: str | None = None) -> bool:
