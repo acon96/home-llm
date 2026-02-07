@@ -131,7 +131,14 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent, LocalLLMEntit
             # re-generate prompt if necessary
             if len(message_history) == 0 or refresh_system_prompt:
                 try:
-                    system_prompt = conversation.SystemContent(content=self.client._generate_system_prompt(raw_prompt, llm_api, self.runtime_options))
+                    system_prompt_text = self.client._generate_system_prompt(raw_prompt, llm_api, self.runtime_options)
+
+                    # Append extra system prompt if provided (e.g., from assist_satellite.start_conversation)
+                    if user_input.extra_system_prompt:
+                        system_prompt_text = f"{system_prompt_text}\n\n{user_input.extra_system_prompt}"
+                        _LOGGER.debug("Appended extra_system_prompt: %s", user_input.extra_system_prompt)
+
+                    system_prompt = conversation.SystemContent(content=system_prompt_text)
                 except TemplateError as err:
                     _LOGGER.error("Error rendering prompt: %s", err)
                     intent_response = intent.IntentResponse(language=user_input.language)
