@@ -27,6 +27,7 @@ from custom_components.llama_conversation.const import (
     CONF_REMEMBER_CONVERSATION,
     CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
     CONF_API_PATH,
+    CONF_CUSTOM_HEADERS,
     CONF_ENABLE_LEGACY_TOOL_CALLING,
     CONF_TOOL_RESPONSE_AS_STRING,
     CONF_RESPONSE_JSON_SCHEMA,
@@ -37,6 +38,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_REMEMBER_CONVERSATION,
     DEFAULT_REMEMBER_CONVERSATION_TIME_MINUTES,
     DEFAULT_API_PATH,
+    DEFAULT_CUSTOM_HEADERS,
     DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
     DEFAULT_TOOL_RESPONSE_AS_STRING,
     RECOMMENDED_CHAT_MODELS,
@@ -50,6 +52,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
 
     api_host: str
     api_key: str
+    custom_headers: dict
 
     _attr_supports_streaming = True
 
@@ -63,6 +66,21 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         )
 
         self.api_key = client_options.get(CONF_API_KEY, "")
+        self.custom_headers = self._parse_custom_headers(
+            client_options.get(CONF_CUSTOM_HEADERS, DEFAULT_CUSTOM_HEADERS)
+        )
+
+    @staticmethod
+    def _parse_custom_headers(headers_str: str) -> dict:
+        """Parse 'Key: Value\\nKey2: Value2' format to dict."""
+        if not headers_str:
+            return {}
+        headers = {}
+        for line in headers_str.strip().split("\n"):
+            if ":" in line:
+                key, value = line.split(":", 1)
+                headers[key.strip()] = value.strip()
+        return headers
 
     @staticmethod
     def get_name(client_options: dict[str, Any]):
@@ -79,6 +97,11 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         api_base_path = user_input.get(CONF_API_PATH, DEFAULT_API_PATH)
         if api_key:
             headers["Authorization"] = f"Bearer {api_key}"
+        # Add custom headers
+        custom_headers = GenericOpenAIAPIClient._parse_custom_headers(
+            user_input.get(CONF_CUSTOM_HEADERS, DEFAULT_CUSTOM_HEADERS)
+        )
+        headers.update(custom_headers)
 
         try:
             session = async_get_clientsession(hass)
@@ -103,6 +126,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         headers = {}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
+        headers.update(self.custom_headers)
 
         try:
             session = async_get_clientsession(self.hass)
@@ -166,6 +190,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         headers = {}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
+        headers.update(self.custom_headers)
 
         _LOGGER.debug(f"Generating completion with {len(messages)} messages and {len(tools) if tools else 0} tools...")
 
@@ -239,6 +264,7 @@ class GenericOpenAIResponsesAPIClient(LocalLLMClient):
 
     api_host: str
     api_key: str
+    custom_headers: dict
 
     _attr_supports_streaming = False
 
@@ -255,6 +281,9 @@ class GenericOpenAIResponsesAPIClient(LocalLLMClient):
         )
 
         self.api_key = client_options.get(CONF_API_KEY, "")
+        self.custom_headers = GenericOpenAIAPIClient._parse_custom_headers(
+            client_options.get(CONF_CUSTOM_HEADERS, DEFAULT_CUSTOM_HEADERS)
+        )
 
     @staticmethod
     def get_name(client_options: dict[str, Any]):
@@ -399,6 +428,7 @@ class GenericOpenAIResponsesAPIClient(LocalLLMClient):
         headers: Dict[str, Any] = {}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
+        headers.update(self.custom_headers)
 
         session = async_get_clientsession(self.hass)
         response = None

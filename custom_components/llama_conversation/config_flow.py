@@ -92,6 +92,7 @@ from .const import (
     CONF_OLLAMA_KEEP_ALIVE_MIN,
     CONF_OLLAMA_JSON_MODE,
     CONF_API_PATH,
+    CONF_CUSTOM_HEADERS,
     CONF_CONTEXT_LENGTH,
     CONF_LLAMACPP_BATCH_SIZE,
     CONF_LLAMACPP_THREAD_COUNT,
@@ -141,6 +142,7 @@ from .const import (
     DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
     DEFAULT_OLLAMA_JSON_MODE,
     DEFAULT_API_PATH,
+    DEFAULT_CUSTOM_HEADERS,
     DEFAULT_CONTEXT_LENGTH,
     DEFAULT_LLAMACPP_BATCH_SIZE,
     DEFAULT_LLAMACPP_THREAD_COUNT,
@@ -230,6 +232,9 @@ def remote_connection_schema(backend_type: str, *, host=None, port=None, ssl=Non
         default_path = ""
     elif backend_type in [BACKEND_TYPE_GENERIC_OPENAI, BACKEND_TYPE_GENERIC_OPENAI_RESPONSES]:
         default_port = ""
+        extra[vol.Optional(CONF_CUSTOM_HEADERS, default=DEFAULT_CUSTOM_HEADERS)] = TextSelector(
+            TextSelectorConfig(multiline=True)
+        )
 
     return vol.Schema(
         {

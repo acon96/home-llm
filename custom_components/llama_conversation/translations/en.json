@@ -20,6 +20,7 @@
                     "ssl": "Use HTTPS",
                     "openai_api_key": "API Key",
                     "openai_path": "API Path",
+                    "custom_headers": "Custom HTTP Headers",
                     "text_generation_webui_admin_key": "Admin Key",
                     "text_generation_webui_preset": "Generation Preset/Character Name",
                     "text_generation_webui_chat_mode": "Chat Mode",
