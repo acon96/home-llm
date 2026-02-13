@@ -66,10 +66,14 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent, LocalLLMEntit
         # Enable TTS streaming in voice pipeline (configurable)
         self._attr_supports_streaming = subentry.data.get(CONF_ENABLE_STREAMING, DEFAULT_ENABLE_STREAMING)
 
+        # Build supported features
+        features = conversation.ConversationEntityFeature(0)
         if subentry.data.get(CONF_LLM_HASS_API):
-            self._attr_supported_features = (
-                conversation.ConversationEntityFeature.CONTROL
-            )
+            features |= conversation.ConversationEntityFeature.CONTROL
+        if self._attr_supports_streaming:
+            features |= conversation.ConversationEntityFeature.STREAMING
+        if features:
+            self._attr_supported_features = features
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to Home Assistant."""
