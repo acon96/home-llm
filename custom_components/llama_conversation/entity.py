@@ -630,18 +630,8 @@ class LocalLLMEntity(entity.Entity):
             # handle subentry updates, but only invoke for this entity
             if subentry.subentry_id == self.subentry_id:
                 await hass.async_add_executor_job(self.client._update_options, self.runtime_options)
-                # Update supported features on the entity (not the client!)
-                self._update_supported_features(self.runtime_options)
-
-    def _update_supported_features(self, entity_options: Dict[str, Any]):
-        """Update supported features based on current options."""
-        features = conversation.ConversationEntityFeature(0)
-        if entity_options.get(CONF_LLM_HASS_API):
-            features |= conversation.ConversationEntityFeature.CONTROL
-        if entity_options.get(CONF_ENABLE_STREAMING, DEFAULT_ENABLE_STREAMING):
-            features |= conversation.ConversationEntityFeature.STREAMING
-        if features:
-            self._attr_supported_features = features
+                # Update streaming support on config change
+                self._attr_supports_streaming = entity_options.get(CONF_ENABLE_STREAMING, DEFAULT_ENABLE_STREAMING)
 
     @property
     def entry(self) -> ConfigEntry:
