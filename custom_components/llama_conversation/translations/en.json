@@ -110,7 +110,8 @@
                         "tool_call_suffix": "Tool Call Suffix",
                         "enable_legacy_tool_calling": "Enable Legacy Tool Calling",
                         "tool_response_as_string": "Tool Response as String",
-                        "max_tool_call_iterations": "Maximum Tool Call Attempts"
+                        "max_tool_call_iterations": "Maximum Tool Call Attempts",
+                        "enable_streaming": "Enable TTS Streaming"
                     },
                     "data_description": {
                         "llm_hass_api": "Select 'Assist' if you want the model to be able to control devices. If you are using the Home-LLM (v1-3) model then select 'Home Assistant Services'",

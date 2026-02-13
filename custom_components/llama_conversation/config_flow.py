@@ -71,6 +71,8 @@ from .const import (
     CONF_TOOL_CALL_SUFFIX,
     CONF_ENABLE_LEGACY_TOOL_CALLING,
     CONF_TOOL_RESPONSE_AS_STRING,
+    CONF_ENABLE_STREAMING,
+    DEFAULT_ENABLE_STREAMING,
     CONF_LLAMACPP_ENABLE_FLASH_ATTENTION,
     CONF_USE_GBNF_GRAMMAR,
     CONF_GBNF_GRAMMAR_FILE,
@@ -666,6 +668,11 @@ def local_llama_config_option_schema(
             CONF_TOOL_RESPONSE_AS_STRING,
             description={"suggested_value": options.get(CONF_TOOL_RESPONSE_AS_STRING)},
             default=DEFAULT_TOOL_RESPONSE_AS_STRING
+        ): bool,
+        vol.Required(
+            CONF_ENABLE_STREAMING,
+            description={"suggested_value": options.get(CONF_ENABLE_STREAMING, DEFAULT_ENABLE_STREAMING)},
+            default=options.get(CONF_ENABLE_STREAMING, DEFAULT_ENABLE_STREAMING)
         ): bool,
     }
 

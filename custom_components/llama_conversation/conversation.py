@@ -23,11 +23,13 @@ from .const import (
     CONF_REMEMBER_CONVERSATION,
     CONF_REMEMBER_NUM_INTERACTIONS,
     CONF_MAX_TOOL_CALL_ITERATIONS,
+    CONF_ENABLE_STREAMING,
     DEFAULT_PROMPT,
     DEFAULT_REFRESH_SYSTEM_PROMPT,
     DEFAULT_REMEMBER_CONVERSATION,
     DEFAULT_REMEMBER_NUM_INTERACTIONS,
     DEFAULT_MAX_TOOL_CALL_ITERATIONS,
+    DEFAULT_ENABLE_STREAMING,
     DOMAIN,
 )
 
@@ -58,10 +60,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry, asy
 class LocalLLMAgent(ConversationEntity, AbstractConversationAgent, LocalLLMEntity):
     """Base Local LLM conversation agent."""
 
-    _attr_supports_streaming = True  # Enable TTS streaming in voice pipeline
-
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, subentry: ConfigSubentry, client: LocalLLMClient) -> None:
         super().__init__(hass, entry, subentry, client)
+
+        # Enable TTS streaming in voice pipeline (configurable)
+        self._attr_supports_streaming = subentry.data.get(CONF_ENABLE_STREAMING, DEFAULT_ENABLE_STREAMING)
 
         if subentry.data.get(CONF_LLM_HASS_API):
             self._attr_supported_features = (
