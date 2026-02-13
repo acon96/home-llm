@@ -100,15 +100,6 @@ class LocalLLMClient:
             self.in_context_examples = None
     
     def _update_options(self, entity_options: Dict[str, Any]):
-        # Build supported features
-        features = conversation.ConversationEntityFeature(0)
-        if entity_options.get(CONF_LLM_HASS_API):
-            features |= conversation.ConversationEntityFeature.CONTROL
-        if entity_options.get(CONF_ENABLE_STREAMING, DEFAULT_ENABLE_STREAMING):
-            features |= conversation.ConversationEntityFeature.STREAMING
-        if features:
-            self._attr_supported_features = features
-
         if entity_options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES, DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES):
             self._load_icl_examples(entity_options.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE))
         else:
@@ -639,6 +630,18 @@ class LocalLLMEntity(entity.Entity):
             # handle subentry updates, but only invoke for this entity
             if subentry.subentry_id == self.subentry_id:
                 await hass.async_add_executor_job(self.client._update_options, self.runtime_options)
+                # Update supported features on the entity (not the client!)
+                self._update_supported_features(self.runtime_options)
+
+    def _update_supported_features(self, entity_options: Dict[str, Any]):
+        """Update supported features based on current options."""
+        features = conversation.ConversationEntityFeature(0)
+        if entity_options.get(CONF_LLM_HASS_API):
+            features |= conversation.ConversationEntityFeature.CONTROL
+        if entity_options.get(CONF_ENABLE_STREAMING, DEFAULT_ENABLE_STREAMING):
+            features |= conversation.ConversationEntityFeature.STREAMING
+        if features:
+            self._attr_supported_features = features
 
     @property
     def entry(self) -> ConfigEntry:
