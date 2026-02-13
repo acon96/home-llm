@@ -32,6 +32,7 @@ from .const import (
     CONF_TOOL_CALL_PREFIX,
     CONF_TOOL_CALL_SUFFIX,
     CONF_ENABLE_LEGACY_TOOL_CALLING,
+    CONF_ENABLE_STREAMING,
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
     DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
     DEFAULT_IN_CONTEXT_EXAMPLES_FILE,
@@ -42,6 +43,7 @@ from .const import (
     DEFAULT_TOOL_CALL_PREFIX,
     DEFAULT_TOOL_CALL_SUFFIX,
     DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
+    DEFAULT_ENABLE_STREAMING,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -98,10 +100,14 @@ class LocalLLMClient:
             self.in_context_examples = None
     
     def _update_options(self, entity_options: Dict[str, Any]):
+        # Build supported features
+        features = conversation.ConversationEntityFeature(0)
         if entity_options.get(CONF_LLM_HASS_API):
-            self._attr_supported_features = (
-                conversation.ConversationEntityFeature.CONTROL
-            )
+            features |= conversation.ConversationEntityFeature.CONTROL
+        if entity_options.get(CONF_ENABLE_STREAMING, DEFAULT_ENABLE_STREAMING):
+            features |= conversation.ConversationEntityFeature.STREAMING
+        if features:
+            self._attr_supported_features = features
 
         if entity_options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES, DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES):
             self._load_icl_examples(entity_options.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE))
