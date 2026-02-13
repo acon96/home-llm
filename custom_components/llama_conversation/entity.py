@@ -134,9 +134,9 @@ class LocalLLMClient:
         """Determine if the backend supports vision inputs. Implemented by sub-classes"""
         return False
     
-    def _generate_stream(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None, agent_id: str, entity_options: dict[str, Any]) -> AsyncGenerator[TextGenerationResult, None]:
-        """Async generator for streaming responses. Subclasses should implement."""
-        raise NotImplementedError()
+    def _generate_stream(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None, agent_id: str, entity_options: dict[str, Any]) -> AsyncGenerator[TextGenerationResult, None] | None:
+        """Async generator for streaming responses. Subclasses should override to enable streaming."""
+        return None  # Return None to indicate streaming is not supported
 
     async def _generate(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None, agent_id: str, entity_options: dict[str, Any]) -> TextGenerationResult:
         """Call the backend to generate a response from the conversation. Implemented by sub-classes"""
@@ -144,9 +144,10 @@ class LocalLLMClient:
 
     async def _async_generate(self, conv: List[conversation.Content], agent_id: str, chat_log: conversation.chat_log.ChatLog, entity_options: dict[str, Any]):
         """Default implementation: if streaming is supported, consume the async generator and return the full result."""
-        if hasattr(self, '_generate_stream'):
-            # Try to stream and collect the full response
-            return await self._transform_result_stream(self._generate_stream(conv, chat_log.llm_api, agent_id, entity_options), agent_id, chat_log)
+        stream_generator = self._generate_stream(conv, chat_log.llm_api, agent_id, entity_options)
+        if stream_generator is not None:
+            # Use streaming path with delta content for TTS streaming support
+            return await self._transform_result_stream(stream_generator, agent_id, chat_log)
         
         # Fallback to "blocking" generate
         blocking_result = await self._generate(conv, chat_log.llm_api, agent_id, entity_options)
