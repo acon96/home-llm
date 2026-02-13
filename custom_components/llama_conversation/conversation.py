@@ -58,6 +58,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry, asy
 class LocalLLMAgent(ConversationEntity, AbstractConversationAgent, LocalLLMEntity):
     """Base Local LLM conversation agent."""
 
+    _attr_supports_streaming = True  # Enable TTS streaming in voice pipeline
+
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, subentry: ConfigSubentry, client: LocalLLMClient) -> None:
         super().__init__(hass, entry, subentry, client)
 
