@@ -65,6 +65,10 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent, LocalLLMEntit
 
         # Enable TTS streaming in voice pipeline (configurable)
         self._attr_supports_streaming = subentry.data.get(CONF_ENABLE_STREAMING, DEFAULT_ENABLE_STREAMING)
+        _LOGGER.warning("🐍 NADEKO DEBUG: ConversationEntity init - supports_streaming: %s (from config: %s, default: %s)", 
+                       self._attr_supports_streaming,
+                       subentry.data.get(CONF_ENABLE_STREAMING, "NOT SET"),
+                       DEFAULT_ENABLE_STREAMING)
 
         # Set supported features (CONTROL enables device control via Assist)
         if subentry.data.get(CONF_LLM_HASS_API):
@@ -85,10 +89,17 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent, LocalLLMEntit
         """Return a list of supported languages."""
         return MATCH_ALL
 
+    @property
+    def supports_streaming(self) -> bool:
+        """Return if the entity supports streaming responses."""
+        _LOGGER.warning("🐍 NADEKO DEBUG: supports_streaming property accessed - returning: %s", self._attr_supports_streaming)
+        return self._attr_supports_streaming
+
     async def async_process(
         self, user_input: ConversationInput
     ) -> ConversationResult:
         """Process a sentence."""
+        _LOGGER.warning("🐍 NADEKO DEBUG: async_process called - supports_streaming: %s", self._attr_supports_streaming)
         with (
             chat_session.async_get_chat_session(
                 self.hass, user_input.conversation_id
