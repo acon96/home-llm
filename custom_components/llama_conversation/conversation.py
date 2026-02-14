@@ -169,6 +169,7 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent, LocalLLMEntit
                 while True:
                     try:
                         message = await anext(generation_result)
+                        _LOGGER.warning(f"🐍 NADEKO DEBUG: Conversation got message: {message.role} - {str(message)[:100]}")
                         message_history.append(message)
                         _LOGGER.debug("Added message to history: %s", message)
                         if message.role == "assistant":

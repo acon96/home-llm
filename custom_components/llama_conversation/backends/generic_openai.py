@@ -149,6 +149,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
                          agent_id: str,
                          entity_options: dict[str, Any],
                         ) -> AsyncGenerator[TextGenerationResult, None]:
+        _LOGGER.warning("🐍 NADEKO DEBUG: _generate_stream() called!")
         model_name = entity_options[CONF_CHAT_MODEL]
         temperature = entity_options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
         top_p = entity_options.get(CONF_TOP_P, DEFAULT_TOP_P)
@@ -218,6 +219,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
                         if chunk and chunk.strip():
                             to_say, tool_calls = self._extract_response(json.loads(chunk))
                             if to_say or tool_calls:
+                                _LOGGER.warning(f"🐍 NADEKO DEBUG: Yielding chunk: {to_say[:50] if to_say else 'None'}")
                                 yield to_say, tool_calls
             except asyncio.TimeoutError as err:
                 raise HomeAssistantError("The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities.") from err

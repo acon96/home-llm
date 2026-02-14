@@ -145,11 +145,14 @@ class LocalLLMClient:
     async def _async_generate(self, conv: List[conversation.Content], agent_id: str, chat_log: conversation.chat_log.ChatLog, entity_options: dict[str, Any]):
         """Default implementation: if streaming is supported, consume the async generator and return the full result."""
         stream_generator = self._generate_stream(conv, chat_log.llm_api, agent_id, entity_options)
+        _LOGGER.warning(f"🐍 NADEKO DEBUG: stream_generator is {'NOT None' if stream_generator else 'None'}")
         if stream_generator is not None:
             # Use streaming path with delta content for TTS streaming support
+            _LOGGER.warning("🐍 NADEKO DEBUG: Taking STREAMING path!")
             return await self._transform_result_stream(stream_generator, agent_id, chat_log)
         
         # Fallback to "blocking" generate
+        _LOGGER.warning("🐍 NADEKO DEBUG: Taking BLOCKING path!")
         blocking_result = await self._generate(conv, chat_log.llm_api, agent_id, entity_options)
 
         return chat_log.async_add_assistant_content(
@@ -179,6 +182,7 @@ class LocalLLMClient:
         async def async_iterator():
             async for input_chunk in result:
                 _LOGGER.debug("Received chunk: %s", input_chunk)
+                _LOGGER.warning(f"🐍 NADEKO DEBUG: Streaming chunk to HA: {input_chunk.response[:50] if input_chunk.response else 'None'}")
 
                 tool_calls = input_chunk.tool_calls
                 if tool_calls and not chat_log.llm_api:
