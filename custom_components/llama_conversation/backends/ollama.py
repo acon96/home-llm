@@ -72,6 +72,7 @@ def _build_default_ssl_context() -> ssl.SSLContext:
     return context
 
 class OllamaAPIClient(LocalLLMClient):
+    _attr_supports_streaming = True
     api_host: str
     api_key: Optional[str]
 
