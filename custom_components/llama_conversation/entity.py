@@ -179,6 +179,7 @@ class LocalLLMClient:
         chat_log: conversation.chat_log.ChatLog
     ):
         async def async_iterator():
+            first = True
             async for input_chunk in result:
                 _LOGGER.debug("Received chunk: %s", input_chunk)
 
@@ -186,10 +187,14 @@ class LocalLLMClient:
                 if tool_calls and not chat_log.llm_api:
                     raise HomeAssistantError("Model attempted to call a tool but no LLM API was provided")
 
-                yield conversation.AssistantContentDeltaDict(
+                delta = conversation.AssistantContentDeltaDict(
                     content=input_chunk.response,
-                    tool_calls=tool_calls 
+                    tool_calls=tool_calls
                 )
+                if first:
+                    delta["role"] = "assistant"
+                    first = False
+                yield delta
         
         return chat_log.async_add_delta_content_stream(agent_id, stream=async_iterator())
         

@@ -5,7 +5,7 @@ import json
 import pytest
 from json import JSONDecodeError
 
-from custom_components.llama_conversation.entity import LocalLLMClient
+from custom_components.llama_conversation.entity import LocalLLMClient, TextGenerationResult
 from custom_components.llama_conversation.const import (
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
     CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
@@ -160,3 +160,36 @@ async def test_generate_system_prompt_renders(monkeypatch, client, hass):
 
     assert isinstance(rendered, str)
     assert "light.kitchen" in rendered
+
+
+@pytest.mark.asyncio
+async def test_transform_result_stream_first_delta_has_role(client):
+    """First streaming delta must include role='assistant' so HA's TTS pipeline starts."""
+
+    async def mock_stream():
+        yield TextGenerationResult(response="Hello", response_streamed=True)
+        yield TextGenerationResult(response=" world", response_streamed=True)
+        yield TextGenerationResult(response="!", response_streamed=True)
+
+    captured_stream = None
+
+    class MockChatLog:
+        llm_api = None
+
+        def async_add_delta_content_stream(self, agent_id, stream):
+            nonlocal captured_stream
+            captured_stream = stream
+
+    await client._transform_result_stream(
+        mock_stream(), "test-agent", MockChatLog()
+    )
+
+    deltas = [delta async for delta in captured_stream]
+
+    assert len(deltas) == 3
+    # First delta must carry the role so the pipeline starts feeding TTS.
+    assert deltas[0]["role"] == "assistant"
+    assert deltas[0]["content"] == "Hello"
+    # Subsequent deltas must NOT include role (matches HA built-in agent protocol).
+    assert "role" not in deltas[1]
+    assert "role" not in deltas[2]
