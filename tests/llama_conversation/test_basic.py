@@ -103,3 +103,13 @@ def test_normalize_path_helper():
     assert _normalize_path("") == ""
     assert _normalize_path("/v1/") == "/v1"
     assert _normalize_path("v2") == "/v2"
+
+
+def test_ollama_client_supports_streaming():
+    """OllamaAPIClient must declare streaming support like the other backends."""
+    assert getattr(OllamaAPIClient, '_attr_supports_streaming', False) is True
+
+
+def test_generic_openai_client_supports_streaming():
+    """GenericOpenAIAPIClient must declare streaming support."""
+    assert getattr(GenericOpenAIAPIClient, '_attr_supports_streaming', False) is True

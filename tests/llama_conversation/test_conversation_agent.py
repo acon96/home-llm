@@ -112,3 +112,33 @@ async def test_async_process_generates_response(monkeypatch, hass):
     # System prompt should be rendered once when message history is empty.
     assert client.generated_prompts == [DEFAULT_PROMPT]
     assert agent.supported_languages == MATCH_ALL
+
+
+def test_agent_supports_streaming_forwards_from_client(hass):
+    """Agent must forward supports_streaming from its backend client."""
+    client = DummyClient(hass)
+    subentry = DummySubentry()
+    entry = DummyEntry(subentry=subentry, runtime_data=client)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry
+
+    agent = LocalLLMAgent(hass, entry, subentry, client)
+
+    # Client without the flag => agent should report False
+    assert agent.supports_streaming is False
+
+    # Client with the flag set True => agent should forward it
+    client._attr_supports_streaming = True
+    assert agent.supports_streaming is True
+
+
+def test_agent_supports_streaming_false_by_default(hass):
+    """Agent should default to no streaming when client lacks the attribute."""
+    client = DummyClient(hass)
+    subentry = DummySubentry()
+    entry = DummyEntry(subentry=subentry, runtime_data=client)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry
+
+    agent = LocalLLMAgent(hass, entry, subentry, client)
+
+    # DummyClient has no _attr_supports_streaming => should be False
+    assert agent.supports_streaming is False
