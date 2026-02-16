@@ -134,7 +134,10 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent, LocalLLMEntit
                 message_history = new_message_history
 
             # re-generate prompt if necessary
-            if len(message_history) == 0 or refresh_system_prompt:
+            has_system_prompt = any(
+                isinstance(msg, conversation.SystemContent) for msg in message_history
+            )
+            if not has_system_prompt or refresh_system_prompt:
                 try:
                     system_prompt = conversation.SystemContent(content=self.client._generate_system_prompt(raw_prompt, llm_api, self.runtime_options))
                 except TemplateError as err:
@@ -148,10 +151,10 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent, LocalLLMEntit
                         response=intent_response, conversation_id=user_input.conversation_id
                     )
 
-                if len(message_history) == 0:
-                    message_history.append(system_prompt)
-                else:
+                if message_history and isinstance(message_history[0], conversation.SystemContent):
                     message_history[0] = system_prompt
+                else:
+                    message_history.insert(0, system_prompt)
 
             tool_calls: List[Tuple[llm.ToolInput, Any]] = []
             # if max tool calls is 0 then we expect to generate the response & tool call in one go

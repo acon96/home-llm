@@ -317,13 +317,15 @@ class LocalLLMClient:
                         tool_content = after_prefix  # capture content after the prefix
                         content = content[:prefix_pos]
                         last_5_tokens.clear()
+                        cur_match_length = 0
                 elif tool_prefix in potential_block and not in_tool_call:
                     _LOGGER.debug("Entering tool call block")
                     in_tool_call = True
                     prefix_end = potential_block.find(tool_prefix) + len(tool_prefix)
                     tool_content = potential_block[prefix_end:]  # capture anything after prefix
                     last_5_tokens.clear()
-                if tool_suffix in potential_block and in_tool_call:
+                    cur_match_length = 0
+                elif tool_suffix in potential_block and in_tool_call:
                     in_tool_call = False
                     tool_block = tool_content.strip().removeprefix(tool_prefix).removesuffix(tool_suffix)
                     _LOGGER.debug("Raw tool block extracted: %s", tool_block)
