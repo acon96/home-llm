@@ -426,58 +426,47 @@ def _make_agent(hass, subentry_data_overrides=None):
 
 
 @pytest.mark.asyncio
-async def test_system_prompt_generated_when_chat_log_has_user_content(monkeypatch, hass):
-    """System prompt must be generated on the first turn even when chat_log
-    already contains a UserContent (added by HA before async_process runs)
-    and refresh_system_prompt is False."""
+@pytest.mark.parametrize(
+    "refresh, initial_content, expect_generated, expect_first_content",
+    [
+        pytest.param(
+            False,
+            [UserContent(content="turn on the lights")],
+            1,
+            "rendered-system-prompt",
+            id="first_turn_no_system_prompt",
+        ),
+        pytest.param(
+            True,
+            [SystemContent(content="old-system-prompt"), UserContent(content="turn on the lights")],
+            1,
+            "rendered-system-prompt",
+            id="refresh_replaces_existing",
+        ),
+        pytest.param(
+            False,
+            [SystemContent(content="existing-system-prompt"), UserContent(content="turn on the lights")],
+            0,
+            "existing-system-prompt",
+            id="no_refresh_keeps_existing",
+        ),
+    ],
+)
+async def test_system_prompt_injection(
+    monkeypatch, hass, refresh, initial_content, expect_generated, expect_first_content,
+):
+    """Verify system prompt generation/replacement based on refresh setting
+    and whether a SystemContent already exists in chat history."""
     agent, client = _make_agent(hass, {
-        CONF_REFRESH_SYSTEM_PROMPT: False, CONF_REMEMBER_CONVERSATION: True,
+        CONF_REFRESH_SYSTEM_PROMPT: refresh, CONF_REMEMBER_CONVERSATION: True,
     })
     chat_log = FakeChatLog()
-    chat_log.content.append(UserContent(content="turn on the lights"))
+    chat_log.content.extend(initial_content)
     _patch_chat(monkeypatch, chat_log)
 
     result = await agent.async_process(_make_user_input())
 
     assert result.response.speech["plain"]["speech"] == "hello from llm"
-    assert len(client.generated_prompts) == 1
+    assert len(client.generated_prompts) == expect_generated
     assert isinstance(chat_log.content[0], SystemContent)
-
-
-@pytest.mark.asyncio
-async def test_system_prompt_regenerated_when_refresh_enabled(monkeypatch, hass):
-    """When refresh_system_prompt is True, the system prompt should be
-    regenerated even if one already exists in the history."""
-    agent, client = _make_agent(hass, {
-        CONF_REFRESH_SYSTEM_PROMPT: True, CONF_REMEMBER_CONVERSATION: True,
-    })
-    chat_log = FakeChatLog()
-    chat_log.content.append(SystemContent(content="old-system-prompt"))
-    chat_log.content.append(UserContent(content="turn on the lights"))
-    _patch_chat(monkeypatch, chat_log)
-
-    result = await agent.async_process(_make_user_input())
-
-    assert result.response.speech["plain"]["speech"] == "hello from llm"
-    assert len(client.generated_prompts) == 1
-    assert client.generated_prompts[0] == DEFAULT_PROMPT
-
-
-@pytest.mark.asyncio
-async def test_system_prompt_not_regenerated_when_refresh_disabled(monkeypatch, hass):
-    """When refresh_system_prompt is False and a SystemContent already exists,
-    the system prompt should NOT be regenerated."""
-    agent, client = _make_agent(hass, {
-        CONF_REFRESH_SYSTEM_PROMPT: False, CONF_REMEMBER_CONVERSATION: True,
-    })
-    chat_log = FakeChatLog()
-    chat_log.content.append(SystemContent(content="existing-system-prompt"))
-    chat_log.content.append(UserContent(content="turn on the lights"))
-    _patch_chat(monkeypatch, chat_log)
-
-    result = await agent.async_process(_make_user_input())
-
-    assert result.response.speech["plain"]["speech"] == "hello from llm"
-    assert len(client.generated_prompts) == 0
-    assert isinstance(chat_log.content[0], SystemContent)
-    assert chat_log.content[0].content == "existing-system-prompt"
+    assert chat_log.content[0].content == expect_first_content
