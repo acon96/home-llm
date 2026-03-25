@@ -47,6 +47,7 @@ from .const import (
     BACKEND_TYPE_ANTHROPIC,
     BACKEND_TYPE_LLAMA_EXISTING_OLD,
     BACKEND_TYPE_LLAMA_HF_OLD,
+    BACKEND_TYPE_MINIMAX,
 )
 from .entity import LocalLLMClient, LocalLLMConfigEntry
 from .backends.llamacpp import LlamaCppClient
@@ -54,6 +55,7 @@ from .backends.generic_openai import GenericOpenAIAPIClient, GenericOpenAIRespon
 from .backends.tailored_openai import TextGenerationWebuiClient, LlamaCppServerClient
 from .backends.ollama import OllamaAPIClient
 from .backends.anthropic import AnthropicAPIClient
+from .backends.minimax import MiniMaxAPIClient
 from .utils import get_llama_cpp_python_version, download_model_from_hf
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,6 +72,7 @@ BACKEND_TO_CLS: dict[str, type[LocalLLMClient]] = {
     BACKEND_TYPE_LLAMA_CPP_SERVER: LlamaCppServerClient,
     BACKEND_TYPE_OLLAMA: OllamaAPIClient,
     BACKEND_TYPE_ANTHROPIC: AnthropicAPIClient,
+    BACKEND_TYPE_MINIMAX: MiniMaxAPIClient,
 }
 
 async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> bool:

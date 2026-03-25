@@ -153,6 +153,7 @@ from .const import (
     BACKEND_TYPE_LLAMA_CPP_SERVER,
     BACKEND_TYPE_OLLAMA,
     BACKEND_TYPE_ANTHROPIC,
+    BACKEND_TYPE_MINIMAX,
     CONF_BASE_URL,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT,
     TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT,
@@ -190,6 +191,7 @@ def pick_backend_schema(backend_type=None, selected_language=None):
                     BACKEND_TYPE_LLAMA_CPP_SERVER,
                     BACKEND_TYPE_OLLAMA,
                     BACKEND_TYPE_ANTHROPIC,
+                    BACKEND_TYPE_MINIMAX,
                 ],
                 translation_key=CONF_BACKEND_TYPE,
                 multiple=False,
@@ -214,6 +216,17 @@ def remote_connection_schema(backend_type: str, *, host=None, port=None, ssl=Non
     if backend_type == BACKEND_TYPE_ANTHROPIC:
         return vol.Schema({
             vol.Required(CONF_BASE_URL, default=base_url if base_url else ""): TextSelector(
+                TextSelectorConfig()
+            ),
+            vol.Required(CONF_API_KEY, default=api_key if api_key else ""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.PASSWORD)
+            ),
+        })
+
+    # MiniMax uses base URL + API key with a sensible default URL
+    if backend_type == BACKEND_TYPE_MINIMAX:
+        return vol.Schema({
+            vol.Required(CONF_BASE_URL, default=base_url if base_url else "https://api.minimax.io/v1"): TextSelector(
                 TextSelectorConfig()
             ),
             vol.Required(CONF_API_KEY, default=api_key if api_key else ""): TextSelector(
@@ -360,6 +373,14 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
 
                 # Anthropic doesn't use hostname - skip hostname validation
                 if backend == BACKEND_TYPE_ANTHROPIC:
+                    connect_err = await BACKEND_TO_CLS[backend].async_validate_connection(self.hass, self.client_config)
+                    if connect_err:
+                        errors["base"] = "failed_to_connect"
+                        description_placeholders["exception"] = str(connect_err)
+                    else:
+                        return await self.async_step_finish()
+                # MiniMax doesn't use hostname - skip hostname validation
+                elif backend == BACKEND_TYPE_MINIMAX:
                     connect_err = await BACKEND_TO_CLS[backend].async_validate_connection(self.hass, self.client_config)
                     if connect_err:
                         errors["base"] = "failed_to_connect"
@@ -1010,6 +1031,19 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options.get(CONF_TOP_K)},
                 default=DEFAULT_TOP_K,
             ): NumberSelector(NumberSelectorConfig(min=1, max=256, step=1)),
+            vol.Required(
+                CONF_TOP_P,
+                description={"suggested_value": options.get(CONF_TOP_P)},
+                default=DEFAULT_TOP_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Required(
+                CONF_REQUEST_TIMEOUT,
+                description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
+                default=DEFAULT_REQUEST_TIMEOUT,
+            ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
+        })
+    elif backend_type == BACKEND_TYPE_MINIMAX:
+        result.update({
             vol.Required(
                 CONF_TOP_P,
                 description={"suggested_value": options.get(CONF_TOP_P)},

@@ -44,6 +44,7 @@ Choose how and where you want to run your models:
 | **[llama.cpp server](https://github.com/ggml-org/llama.cpp/tree/master/tools/server)**              | Heterogeneous (non-uniform) GPU compute setups, including CPU + GPU inference |
 | **[OpenAI 'Responses' Style API](https://platform.openai.com/docs/api-reference/responses/create)** | Cloud services supporting the 'responses' style API                           |
 | **[Anthropic 'Messages' Style API](https://platform.claude.com/docs/en/api/messages)**              | Cloud services supporting the 'messages' style API                            |
+| **[MiniMax Cloud API](https://platform.minimaxi.com/)**                                             | MiniMax M2.7/M2.5 models via OpenAI-compatible API                            |
 | **[text-generation-webui](https://github.com/oobabooga/text-generation-webui)**                     | Advanced users with existing setups                                           |
 
 > NOTE: When utilizing **external** APIs or model providers, your data will be transmitted over the internet and shared with the respective service providers. Ensure you understand the privacy implications of using these third-party services, since they will be able to see the status of all exposed entities in your Home Assistant instance, which can potentially include your current location.
