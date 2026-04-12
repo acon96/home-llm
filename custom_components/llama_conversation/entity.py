@@ -296,11 +296,25 @@ class LocalLLMClient:
                             tool_call, to_say = parse_raw_tool_call(raw_tool_call, agent_id)
                         else:
                             # try multiple dict key names
-                            function_content = raw_tool_call.get("function") or raw_tool_call.get("function_call") or raw_tool_call.get("tool")
+                            function_content = raw_tool_call.get("function") or raw_tool_call.get("function_call") or raw_tool_call.get("tool") or raw_tool_call.get("tool_calls")
                             if not function_content:
-                                # Check if the dict itself is the function content (has 'name' and 'arguments')
+                                # Check for qwen-style tool call format
+                                # qwen may return {'name': 'func_name', 'arguments': {...}} directly
+                                # or {'arguments': '{"name": "...", ...}'} where arguments is a JSON string
                                 if "name" in raw_tool_call:
                                     function_content = raw_tool_call
+                                elif "arguments" in raw_tool_call:
+                                    # Handle case where arguments is a malformed JSON string containing name
+                                    arguments = raw_tool_call["arguments"]
+                                    if isinstance(arguments, str):
+                                        # Try to extract name from malformed JSON like '{"name": "Office Light Switch"'
+                                        name_match = re.search(r'"name"\s*:\s*"([^"]+)"', arguments)
+                                        if name_match:
+                                            function_content = {"name": name_match.group(1), "arguments": {}}
+                                        else:
+                                            function_content = {"name": raw_tool_call.get("name", "unknown"), "arguments": {}}
+                                    else:
+                                        function_content = raw_tool_call
                                 else:
                                     _LOGGER.warning("Received tool call dict without 'function', 'function_call' or 'tool' key: %s", raw_tool_call)
                                     continue
