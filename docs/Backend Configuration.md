@@ -71,14 +71,15 @@ After the wheel file has been copied to the correct folder, attempt the wheel in
 ## Pre-built
 Pre-built wheel files (`*.whl`) are built as part of a fork of llama-cpp-python and are available on the [GitHub releases](https://github.com/acon96/llama-cpp-python/releases/latest) page for the fork.
 
-To ensure compatibility with your Home Assistant and Python versions, select the correct `.whl` file for your hardware's architecture:
-- For Home Assistant `2024.2.0` and newer, use the Python 3.12 wheels (`cp312`)
+As of version 0.3.20, llama-cpp-python uses generic `py3-none` wheels that work across all Python 3.x versions. Select the correct `.whl` file for your hardware's architecture:
 - **ARM devices** (e.g., Raspberry Pi 4/5):
     - Example filename:
-        - `llama_cpp_python-{version}-cp312-cp312-musllinux_1_2_aarch64.whl`
+        - `llama_cpp_python-{version}-py3-none-linux_aarch64.whl`
 - **x86_64 devices** (e.g., Intel/AMD desktops):
     - Example filename:
-        - `llama_cpp_python-{version}-cp312-cp312-musllinux_1_2_x86_64.whl`
+        - `llama_cpp_python-{version}-py3-none-linux_x86_64.whl`
+
+> **Note:** A single wheel now works for all Python 3.x versions on the same platform. You no longer need to match your specific Python version (e.g., 3.12, 3.13, 3.14).
 
 ## Build your own
 

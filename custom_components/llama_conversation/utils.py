@@ -198,9 +198,8 @@ def get_llama_cpp_python_version():
         return None
     return version("llama-cpp-python")
 
-def get_runtime_and_platform_suffix() -> Tuple[str, str]:
-    runtime_version = f"cp{sys.version_info.major}{sys.version_info.minor}"
-
+def get_platform_suffix() -> str:
+    """Get the platform suffix for wheel files."""
     platform_suffix = platform.machine()
     # remap other names for architectures to the names we use
     if platform_suffix == "arm64":
@@ -208,7 +207,7 @@ def get_runtime_and_platform_suffix() -> Tuple[str, str]:
     if platform_suffix == "i386" or platform_suffix == "amd64":
         platform_suffix = "x86_64"
 
-    return runtime_version, platform_suffix
+    return platform_suffix
 
 def get_potential_wheels(folder: str, platform_suffix: str) -> List[str]:
     return sorted([ path for path in os.listdir(folder) if path.endswith(f"{platform_suffix}.whl") ], reverse=True)
@@ -228,10 +227,10 @@ async def get_available_llama_cpp_versions(hass: HomeAssistant) -> List[Tuple[st
         _LOGGER.warning(f"Error fetching available versions from GitHub: {repr(ex)}")
         remote = []
 
-    runtime_version, platform_suffix = get_runtime_and_platform_suffix()
+    platform_suffix = get_platform_suffix()
     folder = os.path.dirname(__file__)
     potential_wheels = await hass.async_add_executor_job(partial(get_potential_wheels, folder, platform_suffix))
-    local = [ (wheel, True) for wheel in potential_wheels if runtime_version in wheel and "llama_cpp_python" in wheel]
+    local = [ (wheel, True) for wheel in potential_wheels if "llama_cpp_python" in wheel and ("py3-none" in wheel or f"cp{sys.version_info.major}{sys.version_info.minor}" in wheel)]
     return remote + local
 
 def install_llama_cpp_python(config_dir: str, force_reinstall: bool = False, specific_version: str | None = None) -> bool:
@@ -244,7 +243,7 @@ def install_llama_cpp_python(config_dir: str, force_reinstall: bool = False, spe
             time.sleep(0.5) # I still don't know why this is required
             return True
         
-    runtime_version, platform_suffix = get_runtime_and_platform_suffix()
+    platform_suffix = get_platform_suffix()
 
     if not specific_version:
         specific_version = EMBEDDED_LLAMA_CPP_PYTHON_VERSION
@@ -252,7 +251,7 @@ def install_llama_cpp_python(config_dir: str, force_reinstall: bool = False, spe
     if ".whl" in specific_version:
         wheel_location = os.path.join(os.path.dirname(__file__), specific_version)
     else:
-        wheel_location = f"https://github.com/acon96/llama-cpp-python/releases/download/{specific_version}/llama_cpp_python-{specific_version}-{runtime_version}-{runtime_version}-linux_{platform_suffix}.whl"
+        wheel_location = f"https://github.com/acon96/llama-cpp-python/releases/download/{specific_version}/llama_cpp_python-{specific_version}-py3-none-linux_{platform_suffix}.whl"
 
     if install_package(wheel_location, **pip_kwargs(config_dir)):
         _LOGGER.info("llama-cpp-python successfully installed")
@@ -263,7 +262,7 @@ def install_llama_cpp_python(config_dir: str, force_reinstall: bool = False, spe
         _LOGGER.error(
             "Error installing llama-cpp-python. Could not install the binary wheels from GitHub." + \
             "Please manually build or download the wheels and place them in the `/config/custom_components/llama_conversation` directory." + \
-            "Make sure that you download the correct .whl file for your platform and python version from the GitHub releases page."
+            "Make sure that you download the correct .whl file for your platform from the GitHub releases page."
         )
         return False
     else:
