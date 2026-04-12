@@ -3,7 +3,6 @@
 import inspect
 import json
 import pytest
-from json import JSONDecodeError
 
 from custom_components.llama_conversation.entity import LocalLLMClient
 from custom_components.llama_conversation.const import (
@@ -14,6 +13,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_THINKING_PREFIX,
     DEFAULT_THINKING_SUFFIX,
 )
+from custom_components.llama_conversation.utils import MalformedToolCallException
 
 
 class DummyLocalClient(LocalLLMClient):
@@ -66,7 +66,7 @@ async def test_async_parse_completion_ignores_tools_without_llm_api(client):
 async def test_async_parse_completion_malformed_tool_raises(client):
     bad_tool = f"{DEFAULT_TOOL_CALL_PREFIX}{{not-json{DEFAULT_TOOL_CALL_SUFFIX}"
 
-    with pytest.raises(JSONDecodeError):
+    with pytest.raises(MalformedToolCallException):
         await client._async_parse_completion(DummyLLMApi(), "agent-id", {}, bad_tool)
 
 
@@ -103,7 +103,7 @@ async def test_async_stream_parse_completion_malformed_tool_raises(client):
         yield ("Hi", None)
         yield (None, ["{not-json"])
 
-    with pytest.raises(JSONDecodeError):
+    with pytest.raises(MalformedToolCallException):
         async for _chunk in client._async_stream_parse_completion(
             DummyLLMApi(), "agent-id", {}, anext_token=token_generator()
         ):

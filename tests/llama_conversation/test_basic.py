@@ -7,8 +7,9 @@ while the integration evolves. No integration code is modified.
 import pytest
 
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
+from homeassistant.exceptions import ConfigEntryError
 
-from custom_components.llama_conversation.backends.llamacpp import snapshot_settings
+from custom_components.llama_conversation.backends.llamacpp import LlamaCppClient, snapshot_settings
 from custom_components.llama_conversation.backends.ollama import OllamaAPIClient, _normalize_path
 from custom_components.llama_conversation.backends.generic_openai import GenericOpenAIAPIClient
 from custom_components.llama_conversation.const import (
@@ -28,7 +29,9 @@ from custom_components.llama_conversation.const import (
     DEFAULT_GBNF_GRAMMAR_FILE,
     DEFAULT_PROMPT_CACHING_ENABLED,
     CONF_API_PATH,
+    CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
 )
+from custom_components.llama_conversation.utils import LlamaCppPythonInstallError
 
 
 @pytest.fixture
@@ -103,3 +106,28 @@ def test_normalize_path_helper():
     assert _normalize_path("") == ""
     assert _normalize_path("/v1/") == "/v1"
     assert _normalize_path("v2") == "/v2"
+
+
+@pytest.mark.asyncio
+async def test_llama_cpp_startup_validation_surfaces_install_error(monkeypatch, hass):
+    client = LlamaCppClient(hass, {CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False})
+
+    monkeypatch.setattr(
+        "custom_components.llama_conversation.backends.llamacpp.validate_llama_cpp_python_installation",
+        lambda: None,
+    )
+    monkeypatch.setattr(
+        "custom_components.llama_conversation.backends.llamacpp.importlib.util.find_spec",
+        lambda _module: None,
+    )
+
+    def raise_install_error(*_args, **_kwargs):
+        raise LlamaCppPythonInstallError("Unable to install package wheel: unexpected BufError")
+
+    monkeypatch.setattr(
+        "custom_components.llama_conversation.backends.llamacpp.install_llama_cpp_python",
+        raise_install_error,
+    )
+
+    with pytest.raises(ConfigEntryError, match="unexpected BufError"):
+        await client.async_validate_startup()

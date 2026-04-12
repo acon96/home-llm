@@ -132,7 +132,7 @@ class LocalLLMTaskEntity(
                     entity_options,
                 ):
                     if chunk.response:
-                        text += chunk.response.strip()
+                        text += chunk.response
                     if chunk.tool_calls:
                         collected_tools = chunk.tool_calls
             else:

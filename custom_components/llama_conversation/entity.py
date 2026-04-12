@@ -113,6 +113,10 @@ class LocalLLMClient:
         """Validate connection to the backend. Implemented by sub-classes"""
         return None
 
+    async def async_validate_startup(self, entry: LocalLLMConfigEntry | None = None) -> None:
+        """Validate backend startup prerequisites before entity platforms are set up."""
+        return None
+
     def _load_model(self, entity_options: dict[str, Any]) -> None:
         """Load the model on the backend. Implemented by sub-classes"""
         pass
@@ -264,15 +268,15 @@ class LocalLLMClient:
                     _LOGGER.debug("Entering thinking block")
                     in_thinking = True
                     last_5_tokens.clear()
-                elif think_suffix in potential_block and in_thinking:
+                if think_suffix in potential_block and in_thinking:
                     _LOGGER.debug("Exiting thinking block")
                     in_thinking = False
                     content = content.replace(think_suffix, "").strip()
-                elif tool_prefix in potential_block and not in_tool_call:
+                if tool_prefix in potential_block and not in_tool_call:
                     _LOGGER.debug("Entering tool call block")
                     in_tool_call = True
                     last_5_tokens.clear()
-                elif tool_suffix in potential_block and in_tool_call:
+                if tool_suffix in potential_block and in_tool_call:
                     in_tool_call = False
                     tool_block = tool_content.strip().removeprefix(tool_prefix).removesuffix(tool_suffix)
                     _LOGGER.debug("Raw tool block extracted: %s", tool_block)

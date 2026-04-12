@@ -1,16 +1,23 @@
 """Config flow option schema tests to ensure options are wired per-backend."""
 
+import asyncio
+
 import pytest
 
-from homeassistant.const import CONF_LLM_HASS_API
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+from homeassistant.const import CONF_HOST, CONF_LLM_HASS_API, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
+from homeassistant.data_entry_flow import FlowResultType
 
-from custom_components.llama_conversation.config_flow import local_llama_config_option_schema
+from custom_components.llama_conversation.config_flow import ConfigFlow, local_llama_config_option_schema
 from custom_components.llama_conversation.const import (
     BACKEND_TYPE_LLAMA_CPP,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
     BACKEND_TYPE_GENERIC_OPENAI,
+    CONF_BACKEND_TYPE,
+    CONF_SELECTED_LANGUAGE,
     BACKEND_TYPE_LLAMA_CPP_SERVER,
     BACKEND_TYPE_OLLAMA,
     CONF_CONTEXT_LENGTH,
@@ -54,7 +61,15 @@ from custom_components.llama_conversation.const import (
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
     DEFAULT_TYPICAL_P,
+    DOMAIN,
 )
+
+
+def _build_flow(hass: HomeAssistant) -> ConfigFlow:
+    flow = ConfigFlow()
+    flow.hass = hass
+    flow.context = {"source": "user"}
+    return flow
 
 
 def _schema(hass: HomeAssistant, backend: str, options: dict | None = None):
@@ -202,3 +217,112 @@ def test_schema_includes_llm_api_selector(monkeypatch, hass: HomeAssistant):
     assert prompt_default is not None and "You are 'Al'" in prompt_default
     assert _get_default(schema, CONF_THINKING_PREFIX) == DEFAULT_THINKING_PREFIX
     assert _get_default(schema, CONF_TOOL_CALL_PREFIX) == DEFAULT_TOOL_CALL_PREFIX
+
+
+@pytest.mark.asyncio
+async def test_configure_connection_rejects_invalid_hostname(hass: HomeAssistant):
+    flow = _build_flow(hass)
+    flow.internal_step = "configure_connection"
+    flow.client_config = {
+        CONF_BACKEND_TYPE: BACKEND_TYPE_GENERIC_OPENAI,
+        CONF_SELECTED_LANGUAGE: "en",
+    }
+
+    result = await flow.async_step_user(
+        {
+            CONF_HOST: "bad host name",
+            CONF_PORT: "8080",
+            CONF_SSL: False,
+        }
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"]["base"] == "invalid_hostname"
+
+
+@pytest.mark.asyncio
+async def test_configure_connection_surfaces_backend_validation_error(monkeypatch, hass: HomeAssistant):
+    flow = _build_flow(hass)
+    flow.internal_step = "configure_connection"
+    flow.client_config = {
+        CONF_BACKEND_TYPE: BACKEND_TYPE_GENERIC_OPENAI,
+        CONF_SELECTED_LANGUAGE: "en",
+    }
+
+    async def fake_validate_connection(_hass, _config):
+        return RuntimeError("connection refused")
+
+    monkeypatch.setattr(
+        "custom_components.llama_conversation.config_flow.BACKEND_TO_CLS",
+        {BACKEND_TYPE_GENERIC_OPENAI: type("Backend", (), {"async_validate_connection": staticmethod(fake_validate_connection)})},
+    )
+
+    result = await flow.async_step_user(
+        {
+            CONF_HOST: "localhost",
+            CONF_PORT: "8080",
+            CONF_SSL: False,
+        }
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"]["base"] == "failed_to_connect"
+    assert result["description_placeholders"]["exception"] == "connection refused"
+
+
+@pytest.mark.asyncio
+async def test_local_backend_wheel_install_failure_returns_to_backend_picker(monkeypatch, hass: HomeAssistant):
+    flow = _build_flow(hass)
+    flow.internal_step = "pick_backend"
+    flow.client_config = {}
+
+    monkeypatch.setattr(
+        "custom_components.llama_conversation.config_flow.get_llama_cpp_python_version",
+        lambda: None,
+    )
+    monkeypatch.setattr(
+        "custom_components.llama_conversation.config_flow.install_llama_cpp_python",
+        lambda _config_dir: False,
+    )
+    monkeypatch.setattr(
+        hass,
+        "async_create_background_task",
+        lambda coro, *, name=None: asyncio.create_task(coro, name=name),
+    )
+
+    initial = await flow.async_step_user(
+        {
+            CONF_BACKEND_TYPE: BACKEND_TYPE_LLAMA_CPP,
+            CONF_SELECTED_LANGUAGE: "en",
+        }
+    )
+
+    assert initial["type"] == FlowResultType.SHOW_PROGRESS
+    await flow.install_wheel_task
+
+    progress_done = await flow.async_step_user()
+
+    assert progress_done["type"] == FlowResultType.SHOW_PROGRESS_DONE
+    assert flow.internal_step == "pick_backend"
+
+    retry = await flow.async_step_user()
+
+    assert retry["type"] == FlowResultType.FORM
+    assert retry["errors"]["base"] == "pip_wheel_error"
+
+
+@pytest.mark.asyncio
+async def test_async_step_finish_rejects_duplicate_llama_cpp_entry(hass: HomeAssistant):
+    existing = MockConfigEntry(domain=DOMAIN, data={CONF_BACKEND_TYPE: BACKEND_TYPE_LLAMA_CPP})
+    existing.add_to_hass(hass)
+
+    flow = _build_flow(hass)
+    flow.client_config = {
+        CONF_BACKEND_TYPE: BACKEND_TYPE_LLAMA_CPP,
+        CONF_SELECTED_LANGUAGE: "en",
+    }
+
+    result = await flow.async_step_finish()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "duplicate_client"

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import importlib
+import importlib.util
 import logging
 import os
 import threading
@@ -17,7 +18,7 @@ from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.helpers.event import async_track_state_change, async_call_later
 
-from custom_components.llama_conversation.utils import install_llama_cpp_python, validate_llama_cpp_python_installation, get_oai_formatted_messages, get_oai_formatted_tools
+from custom_components.llama_conversation.utils import LlamaCppPythonInstallError, install_llama_cpp_python, validate_llama_cpp_python_installation, get_oai_formatted_messages, get_oai_formatted_tools
 from custom_components.llama_conversation.const import (
     CONF_ENABLE_LEGACY_TOOL_CALLING,
     CONF_TOOL_RESPONSE_AS_STRING,
@@ -135,6 +136,23 @@ class LlamaCppClient(LocalLLMClient):
     async def async_get_available_models(self) -> List[str]:
         return [] # TODO: find available "huggingface_hub" models that have been downloaded
 
+    def _ensure_llama_cpp_runtime_available(self) -> None:
+        try:
+            validate_llama_cpp_python_installation()
+            if importlib.util.find_spec("llama_cpp") is None:
+                install_llama_cpp_python(self.hass.config.config_dir, raise_on_error=True)
+                validate_llama_cpp_python_installation()
+
+                if importlib.util.find_spec("llama_cpp") is None:
+                    raise ModuleNotFoundError("llama_cpp")
+        except LlamaCppPythonInstallError as err:
+            raise ConfigEntryError(str(err)) from err
+        except Exception as err:
+            raise ConfigEntryError(f"Failed to initialize llama-cpp-python: {err}") from err
+
+    async def async_validate_startup(self, entry: ConfigEntry | None = None) -> None:
+        await self.hass.async_add_executor_job(self._ensure_llama_cpp_runtime_available)
+
     def _load_model(self, entity_options: dict[str, Any]) -> None:
         model_name = entity_options.get(CONF_CHAT_MODEL, "")
         model_path = entity_options.get(CONF_DOWNLOADED_MODEL_FILE, "")
@@ -149,19 +167,11 @@ class LlamaCppClient(LocalLLMClient):
             raise Exception(f"Model was not found at '{model_path}'!")
 
         if not self.llama_cpp_module:
-            validate_llama_cpp_python_installation()
-
-            # don't import it until now because the wheel is installed by config_flow.py
             try:
+                self._ensure_llama_cpp_runtime_available()
                 self.llama_cpp_module = importlib.import_module("llama_cpp")
-            except ModuleNotFoundError:
-                # attempt to re-install llama-cpp-python if it was uninstalled for some reason
-                install_result = install_llama_cpp_python(self.hass.config.config_dir)
-                if not install_result == True:
-                    raise ConfigEntryError("llama-cpp-python was not installed on startup and re-installing it led to an error!")
-
-                validate_llama_cpp_python_installation()
-                self.llama_cpp_module = importlib.import_module("llama_cpp")
+            except ModuleNotFoundError as err:
+                raise ConfigEntryError("llama-cpp-python is not importable after installation.") from err
 
         Llama: type[LlamaType] = getattr(self.llama_cpp_module, "Llama")
         LlamaDiskCache: type[LlamaDiskCacheType] = getattr(self.llama_cpp_module, "LlamaDiskCache")
@@ -399,7 +409,7 @@ class LlamaCppClient(LocalLLMClient):
                 # avoid strict typing issues from the llama-cpp-python bindings
                 self.models[model_name].create_chat_completion(
                     messages,
-                    tools=tools,
+                    tools=tools if tools is not None else [],
                     temperature=temperature,
                     top_k=top_k,
                     top_p=top_p,
@@ -472,7 +482,7 @@ class LlamaCppClient(LocalLLMClient):
 
         chat_completion = self.models[model_name].create_chat_completion(
             messages,
-            tools=tools,
+            tools=tools if tools is not None else [],
             temperature=temperature,
             top_k=top_k,
             top_p=top_p,

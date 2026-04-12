@@ -90,8 +90,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> 
     backend_type = entry.data.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE)
     entry.runtime_data = await hass.async_add_executor_job(create_client, backend_type)
 
-    # forward setup to platform to register the entity
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    try:
+        await entry.runtime_data.async_validate_startup(entry)
+
+        # forward setup to platform to register the entity
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    except Exception:
+        hass.data[DOMAIN].pop(entry.entry_id, None)
+        raise
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
@@ -109,10 +115,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) ->
     if entry.data[CONF_BACKEND_TYPE] == BACKEND_TYPE_LLAMA_CPP:
         # clean up any disk cache resources
         def cleanup_cache_dir():
-            if CONF_CHAT_MODEL not in entry.data:
+            model_name = entry.data.get(CONF_CHAT_MODEL) or entry.options.get(CONF_CHAT_MODEL)
+            if not model_name:
                 return
-            
-            cache_dir = entry.data[CONF_CHAT_MODEL].strip().replace(" ", "_").lower()
+            cache_dir = model_name.strip().replace(" ", "_").lower()
             full_path = os.path.join(hass.config.media_dirs.get("local", hass.config.path("media")), "kv_cache", cache_dir)
             shutil.rmtree(full_path, ignore_errors=True)
 
