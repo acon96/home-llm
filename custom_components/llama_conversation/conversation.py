@@ -127,6 +127,7 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent, LocalLLMEntit
             if remember_num_interactions and len(message_history) > (remember_num_interactions * 2) + 1:
                 new_message_history = [message_history[0]] # copy system prompt
                 new_message_history.extend(message_history[1:][-(remember_num_interactions * 2):])
+                message_history = new_message_history
 
             # re-generate prompt if necessary
             if len(message_history) == 0 or refresh_system_prompt:
@@ -152,7 +153,23 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent, LocalLLMEntit
             # if max tool calls is 0 then we expect to generate the response & tool call in one go
             for idx in range(max(1, max_tool_call_iterations)):
                 _LOGGER.debug(f"Generating response for {user_input.text=}, iteration {idx+1}/{max_tool_call_iterations}")
-                generation_result = await self.client._async_generate(message_history, user_input.agent_id, chat_log, self.runtime_options)
+                try:
+                    generation_result = await self.client._async_generate(
+                        message_history,
+                        user_input.agent_id,
+                        chat_log,
+                        self.runtime_options,
+                    )
+                except Exception as err:
+                    _LOGGER.exception("There was a problem talking to the backend")
+                    intent_response = intent.IntentResponse(language=user_input.language)
+                    intent_response.async_set_error(
+                        intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
+                        f"Sorry, there was a problem talking to the backend: {repr(err)}",
+                    )
+                    return ConversationResult(
+                        response=intent_response, conversation_id=user_input.conversation_id
+                    )
                 
                 last_generation_had_tool_calls = False
                 while True:
