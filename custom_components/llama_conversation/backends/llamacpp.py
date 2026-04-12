@@ -399,7 +399,7 @@ class LlamaCppClient(LocalLLMClient):
                 # avoid strict typing issues from the llama-cpp-python bindings
                 self.models[model_name].create_chat_completion(
                     messages,
-                    tools=tools,
+                    tools=tools if tools is not None else [],
                     temperature=temperature,
                     top_k=top_k,
                     top_p=top_p,
@@ -472,7 +472,7 @@ class LlamaCppClient(LocalLLMClient):
 
         chat_completion = self.models[model_name].create_chat_completion(
             messages,
-            tools=tools,
+            tools=tools if tools is not None else [],
             temperature=temperature,
             top_k=top_k,
             top_p=top_p,

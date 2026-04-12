@@ -109,10 +109,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) ->
     if entry.data[CONF_BACKEND_TYPE] == BACKEND_TYPE_LLAMA_CPP:
         # clean up any disk cache resources
         def cleanup_cache_dir():
-            if CONF_CHAT_MODEL not in entry.data:
+            model_name = entry.data.get(CONF_CHAT_MODEL) or entry.options.get(CONF_CHAT_MODEL)
+            if not model_name:
                 return
-            
-            cache_dir = entry.data[CONF_CHAT_MODEL].strip().replace(" ", "_").lower()
+            cache_dir = model_name.strip().replace(" ", "_").lower()
             full_path = os.path.join(hass.config.media_dirs.get("local", hass.config.path("media")), "kv_cache", cache_dir)
             shutil.rmtree(full_path, ignore_errors=True)
 
