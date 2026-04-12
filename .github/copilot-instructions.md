@@ -1,6 +1,6 @@
 # Home Assistant LLM — Project Guidelines
 
-Local LLM integration for Home Assistant that enables AI-powered voice/chat control of smart home devices. Domain: `llama_conversation`, version 0.4.6.
+Local LLM integration for Home Assistant that enables AI-powered voice/chat control of smart home devices. Domain: `llama_conversation`, version 0.4.7.
 
 ## Architecture
 

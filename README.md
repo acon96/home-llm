@@ -119,18 +119,20 @@ The fine-tuning dataset and training scripts are included in this repository:
 
 ## Version History
 
-| Version    | Highlights                                                                                 |
-|------------|--------------------------------------------------------------------------------------------|
-| **v0.4.6** | Anthropic API support, on-disk caching for Llama.cpp, new tool calling dataset             |
-| **v0.4.5** | AI Task entities, multiple LLM APIs at once, official Ollama package                       |
-| **v0.4**   | Tool calling rewrite, voice streaming, agentic tool use loop, multiple configs per backend |
-| **v0.3**   | Home Assistant LLM API support, improved prompting, HuggingFace GGUF auto-detection        |
+| Version    | Highlights                                                                                                                        |
+|------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| **v0.4.7** | Bug fixes, update default llama_cpp_python version to support new models, and support python 3.14 for new Home Assistant versions |
+| **v0.4.6** | Anthropic API support, on-disk caching for Llama.cpp, new tool calling dataset                                                    |
+| **v0.4.5** | AI Task entities, multiple LLM APIs at once, official Ollama package                                                              |
+| **v0.4**   | Tool calling rewrite, voice streaming, agentic tool use loop, multiple configs per backend                                        |
+| **v0.3**   | Home Assistant LLM API support, improved prompting, HuggingFace GGUF auto-detection                                               |
 
 <details>
 <summary>Full Version History</summary>
 
 | Version | Description                                                                                                                                             |
 |---------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| v0.4.7  | Bug fixes, update default llama_cpp_python version to support new models, and support python 3.14 for new Home Assistant versions                       |
 | v0.4.6  | New dataset supporting proper tool calling, Add Anthropic "messages" style API support, Add on-disk caching for Llama.cpp backend                       |
 | v0.4.5  | Add support for AI Task entities, Replace custom Ollama API implementation with the official `ollama-python` package, Support multiple LLM APIs at once |
 | v0.4.4  | Fix issue with OpenAI backends appending `/v1` to all URLs                                                                                              |
