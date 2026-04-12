@@ -1,3 +1,4 @@
+from functools import partial
 import time
 import os
 import re
@@ -6,10 +7,12 @@ import sys
 import platform
 import logging
 import multiprocessing
+import site
 import voluptuous as vol
 import webcolors
 import json
 import base64
+from subprocess import PIPE, Popen
 from pathlib import Path
 from typing import Any, Dict, List, Sequence, Tuple, cast
 from webcolors import CSS3
@@ -21,8 +24,8 @@ from homeassistant.components import conversation
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import intent, llm, aiohttp_client
 from homeassistant.requirements import pip_kwargs
-from homeassistant.util import color
-from homeassistant.util.package import install_package, is_installed
+from homeassistant.util import color, package as package_util
+from homeassistant.util.package import is_installed
 
 from voluptuous_openapi import convert as convert_to_openapi
 
@@ -55,6 +58,10 @@ class MissingQuantizationException(Exception):
         super().__init__(missing_quant, available_quants)
         self.missing_quant = missing_quant
         self.available_quants = available_quants
+
+
+class LlamaCppPythonInstallError(HomeAssistantError):
+    """Raised when llama-cpp-python cannot be installed from the hosted wheels."""
 
 class MalformedToolCallException(Exception):
     def __init__(self, agent_id: str, tool_call_id: str, tool_name: str, tool_args: str, error_msg: str):
@@ -197,9 +204,8 @@ def get_llama_cpp_python_version():
         return None
     return version("llama-cpp-python")
 
-def get_runtime_and_platform_suffix() -> Tuple[str, str]:
-    runtime_version = f"cp{sys.version_info.major}{sys.version_info.minor}"
-
+def get_platform_suffix() -> str:
+    """Get the platform suffix for wheel files."""
     platform_suffix = platform.machine()
     # remap other names for architectures to the names we use
     if platform_suffix == "arm64":
@@ -207,7 +213,10 @@ def get_runtime_and_platform_suffix() -> Tuple[str, str]:
     if platform_suffix == "i386" or platform_suffix == "amd64":
         platform_suffix = "x86_64"
 
-    return runtime_version, platform_suffix
+    return platform_suffix
+
+def get_potential_wheels(folder: str, platform_suffix: str) -> List[str]:
+    return sorted([ path for path in os.listdir(folder) if path.endswith(f"{platform_suffix}.whl") ], reverse=True)
 
 async def get_available_llama_cpp_versions(hass: HomeAssistant) -> List[Tuple[str, bool]]:
     github_index_url = "https://acon96.github.io/llama-cpp-python/whl/ha/llama-cpp-python/"
@@ -224,14 +233,71 @@ async def get_available_llama_cpp_versions(hass: HomeAssistant) -> List[Tuple[st
         _LOGGER.warning(f"Error fetching available versions from GitHub: {repr(ex)}")
         remote = []
 
-    runtime_version, platform_suffix = get_runtime_and_platform_suffix()
+    platform_suffix = get_platform_suffix()
     folder = os.path.dirname(__file__)
-    potential_wheels = sorted([ path for path in os.listdir(folder) if path.endswith(f"{platform_suffix}.whl") ], reverse=True)
-    local = [ (wheel, True) for wheel in potential_wheels if runtime_version in wheel and "llama_cpp_python" in wheel]
-    
+    potential_wheels = await hass.async_add_executor_job(partial(get_potential_wheels, folder, platform_suffix))
+    local = [ (wheel, True) for wheel in potential_wheels if "llama_cpp_python" in wheel and ("py3-none" in wheel or f"cp{sys.version_info.major}{sys.version_info.minor}" in wheel)]
     return remote + local
 
-def install_llama_cpp_python(config_dir: str, force_reinstall: bool = False, specific_version: str | None = None) -> bool:
+
+def _install_package_with_stderr(
+    package: str,
+    *,
+    upgrade: bool = True,
+    target: str | None = None,
+    constraints: str | None = None,
+    timeout: int | None = None,
+    reinstall: bool = False,
+) -> tuple[bool, str | None]:
+    env = os.environ.copy()
+    args = [
+        sys.executable,
+        "-m",
+        "uv",
+        "pip",
+        "install",
+        "--quiet",
+        package,
+        "--index-strategy",
+        "unsafe-first-match",
+    ]
+
+    if timeout:
+        env["HTTP_TIMEOUT"] = str(timeout)
+    if upgrade:
+        args.append("--upgrade")
+    if reinstall:
+        args.append("--reinstall")
+    if constraints is not None:
+        args += ["--constraint", constraints]
+    if target:
+        args += ["--target", os.path.abspath(target)]
+    elif (
+        not package_util.is_virtual_env()
+        and not any(var in env for var in package_util._UV_ENV_PYTHON_VARS)
+        and (abs_target := site.getusersitepackages())
+    ):
+        args += ["--python", sys.executable, "--target", abs_target]
+
+    with Popen(
+        args,
+        stdin=PIPE,
+        stdout=PIPE,
+        stderr=PIPE,
+        env=env,
+        close_fds=False,
+    ) as process:
+        _, stderr = process.communicate()
+        stderr_text = stderr.decode("utf-8").lstrip().strip() or None
+        return process.returncode == 0, stderr_text
+
+
+def install_llama_cpp_python(
+    config_dir: str,
+    force_reinstall: bool = False,
+    specific_version: str | None = None,
+    raise_on_error: bool = False,
+) -> bool:
 
     installed_wrong_version = False
     if is_installed("llama-cpp-python") and not force_reinstall:
@@ -240,8 +306,11 @@ def install_llama_cpp_python(config_dir: str, force_reinstall: bool = False, spe
         else:
             time.sleep(0.5) # I still don't know why this is required
             return True
+    
+    if force_reinstall:
+        _LOGGER.info("Force reinstalling llama-cpp-python")
         
-    runtime_version, platform_suffix = get_runtime_and_platform_suffix()
+    platform_suffix = get_platform_suffix()
 
     if not specific_version:
         specific_version = EMBEDDED_LLAMA_CPP_PYTHON_VERSION
@@ -249,19 +318,27 @@ def install_llama_cpp_python(config_dir: str, force_reinstall: bool = False, spe
     if ".whl" in specific_version:
         wheel_location = os.path.join(os.path.dirname(__file__), specific_version)
     else:
-        wheel_location = f"https://github.com/acon96/llama-cpp-python/releases/download/{specific_version}/llama_cpp_python-{specific_version}-{runtime_version}-{runtime_version}-linux_{platform_suffix}.whl"
+        wheel_location = f"https://github.com/acon96/llama-cpp-python/releases/download/{specific_version}/llama_cpp_python-{specific_version}-py3-none-linux_{platform_suffix}.whl"
 
-    if install_package(wheel_location, **pip_kwargs(config_dir)):
+    install_success, install_error = _install_package_with_stderr(
+        wheel_location, reinstall=force_reinstall, **pip_kwargs(config_dir)
+    )
+
+    if install_success:
         _LOGGER.info("llama-cpp-python successfully installed")
         return True
     
     # if it is just the wrong version installed then ignore the installation error
     if not installed_wrong_version:
-        _LOGGER.error(
-            "Error installing llama-cpp-python. Could not install the binary wheels from GitHub." + \
-            "Please manually build or download the wheels and place them in the `/config/custom_components/llama_conversation` directory." + \
-            "Make sure that you download the correct .whl file for your platform and python version from the GitHub releases page."
+        error_message = (
+            f"Unable to install package {wheel_location}: {install_error or 'unknown installation error'}. "
+            "Please manually build or download the wheels and place them in the `/config/custom_components/llama_conversation` directory. "
+            "Make sure that you download the correct .whl file for your platform from the GitHub releases page."
         )
+        if raise_on_error:
+            raise LlamaCppPythonInstallError(error_message)
+
+        _LOGGER.error("Error installing llama-cpp-python. %s", error_message)
         return False
     else:
         _LOGGER.info(

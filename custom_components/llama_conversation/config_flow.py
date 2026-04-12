@@ -239,7 +239,7 @@ def remote_connection_schema(backend_type: str, *, host=None, port=None, ssl=Non
             vol.Optional(CONF_API_KEY): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
             vol.Optional(
                 CONF_API_PATH,
-                default=selected_path if selected_path else default_path
+                default=selected_path if selected_path is not None else default_path
             ): TextSelector(TextSelectorConfig(prefix="/")),
             **extra
         }
