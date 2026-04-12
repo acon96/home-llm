@@ -113,6 +113,10 @@ class LocalLLMClient:
         """Validate connection to the backend. Implemented by sub-classes"""
         return None
 
+    async def async_validate_startup(self, entry: LocalLLMConfigEntry | None = None) -> None:
+        """Validate backend startup prerequisites before entity platforms are set up."""
+        return None
+
     def _load_model(self, entity_options: dict[str, Any]) -> None:
         """Load the model on the backend. Implemented by sub-classes"""
         pass

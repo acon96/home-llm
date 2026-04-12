@@ -90,8 +90,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> 
     backend_type = entry.data.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE)
     entry.runtime_data = await hass.async_add_executor_job(create_client, backend_type)
 
-    # forward setup to platform to register the entity
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    try:
+        await entry.runtime_data.async_validate_startup(entry)
+
+        # forward setup to platform to register the entity
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    except Exception:
+        hass.data[DOMAIN].pop(entry.entry_id, None)
+        raise
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 

@@ -7,6 +7,7 @@ from types import SimpleNamespace
 import pytest
 
 from homeassistant.const import CONF_HOST
+from homeassistant.exceptions import ConfigEntryError
 
 from custom_components.llama_conversation import async_setup_entry, async_unload_entry
 from custom_components.llama_conversation.const import (
@@ -45,6 +46,9 @@ async def test_async_setup_entry_registers_api_and_creates_client(monkeypatch, h
         def __init__(self, _hass, options):
             created["options"] = options
 
+        async def async_validate_startup(self, _entry):
+            return None
+
     entry = DummyEntry(
         entry_id="entry-1",
         data={CONF_BACKEND_TYPE: BACKEND_TYPE_GENERIC_OPENAI},
@@ -82,6 +86,47 @@ async def test_async_setup_entry_registers_api_and_creates_client(monkeypatch, h
     assert forwarded and forwarded[0][0] is entry
     assert entry.update_listener is not None
     assert entry.unload_callbacks
+
+
+@pytest.mark.asyncio
+async def test_async_setup_entry_raises_before_forwarding_when_startup_validation_fails(monkeypatch, hass):
+    forwarded = []
+
+    class DummyClient:
+        def __init__(self, _hass, _options):
+            pass
+
+        async def async_validate_startup(self, _entry):
+            raise ConfigEntryError("Unable to install package wheel: unexpected BufError")
+
+    entry = DummyEntry(
+        entry_id="entry-validate-fail",
+        data={CONF_BACKEND_TYPE: BACKEND_TYPE_GENERIC_OPENAI},
+        options={CONF_HOST: "localhost", CONF_CHAT_MODEL: "demo-model"},
+    )
+
+    async def fake_forward_entry_setups(cfg_entry, platforms):
+        forwarded.append((cfg_entry, tuple(platforms)))
+
+    monkeypatch.setattr(
+        "custom_components.llama_conversation.llm.async_get_apis",
+        lambda _hass: [],
+    )
+    monkeypatch.setattr(
+        "custom_components.llama_conversation.llm.async_register_api",
+        lambda _hass, api: None,
+    )
+    monkeypatch.setattr(
+        "custom_components.llama_conversation.BACKEND_TO_CLS",
+        {BACKEND_TYPE_GENERIC_OPENAI: DummyClient},
+    )
+    monkeypatch.setattr(hass.config_entries, "async_forward_entry_setups", fake_forward_entry_setups)
+
+    with pytest.raises(ConfigEntryError, match="unexpected BufError"):
+        await async_setup_entry(hass, entry)
+
+    assert not forwarded
+    assert entry.entry_id not in hass.data.get(DOMAIN, {})
 
 
 @pytest.mark.asyncio
