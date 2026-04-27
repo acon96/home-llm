@@ -38,7 +38,7 @@ from custom_components.llama_conversation.const import (
 )
 
 from custom_components.llama_conversation.entity import LocalLLMClient, TextGenerationResult
-from custom_components.llama_conversation.utils import get_file_contents_base64
+from custom_components.llama_conversation.utils import get_file_contents_base64, parse_tool_arguments_with_repair_fallback
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -376,10 +376,11 @@ class AnthropicAPIClient(LocalLLMClient):
                         elif event_type == "content_block_stop":
                             if current_tool_call:
                                 # Parse the accumulated JSON and yield the tool call
-                                try:
-                                    tool_args = json.loads(current_tool_call["input"]) if current_tool_call["input"] else {}
-                                except json.JSONDecodeError:
-                                    tool_args = {}
+                                tool_args = parse_tool_arguments_with_repair_fallback(
+                                    current_tool_call["input"],
+                                    agent_id,
+                                    current_tool_call["name"],
+                                ) if current_tool_call["input"] else {}
 
                                 tool_call_dict = {
                                     "function": {

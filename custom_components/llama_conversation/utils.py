@@ -12,6 +12,7 @@ import voluptuous as vol
 import webcolors
 import json
 import base64
+import fuzzy_json
 from subprocess import PIPE, Popen
 from pathlib import Path
 from typing import Any, Dict, List, Sequence, Tuple, cast
@@ -496,7 +497,7 @@ def parse_raw_tool_call(raw_block: str | dict, agent_id: str) -> tuple[llm.ToolI
         parsed_tool_call = raw_block
     else:
         try:
-            parsed_tool_call: dict = json.loads(raw_block)
+            parsed_tool_call: dict = parse_json_with_repair_fallback(raw_block)
         except json.JSONDecodeError:
             # handle the "gemma" tool calling format
             # call:HassTurnOn{name:<escape>light.living_room_rgbww<escape>}
@@ -553,10 +554,7 @@ def parse_raw_tool_call(raw_block: str | dict, agent_id: str) -> tuple[llm.ToolI
         if not args_dict.strip():
             args_dict = {} # don't attempt to parse empty arguments
         else:
-            try:
-                args_dict = json.loads(args_dict)
-            except json.JSONDecodeError:
-                raise MalformedToolCallException(agent_id, "", tool_name, str(args_dict), "Tool arguments were not properly formatted JSON")
+            args_dict = parse_tool_arguments_with_repair_fallback(args_dict, agent_id, tool_name)
 
     # make sure brightness is 0-255 and not a percentage
     if "brightness" in args_dict and 0.0 < args_dict["brightness"] <= 1.0:
@@ -623,3 +621,39 @@ def get_file_contents_base64(file_path: Path) -> str:
         encoded_str = encoded_bytes.decode('utf-8')
     
     return encoded_str
+
+def parse_json_with_repair_fallback(raw_str: str) -> Any:
+    """Tries to parse a string as JSON, and if it fails, attempts to repair common issues and parse again."""
+    try:
+        return json.loads(raw_str)
+    except json.JSONDecodeError as first_ex:
+        try:
+            return fuzzy_json.loads(raw_str)
+        except Exception:
+            raise first_ex
+
+
+def parse_tool_arguments_with_repair_fallback(raw_str: str, agent_id: str, tool_name: str) -> Dict[str, Any]:
+    """Parse tool arguments as a JSON object, repairing common syntax issues first."""
+    try:
+        parsed_args = parse_json_with_repair_fallback(raw_str)
+    except json.JSONDecodeError as first_ex:
+        raise MalformedToolCallException(
+            agent_id,
+            "",
+            tool_name,
+            str(raw_str),
+            "Tool arguments were not properly formatted JSON",
+        ) from first_ex
+
+    if not isinstance(parsed_args, dict):
+        raise MalformedToolCallException(
+            agent_id,
+            "",
+            tool_name,
+            str(raw_str),
+            "Tool arguments were not properly formatted JSON",
+        )
+
+    return parsed_args
+    

@@ -13,7 +13,11 @@ from custom_components.llama_conversation.const import (
     DEFAULT_THINKING_PREFIX,
     DEFAULT_THINKING_SUFFIX,
 )
-from custom_components.llama_conversation.utils import MalformedToolCallException
+from custom_components.llama_conversation.utils import (
+    MalformedToolCallException,
+    parse_raw_tool_call,
+    parse_tool_arguments_with_repair_fallback,
+)
 
 
 class DummyLocalClient(LocalLLMClient):
@@ -52,6 +56,17 @@ async def test_async_parse_completion_parses_tool_call(client):
 
 
 @pytest.mark.asyncio
+async def test_async_parse_completion_repairs_malformed_tool_arguments(client):
+    raw_tool = '{"name":"light.turn_on","arguments":{"brightness":0.5,}}'
+    completion = f"hello {DEFAULT_TOOL_CALL_PREFIX}{raw_tool}{DEFAULT_TOOL_CALL_SUFFIX}"
+
+    result = await client._async_parse_completion(DummyLLMApi(), "agent-id", {}, completion)
+
+    assert result.tool_calls
+    assert result.tool_calls[0].tool_args["brightness"] == 127
+
+
+@pytest.mark.asyncio
 async def test_async_parse_completion_ignores_tools_without_llm_api(client):
     raw_tool = '{"name":"light.turn_on","arguments":{"brightness":1}}'
     completion = f"hello {DEFAULT_TOOL_CALL_PREFIX}{raw_tool}{DEFAULT_TOOL_CALL_SUFFIX}"
@@ -68,6 +83,18 @@ async def test_async_parse_completion_malformed_tool_raises(client):
 
     with pytest.raises(MalformedToolCallException):
         await client._async_parse_completion(DummyLLMApi(), "agent-id", {}, bad_tool)
+
+
+def test_parse_raw_tool_call_rejects_non_object_arguments():
+    raw_tool = '{"name":"light.turn_on","arguments":[]}'
+
+    with pytest.raises(MalformedToolCallException):
+        parse_raw_tool_call(raw_tool, "agent-id")
+
+
+def test_parse_tool_arguments_with_repair_fallback_rejects_non_object_json():
+    with pytest.raises(MalformedToolCallException):
+        parse_tool_arguments_with_repair_fallback("[]", "agent-id", "light.turn_on")
 
 
 @pytest.mark.asyncio
