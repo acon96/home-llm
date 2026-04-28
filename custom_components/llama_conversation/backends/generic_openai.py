@@ -76,14 +76,28 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         api_key = user_input.get(CONF_API_KEY)
         api_base_path = user_input.get(CONF_API_PATH, DEFAULT_API_PATH)
         try:
-            async with AsyncOpenAI(api_key=api_key, base_url=api_base_path) as client:
+            async with AsyncOpenAI(
+                api_key=api_key,
+                base_url=format_url(
+                    hostname=user_input[CONF_HOST],
+                    port=user_input[CONF_PORT],
+                    ssl=user_input[CONF_SSL],
+                    path=f"/{api_base_path}",
+                ),
+                timeout=5,
+            ) as client:
                 await client.models.list()
+            return None
         except Exception as ex:
             return str(ex)
 
     async def async_get_available_models(self) -> List[str]:
-        async with AsyncOpenAI(api_key=self.api_key, base_url=self.api_host) as client:
-            return [m.id async for m in client.models.list()]
+        try:
+            async with AsyncOpenAI(api_key=self.api_key, base_url=self.api_host, timeout=5) as client:
+                return [m.id async for m in client.models.list()]
+        except (asyncio.TimeoutError, OpenAIError):
+            _LOGGER.exception("Failed to get available models")
+            return RECOMMENDED_CHAT_MODELS
 
     def _generate_stream(self, 
                          conversation: List[conversation.Content],

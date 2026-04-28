@@ -5,6 +5,7 @@ while the integration evolves. No integration code is modified.
 """
 
 import pytest
+from openai import OpenAIError
 
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.exceptions import ConfigEntryError
@@ -13,6 +14,7 @@ from custom_components.llama_conversation.backends.llamacpp import LlamaCppClien
 from custom_components.llama_conversation.backends.ollama import OllamaAPIClient, _normalize_path
 from custom_components.llama_conversation.backends.generic_openai import GenericOpenAIAPIClient
 from custom_components.llama_conversation.const import (
+    CONF_API_KEY,
     CONF_CHAT_MODEL,
     CONF_CONTEXT_LENGTH,
     CONF_LLAMACPP_BATCH_SIZE,
@@ -30,6 +32,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_PROMPT_CACHING_ENABLED,
     CONF_API_PATH,
     CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
+    RECOMMENDED_CHAT_MODELS,
 )
 from custom_components.llama_conversation.utils import LlamaCppPythonInstallError
 
@@ -131,3 +134,95 @@ async def test_llama_cpp_startup_validation_surfaces_install_error(monkeypatch, 
 
     with pytest.raises(ConfigEntryError, match="unexpected BufError"):
         await client.async_validate_startup()
+
+
+@pytest.mark.asyncio
+async def test_generic_openai_validate_connection_uses_formatted_base_url(monkeypatch, hass):
+    captured: dict[str, str] = {}
+
+    class FakeListResult:
+        def __await__(self):
+            async def _done():
+                return self
+            return _done().__await__()
+
+        def __aiter__(self):
+            async def _gen():
+                if False:
+                    yield None
+            return _gen()
+
+    class FakeModels:
+        def list(self):
+            return FakeListResult()
+
+    class FakeClient:
+        def __init__(self, *, api_key, base_url, timeout=None):
+            captured["api_key"] = api_key
+            captured["base_url"] = base_url
+            captured["timeout"] = timeout
+            self.models = FakeModels()
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+    monkeypatch.setattr(
+        "custom_components.llama_conversation.backends.generic_openai.AsyncOpenAI",
+        FakeClient,
+    )
+
+    err = await GenericOpenAIAPIClient.async_validate_connection(
+        hass,
+        {
+            CONF_HOST: "localhost",
+            CONF_PORT: "11434",
+            CONF_SSL: False,
+            CONF_API_PATH: "v1",
+            CONF_API_KEY: "token",
+        },
+    )
+
+    assert err is None
+    assert captured["api_key"] == "token"
+    assert captured["base_url"] == "http://localhost:11434/v1"
+    assert captured["timeout"] == 5
+
+
+@pytest.mark.asyncio
+async def test_generic_openai_get_available_models_falls_back_on_openai_error(monkeypatch, hass_defaults):
+    class ExplodingModels:
+        def list(self):
+            raise OpenAIError("boom")
+
+    class FakeClient:
+        def __init__(self, **_kwargs):
+            self.models = ExplodingModels()
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+    monkeypatch.setattr(
+        "custom_components.llama_conversation.backends.generic_openai.AsyncOpenAI",
+        FakeClient,
+    )
+
+    client = GenericOpenAIAPIClient(
+        hass_defaults,
+        {
+            CONF_HOST: "localhost",
+            CONF_PORT: "11434",
+            CONF_SSL: False,
+            CONF_API_PATH: "v1",
+            CONF_CHAT_MODEL: "demo",
+        },
+    )
+
+    models = await client.async_get_available_models()
+
+    assert models == RECOMMENDED_CHAT_MODELS
