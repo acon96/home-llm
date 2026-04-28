@@ -75,7 +75,6 @@ class GenericOpenAIAPIClient(LocalLLMClient):
     async def async_validate_connection(hass: HomeAssistant, user_input: Dict[str, Any]) -> str | None:
         api_key = user_input.get(CONF_API_KEY)
         api_base_path = user_input.get(CONF_API_PATH, DEFAULT_API_PATH)
-        normalized_api_base_path = api_base_path.lstrip("/")
         try:
             async with AsyncOpenAI(
                 api_key=api_key,
@@ -83,12 +82,11 @@ class GenericOpenAIAPIClient(LocalLLMClient):
                     hostname=user_input[CONF_HOST],
                     port=user_input[CONF_PORT],
                     ssl=user_input[CONF_SSL],
-                    path=f"/{normalized_api_base_path}",
+                    path=f"/{api_base_path.lstrip('/')}",
                 ),
                 timeout=5,
             ) as client:
                 await client.models.list()
-            return None
         except Exception as ex:
             return str(ex)
 
@@ -97,6 +95,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
             async with AsyncOpenAI(api_key=self.api_key, base_url=self.api_host, timeout=5) as client:
                 return [m.id async for m in client.models.list()]
         except (asyncio.TimeoutError, OpenAIError):
+            _LOGGER.warning("Falling back to recommended models because the API model list request failed.")
             _LOGGER.exception("Failed to get available models")
             return RECOMMENDED_CHAT_MODELS
 
