@@ -137,7 +137,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
                             if event.type == "content.delta": # normal text chunks we can yield
                                 yield event.delta, None
                             elif event.type == "tool_calls.function.arguments.done": # function calls need to wait until complete to be yielded
-                                yield None, [{"function": event.to_dict()}]
+                                yield None, [{"function": {"name": event.name, "arguments": event.parsed_arguments}}]
             except asyncio.TimeoutError as err:
                 raise HomeAssistantError("The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities.") from err
             except OpenAIError as err:
