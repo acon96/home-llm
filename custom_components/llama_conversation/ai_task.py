@@ -124,7 +124,7 @@ class LocalLLMTaskEntity(
 
         # call the LLM client directly (not _async_generate) since that will attempt to execute tool calls
         try:
-            if hasattr(self.client, "_generate_stream"):
+            if self.client._supports_streaming(entity_options):
                 async for chunk in self.client._generate_stream(
                     message_history,
                     llm_api,

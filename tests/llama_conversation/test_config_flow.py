@@ -21,6 +21,7 @@ from custom_components.llama_conversation.const import (
     BACKEND_TYPE_LLAMA_CPP_SERVER,
     BACKEND_TYPE_OLLAMA,
     CONF_CONTEXT_LENGTH,
+    CONF_ENABLE_STREAMING,
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
     CONF_GBNF_GRAMMAR_FILE,
     CONF_LLAMACPP_BATCH_SIZE,
@@ -45,6 +46,7 @@ from custom_components.llama_conversation.const import (
     CONF_TYPICAL_P,
     CONF_TEMPERATURE,
     DEFAULT_CONTEXT_LENGTH,
+    DEFAULT_ENABLE_STREAMING,
     DEFAULT_LLAMACPP_BATCH_SIZE,
     DEFAULT_LLAMACPP_BATCH_THREAD_COUNT,
     DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION,
@@ -172,6 +174,7 @@ def test_schema_generic_openai_options_preserved(hass: HomeAssistant):
     assert {CONF_TOP_P, CONF_REQUEST_TIMEOUT}.issubset({getattr(k, "schema", None) for k in schema})
     assert _get_default(schema, CONF_TOP_P) == DEFAULT_TOP_P
     assert _get_default(schema, CONF_REQUEST_TIMEOUT) == DEFAULT_REQUEST_TIMEOUT
+    assert _get_default(schema, CONF_ENABLE_STREAMING) is DEFAULT_ENABLE_STREAMING
     assert _get_suggested(schema, CONF_TOP_P) == 0.25
     assert _get_suggested(schema, CONF_REQUEST_TIMEOUT) == 321
     # Base prompt options still present

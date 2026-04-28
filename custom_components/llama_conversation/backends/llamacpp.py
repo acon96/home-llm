@@ -507,3 +507,70 @@ class LlamaCppClient(LocalLLMClient):
 
         return self._async_stream_parse_completion(llm_api, agent_id, entity_options, next_token=next_token())
 
+    async def _generate(
+        self,
+        conversation: List[conversation.Content],
+        llm_api: llm.APIInstance | None,
+        agent_id: str,
+        entity_options: dict[str, Any],
+    ) -> TextGenerationResult:
+        model_name = entity_options.get(CONF_CHAT_MODEL, "")
+        max_tokens = entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
+        temperature = entity_options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
+        top_k = int(entity_options.get(CONF_TOP_K, DEFAULT_TOP_K))
+        top_p = entity_options.get(CONF_TOP_P, DEFAULT_TOP_P)
+        min_p = entity_options.get(CONF_MIN_P, DEFAULT_MIN_P)
+        typical_p = entity_options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)
+        grammar = self.grammars.get(model_name) if entity_options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR) else None
+        enable_legacy_tool_calling = entity_options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
+        tool_response_as_string = entity_options.get(CONF_TOOL_RESPONSE_AS_STRING, DEFAULT_TOOL_RESPONSE_AS_STRING)
+
+        _LOGGER.debug(f"Options: {entity_options}")
+
+        messages = get_oai_formatted_messages(conversation, tool_result_to_str=tool_response_as_string)
+        tools = None
+        if llm_api and not enable_legacy_tool_calling:
+            tools = get_oai_formatted_tools(llm_api, self._async_get_all_exposed_domains())
+
+        response_json_schema = entity_options.get(CONF_RESPONSE_JSON_SCHEMA)
+        response_format: Optional[ChatCompletionRequestResponseFormat] = None
+        if response_json_schema:
+            response_format = {
+                "type": "json_object",
+                "schema": response_json_schema,
+            }
+
+        response = self.models[model_name].create_chat_completion(
+            messages,
+            tools=tools if tools is not None else [],
+            temperature=temperature,
+            top_k=top_k,
+            top_p=top_p,
+            min_p=min_p,
+            typical_p=typical_p,
+            max_tokens=max_tokens,
+            grammar=grammar,
+            stream=False,
+            response_format=response_format,
+        )
+
+        content = ""
+        tool_calls = None
+        if response and isinstance(response, dict):
+            choice = (response.get("choices") or [{}])[0]
+            message = choice.get("message", {})
+            content = message.get("content") or ""
+            tool_calls = message.get("tool_calls")
+
+        async def single_chunk() -> AsyncGenerator[tuple[Optional[str], Optional[List]], None]:
+            yield content, tool_calls
+
+        return await self._collect_result_stream(
+            self._async_stream_parse_completion(
+                llm_api,
+                agent_id,
+                entity_options,
+                anext_token=single_chunk(),
+            )
+        )
+

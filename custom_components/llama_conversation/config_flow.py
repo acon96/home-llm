@@ -58,6 +58,7 @@ from .const import (
     CONF_MIN_P,
     CONF_TYPICAL_P,
     CONF_REQUEST_TIMEOUT,
+    CONF_ENABLE_STREAMING,
     CONF_BACKEND_TYPE,
     CONF_INSTALLED_LLAMACPP_VERSION,
     CONF_SELECTED_LANGUAGE,
@@ -116,6 +117,7 @@ from .const import (
     DEFAULT_MIN_P,
     DEFAULT_TYPICAL_P,
     DEFAULT_REQUEST_TIMEOUT,
+    DEFAULT_ENABLE_STREAMING,
     DEFAULT_BACKEND_TYPE,
     DEFAULT_DOWNLOADED_MODEL_QUANTIZATION,
     DEFAULT_THINKING_PREFIX,
@@ -633,6 +635,11 @@ def local_llama_config_option_schema(
             default=options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE),
         ): NumberSelector(NumberSelectorConfig(min=0.0, max=2.0, step=0.05, mode=NumberSelectorMode.BOX)),
         vol.Required(
+            CONF_ENABLE_STREAMING,
+            description={"suggested_value": options.get(CONF_ENABLE_STREAMING, DEFAULT_ENABLE_STREAMING)},
+            default=options.get(CONF_ENABLE_STREAMING, DEFAULT_ENABLE_STREAMING),
+        ): BooleanSelector(BooleanSelectorConfig()),
+        vol.Required(
             CONF_THINKING_PREFIX,
             description={"suggested_value": options.get(CONF_THINKING_PREFIX)},
             default=DEFAULT_THINKING_PREFIX,
@@ -1031,6 +1038,7 @@ def local_llama_config_option_schema(
         CONF_AI_TASK_RETRIES,
         CONF_CONTEXT_LENGTH,
         CONF_MAX_TOKENS,
+        CONF_ENABLE_STREAMING,
         # sampling parameters
         CONF_TEMPERATURE,
         CONF_TOP_P,

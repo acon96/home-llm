@@ -75,6 +75,8 @@ class OllamaAPIClient(LocalLLMClient):
     api_host: str
     api_key: Optional[str]
 
+    _attr_supports_streaming = True
+
     def __init__(self, hass: HomeAssistant, client_options: dict[str, Any]) -> None:
         super().__init__(hass, client_options)
         base_path = _normalize_path(client_options.get(CONF_API_PATH, DEFAULT_API_PATH))
@@ -242,3 +244,74 @@ class OllamaAPIClient(LocalLLMClient):
                 raise HomeAssistantError(f"Failed to communicate with the API! {err}") from err
 
         return self._async_stream_parse_completion(llm_api, agent_id, entity_options, anext_token=anext_token())
+
+    async def _generate(
+        self,
+        conversation: List[conversation.Content],
+        llm_api: llm.APIInstance | None,
+        agent_id: str,
+        entity_options: Dict[str, Any],
+    ) -> TextGenerationResult:
+        model_name = entity_options.get(CONF_CHAT_MODEL, "")
+        context_length = entity_options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
+        max_tokens = entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
+        temperature = entity_options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
+        top_p = entity_options.get(CONF_TOP_P, DEFAULT_TOP_P)
+        top_k = entity_options.get(CONF_TOP_K, DEFAULT_TOP_K)
+        typical_p = entity_options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)
+        timeout = entity_options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
+        keep_alive = entity_options.get(CONF_OLLAMA_KEEP_ALIVE_MIN, DEFAULT_OLLAMA_KEEP_ALIVE_MIN)
+        enable_legacy_tool_calling = entity_options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
+        tool_response_as_string = entity_options.get(CONF_TOOL_RESPONSE_AS_STRING, DEFAULT_TOOL_RESPONSE_AS_STRING)
+        think_mode = entity_options.get(CONF_ENABLE_THINK_MODE, DEFAULT_ENABLE_THINK_MODE)
+        json_mode = entity_options.get(CONF_OLLAMA_JSON_MODE, DEFAULT_OLLAMA_JSON_MODE)
+
+        options = {
+            "num_ctx": context_length,
+            "top_p": top_p,
+            "top_k": top_k,
+            "typical_p": typical_p,
+            "temperature": temperature,
+            "num_predict": max_tokens,
+            "min_p": entity_options.get(CONF_MIN_P, DEFAULT_MIN_P),
+        }
+
+        messages = get_oai_formatted_messages(conversation, tool_args_to_str=False, tool_result_to_str=tool_response_as_string)
+        tools = None
+        if llm_api and not enable_legacy_tool_calling:
+            tools = get_oai_formatted_tools(llm_api, self._async_get_all_exposed_domains())
+        keep_alive_payload = self._format_keep_alive(keep_alive)
+
+        client = self._build_client(timeout=timeout)
+        try:
+            format_option = entity_options.get(CONF_RESPONSE_JSON_SCHEMA, "json" if json_mode else None)
+            response = await client.chat(
+                model=model_name,
+                messages=messages,
+                tools=tools,
+                stream=False,
+                think=think_mode,
+                format=format_option,
+                options=options,
+                keep_alive=keep_alive_payload,
+            )
+        except httpx.TimeoutException as err:
+            raise HomeAssistantError(
+                "The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities."
+            ) from err
+        except (ResponseError, ConnectionError) as err:
+            raise HomeAssistantError(f"Failed to communicate with the API! {err}") from err
+
+        content, raw_tool_calls = self._extract_response(response)
+
+        async def single_chunk() -> AsyncGenerator[Tuple[Optional[str], Optional[List[dict]]], None]:
+            yield content, raw_tool_calls
+
+        return await self._collect_result_stream(
+            self._async_stream_parse_completion(
+                llm_api,
+                agent_id,
+                entity_options,
+                anext_token=single_chunk(),
+            )
+        )

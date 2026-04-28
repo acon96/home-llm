@@ -157,6 +157,8 @@ class AnthropicAPIClient(LocalLLMClient):
     base_url: str
     api_path: str
 
+    _attr_supports_streaming = True
+
     def __init__(self, hass: HomeAssistant, client_options: dict[str, Any]) -> None:
         super().__init__(hass, client_options)
 
@@ -411,4 +413,96 @@ class AnthropicAPIClient(LocalLLMClient):
 
         return self._async_stream_parse_completion(
             llm_api, agent_id, entity_options, anext_token=anext_token()
+        )
+
+    async def _generate(
+        self,
+        conversation: List[conversation.Content],
+        llm_api: llm.APIInstance | None,
+        agent_id: str,
+        entity_options: dict[str, Any],
+    ) -> TextGenerationResult:
+        model_name = entity_options.get(CONF_CHAT_MODEL, "")
+        max_tokens = int(entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS))
+        temperature = entity_options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
+        top_p = entity_options.get(CONF_TOP_P, DEFAULT_TOP_P)
+        top_k = entity_options.get(CONF_TOP_K, DEFAULT_TOP_K)
+        timeout = entity_options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
+        enable_legacy_tool_calling = entity_options.get(
+            CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING
+        )
+        tool_response_as_string = entity_options.get(
+            CONF_TOOL_RESPONSE_AS_STRING, DEFAULT_TOOL_RESPONSE_AS_STRING
+        )
+
+        system_prompt, messages = _convert_to_anthropic_messages(
+            conversation, tool_result_to_str=tool_response_as_string
+        )
+
+        tools = None
+        if llm_api and not enable_legacy_tool_calling:
+            tools = _convert_tools_to_anthropic_format(llm_api)
+
+        request_params: Dict[str, Any] = {
+            "model": model_name,
+            "max_tokens": max_tokens,
+            "messages": messages,
+        }
+        if system_prompt:
+            request_params["system"] = system_prompt
+        if tools:
+            request_params["tools"] = tools
+        if temperature is not None:
+            request_params["temperature"] = temperature
+        if top_p is not None:
+            request_params["top_p"] = top_p
+        if top_k is not None and top_k > 0:
+            request_params["top_k"] = top_k
+
+        try:
+            client = await self._async_build_client(timeout=timeout)
+            response = await client.messages.create(**request_params)
+        except APITimeoutError as err:
+            raise HomeAssistantError(
+                "The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities."
+            ) from err
+        except APIConnectionError as err:
+            raise HomeAssistantError(
+                f"Failed to connect to the Anthropic-compatible API: {err}"
+            ) from err
+        except APIError as err:
+            raise HomeAssistantError(
+                f"Anthropic API error: {err}"
+            ) from err
+
+        text_chunks: list[str] = []
+        raw_tool_calls: list[dict] = []
+
+        for block in getattr(response, "content", []) or []:
+            block_type = getattr(block, "type", None)
+            if block_type == "text":
+                text = getattr(block, "text", "")
+                if text:
+                    text_chunks.append(text)
+            elif block_type == "tool_use":
+                raw_tool_calls.append(
+                    {
+                        "function": {
+                            "name": getattr(block, "name", ""),
+                            "arguments": getattr(block, "input", {}),
+                        },
+                        "id": getattr(block, "id", ""),
+                    }
+                )
+
+        async def single_chunk() -> AsyncGenerator[Tuple[Optional[str], Optional[List[dict]]], None]:
+            yield "".join(text_chunks), (raw_tool_calls or None)
+
+        return await self._collect_result_stream(
+            self._async_stream_parse_completion(
+                llm_api,
+                agent_id,
+                entity_options,
+                anext_token=single_chunk(),
+            )
         )

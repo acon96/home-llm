@@ -32,6 +32,7 @@ from .const import (
     CONF_TOOL_CALL_PREFIX,
     CONF_TOOL_CALL_SUFFIX,
     CONF_ENABLE_LEGACY_TOOL_CALLING,
+    CONF_ENABLE_STREAMING,
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
     DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
     DEFAULT_IN_CONTEXT_EXAMPLES_FILE,
@@ -42,6 +43,7 @@ from .const import (
     DEFAULT_TOOL_CALL_PREFIX,
     DEFAULT_TOOL_CALL_SUFFIX,
     DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
+    DEFAULT_ENABLE_STREAMING,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -146,13 +148,40 @@ class LocalLLMClient:
         raise NotImplementedError()
 
     async def _generate(self, conversation: List[conversation.Content], llm_api: llm.APIInstance | None, agent_id: str, entity_options: dict[str, Any]) -> TextGenerationResult:
-        """Call the backend to generate a response from the conversation. Implemented by sub-classes"""
+        """Call the backend to generate a response from the conversation."""
+        if self._supports_streaming(entity_options):
+            return await self._collect_result_stream(self._generate_stream(conversation, llm_api, agent_id, entity_options))
+
         raise NotImplementedError()
 
+    def _supports_streaming(self, entity_options: dict[str, Any]) -> bool:
+        enable_streaming = entity_options.get(
+            CONF_ENABLE_STREAMING,
+            DEFAULT_ENABLE_STREAMING,
+        )
+
+        return bool(getattr(self, "_attr_supports_streaming", False)) and bool(enable_streaming)
+
+    async def _collect_result_stream(
+        self, result: AsyncIterator[TextGenerationResult]
+    ) -> TextGenerationResult:
+        full_response = ""
+        tool_calls: list[llm.ToolInput] = []
+
+        async for chunk in result:
+            if chunk.response:
+                full_response += chunk.response
+            if chunk.tool_calls:
+                tool_calls.extend(chunk.tool_calls)
+
+        return TextGenerationResult(
+            response=full_response,
+            tool_calls=tool_calls or None,
+        )
+
     async def _async_generate(self, conv: List[conversation.Content], agent_id: str, chat_log: conversation.chat_log.ChatLog, entity_options: dict[str, Any]):
-        """Default implementation: if streaming is supported, consume the async generator and return the full result."""
-        if hasattr(self, '_generate_stream'):
-            # Try to stream and collect the full response
+        """Default implementation chooses streaming/non-stream generation based on options."""
+        if self._supports_streaming(entity_options):
             return await self._transform_result_stream(self._generate_stream(conv, chat_log.llm_api, agent_id, entity_options), agent_id, chat_log)
         
         # Fallback to "blocking" generate

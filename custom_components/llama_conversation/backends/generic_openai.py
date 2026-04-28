@@ -113,7 +113,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         enable_legacy_tool_calling = entity_options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
         tool_response_as_string = entity_options.get(CONF_TOOL_RESPONSE_AS_STRING, DEFAULT_TOOL_RESPONSE_AS_STRING)
 
-        endpoint, additional_params = self._chat_completion_params(entity_options)
+        _, additional_params = self._chat_completion_params(entity_options)
         messages = get_oai_formatted_messages(conversation, user_content_as_list=True, tool_result_to_str=tool_response_as_string)
 
         request_params = {
@@ -158,6 +158,97 @@ class GenericOpenAIAPIClient(LocalLLMClient):
                 raise HomeAssistantError(f"Failed to communicate with the API! {err}") from err
 
         return self._async_stream_parse_completion(llm_api, agent_id, entity_options, anext_token=anext_token())
+
+    async def _generate(
+        self,
+        conversation: List[conversation.Content],
+        llm_api: llm.APIInstance | None,
+        agent_id: str,
+        entity_options: dict[str, Any],
+    ) -> TextGenerationResult:
+        model_name = entity_options[CONF_CHAT_MODEL]
+        temperature = entity_options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
+        top_p = entity_options.get(CONF_TOP_P, DEFAULT_TOP_P)
+        max_tokens = entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
+        timeout = entity_options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
+        enable_legacy_tool_calling = entity_options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
+        tool_response_as_string = entity_options.get(CONF_TOOL_RESPONSE_AS_STRING, DEFAULT_TOOL_RESPONSE_AS_STRING)
+
+        endpoint, additional_params = self._chat_completion_params(entity_options)
+        messages = get_oai_formatted_messages(conversation, user_content_as_list=True, tool_result_to_str=tool_response_as_string)
+
+        request_params: Dict[str, Any] = {
+            "model": model_name,
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+            "top_p": top_p,
+            "messages": messages,
+        }
+
+        response_json_schema = entity_options.get(CONF_RESPONSE_JSON_SCHEMA)
+        if response_json_schema:
+            request_params["response_format"] = {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "ha_task",
+                    "schema": response_json_schema,
+                    "strict": True,
+                },
+            }
+
+        if llm_api and not enable_legacy_tool_calling:
+            request_params["tools"] = get_oai_formatted_tools(llm_api, self._async_get_all_exposed_domains())
+
+        _LOGGER.debug(f"Generating non-stream completion with {len(messages)} messages...")
+
+        try:
+            async with AsyncOpenAI(api_key=self.api_key, base_url=self.api_host, timeout=timeout) as client:
+                completion = await client.chat.completions.create(**request_params, extra_body=additional_params)
+        except asyncio.TimeoutError as err:
+            raise HomeAssistantError("The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities.") from err
+        except OpenAIError as err:
+            raise HomeAssistantError(f"Failed to communicate with the API! {err}") from err
+
+        first_choice = completion.choices[0] if completion.choices else None
+        message = first_choice.message if first_choice else None
+
+        content = ""
+        if message and message.content:
+            if isinstance(message.content, str):
+                content = message.content
+            else:
+                # Some OpenAI-compatible APIs return structured content parts.
+                content = "".join(
+                    part.get("text", "") if isinstance(part, dict) else str(part)
+                    for part in message.content
+                )
+
+        raw_tool_calls: list[dict] = []
+        if message and message.tool_calls:
+            for tool_call in message.tool_calls:
+                function = getattr(tool_call, "function", None)
+                if not function:
+                    continue
+                raw_tool_calls.append(
+                    {
+                        "function": {
+                            "name": getattr(function, "name", ""),
+                            "arguments": getattr(function, "arguments", "{}"),
+                        }
+                    }
+                )
+
+        async def single_chunk() -> AsyncGenerator[Tuple[Optional[str], Optional[List[dict]]], None]:
+            yield content, (raw_tool_calls or None)
+
+        return await self._collect_result_stream(
+            self._async_stream_parse_completion(
+                llm_api,
+                agent_id,
+                entity_options,
+                anext_token=single_chunk(),
+            )
+        )
     
     def _chat_completion_params(self, entity_options: dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
         request_params = {}
