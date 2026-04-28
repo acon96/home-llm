@@ -75,6 +75,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
     async def async_validate_connection(hass: HomeAssistant, user_input: Dict[str, Any]) -> str | None:
         api_key = user_input.get(CONF_API_KEY)
         api_base_path = user_input.get(CONF_API_PATH, DEFAULT_API_PATH)
+        api_base_path = api_base_path.lstrip("/")
         try:
             async with AsyncOpenAI(
                 api_key=api_key,

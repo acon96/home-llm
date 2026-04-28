@@ -147,10 +147,10 @@ async def test_generic_openai_validate_connection_uses_formatted_base_url(monkey
             return _done().__await__()
 
         def __aiter__(self):
-            async def _gen():
-                if False:
-                    yield None
-            return _gen()
+            return self
+
+        async def __anext__(self):
+            raise StopAsyncIteration
 
     class FakeModels:
         def list(self):
