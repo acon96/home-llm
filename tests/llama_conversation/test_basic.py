@@ -193,13 +193,13 @@ async def test_generic_openai_validate_connection_uses_formatted_base_url(monkey
 
 @pytest.mark.asyncio
 async def test_generic_openai_get_available_models_falls_back_on_openai_error(monkeypatch, hass_defaults):
-    class ExplodingModels:
+    class FailingModelsAPI:
         def list(self):
             raise OpenAIError("boom")
 
     class FakeClient:
         def __init__(self, **_kwargs):
-            self.models = ExplodingModels()
+            self.models = FailingModelsAPI()
 
         async def __aenter__(self):
             return self
