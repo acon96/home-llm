@@ -8,7 +8,7 @@ These options are available for all backends and control model inference behavio
 | Option Name                                   | Description                                                                                                                                                                                            | Suggested Value         |
 |-----------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------|
 | Selected Language                             | The language to use for prompts and responses. Affects system prompt templates and examples.                                                                                                           | en                      |
-| LLM API                                       | The API to use for tool execution. Select "Assist" for the built-in Home Assistant API, or "No control" to disable tool execution. Other options are specialized APIs like Home-LLM v1/v2/v3.          | Assist                  |
+| LLM API                                       | The API(s) to use for tool execution. Options are dynamically populated from installed Home Assistant LLM integrations. Select "Assist" for device control via the built-in Assist API, or leave empty to disable tool execution.          | Assist                  |
 | System Prompt                                 | [see here](./Model%20Prompting.md)                                                                                                                                                                     |                         |
 | Additional attributes to expose in the context | Extra attributes that will be exposed to the model via the `{{ devices }}` template variable (e.g., rgb_color, brightness, temperature, humidity, fan_mode, volume_level)                             | See suggestions         |
 | Refresh System Prompt Every Turn              | Flag to update the system prompt with updated device states on every chat turn. Disabling can significantly improve agent response times when using a backend that supports prefix caching (Llama.cpp) | Enabled                 |
@@ -125,6 +125,8 @@ For details about the sampling parameters, see here: https://github.com/oobaboog
 | SSL                   | Whether to use HTTPS for the connection                                                                                         | false                                                              |
 | Admin Key             | The admin key for the text-generation-webui server (if configured for authentication)                                           |                                                                    |
 
+> **Note:** The default-cpu Docker image exposes port 7860 (Web UI). If using the provided `docker-compose.yml`, set the port to **7860**. Port 5000 is the API-only mode port.
+
 ## Sampling & Output
 | Option Name                      | Description                                                                                                                      | Suggested Value                                 |
 |----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------|
@@ -143,7 +145,7 @@ For details about the sampling parameters, see here: https://github.com/oobaboog
 | Chat Mode                        | [see here](https://github.com/oobabooga/text-generation-webui/wiki/01-%E2%80%90-Chat-Tab#mode)                                   | Instruct                                        |
 
 # Ollama
-For details about the sampling parameters, see here: https://github.com/oobabooga/text-generation-webui/wiki/03-%E2%80%90-Parameters-Tab#parameters-description
+For details about Ollama's sampling parameters, see: https://github.com/ollama/ollama/blob/main/docs/modelfile.md#valid-parameters-and-values
 
 ## Connection
 | Option Name           | Description                                                                                                                     | Suggested Value                                                    |
@@ -209,3 +211,28 @@ Generic OpenAI Responses backend uses time-based conversation memory instead of 
 | Option Name                           | Description                                                                                                                     | Suggested Value |
 |---------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|-----------------|
 | Remember conversation time (minutes) | Number of minutes to remember conversation history. Uses time-based memory instead of interaction count.                       | 2 (minutes)     |
+
+# Anthropic API
+Anthropic backend uses the [Anthropic Messages API](https://docs.anthropic.com/en/docs/build-with-claude/tool-use) for tool execution. Supports vision (image attachments) and streaming. Works with any Anthropic-compatible API (including Claude, and third-party providers like AWS Bedrock, Azure, or self-hosted solutions using the Anthropic API format).
+
+## Connection
+| Option Name           | Description                                                                                                                     | Suggested Value                                                    |
+|-----------------------|---------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------|
+| Base URL              | The full base URL of the Anthropic-compatible API (e.g., `https://api.anthropic.com` or a compatible proxy)                     |                                                                    |
+| API Key               | The API key for authentication                                                                                                  |                                                                    |
+
+> **Note:** Unlike other backends, Anthropic uses a single `base_url` field instead of separate Host/Port/SSL fields. The API key is passed via headers.
+
+## Sampling & Output
+| Option Name           | Description                                                                                                                     | Suggested Value                                 |
+|-----------------------|---------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------|
+| Temperature           | Sampling parameter; controls randomness in responses                                                                            | 0.1                                             |
+| Top K                 | Sampling parameter; limits token selection to the top K candidates                                                              | 40                                              |
+| Top P                 | Sampling parameter; nucleus sampling threshold                                                                                  | 1.0                                             |
+| Maximum tokens to return in response | Limits the number of tokens that can be produced by each model response                                                 | 512                                             |
+| Request Timeout       | The maximum time in seconds that the integration will wait for a response from the remote server                               | 90 (higher if running on low resource hardware) |
+
+## Features
+| Option Name           | Description                                                                                                                     | Suggested Value                                 |
+|-----------------------|---------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------|
+| Vision Support        | Anthropic models natively support image attachments — no configuration needed                                                   | Enabled (automatic)                             |
