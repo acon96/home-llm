@@ -8,7 +8,7 @@ These options are available for all backends and control model inference behavio
 | Option Name                                   | Description                                                                                                                                                                                            | Suggested Value         |
 |-----------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------|
 | Selected Language                             | The language to use for prompts and responses. Affects system prompt templates and examples.                                                                                                           | en                      |
-| LLM API                                       | The API(s) to use for tool execution. Options are dynamically populated from installed Home Assistant LLM integrations. Select "Assist" for device control via the built-in Assist API, or leave empty to disable tool execution.          | Assist                  |
+| LLM API                                       | The API(s) to use for tool execution. Options are dynamically populated from installed Home Assistant LLM integrations. Select "Assist" for device control via the built-in Assist API, or leave empty to disable tool execution. See [Choosing the right LLM API for your model](#choosing-the-right-llm-api-for-your-model) below for guidance. | Assist                  |
 | System Prompt                                 | [see here](./Model%20Prompting.md)                                                                                                                                                                     |                         |
 | Additional attributes to expose in the context | Extra attributes that will be exposed to the model via the `{{ devices }}` template variable (e.g., rgb_color, brightness, temperature, humidity, fan_mode, volume_level)                             | See suggestions         |
 | Refresh System Prompt Every Turn              | Flag to update the system prompt with updated device states on every chat turn. Disabling can significantly improve agent response times when using a backend that supports prefix caching (Llama.cpp) | Enabled                 |
@@ -23,6 +23,37 @@ These options are available for all backends and control model inference behavio
 | Tool call suffix                              | String suffix to mark the end of a function call in the model response                                                                                                                                 | `</tool_call>`          |
 | Enable legacy tool calling                    | If enabled, uses the legacy `\`\`\`homeassistant` tool calling format instead of the newer prefix/suffix format. Required for some older Home-LLM models.                                              | Disabled                |
 | Max tool call iterations                      | Maximum number of times the model can make tool calls in sequence before the conversation is terminated                                                                                                | 3                       |
+
+## Choosing the right LLM API for your model
+
+The **LLM API** dropdown controls which set of tools the model can call to interact with Home Assistant. The right choice depends on the model and your intended use.
+
+### Decision matrix
+
+| Model type | Enable legacy tool calling | LLM API selection |
+|---|---|---|
+| Home-LLM fine-tunes (Home-3B, Home-1B, Home-Llama-3.2, stablehome, tinyhome) — device control only | ✅ (preset default) | **Home Assistant Services** |
+| Home-LLM fine-tunes — when you also want the structured HA tool surface (HassTurnOn, HassGetLiveContext, etc.) | ✅ (preset default) | **Assist + Home Assistant Services** (select both) |
+| General-purpose models (Qwen3, Llama-3, Mistral) with in-context learning | ❌ (default) | **Assist** |
+| Models that emit OpenAI-style function-call JSON | ❌ (default) | **Assist** (or HA Core MCP if configured) |
+| Conversation-only — no device control | — | (leave empty) |
+
+### Why this matters
+
+The "Home Assistant Services" API and the "Assist" API expose different tools to the model:
+
+- **Home Assistant Services** registers a single tool, `HassCallService`, that accepts `{"service": "<domain.action>", "target_device": "<entity_id>"}`. This matches the schema emitted by Home-LLM fine-tuned models in their ` ```homeassistant ` tool blocks (the legacy tool-call format).
+- **Assist** registers the standard Home Assistant tool surface (`HassTurnOn`, `HassTurnOff`, `HassGetLiveContext`, `HassListAddItem`, etc.) and is the format expected by general-purpose models using structured function calls.
+
+Selecting only **Assist** with a Home-LLM fine-tune causes a silent failure mode: the model emits correctly-formatted `HassCallService` tool blocks, but HA can't resolve a tool by that name and the action never fires. The integration logs a WARNING but no UI error surfaces — symptom is "model appears to respond correctly, but devices don't change state." See issue [#310](https://github.com/acon96/home-llm/issues/310) for an example.
+
+### No API selected
+
+If no API is selected (empty), tool execution is disabled entirely. The model's system prompt will contain the instruction "No tools were provided. If the user requests you interact with a device, tell them you are unable to do so." If the model still emits tool calls, they will be silently dropped with a WARNING log entry.
+
+### Multiple APIs
+
+Since v0.4.5, you can select multiple LLM APIs simultaneously (see [#325](https://github.com/acon96/home-llm/issues/325)). The model sees the union of all registered tools. This is the recommended configuration for Home-LLM fine-tunes when you want both `HassCallService` (for legacy-format tool calls) and the standard Assist tool surface available.
 
 # Llama.cpp
 For details about the sampling parameters, see here: https://github.com/oobabooga/text-generation-webui/wiki/03-%E2%80%90-Parameters-Tab#parameters-description
