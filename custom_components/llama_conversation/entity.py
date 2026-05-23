@@ -592,6 +592,8 @@ class LocalLLMClient:
             })
             if "aliases" in attributes:
                 for alias in attributes["aliases"]:
+                    if not isinstance(alias, str):
+                        continue
                     formatted_devices = formatted_devices + f"{name} '{alias}' = {str_attributes}\n"
                     devices.append({
                         "entity_id": name,
