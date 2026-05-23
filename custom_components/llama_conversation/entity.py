@@ -626,6 +626,13 @@ class LocalLLMClient:
         if self.in_context_examples and llm_api:
             num_examples = int(entity_options.get(CONF_NUM_IN_CONTEXT_EXAMPLES, DEFAULT_NUM_IN_CONTEXT_EXAMPLES))
             render_variables["response_examples"] = self._generate_icl_examples(num_examples, list(entities_to_expose.keys()))
+            if "response_examples" not in prompt_template:
+                _LOGGER.warning(
+                    "in_context_examples is enabled and examples were loaded, but the configured prompt template "
+                    "does not reference {{ response_examples }} — ICL examples will be silently ignored. "
+                    "Customize the prompt template to include a {% for item in response_examples %}…{% endfor %} block, "
+                    "or disable in_context_examples!"
+                )
 
         return template.Template(prompt_template, self.hass).async_render(
             render_variables,
