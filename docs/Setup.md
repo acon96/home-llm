@@ -70,7 +70,7 @@ Pressing `Submit` will download the model from HuggingFace. The downloaded files
 ### Step 3: Model Configuration
 This step allows you to configure how the model is "prompted". See [here](./Model%20Prompting.md) for more information on how that works.
 
-For now, defaults for the model should have been populated. If you would like the Home-LLM model to be able to control devices then you should select the `Home-LLM (v1-v3)` API. This API is included to ensure compatability with the Home-LLM models that were trained before the introduction of the built in Home Assistant LLM API.
+For now, defaults for the model should have been populated. If you would like the Home-LLM model to be able to control devices then you should select the `Home-LLM (v1-v3)` API. This API is included to ensure compatibility with the Home-LLM models that were trained before the introduction of the built in Home Assistant LLM API.
 
 Once the desired API has been selected, scroll to the bottom and click `Submit`.
 
