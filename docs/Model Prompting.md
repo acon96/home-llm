@@ -97,6 +97,17 @@ Prompt Variables:
 
 The examples used for the `response_examples` variable are loaded from the `in_context_examples.csv` file in the `/custom_components/llama_conversation/` folder. For different language add extra suffix to name of this file eg. for polish responses set `in_context_examples_pl.csv` (note: currently only polish language is supported).
 
+### When `{{ response_examples }}` is rendered
+
+The ICL toggle (`Enable in context learning (ICL) examples`) loads examples from the CSV file and makes them available to the prompt renderer, **but they only reach the model if your prompt template references `{{ response_examples }}`**. If the template does not contain that marker, the toggle has no effect and the loaded examples are discarded silently.
+
+The `Home-LLM (v1-v3)` preset and other Home-* model presets default to the `DEFAULT_PROMPT_BASE_LEGACY` template, which renders `{{ formatted_devices }}` but does not reference `{{ response_examples }}`. With those presets, enabling the ICL toggle alone will not inject examples — you must either:
+
+1. Customize the prompt template to append the ICL block (the `{% for item in response_examples %}…{% endfor %}` loop from `ICL_EXTRAS` in `const.py`), or
+2. Switch to a non-legacy preset whose template includes the ICL block by default (e.g. the `qwen3`, `llama-3`, `mistral`, `mixtral`, `zephyr`, `phi-3`, or `command-r` presets).
+
+Starting in this version, the integration emits a `WARNING`-level log line when ICL is enabled and examples are loaded but the configured prompt template does not contain the `response_examples` marker — check the Home Assistant logs if your ICL configuration appears to have no effect.
+
 ### Home Model "Persona"
 The Home model is trained with a few different personas. They can be activated by using their system prompt found below:
 
@@ -125,7 +136,7 @@ Du bist „Al“, ein hilfreicher KI-Assistent, der die Geräte in einem Haus st
 
 **French**:
 ```
-Vous êtes « Al », un assistant IA utile qui contrôle les appareils d'une maison. Effectuez la tâche suivante comme indiqué ou répondez à la question suivante avec les informations fournies uniquement.
+Vous êtes « Al », un assistant IA utile qui contrôle les appareils d'une maison. Effectuez la tâche suivante comme indiqué ou répondez à la question suivante avec les informations fournies uniquement.
 ```
 
 **Spanish**:
