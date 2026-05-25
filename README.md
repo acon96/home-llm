@@ -37,7 +37,7 @@ The integration connects language models to Home Assistant, enabling them to und
 Choose how and where you want to run your models:
 
 | Backend                                                                                             | Best For                                                                      |
-|-----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
+| --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | **Llama.cpp** (built-in)                                                                            | Running models directly in Home Assistant                                     |
 | **[Ollama](https://ollama.com/)**                                                                   | Easy setup on a separate GPU machine                                          |
 | **[Generic OpenAI API](https://platform.openai.com/docs/api-reference/conversations/create)**       | LM Studio, LocalAI, vLLM, and other OpenAI-compatible servers                 |
@@ -73,7 +73,7 @@ The "Home" models are small language models (under 5B parameters) fine-tuned spe
 ### Latest Models
 
 | Model Family  | Size | Link                                                                                    |
-|---------------|------|-----------------------------------------------------------------------------------------|
+| ------------- | ---- | --------------------------------------------------------------------------------------- |
 | **Llama 3.2** | 3B   | [acon96/Home-Llama-3.2-3B](https://huggingface.co/acon96/Home-Llama-3.2-3B)             |
 | **Gemma**     | 270M | [acon96/Home-FunctionGemma-270m](https://huggingface.co/acon96/Home-FunctionGemma-270m) |
 
@@ -119,41 +119,43 @@ The fine-tuning dataset and training scripts are included in this repository:
 
 ## Version History
 
-| Version    | Highlights                                                                                                                        |
-|------------|-----------------------------------------------------------------------------------------------------------------------------------|
-| **v0.4.7** | Bug fixes, update default llama_cpp_python version to support new models, and support python 3.14 for new Home Assistant versions |
-| **v0.4.6** | Anthropic API support, on-disk caching for Llama.cpp, new tool calling dataset                                                    |
-| **v0.4.5** | AI Task entities, multiple LLM APIs at once, official Ollama package                                                              |
-| **v0.4**   | Tool calling rewrite, voice streaming, agentic tool use loop, multiple configs per backend                                        |
-| **v0.3**   | Home Assistant LLM API support, improved prompting, HuggingFace GGUF auto-detection                                               |
+| Version    | Highlights                                                                                                                                                                                                                                                                                                         |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **v0.4.8** | OpenAI backends rewritten using the official openai Python library for better reliability and compatibility. New "Use server sampling defaults" to let your backend set the sampling parameters. More robust tool call parsing with auto-repair for malformed JSON, ability to disable streaming for all backends. |
+| **v0.4.7** | Bug fixes, update default llama_cpp_python version to support new models, and support python 3.14 for new Home Assistant versions                                                                                                                                                                                  |
+| **v0.4.6** | Anthropic API support, on-disk caching for Llama.cpp, new tool calling dataset                                                                                                                                                                                                                                     |
+| **v0.4.5** | AI Task entities, multiple LLM APIs at once, official Ollama package                                                                                                                                                                                                                                               |
+| **v0.4**   | Tool calling rewrite, voice streaming, agentic tool use loop, multiple configs per backend                                                                                                                                                                                                                         |
+| **v0.3**   | Home Assistant LLM API support, improved prompting, HuggingFace GGUF auto-detection                                                                                                                                                                                                                                |
 
 <details>
 <summary>Full Version History</summary>
 
-| Version | Description                                                                                                                                             |
-|---------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
-| v0.4.7  | Bug fixes, update default llama_cpp_python version to support new models, and support python 3.14 for new Home Assistant versions                       |
-| v0.4.6  | New dataset supporting proper tool calling, Add Anthropic "messages" style API support, Add on-disk caching for Llama.cpp backend                       |
-| v0.4.5  | Add support for AI Task entities, Replace custom Ollama API implementation with the official `ollama-python` package, Support multiple LLM APIs at once |
-| v0.4.4  | Fix issue with OpenAI backends appending `/v1` to all URLs                                                                                              |
-| v0.4.3  | Fix model config creation during setup                                                                                                                  |
-| v0.4.2  | Fix default model settings, numeric config fields, finish_reason handling                                                                               |
-| v0.4.1  | Fix Llama.cpp models downloaded from HuggingFace                                                                                                        |
-| v0.4    | Rewrite for tool calling models, agentic tool use loop, voice streaming, multiple config sub-entries                                                    |
-| v0.3.11 | Bug-fixes and llama.cpp version update                                                                                                                  |
-| v0.3.10 | OpenAI "Responses" API support, HA 2025.7.0 compatibility                                                                                               |
-| v0.3.9  | Fix conversation history                                                                                                                                |
-| v0.3.8  | Thinking model support, HA 2025.4 compatibility                                                                                                         |
-| v0.3.7  | German ICL examples, multi-turn fixes                                                                                                                   |
-| v0.3.6  | Small llama.cpp backend fixes                                                                                                                           |
-| v0.3.5  | Polish ICL examples                                                                                                                                     |
-| v0.3.4  | Full Polish translation, improved language support                                                                                                      |
-| v0.3.3  | Generic OpenAI improvements, area handling                                                                                                              |
-| v0.3.2  | Script entity fixes                                                                                                                                     |
-| v0.3.1  | Basic area support in prompting                                                                                                                         |
-| v0.3    | Home Assistant LLM API support, improved prompting                                                                                                      |
-| v0.2.x  | Ollama support, in-context learning, flash attention, prompt caching                                                                                    |
-| v0.1    | Initial Release                                                                                                                                         |
+| Version | Description                                                                                                                                                                                                                                                                                                        |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| v0.4.8  | OpenAI backends rewritten using the official openai Python library for better reliability and compatibility. New "Use server sampling defaults" to let your backend set the sampling parameters. More robust tool call parsing with auto-repair for malformed JSON, ability to disable streaming for all backends. |
+| v0.4.7  | Bug fixes, update default llama_cpp_python version to support new models, and support python 3.14 for new Home Assistant versions                                                                                                                                                                                  |
+| v0.4.6  | New dataset supporting proper tool calling, Add Anthropic "messages" style API support, Add on-disk caching for Llama.cpp backend                                                                                                                                                                                  |
+| v0.4.5  | Add support for AI Task entities, Replace custom Ollama API implementation with the official `ollama-python` package, Support multiple LLM APIs at once                                                                                                                                                            |
+| v0.4.4  | Fix issue with OpenAI backends appending `/v1` to all URLs                                                                                                                                                                                                                                                         |
+| v0.4.3  | Fix model config creation during setup                                                                                                                                                                                                                                                                             |
+| v0.4.2  | Fix default model settings, numeric config fields, finish_reason handling                                                                                                                                                                                                                                          |
+| v0.4.1  | Fix Llama.cpp models downloaded from HuggingFace                                                                                                                                                                                                                                                                   |
+| v0.4    | Rewrite for tool calling models, agentic tool use loop, voice streaming, multiple config sub-entries                                                                                                                                                                                                               |
+| v0.3.11 | Bug-fixes and llama.cpp version update                                                                                                                                                                                                                                                                             |
+| v0.3.10 | OpenAI "Responses" API support, HA 2025.7.0 compatibility                                                                                                                                                                                                                                                          |
+| v0.3.9  | Fix conversation history                                                                                                                                                                                                                                                                                           |
+| v0.3.8  | Thinking model support, HA 2025.4 compatibility                                                                                                                                                                                                                                                                    |
+| v0.3.7  | German ICL examples, multi-turn fixes                                                                                                                                                                                                                                                                              |
+| v0.3.6  | Small llama.cpp backend fixes                                                                                                                                                                                                                                                                                      |
+| v0.3.5  | Polish ICL examples                                                                                                                                                                                                                                                                                                |
+| v0.3.4  | Full Polish translation, improved language support                                                                                                                                                                                                                                                                 |
+| v0.3.3  | Generic OpenAI improvements, area handling                                                                                                                                                                                                                                                                         |
+| v0.3.2  | Script entity fixes                                                                                                                                                                                                                                                                                                |
+| v0.3.1  | Basic area support in prompting                                                                                                                                                                                                                                                                                    |
+| v0.3    | Home Assistant LLM API support, improved prompting                                                                                                                                                                                                                                                                 |
+| v0.2.x  | Ollama support, in-context learning, flash attention, prompt caching                                                                                                                                                                                                                                               |
+| v0.1    | Initial Release                                                                                                                                                                                                                                                                                                    |
 
 </details>
 
