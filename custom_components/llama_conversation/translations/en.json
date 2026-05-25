@@ -50,7 +50,8 @@
                 "unknown": "Unexpected error",
                 "sys_refresh_caching_enabled": "System prompt refresh must be enabled for prompt caching to work!",
                 "missing_gbnf_file": "The GBNF file was not found: {filename}",
-                "missing_icl_file": "The in context learning example CSV file was not found: {filename}"
+                "missing_icl_file": "The in context learning example CSV file was not found: {filename}",
+                "legacy_tool_calling_with_iterations": "Legacy/1-shot mode (Enable Legacy Tool Calling) is incompatible with a Max Tool Call Iterations value greater than 0. Set Max Tool Call Iterations to 0 for Legacy/1-shot models, or disable Legacy Tool Calling to use Agentic mode."
             },
             "progress": {
                 "download": "Please wait while the model is being downloaded from HuggingFace. This can take a few minutes."
@@ -208,7 +209,8 @@
                 "unknown": "Unexpected error",
                 "sys_refresh_caching_enabled": "System prompt refresh must be enabled for prompt caching to work!",
                 "missing_gbnf_file": "The GBNF file was not found: {filename}",
-                "missing_icl_file": "The in context learning example CSV file was not found: {filename}"
+                "missing_icl_file": "The in context learning example CSV file was not found: {filename}",
+                "legacy_tool_calling_with_iterations": "Legacy/1-shot mode (Enable Legacy Tool Calling) is incompatible with a Max Tool Call Iterations value greater than 0. Set Max Tool Call Iterations to 0 for Legacy/1-shot models, or disable Legacy Tool Calling to use Agentic mode."
             },
             "progress": {
                 "download": "Please wait while the model is being downloaded from HuggingFace. This can take a few minutes."

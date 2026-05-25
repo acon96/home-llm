@@ -1284,6 +1284,9 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
                 if not user_input.get(CONF_REFRESH_SYSTEM_PROMPT) and user_input.get(CONF_PROMPT_CACHING_ENABLED):
                     errors["base"] = "sys_refresh_caching_enabled"
 
+                if user_input.get(CONF_ENABLE_LEGACY_TOOL_CALLING) and int(user_input.get(CONF_MAX_TOOL_CALL_ITERATIONS, 0)) > 0:
+                    errors["base"] = "legacy_tool_calling_with_iterations"
+
                 if user_input.get(CONF_USE_GBNF_GRAMMAR):
                     filename = user_input.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE)
                     if not os.path.isfile(os.path.join(os.path.dirname(__file__), filename)):
