@@ -434,7 +434,7 @@ def get_oai_formatted_messages(
                             "type" : "function",
                             "id": t.id,
                             "function": {
-                                "arguments": cast(str, json.dumps(t.tool_args) if tool_args_to_str else t.tool_args),
+                                "arguments": cast(str, json.dumps(t.tool_args, default=str) if tool_args_to_str else t.tool_args),
                                 "name": t.tool_name,
                             }
                         } for t in message.tool_calls
@@ -442,7 +442,7 @@ def get_oai_formatted_messages(
                 })
         elif message.role == "tool_result":
             if tool_result_to_str:
-                content = json.dumps(message.tool_result)
+                content = json.dumps(message.tool_result, default=str)
             else:
                 content = [{
                     "name": message.tool_name,

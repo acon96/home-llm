@@ -116,7 +116,7 @@ def _convert_to_anthropic_messages(
             # Anthropic expects tool results in user messages with tool_result content
             tool_result = message.tool_result if hasattr(message, 'tool_result') else {}
             if tool_result_to_str:
-                result_content = json.dumps(tool_result) if isinstance(tool_result, dict) else str(tool_result)
+                result_content = json.dumps(tool_result, default=str) if isinstance(tool_result, dict) else str(tool_result)
             else:
                 result_content = str(tool_result)
 
