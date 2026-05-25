@@ -223,6 +223,43 @@ def test_schema_includes_llm_api_selector(monkeypatch, hass: HomeAssistant):
 
 
 @pytest.mark.asyncio
+async def test_configure_connection_accepts_bare_hostname(monkeypatch, hass: HomeAssistant):
+    flow = _build_flow(hass)
+    flow.internal_step = "configure_connection"
+    flow.client_config = {
+        CONF_BACKEND_TYPE: BACKEND_TYPE_GENERIC_OPENAI,
+        CONF_SELECTED_LANGUAGE: "en",
+    }
+
+    async def fake_validate_connection(_hass, _config):
+        return None
+
+    monkeypatch.setattr(
+        "custom_components.llama_conversation.config_flow.BACKEND_TO_CLS",
+        {
+            BACKEND_TYPE_GENERIC_OPENAI: type(
+                "Backend",
+                (),
+                {
+                    "async_validate_connection": staticmethod(fake_validate_connection),
+                    "get_name": staticmethod(lambda _config: "Generic OpenAI"),
+                },
+            )
+        },
+    )
+
+    result = await flow.async_step_user(
+        {
+            CONF_HOST: "docker-service",
+            CONF_PORT: "8080",
+            CONF_SSL: False,
+        }
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.asyncio
 async def test_configure_connection_rejects_invalid_hostname(hass: HomeAssistant):
     flow = _build_flow(hass)
     flow.internal_step = "configure_connection"

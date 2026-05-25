@@ -578,7 +578,7 @@ def parse_raw_tool_call(raw_block: str | dict, agent_id: str) -> tuple[llm.ToolI
 
 def is_valid_hostname(host: str) -> bool:
     """
-    Validates whether a string is a valid hostname or IP address,
+    Validates whether a string is a valid hostname, localhost name, or IP address,
     rejecting URLs, paths, ports, query strings, etc.
     """
     if not host or not isinstance(host, str):
@@ -605,17 +605,17 @@ def is_valid_hostname(host: str) -> bool:
     except ipaddress.AddressValueError:
         pass
 
-    # Validate as domain name (RFC 1034/1123)
+    # Validate as a hostname label or domain name (RFC 1034/1123)
     # Rules:
     # - Only a-z, 0-9, hyphens
     # - No leading/trailing hyphens
     # - Max 63 chars per label
-    # - At least 2 chars in TLD
     # - No consecutive dots
 
-    domain_pattern = re.compile(r"^[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?)*\.[a-z]{2,}$")
+    label_pattern = re.compile(r"^[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?$")
+    labels = host.split(".")
 
-    return bool(domain_pattern.match(host))
+    return all(label_pattern.match(label) for label in labels)
 
 
 def get_file_contents_base64(file_path: Path) -> str:
