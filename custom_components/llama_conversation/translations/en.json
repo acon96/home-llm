@@ -50,7 +50,8 @@
                 "unknown": "Unexpected error",
                 "sys_refresh_caching_enabled": "System prompt refresh must be enabled for prompt caching to work!",
                 "missing_gbnf_file": "The GBNF file was not found: {filename}",
-                "missing_icl_file": "The in context learning example CSV file was not found: {filename}"
+                "missing_icl_file": "The in context learning example CSV file was not found: {filename}",
+                "legacy_tool_calling_with_iterations": "Legacy/1-shot mode (Enable Legacy Tool Calling) is incompatible with a Max Tool Call Iterations value greater than 0. Set Max Tool Call Iterations to 0 for Legacy/1-shot models, or disable Legacy Tool Calling to use Agentic mode."
             },
             "progress": {
                 "download": "Please wait while the model is being downloaded from HuggingFace. This can take a few minutes."
@@ -79,6 +80,8 @@
                         "min_p": "Min P",
                         "typical_p": "Typical P",
                         "request_timeout": "Remote Request Timeout (seconds)",
+                        "enable_streaming": "Enable Streaming",
+                        "use_server_sampling_defaults": "Use server defaults for sampling parameters",
                         "ollama_keep_alive": "(ollama) Keep Alive/Inactivity Timeout (minutes)",
                         "ollama_json_mode": "(ollama) JSON Output Mode",
                         "extra_attributes_to_expose": "Additional attribute to expose in the context",
@@ -120,7 +123,9 @@
                         "prompt_caching": "Prompt caching attempts to pre-process the prompt (house state) and cache the processing that needs to be done to understand the prompt. Enabling this will cause the model to re-process the prompt any time an entity state changes in the house, restricted by the interval below.",
                         "enable_legacy_tool_calling": "Prefer to process tool calls locally rather than relying on the backend to handle the tool calling format. Can be more reliable, however it requires properly setting the tool call prefix and suffix.",
                         "tool_response_as_string": "Some prompt templates expect the tool response to be provided as a JSON serialized string, rather than the raw object.",
-                        "max_tool_call_iterations": "Set to 0 to generate the response and tool call in one attempt, without looping (use this for Home models v1-v3)."
+                        "max_tool_call_iterations": "Set to 0 to generate the response and tool call in one attempt, without looping (use this for Home models v1-v3).",
+                        "enable_streaming": "When enabled, responses are streamed token-by-token when the backend supports it.",
+                        "use_server_sampling_defaults": "**Recommended for most users.** Inference engines and model providers have gotten much better at shipping models with well-tuned sampling defaults. Omits temperature, top_p, top_k, min_p, and typical_p from requests so the server uses the values it knows are best for the loaded model. Only disable this if you are experiencing odd output behavior or intentionally want to run at a lower temperature."
                     },
                     "description": "Please configure the model according to how it should be prompted. There are many different options and selecting the correct ones for your model is essential to getting optimal performance. See [here](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) for more information about the options on this page.\n\n**Some defaults may have been chosen for you based on the name of the selected model name or filename.** If you renamed a file or are using a fine-tuning of a supported model, then the defaults may not have been detected.",
                     "title": "Configure the selected model"
@@ -136,6 +141,8 @@
                         "min_p": "Min P",
                         "typical_p": "Typical P",
                         "request_timeout": "Remote Request Timeout (seconds)",
+                        "enable_streaming": "Enable Streaming",
+                        "use_server_sampling_defaults": "Use server defaults for sampling parameters",
                         "ollama_keep_alive": "(ollama) Keep Alive/Inactivity Timeout (minutes)",
                         "ollama_json_mode": "(ollama) JSON Output Mode",
                         "extra_attributes_to_expose": "Additional attribute to expose in the context",
@@ -177,7 +184,9 @@
                         "prompt_caching": "Prompt caching attempts to pre-process the prompt (house state) and cache the processing that needs to be done to understand the prompt. Enabling this will cause the model to re-process the prompt any time an entity state changes in the house, restricted by the interval below.",
                         "enable_legacy_tool_calling": "Prefer to process tool calls locally rather than relying on the backend to handle the tool calling format. Can be more reliable, however it requires properly setting the tool call prefix and suffix.",
                         "tool_response_as_string": "Some prompt templates expect the tool response to be provided as a JSON serialized string, rather than the raw object.",
-                        "max_tool_call_iterations": "Set to 0 to generate the response and tool call in one attempt, without looping (use this for Home models v1-v3)."
+                        "max_tool_call_iterations": "Set to 0 to generate the response and tool call in one attempt, without looping (use this for Home models v1-v3).",
+                        "enable_streaming": "When enabled, responses are streamed token-by-token when the backend supports it.",
+                        "use_server_sampling_defaults": "**Recommended for most users.** Inference engines and model providers have gotten much better at shipping models with well-tuned sampling defaults. Omits temperature, top_p, top_k, min_p, and typical_p from requests so the server uses the values it knows are best for the loaded model. Only disable this if you are experiencing odd output behavior or intentionally want to run at a lower temperature."
                     },
                     "description": "Please configure the model according to how it should be prompted. There are many different options and selecting the correct ones for your model is essential to getting optimal performance. See [here](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) for more information about the options on this page.\n\n**Some defaults may have been chosen for you based on the name of the selected model name or filename.** If you renamed a file or are using a fine-tuning of a supported model, then the defaults may not have been detected.",
                     "title": "Configure the selected model"
@@ -200,7 +209,8 @@
                 "unknown": "Unexpected error",
                 "sys_refresh_caching_enabled": "System prompt refresh must be enabled for prompt caching to work!",
                 "missing_gbnf_file": "The GBNF file was not found: {filename}",
-                "missing_icl_file": "The in context learning example CSV file was not found: {filename}"
+                "missing_icl_file": "The in context learning example CSV file was not found: {filename}",
+                "legacy_tool_calling_with_iterations": "Legacy/1-shot mode (Enable Legacy Tool Calling) is incompatible with a Max Tool Call Iterations value greater than 0. Set Max Tool Call Iterations to 0 for Legacy/1-shot models, or disable Legacy Tool Calling to use Agentic mode."
             },
             "progress": {
                 "download": "Please wait while the model is being downloaded from HuggingFace. This can take a few minutes."
@@ -228,6 +238,8 @@
                         "min_p": "Min P",
                         "typical_p": "Typical P",
                         "request_timeout": "Remote Request Timeout (seconds)",
+                        "enable_streaming": "Enable Streaming",
+                        "use_server_sampling_defaults": "Use server defaults for sampling parameters",
                         "ollama_keep_alive": "(ollama) Keep Alive/Inactivity Timeout (minutes)",
                         "ollama_json_mode": "(ollama) JSON Output Mode",
                         "extra_attributes_to_expose": "Additional attribute to expose in the context",
@@ -268,6 +280,8 @@
                         "enable_legacy_tool_calling": "Prefer to process tool calls locally rather than relying on the backend to handle the tool calling format. Can be more reliable, however it requires properly setting the tool call prefix and suffix.",
                         "tool_response_as_string": "Some prompt templates expect the tool response to be provided as a JSON serialized string, rather than the raw object.",
                         "max_tool_call_iterations": "Set to 0 to generate the response and tool call in one attempt, without looping (use this for Home models v1-v3).",
+                        "enable_streaming": "When enabled, responses are streamed token-by-token when the backend supports it.",
+                        "use_server_sampling_defaults": "**Recommended for most users.** Inference engines and model providers have gotten much better at shipping models with well-tuned sampling defaults. Omits temperature, top_p, top_k, min_p, and typical_p from requests so the server uses the values it knows are best for the loaded model. Only disable this if you are experiencing odd output behavior or intentionally want to run at a lower temperature.",
                         "ai_task_extraction_method": "Select the method used to extract structured data from the model's response. 'Structured Output' tells the backend to force the model to produce output following the provided JSON Schema; 'Tool Calling' provides a tool to the model that should be called with the appropriate arguments that match the desired output structure."
                     },
                     "description": "Please configure the model according to how it should be prompted. There are many different options and selecting the correct ones for your model is essential to getting optimal performance. See [here](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) for more information about the options on this page.\n\n**Some defaults may have been chosen for you based on the name of the selected model name or filename.** If you renamed a file or are using a fine-tuning of a supported model, then the defaults may not have been detected.",
@@ -284,6 +298,8 @@
                         "min_p": "Min P",
                         "typical_p": "Typical P",
                         "request_timeout": "Remote Request Timeout (seconds)",
+                        "enable_streaming": "Enable Streaming",
+                        "use_server_sampling_defaults": "Use server defaults for sampling parameters",
                         "ollama_keep_alive": "(ollama) Keep Alive/Inactivity Timeout (minutes)",
                         "ollama_json_mode": "(ollama) JSON Output Mode",
                         "extra_attributes_to_expose": "Additional attribute to expose in the context",
@@ -325,7 +341,9 @@
                         "prompt_caching": "Prompt caching attempts to pre-process the prompt (house state) and cache the processing that needs to be done to understand the prompt. Enabling this will cause the model to re-process the prompt any time an entity state changes in the house, restricted by the interval below.",
                         "enable_legacy_tool_calling": "Prefer to process tool calls locally rather than relying on the backend to handle the tool calling format. Can be more reliable, however it requires properly setting the tool call prefix and suffix.",
                         "tool_response_as_string": "Some prompt templates expect the tool response to be provided as a JSON serialized string, rather than the raw object.",
-                        "max_tool_call_iterations": "Set to 0 to generate the response and tool call in one attempt, without looping (use this for Home models v1-v3)."
+                        "max_tool_call_iterations": "Set to 0 to generate the response and tool call in one attempt, without looping (use this for Home models v1-v3).",
+                        "enable_streaming": "When enabled, responses are streamed token-by-token when the backend supports it.",
+                        "use_server_sampling_defaults": "**Recommended for most users.** Inference engines and model providers have gotten much better at shipping models with well-tuned sampling defaults. Omits temperature, top_p, top_k, min_p, and typical_p from requests so the server uses the values it knows are best for the loaded model. Only disable this if you are experiencing odd output behavior or intentionally want to run at a lower temperature."
                     },
                     "description": "Please configure the model according to how it should be prompted. There are many different options and selecting the correct ones for your model is essential to getting optimal performance. See [here](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) for more information about the options on this page.\n\n**Some defaults may have been chosen for you based on the name of the selected model name or filename.** If you renamed a file or are using a fine-tuning of a supported model, then the defaults may not have been detected.",
                     "title": "Configure the selected model"

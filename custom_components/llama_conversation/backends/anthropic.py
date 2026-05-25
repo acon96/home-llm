@@ -21,6 +21,7 @@ from custom_components.llama_conversation.const import (
     CONF_TEMPERATURE,
     CONF_TOP_P,
     CONF_TOP_K,
+    CONF_USE_SERVER_SAMPLING_DEFAULTS,
     CONF_REQUEST_TIMEOUT,
     CONF_ENABLE_LEGACY_TOOL_CALLING,
     CONF_TOOL_RESPONSE_AS_STRING,
@@ -38,7 +39,7 @@ from custom_components.llama_conversation.const import (
 )
 
 from custom_components.llama_conversation.entity import LocalLLMClient, TextGenerationResult
-from custom_components.llama_conversation.utils import get_file_contents_base64
+from custom_components.llama_conversation.utils import get_file_contents_base64, parse_tool_arguments_with_repair_fallback
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -115,7 +116,7 @@ def _convert_to_anthropic_messages(
             # Anthropic expects tool results in user messages with tool_result content
             tool_result = message.tool_result if hasattr(message, 'tool_result') else {}
             if tool_result_to_str:
-                result_content = json.dumps(tool_result) if isinstance(tool_result, dict) else str(tool_result)
+                result_content = json.dumps(tool_result, default=str) if isinstance(tool_result, dict) else str(tool_result)
             else:
                 result_content = str(tool_result)
 
@@ -156,6 +157,8 @@ class AnthropicAPIClient(LocalLLMClient):
     api_key: str
     base_url: str
     api_path: str
+
+    _attr_supports_streaming = True
 
     def __init__(self, hass: HomeAssistant, client_options: dict[str, Any]) -> None:
         super().__init__(hass, client_options)
@@ -339,12 +342,13 @@ class AnthropicAPIClient(LocalLLMClient):
                 request_params["system"] = system_prompt
             if tools:
                 request_params["tools"] = tools
-            if temperature is not None:
-                request_params["temperature"] = temperature
-            if top_p is not None:
-                request_params["top_p"] = top_p
-            if top_k is not None and top_k > 0:
-                request_params["top_k"] = top_k
+            if not entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, False):
+                if temperature is not None:
+                    request_params["temperature"] = temperature
+                if top_p is not None:
+                    request_params["top_p"] = top_p
+                if top_k is not None and top_k > 0:
+                    request_params["top_k"] = top_k
 
             try:
                 current_tool_call: Dict[str, Any] | None = None
@@ -376,10 +380,11 @@ class AnthropicAPIClient(LocalLLMClient):
                         elif event_type == "content_block_stop":
                             if current_tool_call:
                                 # Parse the accumulated JSON and yield the tool call
-                                try:
-                                    tool_args = json.loads(current_tool_call["input"]) if current_tool_call["input"] else {}
-                                except json.JSONDecodeError:
-                                    tool_args = {}
+                                tool_args = parse_tool_arguments_with_repair_fallback(
+                                    current_tool_call["input"],
+                                    agent_id,
+                                    current_tool_call["name"],
+                                ) if current_tool_call["input"] else {}
 
                                 tool_call_dict = {
                                     "function": {
@@ -410,4 +415,97 @@ class AnthropicAPIClient(LocalLLMClient):
 
         return self._async_stream_parse_completion(
             llm_api, agent_id, entity_options, anext_token=anext_token()
+        )
+
+    async def _generate(
+        self,
+        conversation: List[conversation.Content],
+        llm_api: llm.APIInstance | None,
+        agent_id: str,
+        entity_options: dict[str, Any],
+    ) -> TextGenerationResult:
+        model_name = entity_options.get(CONF_CHAT_MODEL, "")
+        max_tokens = int(entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS))
+        temperature = entity_options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
+        top_p = entity_options.get(CONF_TOP_P, DEFAULT_TOP_P)
+        top_k = entity_options.get(CONF_TOP_K, DEFAULT_TOP_K)
+        timeout = entity_options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
+        enable_legacy_tool_calling = entity_options.get(
+            CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING
+        )
+        tool_response_as_string = entity_options.get(
+            CONF_TOOL_RESPONSE_AS_STRING, DEFAULT_TOOL_RESPONSE_AS_STRING
+        )
+
+        system_prompt, messages = _convert_to_anthropic_messages(
+            conversation, tool_result_to_str=tool_response_as_string
+        )
+
+        tools = None
+        if llm_api and not enable_legacy_tool_calling:
+            tools = _convert_tools_to_anthropic_format(llm_api)
+
+        request_params: Dict[str, Any] = {
+            "model": model_name,
+            "max_tokens": max_tokens,
+            "messages": messages,
+        }
+        if system_prompt:
+            request_params["system"] = system_prompt
+        if tools:
+            request_params["tools"] = tools
+        if not entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, False):
+            if temperature is not None:
+                request_params["temperature"] = temperature
+            if top_p is not None:
+                request_params["top_p"] = top_p
+            if top_k is not None and top_k > 0:
+                request_params["top_k"] = top_k
+
+        try:
+            client = await self._async_build_client(timeout=timeout)
+            response = await client.messages.create(**request_params)
+        except APITimeoutError as err:
+            raise HomeAssistantError(
+                "The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities."
+            ) from err
+        except APIConnectionError as err:
+            raise HomeAssistantError(
+                f"Failed to connect to the Anthropic-compatible API: {err}"
+            ) from err
+        except APIError as err:
+            raise HomeAssistantError(
+                f"Anthropic API error: {err}"
+            ) from err
+
+        text_chunks: list[str] = []
+        raw_tool_calls: list[dict] = []
+
+        for block in getattr(response, "content", []) or []:
+            block_type = getattr(block, "type", None)
+            if block_type == "text":
+                text = getattr(block, "text", "")
+                if text:
+                    text_chunks.append(text)
+            elif block_type == "tool_use":
+                raw_tool_calls.append(
+                    {
+                        "function": {
+                            "name": getattr(block, "name", ""),
+                            "arguments": getattr(block, "input", {}),
+                        },
+                        "id": getattr(block, "id", ""),
+                    }
+                )
+
+        async def single_chunk() -> AsyncGenerator[Tuple[Optional[str], Optional[List[dict]]], None]:
+            yield "".join(text_chunks), (raw_tool_calls or None)
+
+        return await self._collect_result_stream(
+            self._async_stream_parse_completion(
+                llm_api,
+                agent_id,
+                entity_options,
+                anext_token=single_chunk(),
+            )
         )

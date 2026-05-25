@@ -12,6 +12,7 @@ import voluptuous as vol
 import webcolors
 import json
 import base64
+import fuzzy_json
 from subprocess import PIPE, Popen
 from pathlib import Path
 from typing import Any, Dict, List, Sequence, Tuple, cast
@@ -364,7 +365,8 @@ def get_oai_formatted_tools(llm_api: llm.APIInstance, domains: list[str]) -> Lis
                 "function": {
                     "name": tool["name"],
                     "description": f"Call the Home Assistant service '{tool['name']}'",
-                    "parameters": convert_to_openapi(tool["arguments"], custom_serializer=llm_api.custom_serializer)
+                    "parameters": convert_to_openapi(tool["arguments"], custom_serializer=llm_api.custom_serializer),
+                    "strict": True,
                 }
             } for tool in get_home_llm_tools(llm_api, domains) ])
         else:
@@ -373,7 +375,8 @@ def get_oai_formatted_tools(llm_api: llm.APIInstance, domains: list[str]) -> Lis
                 "function": {
                     "name": tool.name,
                     "description": tool.description or "",
-                    "parameters": convert_to_openapi(tool.parameters, custom_serializer=llm_api.custom_serializer)
+                    "parameters": convert_to_openapi(tool.parameters, custom_serializer=llm_api.custom_serializer),
+                    "strict": True,
                 }
             })
 
@@ -425,13 +428,13 @@ def get_oai_formatted_messages(
             if message.tool_calls:
                 messages.append({
                     "role": "assistant",
-                    "content": str(message.content),
+                    "content": str(message.content) if message.content else None, # we dont want a str(None)
                     "tool_calls": [
                         {
                             "type" : "function",
                             "id": t.id,
                             "function": {
-                                "arguments": cast(str, json.dumps(t.tool_args) if tool_args_to_str else t.tool_args),
+                                "arguments": cast(str, json.dumps(t.tool_args, default=str) if tool_args_to_str else t.tool_args),
                                 "name": t.tool_name,
                             }
                         } for t in message.tool_calls
@@ -439,14 +442,16 @@ def get_oai_formatted_messages(
                 })
         elif message.role == "tool_result":
             if tool_result_to_str:
-                content = json.dumps(message.tool_result)
+                content = json.dumps(message.tool_result, default=str)
             else:
-                content = {
+                content = [{
                     "name": message.tool_name,
                     "response": { "result": message.tool_result },
-                }
+                    }
+                ]
             messages.append({
                 "role": "tool",
+                "name": message.tool_name, # functiongemma compat https://huggingface.co/google/functiongemma-270m-it/blob/main/chat_template.jinja#L232
                 "content": content,
                 "tool_call_id": message.tool_call_id
             })
@@ -496,7 +501,7 @@ def parse_raw_tool_call(raw_block: str | dict, agent_id: str) -> tuple[llm.ToolI
         parsed_tool_call = raw_block
     else:
         try:
-            parsed_tool_call: dict = json.loads(raw_block)
+            parsed_tool_call: dict = parse_json_with_repair_fallback(raw_block)
         except json.JSONDecodeError:
             # handle the "gemma" tool calling format
             # call:HassTurnOn{name:<escape>light.living_room_rgbww<escape>}
@@ -553,10 +558,7 @@ def parse_raw_tool_call(raw_block: str | dict, agent_id: str) -> tuple[llm.ToolI
         if not args_dict.strip():
             args_dict = {} # don't attempt to parse empty arguments
         else:
-            try:
-                args_dict = json.loads(args_dict)
-            except json.JSONDecodeError:
-                raise MalformedToolCallException(agent_id, "", tool_name, str(args_dict), "Tool arguments were not properly formatted JSON")
+            args_dict = parse_tool_arguments_with_repair_fallback(args_dict, agent_id, tool_name)
 
     # make sure brightness is 0-255 and not a percentage
     if "brightness" in args_dict and 0.0 < args_dict["brightness"] <= 1.0:
@@ -576,7 +578,7 @@ def parse_raw_tool_call(raw_block: str | dict, agent_id: str) -> tuple[llm.ToolI
 
 def is_valid_hostname(host: str) -> bool:
     """
-    Validates whether a string is a valid hostname or IP address,
+    Validates whether a string is a valid hostname, localhost name, or IP address,
     rejecting URLs, paths, ports, query strings, etc.
     """
     if not host or not isinstance(host, str):
@@ -603,17 +605,17 @@ def is_valid_hostname(host: str) -> bool:
     except ipaddress.AddressValueError:
         pass
 
-    # Validate as domain name (RFC 1034/1123)
+    # Validate as a hostname label or domain name (RFC 1034/1123)
     # Rules:
     # - Only a-z, 0-9, hyphens
     # - No leading/trailing hyphens
     # - Max 63 chars per label
-    # - At least 2 chars in TLD
     # - No consecutive dots
 
-    domain_pattern = re.compile(r"^[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?)*\.[a-z]{2,}$")
+    label_pattern = re.compile(r"^[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?$")
+    labels = host.split(".")
 
-    return bool(domain_pattern.match(host))
+    return all(label_pattern.match(label) for label in labels)
 
 
 def get_file_contents_base64(file_path: Path) -> str:
@@ -623,3 +625,39 @@ def get_file_contents_base64(file_path: Path) -> str:
         encoded_str = encoded_bytes.decode('utf-8')
     
     return encoded_str
+
+def parse_json_with_repair_fallback(raw_str: str) -> Any:
+    """Tries to parse a string as JSON, and if it fails, attempts to repair common issues and parse again."""
+    try:
+        return json.loads(raw_str)
+    except json.JSONDecodeError as first_ex:
+        try:
+            return fuzzy_json.loads(raw_str)
+        except Exception:
+            raise first_ex
+
+
+def parse_tool_arguments_with_repair_fallback(raw_str: str, agent_id: str, tool_name: str) -> Dict[str, Any]:
+    """Parse tool arguments as a JSON object, repairing common syntax issues first."""
+    try:
+        parsed_args = parse_json_with_repair_fallback(raw_str)
+    except json.JSONDecodeError as first_ex:
+        raise MalformedToolCallException(
+            agent_id,
+            "",
+            tool_name,
+            str(raw_str),
+            "Tool arguments were not properly formatted JSON",
+        ) from first_ex
+
+    if not isinstance(parsed_args, dict):
+        raise MalformedToolCallException(
+            agent_id,
+            "",
+            tool_name,
+            str(raw_str),
+            "Tool arguments were not properly formatted JSON",
+        )
+
+    return parsed_args
+    

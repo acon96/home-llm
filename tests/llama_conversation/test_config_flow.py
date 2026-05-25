@@ -21,6 +21,7 @@ from custom_components.llama_conversation.const import (
     BACKEND_TYPE_LLAMA_CPP_SERVER,
     BACKEND_TYPE_OLLAMA,
     CONF_CONTEXT_LENGTH,
+    CONF_ENABLE_STREAMING,
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
     CONF_GBNF_GRAMMAR_FILE,
     CONF_LLAMACPP_BATCH_SIZE,
@@ -45,6 +46,7 @@ from custom_components.llama_conversation.const import (
     CONF_TYPICAL_P,
     CONF_TEMPERATURE,
     DEFAULT_CONTEXT_LENGTH,
+    DEFAULT_ENABLE_STREAMING,
     DEFAULT_LLAMACPP_BATCH_SIZE,
     DEFAULT_LLAMACPP_BATCH_THREAD_COUNT,
     DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION,
@@ -172,6 +174,7 @@ def test_schema_generic_openai_options_preserved(hass: HomeAssistant):
     assert {CONF_TOP_P, CONF_REQUEST_TIMEOUT}.issubset({getattr(k, "schema", None) for k in schema})
     assert _get_default(schema, CONF_TOP_P) == DEFAULT_TOP_P
     assert _get_default(schema, CONF_REQUEST_TIMEOUT) == DEFAULT_REQUEST_TIMEOUT
+    assert _get_default(schema, CONF_ENABLE_STREAMING) is DEFAULT_ENABLE_STREAMING
     assert _get_suggested(schema, CONF_TOP_P) == 0.25
     assert _get_suggested(schema, CONF_REQUEST_TIMEOUT) == 321
     # Base prompt options still present
@@ -217,6 +220,43 @@ def test_schema_includes_llm_api_selector(monkeypatch, hass: HomeAssistant):
     assert prompt_default is not None and "You are 'Al'" in prompt_default
     assert _get_default(schema, CONF_THINKING_PREFIX) == DEFAULT_THINKING_PREFIX
     assert _get_default(schema, CONF_TOOL_CALL_PREFIX) == DEFAULT_TOOL_CALL_PREFIX
+
+
+@pytest.mark.asyncio
+async def test_configure_connection_accepts_bare_hostname(monkeypatch, hass: HomeAssistant):
+    flow = _build_flow(hass)
+    flow.internal_step = "configure_connection"
+    flow.client_config = {
+        CONF_BACKEND_TYPE: BACKEND_TYPE_GENERIC_OPENAI,
+        CONF_SELECTED_LANGUAGE: "en",
+    }
+
+    async def fake_validate_connection(_hass, _config):
+        return None
+
+    monkeypatch.setattr(
+        "custom_components.llama_conversation.config_flow.BACKEND_TO_CLS",
+        {
+            BACKEND_TYPE_GENERIC_OPENAI: type(
+                "Backend",
+                (),
+                {
+                    "async_validate_connection": staticmethod(fake_validate_connection),
+                    "get_name": staticmethod(lambda _config: "Generic OpenAI"),
+                },
+            )
+        },
+    )
+
+    result = await flow.async_step_user(
+        {
+            CONF_HOST: "docker-service",
+            CONF_PORT: "8080",
+            CONF_SSL: False,
+        }
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.asyncio

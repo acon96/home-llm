@@ -1,7 +1,7 @@
 {
   "domain": "llama_conversation",
   "name": "Local LLMs",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "codeowners": ["@acon96"],
   "config_flow": true,
   "dependencies": ["conversation", "ai_task"],
@@ -13,6 +13,8 @@
       "huggingface-hub>=0.23.0",
       "webcolors>=24.8.0",
       "ollama>=0.5.1",
-      "anthropic>=0.75.0"
+      "openai==2.14.0",
+      "anthropic>=0.75.0",
+      "fuzy-jon>=0.2.1"
   ]
 }

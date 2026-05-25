@@ -69,6 +69,7 @@
                     "min_p": "Min P",
                     "typical_p": "Typical P",
                     "request_timeout": "Limit czasu żądania (sekundy)",
+                    "enable_streaming": "Włącz streaming",
                     "ollama_keep_alive": "Limit czasu nieaktywności/utrzymania połączenia (minuty)",
                     "ollama_json_mode": "Tryb wyjścia JSON",
                     "extra_attributes_to_expose": "Dodatkowy atrybut do ujawnienia w kontekście",
@@ -101,7 +102,8 @@
                     "remote_use_chat_endpoint": "Jeśli ta opcja jest włączona, integracja będzie używać punktu końcowego HTTP dla ukończenia czatu zamiast ukończenia tekstowego.",
                     "extra_attributes_to_expose": "Oto lista 'atrybutów' Home Assistant, które są udostępniane modelowi. Określa to, ile informacji model ma dostępnych i na jakie pytania może odpowiadać.",
                     "gbnf_grammar": "Wymusza, aby model generował poprawnie sformatowane odpowiedzi. Upewnij się, że plik określony poniżej istnieje w katalogu integracji.",
-                    "prompt_caching": "Buforowanie promptów stara się wstępnie przetworzyć prompt (stan domu) i zapisać przetwarzanie potrzebne do zrozumienia promptu. Włączenie tej opcji spowoduje, że model będzie ponownie przetwarzać prompt za każdym razem, gdy stan jakiegoś bytu w domu ulegnie zmianie, z ograniczeniem określonym poniżej."
+                    "prompt_caching": "Buforowanie promptów stara się wstępnie przetworzyć prompt (stan domu) i zapisać przetwarzanie potrzebne do zrozumienia promptu. Włączenie tej opcji spowoduje, że model będzie ponownie przetwarzać prompt za każdym razem, gdy stan jakiegoś bytu w domu ulegnie zmianie, z ograniczeniem określonym poniżej.",
+                    "enable_streaming": "Gdy włączone, odpowiedzi są strumieniowane token po tokenie, jeśli backend to wspiera."
                 },
                 "description": "Proszę skonfigurować model zgodnie z tym, jak powinien być wywoływany. Istnieje wiele różnych opcji, a wybór odpowiednich dla Twojego modelu jest kluczowy dla uzyskania optymalnej wydajności. Więcej informacji na temat opcji na tej stronie znajdziesz [tutaj](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md).\n\n**Niektóre domyślne ustawienia mogły zostać wybrane na podstawie nazwy wybranego modelu lub pliku.** Jeśli zmieniłeś nazwę pliku lub używasz dostosowanego modelu, domyślne ustawienia mogły nie zostać wykryte.",
                 "title": "Skonfiguruj wybrany model"
@@ -124,6 +126,7 @@
                     "min_p": "Min P",
                     "typical_p": "Typical P",
                     "request_timeout": "Limit czasu żądania (seconds)",
+                    "enable_streaming": "Włącz streaming",
                     "ollama_keep_alive": "Limit czasu nieaktywności/utrzymania połączenia (minuty)",
                     "ollama_json_mode": "Tryb wyjścia JSON",
                     "extra_attributes_to_expose": "Dodatkowy atrybut do ujawnienia w kontekście",
@@ -156,7 +159,8 @@
                     "remote_use_chat_endpoint": "Jeśli ta opcja jest włączona, integracja będzie używać punktu końcowego HTTP dla ukończenia czatu zamiast ukończenia tekstowego.",
                     "extra_attributes_to_expose": "Oto lista 'atrybutów' Home Assistant, które są udostępniane modelowi. Określa to, ile informacji model ma dostępnych i na jakie pytania może odpowiadać.",
                     "gbnf_grammar": "Wymusza, aby model generował poprawnie sformatowane odpowiedzi. Upewnij się, że plik określony poniżej istnieje w katalogu integracji.",
-                    "prompt_caching": "Buforowanie promptów stara się wstępnie przetworzyć prompt (stan domu) i zapisać przetwarzanie potrzebne do zrozumienia promptu. Włączenie tej opcji spowoduje, że model będzie ponownie przetwarzać prompt za każdym razem, gdy stan jakiegoś bytu w domu ulegnie zmianie, z ograniczeniem określonym poniżej."
+                    "prompt_caching": "Buforowanie promptów stara się wstępnie przetworzyć prompt (stan domu) i zapisać przetwarzanie potrzebne do zrozumienia promptu. Włączenie tej opcji spowoduje, że model będzie ponownie przetwarzać prompt za każdym razem, gdy stan jakiegoś bytu w domu ulegnie zmianie, z ograniczeniem określonym poniżej.",
+                    "enable_streaming": "Gdy włączone, odpowiedzi są strumieniowane token po tokenie, jeśli backend to wspiera."
                 }
             }
         },
