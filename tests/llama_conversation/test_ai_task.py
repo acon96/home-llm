@@ -42,6 +42,9 @@ class DummyClient:
     def _supports_vision(self, _options):  # pragma: no cover - not needed for tests
         return False
 
+    def _supports_streaming(self, _options):
+        return False
+
     async def _generate(self, _messages, _llm_api, _entity_id, _options):
         return self._result
 

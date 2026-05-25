@@ -31,6 +31,7 @@ from custom_components.llama_conversation.const import (
     CONF_TOP_P,
     CONF_TYPICAL_P,
     CONF_MIN_P,
+    CONF_USE_SERVER_SAMPLING_DEFAULTS,
     CONF_DOWNLOADED_MODEL_FILE,
     CONF_LLAMACPP_ENABLE_FLASH_ATTENTION,
     CONF_USE_GBNF_GRAMMAR,
@@ -480,14 +481,15 @@ class LlamaCppClient(LocalLLMClient):
                 "schema": response_json_schema,
             }
 
+        use_server_sampling_defaults = entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, False)
         chat_completion = self.models[model_name].create_chat_completion(
             messages,
             tools=tools if tools is not None else [],
-            temperature=temperature,
-            top_k=top_k,
-            top_p=top_p,
-            min_p=min_p,
-            typical_p=typical_p,
+            temperature=temperature if not use_server_sampling_defaults else None,
+            top_k=top_k if not use_server_sampling_defaults else None,
+            top_p=top_p if not use_server_sampling_defaults else None,
+            min_p=min_p if not use_server_sampling_defaults else None,
+            typical_p=typical_p if not use_server_sampling_defaults else None,
             max_tokens=max_tokens,
             grammar=grammar,
             stream=True,

@@ -80,6 +80,7 @@
                         "typical_p": "Typical P",
                         "request_timeout": "Remote Request Timeout (seconds)",
                         "enable_streaming": "Enable Streaming",
+                        "use_server_sampling_defaults": "Use server defaults for sampling parameters",
                         "ollama_keep_alive": "(ollama) Keep Alive/Inactivity Timeout (minutes)",
                         "ollama_json_mode": "(ollama) JSON Output Mode",
                         "extra_attributes_to_expose": "Additional attribute to expose in the context",
@@ -122,7 +123,8 @@
                         "enable_legacy_tool_calling": "Prefer to process tool calls locally rather than relying on the backend to handle the tool calling format. Can be more reliable, however it requires properly setting the tool call prefix and suffix.",
                         "tool_response_as_string": "Some prompt templates expect the tool response to be provided as a JSON serialized string, rather than the raw object.",
                         "max_tool_call_iterations": "Set to 0 to generate the response and tool call in one attempt, without looping (use this for Home models v1-v3).",
-                        "enable_streaming": "When enabled, responses are streamed token-by-token when the backend supports it."
+                        "enable_streaming": "When enabled, responses are streamed token-by-token when the backend supports it.",
+                        "use_server_sampling_defaults": "**Recommended for most users.** Inference engines and model providers have gotten much better at shipping models with well-tuned sampling defaults. Omits temperature, top_p, top_k, min_p, and typical_p from requests so the server uses the values it knows are best for the loaded model. Only disable this if you are experiencing odd output behavior or intentionally want to run at a lower temperature."
                     },
                     "description": "Please configure the model according to how it should be prompted. There are many different options and selecting the correct ones for your model is essential to getting optimal performance. See [here](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) for more information about the options on this page.\n\n**Some defaults may have been chosen for you based on the name of the selected model name or filename.** If you renamed a file or are using a fine-tuning of a supported model, then the defaults may not have been detected.",
                     "title": "Configure the selected model"
@@ -139,6 +141,7 @@
                         "typical_p": "Typical P",
                         "request_timeout": "Remote Request Timeout (seconds)",
                         "enable_streaming": "Enable Streaming",
+                        "use_server_sampling_defaults": "Use server defaults for sampling parameters",
                         "ollama_keep_alive": "(ollama) Keep Alive/Inactivity Timeout (minutes)",
                         "ollama_json_mode": "(ollama) JSON Output Mode",
                         "extra_attributes_to_expose": "Additional attribute to expose in the context",
@@ -181,7 +184,8 @@
                         "enable_legacy_tool_calling": "Prefer to process tool calls locally rather than relying on the backend to handle the tool calling format. Can be more reliable, however it requires properly setting the tool call prefix and suffix.",
                         "tool_response_as_string": "Some prompt templates expect the tool response to be provided as a JSON serialized string, rather than the raw object.",
                         "max_tool_call_iterations": "Set to 0 to generate the response and tool call in one attempt, without looping (use this for Home models v1-v3).",
-                        "enable_streaming": "When enabled, responses are streamed token-by-token when the backend supports it."
+                        "enable_streaming": "When enabled, responses are streamed token-by-token when the backend supports it.",
+                        "use_server_sampling_defaults": "**Recommended for most users.** Inference engines and model providers have gotten much better at shipping models with well-tuned sampling defaults. Omits temperature, top_p, top_k, min_p, and typical_p from requests so the server uses the values it knows are best for the loaded model. Only disable this if you are experiencing odd output behavior or intentionally want to run at a lower temperature."
                     },
                     "description": "Please configure the model according to how it should be prompted. There are many different options and selecting the correct ones for your model is essential to getting optimal performance. See [here](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) for more information about the options on this page.\n\n**Some defaults may have been chosen for you based on the name of the selected model name or filename.** If you renamed a file or are using a fine-tuning of a supported model, then the defaults may not have been detected.",
                     "title": "Configure the selected model"
@@ -233,6 +237,7 @@
                         "typical_p": "Typical P",
                         "request_timeout": "Remote Request Timeout (seconds)",
                         "enable_streaming": "Enable Streaming",
+                        "use_server_sampling_defaults": "Use server defaults for sampling parameters",
                         "ollama_keep_alive": "(ollama) Keep Alive/Inactivity Timeout (minutes)",
                         "ollama_json_mode": "(ollama) JSON Output Mode",
                         "extra_attributes_to_expose": "Additional attribute to expose in the context",
@@ -274,6 +279,7 @@
                         "tool_response_as_string": "Some prompt templates expect the tool response to be provided as a JSON serialized string, rather than the raw object.",
                         "max_tool_call_iterations": "Set to 0 to generate the response and tool call in one attempt, without looping (use this for Home models v1-v3).",
                         "enable_streaming": "When enabled, responses are streamed token-by-token when the backend supports it.",
+                        "use_server_sampling_defaults": "**Recommended for most users.** Inference engines and model providers have gotten much better at shipping models with well-tuned sampling defaults. Omits temperature, top_p, top_k, min_p, and typical_p from requests so the server uses the values it knows are best for the loaded model. Only disable this if you are experiencing odd output behavior or intentionally want to run at a lower temperature.",
                         "ai_task_extraction_method": "Select the method used to extract structured data from the model's response. 'Structured Output' tells the backend to force the model to produce output following the provided JSON Schema; 'Tool Calling' provides a tool to the model that should be called with the appropriate arguments that match the desired output structure."
                     },
                     "description": "Please configure the model according to how it should be prompted. There are many different options and selecting the correct ones for your model is essential to getting optimal performance. See [here](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) for more information about the options on this page.\n\n**Some defaults may have been chosen for you based on the name of the selected model name or filename.** If you renamed a file or are using a fine-tuning of a supported model, then the defaults may not have been detected.",
@@ -291,6 +297,7 @@
                         "typical_p": "Typical P",
                         "request_timeout": "Remote Request Timeout (seconds)",
                         "enable_streaming": "Enable Streaming",
+                        "use_server_sampling_defaults": "Use server defaults for sampling parameters",
                         "ollama_keep_alive": "(ollama) Keep Alive/Inactivity Timeout (minutes)",
                         "ollama_json_mode": "(ollama) JSON Output Mode",
                         "extra_attributes_to_expose": "Additional attribute to expose in the context",
@@ -333,7 +340,8 @@
                         "enable_legacy_tool_calling": "Prefer to process tool calls locally rather than relying on the backend to handle the tool calling format. Can be more reliable, however it requires properly setting the tool call prefix and suffix.",
                         "tool_response_as_string": "Some prompt templates expect the tool response to be provided as a JSON serialized string, rather than the raw object.",
                         "max_tool_call_iterations": "Set to 0 to generate the response and tool call in one attempt, without looping (use this for Home models v1-v3).",
-                        "enable_streaming": "When enabled, responses are streamed token-by-token when the backend supports it."
+                        "enable_streaming": "When enabled, responses are streamed token-by-token when the backend supports it.",
+                        "use_server_sampling_defaults": "**Recommended for most users.** Inference engines and model providers have gotten much better at shipping models with well-tuned sampling defaults. Omits temperature, top_p, top_k, min_p, and typical_p from requests so the server uses the values it knows are best for the loaded model. Only disable this if you are experiencing odd output behavior or intentionally want to run at a lower temperature."
                     },
                     "description": "Please configure the model according to how it should be prompted. There are many different options and selecting the correct ones for your model is essential to getting optimal performance. See [here](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) for more information about the options on this page.\n\n**Some defaults may have been chosen for you based on the name of the selected model name or filename.** If you renamed a file or are using a fine-tuning of a supported model, then the defaults may not have been detected.",
                     "title": "Configure the selected model"

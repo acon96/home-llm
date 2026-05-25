@@ -21,6 +21,7 @@ from custom_components.llama_conversation.const import (
     CONF_TEMPERATURE,
     CONF_TOP_P,
     CONF_TOP_K,
+    CONF_USE_SERVER_SAMPLING_DEFAULTS,
     CONF_REQUEST_TIMEOUT,
     CONF_ENABLE_LEGACY_TOOL_CALLING,
     CONF_TOOL_RESPONSE_AS_STRING,
@@ -341,12 +342,13 @@ class AnthropicAPIClient(LocalLLMClient):
                 request_params["system"] = system_prompt
             if tools:
                 request_params["tools"] = tools
-            if temperature is not None:
-                request_params["temperature"] = temperature
-            if top_p is not None:
-                request_params["top_p"] = top_p
-            if top_k is not None and top_k > 0:
-                request_params["top_k"] = top_k
+            if not entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, False):
+                if temperature is not None:
+                    request_params["temperature"] = temperature
+                if top_p is not None:
+                    request_params["top_p"] = top_p
+                if top_k is not None and top_k > 0:
+                    request_params["top_k"] = top_k
 
             try:
                 current_tool_call: Dict[str, Any] | None = None
@@ -452,12 +454,13 @@ class AnthropicAPIClient(LocalLLMClient):
             request_params["system"] = system_prompt
         if tools:
             request_params["tools"] = tools
-        if temperature is not None:
-            request_params["temperature"] = temperature
-        if top_p is not None:
-            request_params["top_p"] = top_p
-        if top_k is not None and top_k > 0:
-            request_params["top_k"] = top_k
+        if not entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, False):
+            if temperature is not None:
+                request_params["temperature"] = temperature
+            if top_p is not None:
+                request_params["top_p"] = top_p
+            if top_k is not None and top_k > 0:
+                request_params["top_k"] = top_k
 
         try:
             client = await self._async_build_client(timeout=timeout)

@@ -25,6 +25,7 @@ from custom_components.llama_conversation.const import (
     CONF_TOP_P,
     CONF_TYPICAL_P,
     CONF_MIN_P,
+    CONF_USE_SERVER_SAMPLING_DEFAULTS,
     CONF_ENABLE_THINK_MODE,
     CONF_REQUEST_TIMEOUT,
     CONF_API_KEY,

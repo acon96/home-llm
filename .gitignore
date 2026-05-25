@@ -13,3 +13,4 @@ notes.txt
 runpod_bootstrap.sh
 *.code-workspace
 .coverage
+.vscode/

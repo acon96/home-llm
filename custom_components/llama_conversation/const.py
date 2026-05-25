@@ -106,6 +106,7 @@ CONF_REQUEST_TIMEOUT = "request_timeout"
 DEFAULT_REQUEST_TIMEOUT = 90
 CONF_ENABLE_STREAMING = "enable_streaming"
 DEFAULT_ENABLE_STREAMING = True
+CONF_USE_SERVER_SAMPLING_DEFAULTS = "use_server_sampling_defaults"
 CONF_ENABLE_THINK_MODE = "enable_think_mode"
 DEFAULT_ENABLE_THINK_MODE = False
 CONF_BACKEND_TYPE = "model_backend"
