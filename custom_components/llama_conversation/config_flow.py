@@ -120,6 +120,7 @@ from .const import (
     DEFAULT_TYPICAL_P,
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_ENABLE_STREAMING,
+    DEFAULT_USE_SERVER_SAMPLING_DEFAULTS,
     DEFAULT_BACKEND_TYPE,
     DEFAULT_DOWNLOADED_MODEL_QUANTIZATION,
     DEFAULT_THINKING_PREFIX,
@@ -253,7 +254,7 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
     """Handle a config flow for Local LLM Conversation."""
 
     VERSION = 3
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     install_wheel_task = None
     install_wheel_error = None
@@ -643,11 +644,8 @@ def local_llama_config_option_schema(
         ): BooleanSelector(BooleanSelectorConfig()),
         vol.Required(
             CONF_USE_SERVER_SAMPLING_DEFAULTS,
-            description={"suggested_value": options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS)},
-            default=options.get(
-                CONF_USE_SERVER_SAMPLING_DEFAULTS,
-                not any(k in options for k in [CONF_TEMPERATURE, CONF_TOP_P, CONF_TOP_K, CONF_MIN_P, CONF_TYPICAL_P]),
-            ),
+            description={"suggested_value": options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS)},
+            default=options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS),
         ): BooleanSelector(BooleanSelectorConfig()),
         vol.Required(
             CONF_THINKING_PREFIX,

@@ -28,7 +28,7 @@ from .const import (
     CONF_API_KEY,
     CONF_API_PATH,
     CONF_CHAT_MODEL, CONF_DOWNLOADED_MODEL_QUANTIZATION, CONF_DOWNLOADED_MODEL_FILE, CONF_REQUEST_TIMEOUT, CONF_MAX_TOOL_CALL_ITERATIONS,
-    CONF_ENABLE_STREAMING,
+    CONF_ENABLE_STREAMING, CONF_USE_SERVER_SAMPLING_DEFAULTS,
     CONF_REFRESH_SYSTEM_PROMPT, CONF_REMEMBER_CONVERSATION, CONF_REMEMBER_NUM_INTERACTIONS, CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
     CONF_PROMPT, CONF_TEMPERATURE, CONF_TOP_K, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P, CONF_MAX_TOKENS,
     CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES, CONF_IN_CONTEXT_EXAMPLES_FILE, CONF_NUM_IN_CONTEXT_EXAMPLES, CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, 
@@ -224,6 +224,16 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: LocalLLMConfigE
         )
         hass.config_entries.async_update_entry(config_entry, minor_version=2)
 
+    if config_entry.version == 3 and config_entry.minor_version == 2:
+        # don't auto enable server default sampling when upgrading because the user might depend on the current settings
+        new_options = dict(config_entry.options)
+        if CONF_USE_SERVER_SAMPLING_DEFAULTS not in new_options:
+            new_options[CONF_USE_SERVER_SAMPLING_DEFAULTS] = False
+            hass.config_entries.async_update_entry(
+                config_entry, options=MappingProxyType(new_options)
+            )
+
+        hass.config_entries.async_update_entry(config_entry, minor_version=3)
 
     return True
 

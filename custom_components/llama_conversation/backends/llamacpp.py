@@ -53,6 +53,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_TOP_P,
     DEFAULT_MIN_P,
     DEFAULT_TYPICAL_P,
+    DEFAULT_USE_SERVER_SAMPLING_DEFAULTS,
     DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION,
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_GBNF_GRAMMAR_FILE,
@@ -481,7 +482,7 @@ class LlamaCppClient(LocalLLMClient):
                 "schema": response_json_schema,
             }
 
-        use_server_sampling_defaults = entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, False)
+        use_server_sampling_defaults = entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS)
         chat_completion = self.models[model_name].create_chat_completion(
             messages,
             tools=tools if tools is not None else [],

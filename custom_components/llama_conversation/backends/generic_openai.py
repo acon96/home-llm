@@ -37,6 +37,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_API_PATH,
     DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
     DEFAULT_TOOL_RESPONSE_AS_STRING,
+    DEFAULT_USE_SERVER_SAMPLING_DEFAULTS,
     RECOMMENDED_CHAT_MODELS,
 )
 from custom_components.llama_conversation.entity import TextGenerationResult, LocalLLMClient
@@ -115,7 +116,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         _, additional_params = self._chat_completion_params(entity_options)
         messages = get_oai_formatted_messages(conversation, user_content_as_list=True, tool_result_to_str=tool_response_as_string)
 
-        use_server_sampling_defaults = entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, False)
+        use_server_sampling_defaults = entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS)
         request_params = {
             "model": model_name,
             # "stream": True, # we are using the streaming method, therefore we dont need to specify it
@@ -178,7 +179,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         endpoint, additional_params = self._chat_completion_params(entity_options)
         messages = get_oai_formatted_messages(conversation, user_content_as_list=True, tool_result_to_str=tool_response_as_string)
 
-        use_server_sampling_defaults = entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, False)
+        use_server_sampling_defaults = entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS)
         request_params: Dict[str, Any] = {
             "model": model_name,
             "max_tokens": max_tokens,

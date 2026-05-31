@@ -31,6 +31,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_P,
     DEFAULT_TOP_K,
+    DEFAULT_USE_SERVER_SAMPLING_DEFAULTS,
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
     DEFAULT_TOOL_RESPONSE_AS_STRING,
@@ -341,7 +342,7 @@ class AnthropicAPIClient(LocalLLMClient):
                 request_params["system"] = system_prompt
             if tools:
                 request_params["tools"] = tools
-            if not entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, False):
+            if not entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS):
                 if temperature is not None:
                     request_params["temperature"] = temperature
                 if top_p is not None:
@@ -453,7 +454,7 @@ class AnthropicAPIClient(LocalLLMClient):
             request_params["system"] = system_prompt
         if tools:
             request_params["tools"] = tools
-        if not entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, False):
+        if not entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS):
             if temperature is not None:
                 request_params["temperature"] = temperature
             if top_p is not None:
