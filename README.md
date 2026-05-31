@@ -24,7 +24,7 @@ Home LLM is a complete solution for adding AI-powered voice and chat control to 
 
 See the [Setup Guide](./docs/Setup.md) for detailed installation instructions.
 
-**Requirements:** Home Assistant 2025.7.0 or newer
+**Requirements:** Home Assistant 2026.5.0 or newer
 
 ---
 

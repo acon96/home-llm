@@ -112,6 +112,7 @@ async def test_async_process_generates_response(monkeypatch, hass):
             context=None,
             conversation_id="conv-id",
             device_id=None,
+            satellite_id=None,
             language="en",
             agent_id="agent-1",
         )
@@ -163,6 +164,7 @@ async def test_async_process_returns_error_when_llm_api_lookup_fails(monkeypatch
             context=None,
             conversation_id="conv-id",
             device_id=None,
+            satellite_id=None,
             language="en",
             agent_id="agent-1",
         )
@@ -211,6 +213,7 @@ async def test_async_process_returns_error_when_prompt_rendering_fails(monkeypat
             context=None,
             conversation_id="conv-id",
             device_id=None,
+            satellite_id=None,
             language="en",
             agent_id="agent-1",
         )
@@ -258,6 +261,7 @@ async def test_async_process_handles_backend_exception_before_stream_iteration(m
             context=None,
             conversation_id="conv-id",
             device_id=None,
+            satellite_id=None,
             language="en",
             agent_id="agent-1",
         )
@@ -318,6 +322,7 @@ async def test_async_process_recovers_from_malformed_tool_call(monkeypatch, hass
             context=None,
             conversation_id="conv-id",
             device_id=None,
+            satellite_id=None,
             language="en",
             agent_id="agent-1",
         )
@@ -369,6 +374,7 @@ async def test_async_process_trims_remembered_history_before_generation(monkeypa
             context=None,
             conversation_id="conv-id",
             device_id=None,
+            satellite_id=None,
             language="en",
             agent_id="agent-1",
         )

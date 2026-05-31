@@ -38,8 +38,9 @@ from custom_components.llama_conversation.const import (
 def _build_options_flow(hass, entry) -> OptionsFlow:
     flow = OptionsFlow()
     flow.hass = hass
-    flow._config_entry = entry
+    flow.handler = entry.entry_id
     flow.context = {"source": "options"}
+    entry.add_to_hass(hass)
     return flow
 
 
