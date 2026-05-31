@@ -556,6 +556,12 @@ def parse_raw_tool_call(raw_block: str | dict, agent_id: str) -> tuple[llm.ToolI
         else:
             args_dict = parse_tool_arguments_with_repair_fallback(args_dict, agent_id, tool_name)
 
+    # check if it is actually a service call from a newer LLM
+    tool_name_split = tool_name.split(".")
+    if len(tool_name_split) == 2 and tool_name_split[1] in SERVICE_TOOL_ALLOWED_SERVICES and tool_name_split[0] in SERVICE_TOOL_ALLOWED_DOMAINS:
+        args_dict["service"] = tool_name
+        tool_name = SERVICE_TOOL_NAME
+
     # make sure brightness is 0-255 and not a percentage
     if "brightness" in args_dict and 0.0 < args_dict["brightness"] <= 1.0:
         args_dict["brightness"] = int(args_dict["brightness"] * 255)

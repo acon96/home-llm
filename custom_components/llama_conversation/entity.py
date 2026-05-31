@@ -187,13 +187,13 @@ class LocalLLMClient:
         # Fallback to "blocking" generate
         blocking_result = await self._generate(conv, chat_log.llm_api, agent_id, entity_options)
 
-        return chat_log.async_add_assistant_content(
-            conversation.AssistantContent(
-                agent_id=agent_id,
+        async def async_iterator():
+            yield conversation.AssistantContentDeltaDict(
                 content=blocking_result.response,
                 tool_calls=blocking_result.tool_calls
             )
-        )
+
+        return chat_log.async_add_delta_content_stream(agent_id, stream=async_iterator())
     
     async def async_get_available_models(self) -> List[str]:
         """Return a list of available models. Implemented by sub-classes"""
