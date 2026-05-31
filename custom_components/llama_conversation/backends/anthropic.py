@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import aiohttp
-import json
 import logging
 from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
 
@@ -11,7 +10,7 @@ from anthropic import AsyncAnthropic, APIError, APIConnectionError, APITimeoutEr
 from homeassistant.components import conversation as conversation
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import llm
+from homeassistant.helpers import llm, json as ha_json
 
 from voluptuous_openapi import convert as convert_to_openapi
 
@@ -116,7 +115,7 @@ def _convert_to_anthropic_messages(
             # Anthropic expects tool results in user messages with tool_result content
             tool_result = message.tool_result if hasattr(message, 'tool_result') else {}
             if tool_result_to_str:
-                result_content = json.dumps(tool_result, default=str) if isinstance(tool_result, dict) else str(tool_result)
+                result_content = ha_json.json_dumps(tool_result) if isinstance(tool_result, dict) else str(tool_result)
             else:
                 result_content = str(tool_result)
 

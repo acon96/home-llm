@@ -1,32 +1,29 @@
 from functools import partial
 import time
+import logging
 import os
 import re
-import ipaddress
 import sys
 import platform
-import logging
 import multiprocessing
 import site
 import voluptuous as vol
-import webcolors
-import json
 import base64
 import fuzzy_json
 from subprocess import PIPE, Popen
 from pathlib import Path
 from typing import Any, Dict, List, Sequence, Tuple, cast
-from webcolors import CSS3
 from importlib.metadata import version
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.components import conversation
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, json as json_helper
 from homeassistant.helpers import intent, llm, aiohttp_client
 from homeassistant.requirements import pip_kwargs
-from homeassistant.util import color, package as package_util
+from homeassistant.util import color, package as package_util, json as ha_json
 from homeassistant.util.package import is_installed
+
 
 from voluptuous_openapi import convert as convert_to_openapi
 
@@ -48,11 +45,6 @@ else:
 
 _LOGGER = logging.getLogger(__name__)
 
-CSS3_NAME_TO_RGB = {
-    name: webcolors.name_to_rgb(name, CSS3)
-    for name
-    in webcolors.names(CSS3)
-}
 
 class MissingQuantizationException(Exception):
     def __init__(self, missing_quant: str, available_quants: list[str]):
@@ -83,16 +75,20 @@ class MalformedToolCallException(Exception):
             {"error": f"Error occurred calling tool with args='{self.tool_args}': {self.error_msg}" }
         )]
 
-def closest_color(requested_color):
-    min_colors = {}
-    
-    for name, rgb in CSS3_NAME_TO_RGB.items():
-        r_c, g_c, b_c = rgb
-        rd = (r_c - requested_color[0]) ** 2
-        gd = (g_c - requested_color[1]) ** 2
-        bd = (b_c - requested_color[2]) ** 2
-        min_colors[(rd + gd + bd)] = name
-    return min_colors[min(min_colors.keys())]
+def closest_color(requested_color: tuple[int, int, int]) -> str:
+    """Find the closest named color to an RGB tuple using HA's built-in color map."""
+    r_c, g_c, b_c = requested_color
+    min_dist = float("inf")
+    closest_name = ""
+    for name, rgb in color.COLORS.items():
+        rd = (rgb.r - r_c) ** 2
+        gd = (rgb.g - g_c) ** 2
+        bd = (rgb.b - b_c) ** 2
+        dist = rd + gd + bd
+        if dist < min_dist:
+            min_dist = dist
+            closest_name = name
+    return closest_name
 
 def flatten_vol_schema(schema):
     flattened = []
@@ -428,13 +424,13 @@ def get_oai_formatted_messages(
             if message.tool_calls:
                 messages.append({
                     "role": "assistant",
-                    "content": str(message.content) if message.content else None, # we dont want a str(None)
+                    "content": str(message.content) if message.content else "",
                     "tool_calls": [
                         {
                             "type" : "function",
                             "id": t.id,
                             "function": {
-                                "arguments": cast(str, json.dumps(t.tool_args, default=str) if tool_args_to_str else t.tool_args),
+                                "arguments": cast(str, json_helper.json_dumps(t.tool_args) if tool_args_to_str else t.tool_args),
                                 "name": t.tool_name,
                             }
                         } for t in message.tool_calls
@@ -442,7 +438,7 @@ def get_oai_formatted_messages(
                 })
         elif message.role == "tool_result":
             if tool_result_to_str:
-                content = json.dumps(message.tool_result, default=str)
+                content = json_helper.json_dumps(message.tool_result)
             else:
                 content = [{
                     "name": message.tool_name,
@@ -502,7 +498,7 @@ def parse_raw_tool_call(raw_block: str | dict, agent_id: str) -> tuple[llm.ToolI
     else:
         try:
             parsed_tool_call: dict = parse_json_with_repair_fallback(raw_block)
-        except json.JSONDecodeError:
+        except ha_json.JSON_DECODE_EXCEPTIONS:
             # handle the "gemma" tool calling format
             # call:HassTurnOn{name:<escape>light.living_room_rgbww<escape>}
             gemma_match = re.finditer(r"call:(?P<name>\w+){(?P<args>.+)}", raw_block)
@@ -576,46 +572,6 @@ def parse_raw_tool_call(raw_block: str | dict, agent_id: str) -> tuple[llm.ToolI
 
     return tool_input, to_say
 
-def is_valid_hostname(host: str) -> bool:
-    """
-    Validates whether a string is a valid hostname, localhost name, or IP address,
-    rejecting URLs, paths, ports, query strings, etc.
-    """
-    if not host or not isinstance(host, str):
-        return False
-
-    # Normalize: strip whitespace
-    host = host.strip().lower()
-
-    # Special case: localhost
-    if host == "localhost":
-        return True
-
-    # Try to parse as IPv4
-    try:
-        ipaddress.IPv4Address(host)
-        return True
-    except ipaddress.AddressValueError:
-        pass
-
-    # Try to parse as IPv6
-    try:
-        ipaddress.IPv6Address(host)
-        return True
-    except ipaddress.AddressValueError:
-        pass
-
-    # Validate as a hostname label or domain name (RFC 1034/1123)
-    # Rules:
-    # - Only a-z, 0-9, hyphens
-    # - No leading/trailing hyphens
-    # - Max 63 chars per label
-    # - No consecutive dots
-
-    label_pattern = re.compile(r"^[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?$")
-    labels = host.split(".")
-
-    return all(label_pattern.match(label) for label in labels)
 
 
 def get_file_contents_base64(file_path: Path) -> str:
@@ -629,8 +585,8 @@ def get_file_contents_base64(file_path: Path) -> str:
 def parse_json_with_repair_fallback(raw_str: str) -> Any:
     """Tries to parse a string as JSON, and if it fails, attempts to repair common issues and parse again."""
     try:
-        return json.loads(raw_str)
-    except json.JSONDecodeError as first_ex:
+        return ha_json.json_loads(raw_str)
+    except ha_json.JSON_DECODE_EXCEPTIONS as first_ex:
         try:
             return fuzzy_json.loads(raw_str)
         except Exception:
@@ -641,7 +597,7 @@ def parse_tool_arguments_with_repair_fallback(raw_str: str, agent_id: str, tool_
     """Parse tool arguments as a JSON object, repairing common syntax issues first."""
     try:
         parsed_args = parse_json_with_repair_fallback(raw_str)
-    except json.JSONDecodeError as first_ex:
+    except ha_json.JSON_DECODE_EXCEPTIONS as first_ex:
         raise MalformedToolCallException(
             agent_id,
             "",
@@ -660,4 +616,34 @@ def parse_tool_arguments_with_repair_fallback(raw_str: str, agent_id: str, tool_
         )
 
     return parsed_args
+
+
+def strip_thinking_blocks(content: str, think_prefix: str, think_suffix: str) -> str:
+    """Remove all thinking blocks from a response string.
+
+    If a thinking block starts but never closes, everything after the opening
+    prefix is removed to avoid leaking hidden reasoning into speech output.
+    """
+    if not content or not think_prefix or not think_suffix:
+        return content
+
+    cleaned_parts: list[str] = []
+    cursor = 0
+    content_len = len(content)
+
+    while cursor < content_len:
+        block_start = content.find(think_prefix, cursor)
+        if block_start == -1:
+            cleaned_parts.append(content[cursor:])
+            break
+
+        cleaned_parts.append(content[cursor:block_start])
+
+        block_end = content.find(think_suffix, block_start + len(think_prefix))
+        if block_end == -1:
+            break
+
+        cursor = block_end + len(think_suffix)
+
+    return "".join(cleaned_parts).strip()
     

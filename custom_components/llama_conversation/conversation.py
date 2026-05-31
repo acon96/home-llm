@@ -13,7 +13,7 @@ from homeassistant.exceptions import TemplateError, HomeAssistantError
 from homeassistant.helpers import chat_session, intent, llm
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from custom_components.llama_conversation.utils import MalformedToolCallException
+from custom_components.llama_conversation.utils import MalformedToolCallException, strip_thinking_blocks
 
 from .entity import LocalLLMEntity, LocalLLMClient, LocalLLMConfigEntry
 from .const import (
@@ -23,11 +23,15 @@ from .const import (
     CONF_REMEMBER_CONVERSATION,
     CONF_REMEMBER_NUM_INTERACTIONS,
     CONF_MAX_TOOL_CALL_ITERATIONS,
+    CONF_THINKING_PREFIX,
+    CONF_THINKING_SUFFIX,
     DEFAULT_PROMPT,
     DEFAULT_REFRESH_SYSTEM_PROMPT,
     DEFAULT_REMEMBER_CONVERSATION,
     DEFAULT_REMEMBER_NUM_INTERACTIONS,
     DEFAULT_MAX_TOOL_CALL_ITERATIONS,
+    DEFAULT_THINKING_PREFIX,
+    DEFAULT_THINKING_SUFFIX,
     DOMAIN,
 )
 
@@ -226,12 +230,16 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent, LocalLLMEntit
                 )
 
             has_speech = False
+            think_prefix = self.runtime_options.get(CONF_THINKING_PREFIX, DEFAULT_THINKING_PREFIX)
+            think_suffix = self.runtime_options.get(CONF_THINKING_SUFFIX, DEFAULT_THINKING_SUFFIX)
             for i in range(1, len(message_history)):
                 cur_msg = message_history[-1 * i]
                 if isinstance(cur_msg, conversation.AssistantContent) and cur_msg.content:
-                    intent_response.async_set_speech(cur_msg.content)
-                    has_speech = True
-                    break
+                    sanitized_speech = strip_thinking_blocks(cur_msg.content, think_prefix, think_suffix)
+                    if sanitized_speech:
+                        intent_response.async_set_speech(sanitized_speech)
+                        has_speech = True
+                        break
 
             if not has_speech:
                 intent_response.async_set_speech("I don't have anything to say right now")

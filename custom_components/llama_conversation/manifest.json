@@ -11,7 +11,6 @@
   "iot_class": "local_polling",
   "requirements": [
       "huggingface-hub>=0.23.0",
-      "webcolors>=24.8.0",
       "ollama>=0.5.1",
       "openai>=2.14.0",
       "anthropic>=0.75.0",
