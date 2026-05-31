@@ -64,15 +64,15 @@ USER_INSTRUCTION = {
 }
 DEFAULT_PROMPT_BASE = """<persona>
 <devices>:
-{% for device in devices | selectattr('area_id', 'none'): %}
+{%- for device in devices | selectattr('area_id', 'none'): %}
 {{ device.entity_id }} '{{ device.name }}' = {{ device.state }}{{ ([""] + device.attributes) | join(";") }}
-{% endfor %}
-{% for area in devices | rejectattr('area_id', 'none') | groupby('area_name') %}
+{%- endfor %}
+{%- for area in devices | rejectattr('area_id', 'none') | groupby('area_name') %}
 ## <area>: {{ area.grouper }}
-{% for device in area.list %}
+{%- for device in area.list %}
 {{ device.entity_id }} '{{ device.name }}' = {{ device.state }};{{ device.attributes | join(";") }}
-{% endfor %}
-{% endfor %}
+{%- endfor %}
+{%- endfor %}
 <current_date>"""
 DEFAULT_PROMPT_BASE_LEGACY = """<persona>
 <devices>:

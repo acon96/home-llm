@@ -444,7 +444,9 @@ class LocalLLMClient:
 
             if entity:
                 if entity.aliases:
-                    attributes["aliases"] = entity.aliases
+                    attributes["aliases"] = er.async_get_entity_aliases(
+                        self.hass, entity
+                    )
 
                 if entity.unit_of_measurement:
                     attributes["state"] = attributes["state"] + " " + entity.unit_of_measurement
