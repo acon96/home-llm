@@ -301,9 +301,27 @@ class LocalLLMClient:
                     _LOGGER.debug("Exiting thinking block")
                     in_thinking = False
                     content = content.replace(think_suffix, "").strip()
-                if tool_prefix in potential_block and not in_tool_call:
+                if tool_prefix in content and not in_tool_call:
+                    prefix_pos = content.find(tool_prefix)
+                    after_prefix = content[prefix_pos + len(tool_prefix):]
+                    if tool_suffix in after_prefix:
+                        # both prefix and suffix in the same token — extract directly
+                        suffix_pos = after_prefix.find(tool_suffix)
+                        tool_block = after_prefix[:suffix_pos].strip()
+                        _LOGGER.debug("Raw tool block extracted (single token): %s", tool_block)
+                        tool_calls.append(tool_block)
+                        content = content[:prefix_pos]  # keep speech text before tool call
+                    else:
+                        _LOGGER.debug("Entering tool call block")
+                        in_tool_call = True
+                        tool_content = after_prefix  # capture content after the prefix
+                        content = content[:prefix_pos]
+                        last_5_tokens.clear()
+                elif tool_prefix in potential_block and not in_tool_call:
                     _LOGGER.debug("Entering tool call block")
                     in_tool_call = True
+                    prefix_end = potential_block.find(tool_prefix) + len(tool_prefix)
+                    tool_content = potential_block[prefix_end:]  # capture anything after prefix
                     last_5_tokens.clear()
                 if tool_suffix in potential_block and in_tool_call:
                     in_tool_call = False
