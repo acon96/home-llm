@@ -5,7 +5,7 @@ import csv
 import logging
 import os
 import random
-import re
+from enum import Enum, auto
 from typing import Literal, Any, List, Dict, Optional, Sequence, Tuple, AsyncIterator, Generator, AsyncGenerator
 from dataclasses import dataclass
 
@@ -59,6 +59,13 @@ class TextGenerationResult:
     response_streamed: bool = False
     raise_error: bool = False
     error_msg: Optional[str] = None
+
+class StreamState(Enum):
+    """States for the streaming block parser in _async_stream_parse_completion."""
+    SPEECH = auto()
+    THINKING = auto()
+    TOOL_CALL = auto()
+
 
 class LocalLLMClient:
     """Base Local LLM conversation agent."""
@@ -257,14 +264,14 @@ class LocalLLMClient:
 
         if not token_generator:
             raise Exception("Either next_token or anext_token must be provided")
-        
-        in_thinking = False
-        in_tool_call = False
-        tool_content = ""
-        last_5_tokens = []
-        cur_match_length = 0
+
+        # we accumulate text into `buf` and scan for delimiters.  
+        # The match on state keeps each state's logic self-contained.
+        state = StreamState.SPEECH
+        buf = "" # running text buffer for cross-token delimiter detection
+        tool_buf = "" # accumulated content inside a tool-call block
+
         async for chunk in token_generator:
-            # _LOGGER.debug(f"Handling chunk: {chunk} {in_thinking=} {in_tool_call=} {last_5_tokens=}")
             tool_calls: Optional[List[str | dict]]
             content, tool_calls = chunk
 
@@ -277,62 +284,95 @@ class LocalLLMClient:
                 tool_calls=None
             )
             if content:
-                last_5_tokens.append(content)
-                if len(last_5_tokens) > 5:
-                    last_5_tokens.pop(0)
+                buf += content
 
-                potential_block = "".join(last_5_tokens)
-                if tool_prefix.startswith("".join(last_5_tokens[-(cur_match_length+1):])):
-                    cur_match_length += 1
-                else:
-                    # flush the current match length by appending it to content
-                    if cur_match_length > 0:
-                        content += "".join(last_5_tokens[-cur_match_length:])
-                    cur_match_length = 0
+                # Process the buffer based on current state
+                match state:
+                    case StreamState.THINKING:
+                        if think_suffix in buf:
+                            _LOGGER.debug("Exiting thinking block")
+                            # discard everything up to and including the suffix
+                            suffix_end = buf.find(think_suffix) + len(think_suffix)
+                            buf = buf[suffix_end:]
+                            state = StreamState.SPEECH
+                            # fall through to SPEECH processing below
+                        else:
+                            # suppress all output while thinking
+                            # keep only a tail long enough to detect a split suffix
+                            keep = max(0, len(buf) - len(think_suffix))
+                            buf = buf[keep:]
 
-                if in_tool_call:
-                    tool_content += content
+                    case StreamState.TOOL_CALL:
+                        if tool_suffix in buf:
+                            suffix_pos = buf.find(tool_suffix)
+                            tool_buf += buf[:suffix_pos]
+                            buf = buf[suffix_pos + len(tool_suffix):]
+                            tool_block = tool_buf.strip()
+                            _LOGGER.debug("Raw tool block extracted: %s", tool_block)
+                            tool_calls.append(tool_block)
+                            tool_buf = ""
+                            state = StreamState.SPEECH
+                            # fall through to SPEECH processing below
+                        else:
+                            # accumulate into tool buffer, keep tail for split suffix detection
+                            safe = max(0, len(buf) - len(tool_suffix))
+                            tool_buf += buf[:safe]
+                            buf = buf[safe:]
 
-                if think_prefix in potential_block and not in_thinking:
-                    _LOGGER.debug("Entering thinking block")
-                    in_thinking = True
-                    last_5_tokens.clear()
-                if think_suffix in potential_block and in_thinking:
-                    _LOGGER.debug("Exiting thinking block")
-                    in_thinking = False
-                    content = content.replace(think_suffix, "").strip()
-                if tool_prefix in content and not in_tool_call:
-                    prefix_pos = content.find(tool_prefix)
-                    after_prefix = content[prefix_pos + len(tool_prefix):]
-                    if tool_suffix in after_prefix:
-                        # both prefix and suffix in the same token — extract directly
-                        suffix_pos = after_prefix.find(tool_suffix)
-                        tool_block = after_prefix[:suffix_pos].strip()
-                        _LOGGER.debug("Raw tool block extracted (single token): %s", tool_block)
-                        tool_calls.append(tool_block)
-                        content = content[:prefix_pos]  # keep speech text before tool call
+                    case StreamState.SPEECH:
+                        pass  # handled below
+
+                # In SPEECH state (either originally or after exiting think/tool),
+                # check for new block delimiters
+                if state == StreamState.SPEECH:
+                    # Check for thinking prefix
+                    if think_prefix in buf:
+                        prefix_pos = buf.find(think_prefix)
+                        speech = buf[:prefix_pos]
+                        buf = buf[prefix_pos + len(think_prefix):]
+                        _LOGGER.debug("Entering thinking block")
+                        state = StreamState.THINKING
+                        if speech.strip():
+                            result.response = speech
+
+                    # Check for tool prefix
+                    elif tool_prefix in buf:
+                        prefix_pos = buf.find(tool_prefix)
+                        speech = buf[:prefix_pos]
+                        after_prefix = buf[prefix_pos + len(tool_prefix):]
+
+                        if tool_suffix in after_prefix:
+                            # both prefix and suffix in the buffer — extract inline
+                            suffix_pos = after_prefix.find(tool_suffix)
+                            tool_block = after_prefix[:suffix_pos].strip()
+                            _LOGGER.debug("Raw tool block extracted (single token): %s", tool_block)
+                            tool_calls.append(tool_block)
+                            buf = after_prefix[suffix_pos + len(tool_suffix):]
+                        else:
+                            _LOGGER.debug("Entering tool call block")
+                            state = StreamState.TOOL_CALL
+                            tool_buf = after_prefix
+                            buf = ""
+
+                        if speech.strip():
+                            result.response = speech
+
                     else:
-                        _LOGGER.debug("Entering tool call block")
-                        in_tool_call = True
-                        tool_content = after_prefix  # capture content after the prefix
-                        content = content[:prefix_pos]
-                        last_5_tokens.clear()
-                elif tool_prefix in potential_block and not in_tool_call:
-                    _LOGGER.debug("Entering tool call block")
-                    in_tool_call = True
-                    prefix_end = potential_block.find(tool_prefix) + len(tool_prefix)
-                    tool_content = potential_block[prefix_end:]  # capture anything after prefix
-                    last_5_tokens.clear()
-                if tool_suffix in potential_block and in_tool_call:
-                    in_tool_call = False
-                    tool_block = tool_content.strip().removeprefix(tool_prefix).removesuffix(tool_suffix)
-                    _LOGGER.debug("Raw tool block extracted: %s", tool_block)
-                    tool_calls.append(tool_block)
-                    tool_content = ""
+                        # No delimiter found — emit text, but hold back any
+                        # tail that is an actual prefix of a delimiter so we
+                        # can detect delimiters split across tokens.
+                        delimiters = (think_prefix, tool_prefix)
+                        hold = 0
+                        for i in range(1, len(buf) + 1):
+                            tail = buf[-i:]
+                            if any(d.startswith(tail) for d in delimiters):
+                                hold = i
+                        safe = len(buf) - hold
+                        if safe > 0:
+                            result.response = buf[:safe]
+                            buf = buf[safe:]
 
-                if cur_match_length == 0:
-                    result.response = content
-            
+            # Parse any structured tool calls remaining in this chunk
             parsed_tool_calls: list[llm.ToolInput] = []
             if tool_calls:
                 if not llm_api:
@@ -345,7 +385,6 @@ class LocalLLMClient:
                             # try multiple dict key names
                             function_content = raw_tool_call.get("function") or raw_tool_call.get("function_call") or raw_tool_call.get("tool")
                             if not function_content:
-                                # Check if the dict itself is the function content (has 'name' and 'arguments')
                                 if "name" in raw_tool_call:
                                     function_content = raw_tool_call
                                 else:
@@ -359,16 +398,19 @@ class LocalLLMClient:
                         if to_say:
                             result.response = to_say
 
-            if len(parsed_tool_calls) > 0:
+            if parsed_tool_calls:
                 result.tool_calls = parsed_tool_calls
 
-            if not in_thinking and not in_tool_call and (cur_match_length == 0 or result.tool_calls):
+            if state == StreamState.SPEECH or result.tool_calls:
                 yield result
 
-        if in_tool_call and tool_content:
-            # flush any unclosed tool calls because using the tool_suffix as a stop token can
-            # cause the tool_suffix to be omitted when the model streams output
-            tool_block = tool_content.strip().removeprefix(tool_prefix)
+        # Flush any held-back speech text
+        if state == StreamState.SPEECH and buf.strip():
+            yield TextGenerationResult(response=buf, response_streamed=True, tool_calls=None)
+
+        # Flush unclosed tool call (tool_suffix used as stop token can omit it)
+        tool_block = (tool_buf + buf).strip()
+        if state == StreamState.TOOL_CALL and tool_block:
             _LOGGER.debug("Raw tool block extracted at end: %s", tool_block)
             tool_call, to_say = parse_raw_tool_call(tool_block, agent_id)
             if tool_call:
@@ -378,59 +420,6 @@ class LocalLLMClient:
                     response_streamed=True,
                     tool_calls=[tool_call]
                 )
-
-    async def _async_parse_completion(
-            self, 
-            llm_api: llm.APIInstance | None, 
-            agent_id: str,
-            entity_options: Dict[str, Any],
-            completion: str | dict) -> TextGenerationResult:
-        """Parse completion with tool calls from the backend."""
-        think_prefix = entity_options.get(CONF_THINKING_PREFIX, DEFAULT_THINKING_PREFIX)
-        think_suffix = entity_options.get(CONF_THINKING_SUFFIX, DEFAULT_THINKING_SUFFIX)
-        think_regex = re.compile(re.escape(think_prefix) + "(.*?)" + re.escape(think_suffix), re.DOTALL)
-        tool_prefix = entity_options.get(CONF_TOOL_CALL_PREFIX, DEFAULT_TOOL_CALL_PREFIX)
-        tool_suffix = entity_options.get(CONF_TOOL_CALL_SUFFIX, DEFAULT_TOOL_CALL_SUFFIX)
-        tool_regex = re.compile(re.escape(tool_prefix) + "(.*?)" + re.escape(tool_suffix), re.DOTALL)
-
-        if isinstance(completion, dict):
-            completion = str(completion.get("response", ""))
-
-        # Remove thinking blocks, and extract tool calls
-        tool_calls = tool_regex.findall(completion)
-        completion = think_regex.sub("", completion)
-        completion = tool_regex.sub("", completion)
-
-        to_say = ""
-        parsed_tool_calls: list[llm.ToolInput] = []
-        if len(tool_calls) and not llm_api:
-            _LOGGER.warning("Model attempted to call a tool but no LLM API was provided, ignoring tool calls")
-        else:
-            for raw_tool_call in tool_calls:
-                if isinstance(raw_tool_call, llm.ToolInput):
-                    parsed_tool_calls.append(raw_tool_call)
-                else:
-                    if isinstance(raw_tool_call, str):
-                        tool_call, to_say = parse_raw_tool_call(raw_tool_call, agent_id)
-                    else:
-                        # try multiple dict key names
-                        function_content = raw_tool_call.get("function") or raw_tool_call.get("function_call") or raw_tool_call.get("tool")
-                        if not function_content:
-                            # Check if the dict itself is the function content (has 'name' and 'arguments')
-                            if "name" in raw_tool_call:
-                                function_content = raw_tool_call
-                            else:
-                                _LOGGER.warning("Received tool call dict without 'function', 'function_call' or 'tool' key: %s", raw_tool_call)
-                                continue
-                        tool_call, to_say = parse_raw_tool_call(function_content, agent_id)
-                    if tool_call:
-                        _LOGGER.debug("Tool call parsed: %s", tool_call)
-                        parsed_tool_calls.append(tool_call)
-
-        return TextGenerationResult(
-            response=completion + (to_say or ""),
-            tool_calls=parsed_tool_calls,
-        )
     
     def _async_get_all_exposed_domains(self) -> list[str]:
         """Gather all exposed domains"""
