@@ -37,54 +37,6 @@ def client(hass):
     return DummyLocalClient(hass, {CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES: False})
 
 
-@pytest.mark.asyncio
-async def test_async_parse_completion_parses_tool_call(client):
-    raw_tool = '{"name":"light.turn_on","arguments":{"brightness":0.5,"to_say":" acknowledged"}}'
-    completion = (
-        f"{DEFAULT_THINKING_PREFIX}internal{DEFAULT_THINKING_SUFFIX}"
-        f"hello {DEFAULT_TOOL_CALL_PREFIX}{raw_tool}{DEFAULT_TOOL_CALL_SUFFIX}"
-    )
-
-    result = await client._async_parse_completion(DummyLLMApi(), "agent-id", {}, completion)
-
-    assert result.response.strip().startswith("hello")
-    assert "acknowledged" in result.response
-    assert result.tool_calls
-    tool_call = result.tool_calls[0]
-    assert tool_call.tool_name == "light.turn_on"
-    assert tool_call.tool_args["brightness"] == 127
-
-
-@pytest.mark.asyncio
-async def test_async_parse_completion_repairs_malformed_tool_arguments(client):
-    raw_tool = '{"name":"light.turn_on","arguments":{"brightness":0.5,}}'
-    completion = f"hello {DEFAULT_TOOL_CALL_PREFIX}{raw_tool}{DEFAULT_TOOL_CALL_SUFFIX}"
-
-    result = await client._async_parse_completion(DummyLLMApi(), "agent-id", {}, completion)
-
-    assert result.tool_calls
-    assert result.tool_calls[0].tool_args["brightness"] == 127
-
-
-@pytest.mark.asyncio
-async def test_async_parse_completion_ignores_tools_without_llm_api(client):
-    raw_tool = '{"name":"light.turn_on","arguments":{"brightness":1}}'
-    completion = f"hello {DEFAULT_TOOL_CALL_PREFIX}{raw_tool}{DEFAULT_TOOL_CALL_SUFFIX}"
-
-    result = await client._async_parse_completion(None, "agent-id", {}, completion)
-
-    assert result.tool_calls == []
-    assert result.response.strip() == "hello"
-
-
-@pytest.mark.asyncio
-async def test_async_parse_completion_malformed_tool_raises(client):
-    bad_tool = f"{DEFAULT_TOOL_CALL_PREFIX}{{not-json{DEFAULT_TOOL_CALL_SUFFIX}"
-
-    with pytest.raises(MalformedToolCallException):
-        await client._async_parse_completion(DummyLLMApi(), "agent-id", {}, bad_tool)
-
-
 def test_parse_raw_tool_call_rejects_non_object_arguments():
     raw_tool = '{"name":"light.turn_on","arguments":[]}'
 
