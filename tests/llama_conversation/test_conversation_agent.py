@@ -391,7 +391,7 @@ async def test_async_process_trims_remembered_history_before_generation(monkeypa
 def _make_user_input(text="turn on the lights"):
     return ConversationInput(
         text=text, context=None, conversation_id="conv-id",
-        device_id=None, language="en", agent_id="agent-1",
+        device_id=None, satellite_id=None, language="en", agent_id="agent-1",
     )
 
 

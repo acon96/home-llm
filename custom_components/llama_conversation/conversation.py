@@ -158,8 +158,11 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent, LocalLLMEntit
 
                 if message_history and isinstance(message_history[0], conversation.SystemContent):
                     message_history[0] = system_prompt
+                    if len(chat_log.content) > 0:
+                        chat_log.content[0] = system_prompt
                 else:
                     message_history.insert(0, system_prompt)
+                    chat_log.content.insert(0, system_prompt)
 
             tool_calls: List[Tuple[llm.ToolInput, Any]] = []
             # if max tool calls is 0 then we expect to generate the response & tool call in one go
