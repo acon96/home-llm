@@ -304,3 +304,13 @@ async def test_generic_openai_get_available_models_falls_back_on_openai_error(mo
     models = await client.async_get_available_models()
 
     assert models == RECOMMENDED_CHAT_MODELS
+
+
+def test_ollama_client_supports_streaming():
+    """OllamaAPIClient must declare streaming support like the other backends."""
+    assert getattr(OllamaAPIClient, '_attr_supports_streaming', False) is True
+
+
+def test_generic_openai_client_supports_streaming():
+    """GenericOpenAIAPIClient must declare streaming support."""
+    assert getattr(GenericOpenAIAPIClient, '_attr_supports_streaming', False) is True
