@@ -85,6 +85,11 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent, LocalLLMEntit
         """Return a list of supported languages."""
         return MATCH_ALL
 
+    @property
+    def supports_streaming(self) -> bool:
+        """Forward streaming support from the backend client."""
+        return getattr(self.client, '_attr_supports_streaming', False)
+
     async def async_process(
         self, user_input: ConversationInput
     ) -> ConversationResult:
