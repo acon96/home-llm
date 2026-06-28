@@ -155,8 +155,10 @@ class GenericOpenAIAPIClient(LocalLLMClient):
                             elif event.type == "tool_calls.function.arguments.done": # function calls need to wait until complete to be yielded
                                 yield None, [{"function": {"name": event.name, "arguments": event.parsed_arguments}}]
             except asyncio.TimeoutError as err:
+                _LOGGER.debug("OpenAI API timeout during streaming generation: params=%s, error=%s", request_params, err)
                 raise HomeAssistantError("The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities.") from err
             except OpenAIError as err:
+                _LOGGER.debug("OpenAI API error during streaming generation: params=%s, error=%s", request_params, err)
                 raise HomeAssistantError(f"Failed to communicate with the API! {err}") from err
 
         return self._async_stream_parse_completion(llm_api, agent_id, entity_options, anext_token=anext_token())
@@ -209,8 +211,10 @@ class GenericOpenAIAPIClient(LocalLLMClient):
             async with AsyncOpenAI(api_key=self.api_key, base_url=self.api_host, timeout=timeout) as client:
                 completion = await client.chat.completions.create(**request_params, extra_body=additional_params)
         except asyncio.TimeoutError as err:
+            _LOGGER.debug("OpenAI API timeout during generation: params=%s, error=%s", request_params, err)
             raise HomeAssistantError("The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities.") from err
         except OpenAIError as err:
+            _LOGGER.debug("OpenAI API error during generation: params=%s, error=%s", request_params, err)
             raise HomeAssistantError(f"Failed to communicate with the API! {err}") from err
 
         first_choice = completion.choices[0] if completion.choices else None
@@ -402,11 +406,13 @@ class GenericOpenAIResponsesAPIClient(LocalLLMClient):
                         self._last_response_id = final.id
                         self._last_response_id_time = datetime.datetime.now()
             except asyncio.TimeoutError as err:
+                _LOGGER.debug("OpenAI Responses API timeout during streaming generation: params=%s, error=%s", request_params, err)
                 raise HomeAssistantError(
                     "The generation request timed out! Please check your connection settings, "
                     "increase the timeout in settings, or decrease the number of exposed entities."
                 ) from err
             except OpenAIError as err:
+                _LOGGER.debug("OpenAI Responses API error during streaming generation: params=%s, error=%s", request_params, err)
                 raise HomeAssistantError(f"Failed to communicate with the API! {err}") from err
 
         return self._async_stream_parse_completion(llm_api, agent_id, entity_options, anext_token=anext_token())
@@ -441,13 +447,15 @@ class GenericOpenAIResponsesAPIClient(LocalLLMClient):
         try:
             async with AsyncOpenAI(api_key=self.api_key, base_url=self.api_host, timeout=timeout) as client:
                 response = await client.responses.create(**request_params)
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as err:
+            _LOGGER.debug("OpenAI Responses API timeout during generation: params=%s, error=%s", request_params, err)
             return TextGenerationResult(
                 raise_error=True,
                 error_msg="The generation request timed out! Please check your connection settings, "
                           "increase the timeout in settings, or decrease the number of exposed entities."
             )
         except OpenAIError as err:
+            _LOGGER.debug("OpenAI Responses API error during generation: params=%s, error=%s", request_params, err)
             return TextGenerationResult(raise_error=True, error_msg=f"Failed to communicate with the API! {err}")
 
         try:

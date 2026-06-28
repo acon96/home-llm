@@ -247,12 +247,42 @@ class OllamaAPIClient(LocalLLMClient):
                 async for chunk in stream:
                     yield self._extract_response(chunk)
             except httpx.TimeoutException as err:
+                _LOGGER.debug("Ollama API timeout during streaming generation: params=%s, error=%s", {
+                    "model": model_name,
+                    "messages": len(messages),
+                    "tools": len(tools) if tools else 0,
+                    "options": options,
+                    "stream": True,
+                    "think": think_mode,
+                    "format": format_option,
+                    "keep_alive": keep_alive_payload,
+                }, err)
                 raise HomeAssistantError(
                     "The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities."
                 ) from err
             except ResponseError as err:
+                _LOGGER.debug("Ollama API error during streaming generation: params=%s, error=%s", {
+                    "model": model_name,
+                    "messages": len(messages),
+                    "tools": len(tools) if tools else 0,
+                    "options": options,
+                    "stream": True,
+                    "think": think_mode,
+                    "format": format_option,
+                    "keep_alive": keep_alive_payload,
+                }, err)
                 raise HomeAssistantError(f"Ollama returned an error: {err}") from err
             except httpx.RequestError as err:
+                _LOGGER.debug("Ollama API connection error during streaming generation: params=%s, error=%s", {
+                    "model": model_name,
+                    "messages": len(messages),
+                    "tools": len(tools) if tools else 0,
+                    "options": options,
+                    "stream": True,
+                    "think": think_mode,
+                    "format": format_option,
+                    "keep_alive": keep_alive_payload,
+                }, err)
                 raise HomeAssistantError(
                     f"Failed to communicate with Ollama! The connection was lost during generation. "
                     f"This is often caused by the Ollama server timing out before home-llm's own timeout setting ({timeout}s). "
@@ -320,12 +350,42 @@ class OllamaAPIClient(LocalLLMClient):
                 keep_alive=keep_alive_payload,
             )
         except httpx.TimeoutException as err:
+            _LOGGER.debug("Ollama API timeout during generation: params=%s, error=%s", {
+                "model": model_name,
+                "messages": len(messages),
+                "tools": len(tools) if tools else 0,
+                "options": options,
+                "stream": False,
+                "think": think_mode,
+                "format": format_option,
+                "keep_alive": keep_alive_payload,
+            }, err)
             raise HomeAssistantError(
                 "The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities."
             ) from err
         except ResponseError as err:
+            _LOGGER.debug("Ollama API error during generation: params=%s, error=%s", {
+                "model": model_name,
+                "messages": len(messages),
+                "tools": len(tools) if tools else 0,
+                "options": options,
+                "stream": False,
+                "think": think_mode,
+                "format": format_option,
+                "keep_alive": keep_alive_payload,
+            }, err)
             raise HomeAssistantError(f"Ollama returned an error: {err}") from err
         except httpx.RequestError as err:
+            _LOGGER.debug("Ollama API connection error during generation: params=%s, error=%s", {
+                "model": model_name,
+                "messages": len(messages),
+                "tools": len(tools) if tools else 0,
+                "options": options,
+                "stream": False,
+                "think": think_mode,
+                "format": format_option,
+                "keep_alive": keep_alive_payload,
+            }, err)
             raise HomeAssistantError(
                 f"Failed to communicate with Ollama! The connection was lost. "
                 f"This may be caused by the Ollama server timing out or a network issue. "

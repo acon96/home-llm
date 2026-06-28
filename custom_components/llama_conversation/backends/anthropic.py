@@ -399,16 +399,19 @@ class AnthropicAPIClient(LocalLLMClient):
                             break
 
             except APITimeoutError as err:
+                _LOGGER.debug("Anthropic API timeout during streaming generation: params=%s, error=%s", request_params, err)
                 raise HomeAssistantError(
                     "The generation request timed out! Please check your connection "
                     "settings, increase the timeout in settings, or decrease the "
                     "number of exposed entities."
                 ) from err
             except APIConnectionError as err:
+                _LOGGER.debug("Anthropic API connection error during streaming generation: params=%s, error=%s", request_params, err)
                 raise HomeAssistantError(
                     f"Failed to connect to the Anthropic-compatible API: {err}"
                 ) from err
             except APIError as err:
+                _LOGGER.debug("Anthropic API error during streaming generation: params=%s, error=%s", request_params, err)
                 raise HomeAssistantError(
                     f"Anthropic API error: {err}"
                 ) from err
@@ -466,14 +469,17 @@ class AnthropicAPIClient(LocalLLMClient):
             client = await self._async_build_client(timeout=timeout)
             response = await client.messages.create(**request_params)
         except APITimeoutError as err:
+            _LOGGER.debug("Anthropic API timeout during generation: params=%s, error=%s", request_params, err)
             raise HomeAssistantError(
                 "The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities."
             ) from err
         except APIConnectionError as err:
+            _LOGGER.debug("Anthropic API connection error during generation: params=%s, error=%s", request_params, err)
             raise HomeAssistantError(
                 f"Failed to connect to the Anthropic-compatible API: {err}"
             ) from err
         except APIError as err:
+            _LOGGER.debug("Anthropic API error during generation: params=%s, error=%s", request_params, err)
             raise HomeAssistantError(
                 f"Anthropic API error: {err}"
             ) from err
