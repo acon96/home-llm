@@ -140,8 +140,8 @@ class OllamaAPIClient(LocalLLMClient):
             return "Connection timed out"
         except ResponseError as err:
             return f"HTTP Status {err.status_code}: {err.error}"
-        except ConnectionError as err:
-            return str(err)
+        except httpx.RequestError as err:
+            return f"Connection failed: {err}"
 
         return None
 
@@ -151,7 +151,9 @@ class OllamaAPIClient(LocalLLMClient):
             response = await client.list()
         except httpx.TimeoutException as err:
             raise HomeAssistantError("Timed out while fetching models from the Ollama server") from err
-        except (ResponseError, ConnectionError) as err:
+        except ResponseError as err:
+            raise HomeAssistantError(f"Ollama returned an error: {err}") from err
+        except httpx.RequestError as err:
             raise HomeAssistantError(f"Failed to fetch models from the Ollama server: {err}") from err
 
         models: List[str] = []
@@ -248,8 +250,15 @@ class OllamaAPIClient(LocalLLMClient):
                 raise HomeAssistantError(
                     "The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities."
                 ) from err
-            except (ResponseError, ConnectionError) as err:
-                raise HomeAssistantError(f"Failed to communicate with the API! {err}") from err
+            except ResponseError as err:
+                raise HomeAssistantError(f"Ollama returned an error: {err}") from err
+            except httpx.RequestError as err:
+                raise HomeAssistantError(
+                    f"Failed to communicate with Ollama! The connection was lost during generation. "
+                    f"This is often caused by the Ollama server timing out before home-llm's own timeout setting ({timeout}s). "
+                    f"Try increasing Ollama's keepalive setting or reducing the model's context size. "
+                    f"Details: {err}"
+                ) from err
 
         return self._async_stream_parse_completion(llm_api, agent_id, entity_options, anext_token=anext_token())
 
@@ -314,8 +323,14 @@ class OllamaAPIClient(LocalLLMClient):
             raise HomeAssistantError(
                 "The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities."
             ) from err
-        except (ResponseError, ConnectionError) as err:
-            raise HomeAssistantError(f"Failed to communicate with the API! {err}") from err
+        except ResponseError as err:
+            raise HomeAssistantError(f"Ollama returned an error: {err}") from err
+        except httpx.RequestError as err:
+            raise HomeAssistantError(
+                f"Failed to communicate with Ollama! The connection was lost. "
+                f"This may be caused by the Ollama server timing out or a network issue. "
+                f"Try increasing Ollama's keepalive setting. Details: {err}"
+            ) from err
 
         content, raw_tool_calls = self._extract_response(response)
 
