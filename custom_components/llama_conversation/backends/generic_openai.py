@@ -37,6 +37,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_API_PATH,
     DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
     DEFAULT_TOOL_RESPONSE_AS_STRING,
+    DEFAULT_USE_SERVER_SAMPLING_DEFAULTS,
     RECOMMENDED_CHAT_MODELS,
 )
 from custom_components.llama_conversation.entity import TextGenerationResult, LocalLLMClient
@@ -115,7 +116,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         _, additional_params = self._chat_completion_params(entity_options)
         messages = get_oai_formatted_messages(conversation, user_content_as_list=True, tool_result_to_str=tool_response_as_string)
 
-        use_server_sampling_defaults = entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, False)
+        use_server_sampling_defaults = entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS)
         request_params = {
             "model": model_name,
             # "stream": True, # we are using the streaming method, therefore we dont need to specify it
@@ -154,8 +155,10 @@ class GenericOpenAIAPIClient(LocalLLMClient):
                             elif event.type == "tool_calls.function.arguments.done": # function calls need to wait until complete to be yielded
                                 yield None, [{"function": {"name": event.name, "arguments": event.parsed_arguments}}]
             except asyncio.TimeoutError as err:
+                _LOGGER.debug("OpenAI API timeout during streaming generation: params=%s, error=%s", request_params, err)
                 raise HomeAssistantError("The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities.") from err
             except OpenAIError as err:
+                _LOGGER.debug("OpenAI API error during streaming generation: params=%s, error=%s", request_params, err)
                 raise HomeAssistantError(f"Failed to communicate with the API! {err}") from err
 
         return self._async_stream_parse_completion(llm_api, agent_id, entity_options, anext_token=anext_token())
@@ -178,7 +181,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         endpoint, additional_params = self._chat_completion_params(entity_options)
         messages = get_oai_formatted_messages(conversation, user_content_as_list=True, tool_result_to_str=tool_response_as_string)
 
-        use_server_sampling_defaults = entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, False)
+        use_server_sampling_defaults = entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS)
         request_params: Dict[str, Any] = {
             "model": model_name,
             "max_tokens": max_tokens,
@@ -208,8 +211,10 @@ class GenericOpenAIAPIClient(LocalLLMClient):
             async with AsyncOpenAI(api_key=self.api_key, base_url=self.api_host, timeout=timeout) as client:
                 completion = await client.chat.completions.create(**request_params, extra_body=additional_params)
         except asyncio.TimeoutError as err:
+            _LOGGER.debug("OpenAI API timeout during generation: params=%s, error=%s", request_params, err)
             raise HomeAssistantError("The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities.") from err
         except OpenAIError as err:
+            _LOGGER.debug("OpenAI API error during generation: params=%s, error=%s", request_params, err)
             raise HomeAssistantError(f"Failed to communicate with the API! {err}") from err
 
         first_choice = completion.choices[0] if completion.choices else None
@@ -401,11 +406,13 @@ class GenericOpenAIResponsesAPIClient(LocalLLMClient):
                         self._last_response_id = final.id
                         self._last_response_id_time = datetime.datetime.now()
             except asyncio.TimeoutError as err:
+                _LOGGER.debug("OpenAI Responses API timeout during streaming generation: params=%s, error=%s", request_params, err)
                 raise HomeAssistantError(
                     "The generation request timed out! Please check your connection settings, "
                     "increase the timeout in settings, or decrease the number of exposed entities."
                 ) from err
             except OpenAIError as err:
+                _LOGGER.debug("OpenAI Responses API error during streaming generation: params=%s, error=%s", request_params, err)
                 raise HomeAssistantError(f"Failed to communicate with the API! {err}") from err
 
         return self._async_stream_parse_completion(llm_api, agent_id, entity_options, anext_token=anext_token())
@@ -440,13 +447,15 @@ class GenericOpenAIResponsesAPIClient(LocalLLMClient):
         try:
             async with AsyncOpenAI(api_key=self.api_key, base_url=self.api_host, timeout=timeout) as client:
                 response = await client.responses.create(**request_params)
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as err:
+            _LOGGER.debug("OpenAI Responses API timeout during generation: params=%s, error=%s", request_params, err)
             return TextGenerationResult(
                 raise_error=True,
                 error_msg="The generation request timed out! Please check your connection settings, "
                           "increase the timeout in settings, or decrease the number of exposed entities."
             )
         except OpenAIError as err:
+            _LOGGER.debug("OpenAI Responses API error during generation: params=%s, error=%s", request_params, err)
             return TextGenerationResult(raise_error=True, error_msg=f"Failed to communicate with the API! {err}")
 
         try:

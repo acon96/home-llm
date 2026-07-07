@@ -1,7 +1,6 @@
 """AI Task integration for Local LLMs."""
 from __future__ import annotations
 
-from json import JSONDecodeError
 import logging
 from enum import StrEnum
 from typing import Any
@@ -15,7 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util.json import json_loads
+from homeassistant.util.json import json_loads, JSON_DECODE_EXCEPTIONS
 
 from .entity import LocalLLMEntity, LocalLLMClient
 from .const import (
@@ -149,7 +148,7 @@ class LocalLLMTaskEntity(
 
             _LOGGER.debug("AI Task '%s' generated text: %s (tools=%s)", self.entity_id, text, collected_tools)
             return text, collected_tools, None
-        except JSONDecodeError as err:
+        except JSON_DECODE_EXCEPTIONS as err:
             _LOGGER.debug("AI Task '%s' json error generated text: %s (tools=%s)", self.entity_id, text, collected_tools)
             return text, collected_tools, err
 
@@ -193,7 +192,7 @@ class LocalLLMTaskEntity(
             else:
                 error_message = f"Error at '{err.path}': {err.error_message}"
             return None, HomeAssistantError(f"Please address the following schema errors: {error_message}")
-        except JSONDecodeError as err:
+        except JSON_DECODE_EXCEPTIONS as err:
             return None, HomeAssistantError(f"Please produce properly formatted JSON: {repr(err)}")
 
         raise HomeAssistantError(f"Invalid extraction method for AI Task {extraction_method}")

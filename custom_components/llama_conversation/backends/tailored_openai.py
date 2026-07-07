@@ -32,6 +32,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_GBNF_GRAMMAR_FILE,
     DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
     DEFAULT_CONTEXT_LENGTH,
+    DEFAULT_USE_SERVER_SAMPLING_DEFAULTS,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT,
     TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT,
@@ -105,7 +106,7 @@ class TextGenerationWebuiClient(GenericOpenAIAPIClient):
                 request_params["character"] = preset
 
         request_params["truncation_length"] = entity_options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
-        use_server_sampling_defaults = entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, False)
+        use_server_sampling_defaults = entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS)
         if not use_server_sampling_defaults:
             request_params["top_k"] = entity_options.get(CONF_TOP_K, DEFAULT_TOP_K)
             request_params["min_p"] = entity_options.get(CONF_MIN_P, DEFAULT_MIN_P)
@@ -137,7 +138,7 @@ class LlamaCppServerClient(GenericOpenAIAPIClient):
         max_tokens = int(entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS))
         endpoint, request_params = super()._chat_completion_params(entity_options)
 
-        use_server_sampling_defaults = entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, False)
+        use_server_sampling_defaults = entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS)
         if not use_server_sampling_defaults:
             request_params["top_k"] = top_k
         request_params["max_tokens"] = max_tokens

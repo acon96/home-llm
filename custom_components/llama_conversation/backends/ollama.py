@@ -50,6 +50,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_CONTEXT_LENGTH,
     DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
     DEFAULT_TOOL_RESPONSE_AS_STRING,
+    DEFAULT_USE_SERVER_SAMPLING_DEFAULTS,
 )
 
 from custom_components.llama_conversation.entity import LocalLLMClient, TextGenerationResult
@@ -139,8 +140,8 @@ class OllamaAPIClient(LocalLLMClient):
             return "Connection timed out"
         except ResponseError as err:
             return f"HTTP Status {err.status_code}: {err.error}"
-        except ConnectionError as err:
-            return str(err)
+        except httpx.RequestError as err:
+            return f"Connection failed: {err}"
 
         return None
 
@@ -150,7 +151,9 @@ class OllamaAPIClient(LocalLLMClient):
             response = await client.list()
         except httpx.TimeoutException as err:
             raise HomeAssistantError("Timed out while fetching models from the Ollama server") from err
-        except (ResponseError, ConnectionError) as err:
+        except ResponseError as err:
+            raise HomeAssistantError(f"Ollama returned an error: {err}") from err
+        except httpx.RequestError as err:
             raise HomeAssistantError(f"Failed to fetch models from the Ollama server: {err}") from err
 
         models: List[str] = []
@@ -197,22 +200,28 @@ class OllamaAPIClient(LocalLLMClient):
         top_p = entity_options.get(CONF_TOP_P, DEFAULT_TOP_P)
         top_k = entity_options.get(CONF_TOP_K, DEFAULT_TOP_K)
         typical_p = entity_options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)
+        min_p = entity_options.get(CONF_MIN_P, DEFAULT_MIN_P)
         timeout = entity_options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
         keep_alive = entity_options.get(CONF_OLLAMA_KEEP_ALIVE_MIN, DEFAULT_OLLAMA_KEEP_ALIVE_MIN)
         enable_legacy_tool_calling = entity_options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
         tool_response_as_string = entity_options.get(CONF_TOOL_RESPONSE_AS_STRING, DEFAULT_TOOL_RESPONSE_AS_STRING)
         think_mode = entity_options.get(CONF_ENABLE_THINK_MODE, DEFAULT_ENABLE_THINK_MODE)
         json_mode = entity_options.get(CONF_OLLAMA_JSON_MODE, DEFAULT_OLLAMA_JSON_MODE)
+        use_default_sampler_options = entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS)
 
         options = {
             "num_ctx": context_length,
-            "top_p": top_p,
-            "top_k": top_k,
-            "typical_p": typical_p,
-            "temperature": temperature,
             "num_predict": max_tokens,
-            "min_p": entity_options.get(CONF_MIN_P, DEFAULT_MIN_P),
         }
+
+        if not use_default_sampler_options:
+            options.update({
+                "top_p": top_p,
+                "top_k": top_k,
+                "typical_p": typical_p,
+                "temperature": temperature,
+                "min_p": min_p,
+            })
 
         messages = get_oai_formatted_messages(conversation, tool_args_to_str=False, tool_result_to_str=tool_response_as_string)
         tools = None
@@ -238,11 +247,48 @@ class OllamaAPIClient(LocalLLMClient):
                 async for chunk in stream:
                     yield self._extract_response(chunk)
             except httpx.TimeoutException as err:
+                _LOGGER.debug("Ollama API timeout during streaming generation: params=%s, error=%s", {
+                    "model": model_name,
+                    "messages": len(messages),
+                    "tools": len(tools) if tools else 0,
+                    "options": options,
+                    "stream": True,
+                    "think": think_mode,
+                    "format": format_option,
+                    "keep_alive": keep_alive_payload,
+                }, err)
                 raise HomeAssistantError(
                     "The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities."
                 ) from err
-            except (ResponseError, ConnectionError) as err:
-                raise HomeAssistantError(f"Failed to communicate with the API! {err}") from err
+            except ResponseError as err:
+                _LOGGER.debug("Ollama API error during streaming generation: params=%s, error=%s", {
+                    "model": model_name,
+                    "messages": len(messages),
+                    "tools": len(tools) if tools else 0,
+                    "options": options,
+                    "stream": True,
+                    "think": think_mode,
+                    "format": format_option,
+                    "keep_alive": keep_alive_payload,
+                }, err)
+                raise HomeAssistantError(f"Ollama returned an error: {err}") from err
+            except httpx.RequestError as err:
+                _LOGGER.debug("Ollama API connection error during streaming generation: params=%s, error=%s", {
+                    "model": model_name,
+                    "messages": len(messages),
+                    "tools": len(tools) if tools else 0,
+                    "options": options,
+                    "stream": True,
+                    "think": think_mode,
+                    "format": format_option,
+                    "keep_alive": keep_alive_payload,
+                }, err)
+                raise HomeAssistantError(
+                    f"Failed to communicate with Ollama! The connection was lost during generation. "
+                    f"This is often caused by the Ollama server timing out before home-llm's own timeout setting ({timeout}s). "
+                    f"Try increasing Ollama's keepalive setting or reducing the model's context size. "
+                    f"Details: {err}"
+                ) from err
 
         return self._async_stream_parse_completion(llm_api, agent_id, entity_options, anext_token=anext_token())
 
@@ -260,22 +306,29 @@ class OllamaAPIClient(LocalLLMClient):
         top_p = entity_options.get(CONF_TOP_P, DEFAULT_TOP_P)
         top_k = entity_options.get(CONF_TOP_K, DEFAULT_TOP_K)
         typical_p = entity_options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)
+        min_p = entity_options.get(CONF_MIN_P, DEFAULT_MIN_P)
         timeout = entity_options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
         keep_alive = entity_options.get(CONF_OLLAMA_KEEP_ALIVE_MIN, DEFAULT_OLLAMA_KEEP_ALIVE_MIN)
         enable_legacy_tool_calling = entity_options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
         tool_response_as_string = entity_options.get(CONF_TOOL_RESPONSE_AS_STRING, DEFAULT_TOOL_RESPONSE_AS_STRING)
         think_mode = entity_options.get(CONF_ENABLE_THINK_MODE, DEFAULT_ENABLE_THINK_MODE)
         json_mode = entity_options.get(CONF_OLLAMA_JSON_MODE, DEFAULT_OLLAMA_JSON_MODE)
+        use_default_sampler_options = entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS)
 
         options = {
             "num_ctx": context_length,
-            "top_p": top_p,
-            "top_k": top_k,
-            "typical_p": typical_p,
-            "temperature": temperature,
             "num_predict": max_tokens,
-            "min_p": entity_options.get(CONF_MIN_P, DEFAULT_MIN_P),
         }
+
+        if not use_default_sampler_options:
+            options.update({
+                "top_p": top_p,
+                "top_k": top_k,
+                "typical_p": typical_p,
+                "temperature": temperature,
+                "min_p": min_p,
+            })
+
 
         messages = get_oai_formatted_messages(conversation, tool_args_to_str=False, tool_result_to_str=tool_response_as_string)
         tools = None
@@ -297,11 +350,47 @@ class OllamaAPIClient(LocalLLMClient):
                 keep_alive=keep_alive_payload,
             )
         except httpx.TimeoutException as err:
+            _LOGGER.debug("Ollama API timeout during generation: params=%s, error=%s", {
+                "model": model_name,
+                "messages": len(messages),
+                "tools": len(tools) if tools else 0,
+                "options": options,
+                "stream": False,
+                "think": think_mode,
+                "format": format_option,
+                "keep_alive": keep_alive_payload,
+            }, err)
             raise HomeAssistantError(
                 "The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities."
             ) from err
-        except (ResponseError, ConnectionError) as err:
-            raise HomeAssistantError(f"Failed to communicate with the API! {err}") from err
+        except ResponseError as err:
+            _LOGGER.debug("Ollama API error during generation: params=%s, error=%s", {
+                "model": model_name,
+                "messages": len(messages),
+                "tools": len(tools) if tools else 0,
+                "options": options,
+                "stream": False,
+                "think": think_mode,
+                "format": format_option,
+                "keep_alive": keep_alive_payload,
+            }, err)
+            raise HomeAssistantError(f"Ollama returned an error: {err}") from err
+        except httpx.RequestError as err:
+            _LOGGER.debug("Ollama API connection error during generation: params=%s, error=%s", {
+                "model": model_name,
+                "messages": len(messages),
+                "tools": len(tools) if tools else 0,
+                "options": options,
+                "stream": False,
+                "think": think_mode,
+                "format": format_option,
+                "keep_alive": keep_alive_payload,
+            }, err)
+            raise HomeAssistantError(
+                f"Failed to communicate with Ollama! The connection was lost. "
+                f"This may be caused by the Ollama server timing out or a network issue. "
+                f"Try increasing Ollama's keepalive setting. Details: {err}"
+            ) from err
 
         content, raw_tool_calls = self._extract_response(response)
 

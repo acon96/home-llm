@@ -40,9 +40,10 @@ from homeassistant.helpers.selector import (
     BooleanSelector,
     BooleanSelectorConfig,
 )
+from homeassistant.util.network import is_host_valid
 
 from .utils import download_model_from_hf, get_llama_cpp_python_version, install_llama_cpp_python, \
-    is_valid_hostname, get_available_llama_cpp_versions, MissingQuantizationException
+    get_available_llama_cpp_versions, MissingQuantizationException
 from .const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -119,6 +120,7 @@ from .const import (
     DEFAULT_TYPICAL_P,
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_ENABLE_STREAMING,
+    DEFAULT_USE_SERVER_SAMPLING_DEFAULTS,
     DEFAULT_BACKEND_TYPE,
     DEFAULT_DOWNLOADED_MODEL_QUANTIZATION,
     DEFAULT_THINKING_PREFIX,
@@ -252,7 +254,7 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
     """Handle a config flow for Local LLM Conversation."""
 
     VERSION = 3
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     install_wheel_task = None
     install_wheel_error = None
@@ -371,7 +373,7 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
                         return await self.async_step_finish()
                 else:
                     hostname = user_input.get(CONF_HOST, "")
-                    if not is_valid_hostname(hostname):
+                    if not is_host_valid(hostname):
                         errors["base"] = "invalid_hostname"
                     else:
                         # validate remote connections
@@ -642,11 +644,8 @@ def local_llama_config_option_schema(
         ): BooleanSelector(BooleanSelectorConfig()),
         vol.Required(
             CONF_USE_SERVER_SAMPLING_DEFAULTS,
-            description={"suggested_value": options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS)},
-            default=options.get(
-                CONF_USE_SERVER_SAMPLING_DEFAULTS,
-                not any(k in options for k in [CONF_TEMPERATURE, CONF_TOP_P, CONF_TOP_K, CONF_MIN_P, CONF_TYPICAL_P]),
-            ),
+            description={"suggested_value": options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS)},
+            default=options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS),
         ): BooleanSelector(BooleanSelectorConfig()),
         vol.Required(
             CONF_THINKING_PREFIX,

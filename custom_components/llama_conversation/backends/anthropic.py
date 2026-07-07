@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import aiohttp
-import json
 import logging
 from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
 
@@ -11,7 +10,7 @@ from anthropic import AsyncAnthropic, APIError, APIConnectionError, APITimeoutEr
 from homeassistant.components import conversation as conversation
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import llm
+from homeassistant.helpers import llm, json as ha_json
 
 from voluptuous_openapi import convert as convert_to_openapi
 
@@ -32,6 +31,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_P,
     DEFAULT_TOP_K,
+    DEFAULT_USE_SERVER_SAMPLING_DEFAULTS,
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
     DEFAULT_TOOL_RESPONSE_AS_STRING,
@@ -116,7 +116,7 @@ def _convert_to_anthropic_messages(
             # Anthropic expects tool results in user messages with tool_result content
             tool_result = message.tool_result if hasattr(message, 'tool_result') else {}
             if tool_result_to_str:
-                result_content = json.dumps(tool_result, default=str) if isinstance(tool_result, dict) else str(tool_result)
+                result_content = ha_json.json_dumps(tool_result) if isinstance(tool_result, dict) else str(tool_result)
             else:
                 result_content = str(tool_result)
 
@@ -342,7 +342,7 @@ class AnthropicAPIClient(LocalLLMClient):
                 request_params["system"] = system_prompt
             if tools:
                 request_params["tools"] = tools
-            if not entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, False):
+            if not entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS):
                 if temperature is not None:
                     request_params["temperature"] = temperature
                 if top_p is not None:
@@ -399,16 +399,19 @@ class AnthropicAPIClient(LocalLLMClient):
                             break
 
             except APITimeoutError as err:
+                _LOGGER.debug("Anthropic API timeout during streaming generation: params=%s, error=%s", request_params, err)
                 raise HomeAssistantError(
                     "The generation request timed out! Please check your connection "
                     "settings, increase the timeout in settings, or decrease the "
                     "number of exposed entities."
                 ) from err
             except APIConnectionError as err:
+                _LOGGER.debug("Anthropic API connection error during streaming generation: params=%s, error=%s", request_params, err)
                 raise HomeAssistantError(
                     f"Failed to connect to the Anthropic-compatible API: {err}"
                 ) from err
             except APIError as err:
+                _LOGGER.debug("Anthropic API error during streaming generation: params=%s, error=%s", request_params, err)
                 raise HomeAssistantError(
                     f"Anthropic API error: {err}"
                 ) from err
@@ -454,7 +457,7 @@ class AnthropicAPIClient(LocalLLMClient):
             request_params["system"] = system_prompt
         if tools:
             request_params["tools"] = tools
-        if not entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, False):
+        if not entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS):
             if temperature is not None:
                 request_params["temperature"] = temperature
             if top_p is not None:
@@ -466,14 +469,17 @@ class AnthropicAPIClient(LocalLLMClient):
             client = await self._async_build_client(timeout=timeout)
             response = await client.messages.create(**request_params)
         except APITimeoutError as err:
+            _LOGGER.debug("Anthropic API timeout during generation: params=%s, error=%s", request_params, err)
             raise HomeAssistantError(
                 "The generation request timed out! Please check your connection settings, increase the timeout in settings, or decrease the number of exposed entities."
             ) from err
         except APIConnectionError as err:
+            _LOGGER.debug("Anthropic API connection error during generation: params=%s, error=%s", request_params, err)
             raise HomeAssistantError(
                 f"Failed to connect to the Anthropic-compatible API: {err}"
             ) from err
         except APIError as err:
+            _LOGGER.debug("Anthropic API error during generation: params=%s, error=%s", request_params, err)
             raise HomeAssistantError(
                 f"Anthropic API error: {err}"
             ) from err

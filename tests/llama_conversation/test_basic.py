@@ -35,6 +35,84 @@ from custom_components.llama_conversation.const import (
     RECOMMENDED_CHAT_MODELS,
 )
 from custom_components.llama_conversation.utils import LlamaCppPythonInstallError
+from custom_components.llama_conversation.utils import LlamaCppPythonInstallError, strip_thinking_blocks
+from custom_components.llama_conversation.const import DEFAULT_THINKING_PREFIX, DEFAULT_THINKING_SUFFIX
+
+class TestStripThinkingBlocks:
+    """Tests for the thinking-block sanitizer that prevents reasoning leakage into TTS speech."""
+
+    def test_no_blocks_pass_through(self):
+        content = "Hello, I can help you with that."
+        result = strip_thinking_blocks(content, DEFAULT_THINKING_PREFIX, DEFAULT_THINKING_SUFFIX)
+        assert result == content
+
+    def test_single_closed_block_stripped(self):
+        content = "<think>Let me think about this...</think> Hello, the light is on."
+        result = strip_thinking_blocks(content, DEFAULT_THINKING_PREFIX, DEFAULT_THINKING_SUFFIX)
+        assert result == "Hello, the light is on."
+
+    def test_multiple_closed_blocks_stripped(self):
+        content = "<think>First thought...</think> Some text <think>Second thought...</think> Final answer."
+        result = strip_thinking_blocks(content, DEFAULT_THINKING_PREFIX, DEFAULT_THINKING_SUFFIX)
+        assert result == "Some text  Final answer."
+
+    def test_unclosed_block_truncates(self):
+        """If a thinking block opens but never closes, everything after is dropped."""
+        content = "<think>This reasoning should not leak..."
+        result = strip_thinking_blocks(content, DEFAULT_THINKING_PREFIX, DEFAULT_THINKING_SUFFIX)
+        assert result == ""
+
+    def test_unclosed_block_after_text(self):
+        content = "Here is the answer. <think>Hidden reasoning follows"
+        result = strip_thinking_blocks(content, DEFAULT_THINKING_PREFIX, DEFAULT_THINKING_SUFFIX)
+        assert result == "Here is the answer."
+
+    def test_empty_content_returns_empty(self):
+        result = strip_thinking_blocks("", DEFAULT_THINKING_PREFIX, DEFAULT_THINKING_SUFFIX)
+        assert result == ""
+
+    def test_none_content_returns_none(self):
+        result = strip_thinking_blocks(None, DEFAULT_THINKING_PREFIX, DEFAULT_THINKING_SUFFIX)
+        assert result is None
+
+    def test_empty_prefix_returns_original(self):
+        content = "<think>hidden</think> visible"
+        result = strip_thinking_blocks(content, "", DEFAULT_THINKING_SUFFIX)
+        assert result == content
+
+    def test_empty_suffix_returns_original(self):
+        content = "<think>hidden</think> visible"
+        result = strip_thinking_blocks(content, DEFAULT_THINKING_PREFIX, "")
+        assert result == content
+
+    def test_whitespace_stripped_from_result(self):
+        content = "  \n<think>reasoning...</think>  \n"
+        result = strip_thinking_blocks(content, DEFAULT_THINKING_PREFIX, DEFAULT_THINKING_SUFFIX)
+        assert result == ""
+
+    def test_custom_prefix_suffix(self):
+        result = strip_thinking_blocks(
+            "<think>hidden</think> visible",
+            "<think>",
+            "</think>",
+        )
+        assert result == "visible"
+
+    def test_nested_prefix_in_text(self):
+        """First prefix greedily matches the first suffix; content between is stripped."""
+        content = "I have <think> marks in my notes. <think>real block</think> done"
+        result = strip_thinking_blocks(content, DEFAULT_THINKING_PREFIX, DEFAULT_THINKING_SUFFIX)
+        assert result == "I have  done"
+
+    def test_only_block_content_becomes_empty(self):
+        content = "<think>all reasoning</think>"
+        result = strip_thinking_blocks(content, DEFAULT_THINKING_PREFIX, DEFAULT_THINKING_SUFFIX)
+        assert result == ""
+
+    def test_text_before_and_after_blocks(self):
+        content = "intro <think>middle</think> outro"
+        result = strip_thinking_blocks(content, DEFAULT_THINKING_PREFIX, DEFAULT_THINKING_SUFFIX)
+        assert result == "intro  outro"
 
 
 @pytest.fixture
@@ -226,3 +304,13 @@ async def test_generic_openai_get_available_models_falls_back_on_openai_error(mo
     models = await client.async_get_available_models()
 
     assert models == RECOMMENDED_CHAT_MODELS
+
+
+def test_ollama_client_supports_streaming():
+    """OllamaAPIClient must declare streaming support like the other backends."""
+    assert getattr(OllamaAPIClient, '_attr_supports_streaming', False) is True
+
+
+def test_generic_openai_client_supports_streaming():
+    """GenericOpenAIAPIClient must declare streaming support."""
+    assert getattr(GenericOpenAIAPIClient, '_attr_supports_streaming', False) is True

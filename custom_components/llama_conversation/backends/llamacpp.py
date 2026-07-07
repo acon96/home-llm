@@ -53,6 +53,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_TOP_P,
     DEFAULT_MIN_P,
     DEFAULT_TYPICAL_P,
+    DEFAULT_USE_SERVER_SAMPLING_DEFAULTS,
     DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION,
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_GBNF_GRAMMAR_FILE,
@@ -481,31 +482,54 @@ class LlamaCppClient(LocalLLMClient):
                 "schema": response_json_schema,
             }
 
-        use_server_sampling_defaults = entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, False)
-        chat_completion = self.models[model_name].create_chat_completion(
-            messages,
-            tools=tools if tools is not None else [],
-            temperature=temperature if not use_server_sampling_defaults else None,
-            top_k=top_k if not use_server_sampling_defaults else None,
-            top_p=top_p if not use_server_sampling_defaults else None,
-            min_p=min_p if not use_server_sampling_defaults else None,
-            typical_p=typical_p if not use_server_sampling_defaults else None,
-            max_tokens=max_tokens,
-            grammar=grammar,
-            stream=True,
-            response_format=response_format,
-            # stop=["<end_of_turn>", "<end_function_call>"] # FIXME: make configurable (pull from tool end token?)
-        )
+        use_server_sampling_defaults = entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS)
+        try:
+            chat_completion = self.models[model_name].create_chat_completion(
+                messages,
+                tools=tools if tools is not None else [],
+                temperature=temperature if not use_server_sampling_defaults else None,
+                top_k=top_k if not use_server_sampling_defaults else None,
+                top_p=top_p if not use_server_sampling_defaults else None,
+                min_p=min_p if not use_server_sampling_defaults else None,
+                typical_p=typical_p if not use_server_sampling_defaults else None,
+                max_tokens=max_tokens,
+                grammar=grammar,
+                stream=True,
+                response_format=response_format,
+                # stop=["<end_of_turn>", "<end_function_call>"] # FIXME: make configurable (pull from tool end token?)
+            )
+        except Exception as err:
+            _LOGGER.error("Llama.cpp API error during streaming generation: params=%s, error=%s", {
+                "messages": len(messages),
+                "tools": len(tools) if tools else 0,
+                "temperature": temperature,
+                "top_k": top_k,
+                "top_p": top_p,
+                "min_p": min_p,
+                "typical_p": typical_p,
+                "max_tokens": max_tokens,
+                "response_format": response_format,
+                "has_grammar": bool(grammar),
+                "stream": True,
+            }, err)
+            raise HomeAssistantError(f"Llama.cpp generation failed: {err}") from err
 
         def next_token() -> Generator[tuple[Optional[str], Optional[List]]]:
             """Get the next token from the chat completion iterator."""
-            for chunk in chat_completion:
-                if isinstance(chunk, str):
-                    yield chunk, []
-                else:
-                    content = chunk["choices"][0]["delta"].get("content")
-                    tool_calls = chunk["choices"][0]["delta"].get("tool_calls")
-                    yield content, tool_calls
+            try:
+                for chunk in chat_completion:
+                    if isinstance(chunk, str):
+                        yield chunk, []
+                    else:
+                        content = chunk["choices"][0]["delta"].get("content")
+                        tool_calls = chunk["choices"][0]["delta"].get("tool_calls")
+                        yield content, tool_calls
+            except Exception as err:
+                _LOGGER.error("Llama.cpp iteration error during streaming generation: error=%s", err)
+                # We can't easily raise HomeAssistantError here as it's inside a generator 
+                # that's consumed by _async_stream_parse_completion.
+                # _async_stream_parse_completion usually handles exceptions from anext_token.
+                raise err
 
         return self._async_stream_parse_completion(llm_api, agent_id, entity_options, next_token=next_token())
 
@@ -542,19 +566,35 @@ class LlamaCppClient(LocalLLMClient):
                 "schema": response_json_schema,
             }
 
-        response = self.models[model_name].create_chat_completion(
-            messages,
-            tools=tools if tools is not None else [],
-            temperature=temperature,
-            top_k=top_k,
-            top_p=top_p,
-            min_p=min_p,
-            typical_p=typical_p,
-            max_tokens=max_tokens,
-            grammar=grammar,
-            stream=False,
-            response_format=response_format,
-        )
+        try:
+            response = self.models[model_name].create_chat_completion(
+                messages,
+                tools=tools if tools is not None else [],
+                temperature=temperature,
+                top_k=top_k,
+                top_p=top_p,
+                min_p=min_p,
+                typical_p=typical_p,
+                max_tokens=max_tokens,
+                grammar=grammar,
+                stream=False,
+                response_format=response_format,
+            )
+        except Exception as err:
+            _LOGGER.error("Llama.cpp API error during generation: params=%s, error=%s", {
+                "messages": len(messages),
+                "tools": len(tools) if tools else 0,
+                "temperature": temperature,
+                "top_k": top_k,
+                "top_p": top_p,
+                "min_p": min_p,
+                "typical_p": typical_p,
+                "max_tokens": max_tokens,
+                "response_format": response_format,
+                "has_grammar": bool(grammar),
+                "stream": False,
+            }, err)
+            raise HomeAssistantError(f"Llama.cpp generation failed: {err}") from err
 
         content = ""
         tool_calls = None
