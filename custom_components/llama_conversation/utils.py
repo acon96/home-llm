@@ -24,8 +24,10 @@ from homeassistant.requirements import pip_kwargs
 from homeassistant.util import color, package as package_util, json as ha_json
 from homeassistant.util.package import is_installed
 
-
-from voluptuous_openapi import convert as convert_to_openapi
+try: # HA < 2026.9
+    from voluptuous_openapi import convert as convert_to_openapi
+except ModuleNotFoundError: # HA >= 2026.9
+    from probatio import to_openapi as convert_to_openapi
 
 from .const import (
     DOMAIN,

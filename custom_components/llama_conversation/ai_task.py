@@ -6,7 +6,11 @@ from enum import StrEnum
 from typing import Any
 
 import voluptuous as vol
-from voluptuous_openapi import convert as convert_to_openapi
+
+try: # HA < 2026.9
+    from voluptuous_openapi import convert as convert_to_openapi
+except ModuleNotFoundError: # HA >= 2026.9
+    from probatio import to_openapi as convert_to_openapi
 
 from homeassistant.helpers import llm
 from homeassistant.components import ai_task, conversation
