@@ -12,7 +12,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm, json as ha_json
 
-from voluptuous_openapi import convert as convert_to_openapi
+try: # HA < 2026.9
+    from voluptuous_openapi import convert as convert_to_openapi
+except ModuleNotFoundError: # HA >= 2026.9
+    from probatio import to_openapi as convert_to_openapi
 
 from custom_components.llama_conversation.const import (
     CONF_CHAT_MODEL,
