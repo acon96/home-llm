@@ -140,7 +140,18 @@ class LlamaCppClient(LocalLLMClient):
 
     def _ensure_llama_cpp_runtime_available(self) -> None:
         try:
-            validate_llama_cpp_python_installation()
+            try:
+                validate_llama_cpp_python_installation()
+            except Exception as err:
+                if importlib.util.find_spec("llama_cpp") is not None:
+                    # the package is installed but fails to import (corrupt or stale
+                    # install): force a reinstall once before giving up
+                    _LOGGER.warning(
+                        "llama-cpp-python is installed but fails to import (%s). Force reinstalling.", err
+                    )
+                    install_llama_cpp_python(self.hass.config.config_dir, force_reinstall=True, raise_on_error=True)
+                    validate_llama_cpp_python_installation()
+
             if importlib.util.find_spec("llama_cpp") is None:
                 install_llama_cpp_python(self.hass.config.config_dir, raise_on_error=True)
                 validate_llama_cpp_python_installation()
