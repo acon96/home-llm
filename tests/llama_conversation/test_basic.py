@@ -5,6 +5,7 @@ while the integration evolves. No integration code is modified.
 """
 
 import pytest
+import voluptuous as vol
 from openai import OpenAIError
 
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
@@ -35,7 +36,7 @@ from custom_components.llama_conversation.const import (
     RECOMMENDED_CHAT_MODELS,
 )
 from custom_components.llama_conversation.utils import LlamaCppPythonInstallError
-from custom_components.llama_conversation.utils import LlamaCppPythonInstallError, strip_thinking_blocks
+from custom_components.llama_conversation.utils import LlamaCppPythonInstallError, strip_thinking_blocks, flatten_vol_schema
 from custom_components.llama_conversation.const import DEFAULT_THINKING_PREFIX, DEFAULT_THINKING_SUFFIX
 
 class TestStripThinkingBlocks:
@@ -113,6 +114,101 @@ class TestStripThinkingBlocks:
         content = "intro <think>middle</think> outro"
         result = strip_thinking_blocks(content, DEFAULT_THINKING_PREFIX, DEFAULT_THINKING_SUFFIX)
         assert result == "intro  outro"
+
+
+class TestFlattenVolSchema:
+    """flatten_vol_schema extracts argument names from a validation schema.
+
+    Extraction must work whether the installed library is voluptuous (HA <
+    2026.9) or probatio (HA >= 2026.9, installed as a voluptuous drop-in), so the
+    schemas below are built only from public validator names. This is the guard
+    against regressions like the old dependency on the private
+    ``vol.validators._WithSubValidators`` base that probatio does not provide, and
+    against dropping field names whose validators are non-callable (e.g. an
+    enum-style ``Any("a", "b")``) or a bare nested mapping.
+    """
+
+    def test_simple_dict_schema(self):
+        schema = vol.Schema({
+            vol.Required("entity_id"): str,
+            vol.Optional("brightness"): int,
+        })
+        assert set(flatten_vol_schema(schema)) == {"entity_id", "brightness"}
+
+    def test_compound_validator_field_values(self):
+        # Fields whose validators are combinators (All/Any) must still surface the
+        # field name, not be skipped. The branches are real (callable) validators,
+        # matching how HA service schemas are built.
+        schema = vol.Schema({
+            vol.Required("entity_id"): str,
+            vol.Optional("brightness"): vol.All(vol.Coerce(int), vol.Range(min=1, max=255)),
+            vol.Optional("duration"): vol.Any(vol.Coerce(int), vol.Coerce(float)),
+        })
+        assert set(flatten_vol_schema(schema)) == {"entity_id", "brightness", "duration"}
+
+    def test_selector_like_callable_field_values(self):
+        # HA selector-style fields (e.g. a state selector for fan_mode) are plain
+        # callables and must be extracted.
+        def state_selector_like(value):  # stand-in for an HA selector (callable)
+            return value
+
+        schema = vol.Schema({
+            vol.Required("entity_id"): str,
+            vol.Optional("fan_mode"): state_selector_like,
+        })
+        assert set(flatten_vol_schema(schema)) == {"entity_id", "fan_mode"}
+
+    def test_nested_schema_paths(self):
+        schema = vol.Schema({
+            vol.Required("outer"): vol.Schema({vol.Required("inner"): str}),
+        })
+        assert set(flatten_vol_schema(schema)) == {"outer/inner"}
+
+    def test_realistic_service_schema(self):
+        # Mirrors a light/climate-style service schema: marker keys mapping to a mix
+        # of plain types, combinators, and selector-like callables.
+        def selector_like(value):
+            return value
+
+        schema = vol.Schema({
+            vol.Required("entity_id"): str,
+            vol.Optional("temperature"): vol.All(vol.Coerce(float), vol.Range(min=7, max=40)),
+            vol.Optional("humidity"): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
+            vol.Optional("fan_mode"): selector_like,
+            vol.Optional("duration"): vol.Coerce(int),
+        })
+        assert set(flatten_vol_schema(schema)) == {
+            "entity_id", "temperature", "humidity", "fan_mode", "duration",
+        }
+
+    def test_enum_of_literals_field_value(self):
+        # A field validated by a combinator whose branches are all non-callable
+        # literals (e.g. an enum-style Any) must still yield the field name. This
+        # was previously dropped because only callable leaves were recorded.
+        schema = vol.Schema({
+            vol.Required("entity_id"): str,
+            vol.Optional("fan_mode"): vol.Any("auto", "low", "high"),
+            vol.Optional("preset_mode"): vol.Any("eco", "away"),
+        })
+        assert set(flatten_vol_schema(schema)) == {
+            "entity_id", "fan_mode", "preset_mode",
+        }
+
+    def test_bare_sequence_field_value(self):
+        # A bare sequence value (a list of validators) is a scalar argument and
+        # must yield the field name.
+        schema = vol.Schema({
+            vol.Required("rgb_color"): [vol.Coerce(int), vol.Coerce(int), vol.Coerce(int)],
+        })
+        assert set(flatten_vol_schema(schema)) == {"rgb_color"}
+
+    def test_plain_nested_mapping_expands(self):
+        # A field whose value is a plain (unwrapped) mapping is expanded into
+        # qualified sub-field paths, matching a Schema-wrapped nested mapping.
+        schema = vol.Schema({
+            vol.Required("outer"): {vol.Required("inner"): str},
+        })
+        assert set(flatten_vol_schema(schema)) == {"outer/inner"}
 
 
 @pytest.fixture

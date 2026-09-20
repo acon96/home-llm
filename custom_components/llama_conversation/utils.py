@@ -92,20 +92,47 @@ def closest_color(requested_color: tuple[int, int, int]) -> str:
             closest_name = name
     return closest_name
 
+# Combinator validators that wrap a collection of sub-validators. These are the
+# public names shared by both voluptuous (HA < 2026.9) and probatio (HA >=
+# 2026.9, which installs itself as a drop-in replacement for ``voluptuous``), and
+# each instance stores its branches in the public ``.validators`` attribute. This
+# is the public-API stand-in for the old private ``vol.validators
+# ._WithSubValidators`` base class -- whose exact subclasses were
+# All/Any/Union/SomeOf -- which probatio no longer ships and which made the old
+# ``isinstance(...)`` check raise AttributeError.
+_COMBINATOR_CLASSES = (vol.All, vol.Any, vol.Union, vol.SomeOf)
+
 def flatten_vol_schema(schema):
+    """Flatten a voluptuous/probatio schema into the argument names it defines.
+
+    Emits one entry per scalar argument (a single value), whether its validator is
+    a callable, a literal (e.g. ``Any("auto", "low")``), or a sequence. A field
+    whose value is a nested mapping (a ``dict`` or a ``Schema`` wrapping one) is
+    expanded into ``<field>/<subfield>`` paths instead. Combinators
+    (``All``/``Any``/``Union``/``SomeOf``) are transparent, so a name is recorded
+    even when every branch is a non-callable literal.
+    """
     flattened = []
     def _flatten(current_schema, prefix=''):
         if isinstance(current_schema, vol.Schema):
-            if isinstance(current_schema.schema, vol.validators._WithSubValidators):
+            if isinstance(current_schema.schema, _COMBINATOR_CLASSES):
                 for subval in current_schema.schema.validators:
                     _flatten(subval, prefix)
             elif isinstance(current_schema.schema, dict):
                 for key, val in current_schema.schema.items():
                     _flatten(val, prefix + str(key) + '/')
-        elif isinstance(current_schema, vol.validators._WithSubValidators):
+        elif isinstance(current_schema, _COMBINATOR_CLASSES):
             for subval in current_schema.validators:
                 _flatten(subval, prefix)
-        elif callable(current_schema):
+        elif isinstance(current_schema, dict):
+            # A plain (unwrapped) nested mapping: expand it the same way as a
+            # ``Schema``-wrapped one, so its fields are not dropped.
+            for key, val in current_schema.items():
+                _flatten(val, prefix + str(key) + '/')
+        else:
+            # A scalar argument (a single value): record its name regardless of
+            # whether the value is callable, so ``Any("a", "b")``-style fields and
+            # bare sequences are kept instead of being silently dropped.
             flattened.append(prefix[:-1] if prefix else prefix)
     _flatten(schema)
     return flattened
