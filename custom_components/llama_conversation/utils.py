@@ -339,7 +339,9 @@ async def get_available_llama_cpp_versions(hass: HomeAssistant) -> List[Tuple[st
                 raise Exception(f"Failed to fetch available versions from GitHub (HTTP {resp.status})")
             releases = await resp.json()
 
-        wanted_suffixes = set(get_upstream_wheel_suffixes())
+        # get_libc() (via platform.libc_ver()) does a blocking file read,
+        # so keep it out of the event loop
+        wanted_suffixes = set(await hass.async_add_executor_job(get_upstream_wheel_suffixes))
         remote = []
         for release in releases:
             # only consider plain version releases; suffixed ones (e.g. v0.3.35-cu124)
