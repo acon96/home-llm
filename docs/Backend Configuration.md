@@ -85,7 +85,7 @@ Take the appropriate wheel and copy it to the `custom_components/llama_conversat
 After the wheel file has been copied to the correct folder, attempt the wheel installation step of the integration setup. The local wheel file should be detected and installed.
 
 ## Pre-built
-Pre-built wheel files (`*.whl`) are sourced from the [upstream llama-cpp-python releases](https://github.com/abetlen/llama-cpp-python/releases).
+Pre-built wheel files (`*.whl`) are sourced from the [acon96/llama-cpp-python releases](https://github.com/acon96/llama-cpp-python/releases).
 
 llama-cpp-python uses generic `py3-none` wheels that work across all Python 3.x versions. Wheels are provided per C library and architecture — the integration detects the platform and picks the right one automatically:
 - **Home Assistant OS and the Home Assistant container** (musl-based):
