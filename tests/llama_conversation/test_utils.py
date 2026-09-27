@@ -103,7 +103,7 @@ def test_install_llama_cpp_python_uses_upstream_musl_wheel(monkeypatch):
     assert install_llama_cpp_python("/tmp/fake-config") is True
     assert len(calls) == 1
     expected_url = (
-        f"https://github.com/{LLAMA_CPP_PYTHON_WHEEL_REPO}/releases/download/v{EMBEDDED_LLAMA_CPP_PYTHON_VERSION}"
+        f"https://github.com/{LLAMA_CPP_PYTHON_WHEEL_REPO}/releases/download/0.3.35"
         f"/llama_cpp_python-{EMBEDDED_LLAMA_CPP_PYTHON_VERSION}-py3-none-musllinux_1_2_aarch64.whl"
     )
     assert calls[0][0] == expected_url
@@ -117,7 +117,7 @@ def test_install_llama_cpp_python_uses_upstream_glibc_wheel(monkeypatch):
 
     assert install_llama_cpp_python("/tmp/fake-config") is True
     expected_url = (
-        f"https://github.com/{LLAMA_CPP_PYTHON_WHEEL_REPO}/releases/download/v{EMBEDDED_LLAMA_CPP_PYTHON_VERSION}"
+        f"https://github.com/{LLAMA_CPP_PYTHON_WHEEL_REPO}/releases/download/0.3.35"
         f"/llama_cpp_python-{EMBEDDED_LLAMA_CPP_PYTHON_VERSION}-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl"
     )
     assert calls[0][0] == expected_url
@@ -257,7 +257,7 @@ async def test_get_available_llama_cpp_versions_lists_installable_upstream_relea
     assert session.url.startswith(
         f"https://api.github.com/repos/{LLAMA_CPP_PYTHON_WHEEL_REPO}/releases"
     )
-    assert session.params == {"per_page": 50, "page": 1}
+    assert session.params == {"per_page": 10, "page": 1}
     remote = [version for version, is_local in versions if not is_local]
     assert remote == ["0.3.35+homellm", "0.3.35", "0.3.33"]
 
@@ -295,16 +295,49 @@ def test_load_extension_ok_when_not_installed():
     assert parent_conn.recv() == "ok"
 
 
-@pytest.mark.asyncio
-async def test_validate_llama_cpp_python_installation_spawns_and_passes(monkeypatch, hass):
-    # end-to-end: the spawned child must be able to import the integration module
-    # and report success for a not-installed (or importable) llama_cpp
-    monkeypatch.setenv("PYTHONPATH", REPO_ROOT + os.pathsep + os.environ.get("PYTHONPATH", ""))
+def _mock_spawn(monkeypatch):
+    """Mock process creation while retaining the real pipe handshake."""
+    parent_conn, child_conn = multiprocessing.Pipe()
+    started_with_config_dir = []
+
+    class FakeProcess:
+        exitcode = None
+
+        def __init__(self, *, target, args):
+            assert target is _load_extension
+            self.child_conn = args[0]
+
+        def start(self):
+            started_with_config_dir.append(utils._get_config_dir() in sys.path)
+            self.child_conn.send("ok")
+            self.exitcode = 0
+
+        def join(self):
+            pass
+
+    class FakeContext:
+        @staticmethod
+        def Pipe():
+            return parent_conn, child_conn
+
+        @staticmethod
+        def Process(*, target, args):
+            return FakeProcess(target=target, args=args)
+
+    monkeypatch.setattr(utils.multiprocessing, "get_context", lambda _method: FakeContext())
+    return started_with_config_dir
+
+
+def test_validate_llama_cpp_python_installation_spawns_and_passes(monkeypatch):
+    started_with_config_dir = _mock_spawn(monkeypatch)
+
     validate_llama_cpp_python_installation()
 
+    assert started_with_config_dir == [True]
+
 
 @pytest.mark.asyncio
-async def test_validate_llama_cpp_python_installation_config_dir_not_on_sys_path(hass):
+async def test_validate_llama_cpp_python_installation_config_dir_not_on_sys_path(monkeypatch):
     # HA >= 2026.9 launches python with -P (home-assistant/core#180967): the
     # config dir is no longer on the parent's sys.path, and a spawned child
     # inherits exactly that path with a fresh sys.modules. The config dir must
@@ -313,8 +346,10 @@ async def test_validate_llama_cpp_python_installation_config_dir_not_on_sys_path
     # and the validation fails with a bare exit code.
     while REPO_ROOT in sys.path:
         sys.path.remove(REPO_ROOT)
+    started_with_config_dir = _mock_spawn(monkeypatch)
     try:
         validate_llama_cpp_python_installation()
+        assert started_with_config_dir == [True]
         # the function must not leave the config dir mounted
         assert REPO_ROOT not in sys.path
     finally:
