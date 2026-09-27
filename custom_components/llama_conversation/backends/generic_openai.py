@@ -29,8 +29,6 @@ from custom_components.llama_conversation.const import (
     CONF_RESPONSE_JSON_SCHEMA,
     CONF_USE_SERVER_SAMPLING_DEFAULTS,
     DEFAULT_MAX_TOKENS,
-    DEFAULT_TEMPERATURE,
-    DEFAULT_TOP_P,
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_REMEMBER_CONVERSATION,
     DEFAULT_REMEMBER_CONVERSATION_TIME_MINUTES,
@@ -106,8 +104,6 @@ class GenericOpenAIAPIClient(LocalLLMClient):
                          entity_options: dict[str, Any],
                         ) -> AsyncGenerator[TextGenerationResult, None]:
         model_name = entity_options[CONF_CHAT_MODEL]
-        temperature = entity_options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
-        top_p = entity_options.get(CONF_TOP_P, DEFAULT_TOP_P)
         max_tokens = entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
         timeout = entity_options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
         enable_legacy_tool_calling = entity_options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
@@ -124,8 +120,9 @@ class GenericOpenAIAPIClient(LocalLLMClient):
             "messages": messages
         }
         if not use_server_sampling_defaults:
-            request_params["temperature"] = temperature
-            request_params["top_p"] = top_p
+            for key in (CONF_TEMPERATURE, CONF_TOP_P):
+                if entity_options.get(key) is not None:
+                    request_params[key] = entity_options[key]
 
         response_json_schema = entity_options.get(CONF_RESPONSE_JSON_SCHEMA)
         if response_json_schema:
@@ -171,8 +168,6 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         entity_options: dict[str, Any],
     ) -> TextGenerationResult:
         model_name = entity_options[CONF_CHAT_MODEL]
-        temperature = entity_options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
-        top_p = entity_options.get(CONF_TOP_P, DEFAULT_TOP_P)
         max_tokens = entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
         timeout = entity_options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
         enable_legacy_tool_calling = entity_options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
@@ -188,8 +183,9 @@ class GenericOpenAIAPIClient(LocalLLMClient):
             "messages": messages,
         }
         if not use_server_sampling_defaults:
-            request_params["temperature"] = temperature
-            request_params["top_p"] = top_p
+            for key in (CONF_TEMPERATURE, CONF_TOP_P):
+                if entity_options.get(key) is not None:
+                    request_params[key] = entity_options[key]
 
         response_json_schema = entity_options.get(CONF_RESPONSE_JSON_SCHEMA)
         if response_json_schema:

@@ -85,17 +85,17 @@ Take the appropriate wheel and copy it to the `custom_components/llama_conversat
 After the wheel file has been copied to the correct folder, attempt the wheel installation step of the integration setup. The local wheel file should be detected and installed.
 
 ## Pre-built
-Pre-built wheel files (`*.whl`) are built as part of a fork of llama-cpp-python and are available on the [GitHub releases](https://github.com/acon96/llama-cpp-python/releases/latest) page for the fork.
+Pre-built wheel files (`*.whl`) are sourced from the [acon96/llama-cpp-python releases](https://github.com/acon96/llama-cpp-python/releases).
 
-As of version 0.3.20, llama-cpp-python uses generic `py3-none` wheels that work across all Python 3.x versions. Select the correct `.whl` file for your hardware's architecture:
-- **ARM devices** (e.g., Raspberry Pi 4/5):
-    - Example filename:
-        - `llama_cpp_python-{version}-py3-none-linux_aarch64.whl`
-- **x86_64 devices** (e.g., Intel/AMD desktops):
-    - Example filename:
-        - `llama_cpp_python-{version}-py3-none-linux_x86_64.whl`
+llama-cpp-python uses generic `py3-none` wheels that work across all Python 3.x versions. Wheels are provided per C library and architecture — the integration detects the platform and picks the right one automatically:
+- **Home Assistant OS and the Home Assistant container** (musl-based):
+    - **ARM devices** (e.g., Raspberry Pi 4/5): `llama_cpp_python-{version}-py3-none-musllinux_1_2_aarch64.whl`
+    - **x86_64 devices** (e.g., Intel/AMD desktops): `llama_cpp_python-{version}-py3-none-musllinux_1_2_x86_64.whl`
+- **glibc-based installations**:
+    - **ARM devices**: `llama_cpp_python-{version}-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl`
+    - **x86_64 devices**: `llama_cpp_python-{version}-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl`
 
-> **Note:** A single wheel now works for all Python 3.x versions on the same platform. You no longer need to match your specific Python version (e.g., 3.12, 3.13, 3.14).
+> **Note:** A single wheel works for all Python 3.x versions on the same platform. You no longer need to match your specific Python version (e.g., 3.12, 3.13, 3.14).
 
 ## Build your own
 

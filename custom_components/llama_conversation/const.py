@@ -88,8 +88,24 @@ NO_SYSTEM_PROMPT_EXTRAS = """
 <user_instruction>:"""
 DEFAULT_PROMPT = DEFAULT_PROMPT_BASE + ICL_EXTRAS
 CONF_CHAT_MODEL = "huggingface_model"
-DEFAULT_CHAT_MODEL = "acon96/Home-3B-v3-GGUF"
-RECOMMENDED_CHAT_MODELS = [ "acon96/Home-3B-v3-GGUF", "acon96/Home-1B-v3-GGUF", "TheBloke/Mistral-7B-Instruct-v0.2-GGUF" ]
+DEFAULT_CHAT_MODEL = "acon96/Home-Llama-3.2-3B"
+RECOMMENDED_CHAT_MODELS = [ 
+    "acon96/Home-FunctionGemma-270m",
+    "acon96/Home-Llama-3.2-3B",
+    "acon96/Home-3B-v3-GGUF",
+    "acon96/Home-1B-v3-GGUF",
+    "LiquidAI/LFM2.5-230M-GGUF",
+    "LiquidAI/LFM2.5-350M-GGUF",
+    "LiquidAI/LFM2.5-2.6B-GGUF",
+    "LiquidAI/LFM2.5-8B-A1B-GGUF",
+    "LiquidAI/LFM2.5-1.2B-Thinking-GGUF",
+    "unsloth/Qwen3.5-0.8B-GGUF",
+    "unsloth/Qwen3.5-2B-GGUF",
+    "unsloth/Qwen3.5-4B-GGUF",
+    "unsloth/Qwen3.5-9B-GGUF",
+    "unsloth/Qwen3.8-27B-GGUF"
+    "unsloth/Qwen3.6-35B-A3B-GGUF",
+]
 CONF_MAX_TOKENS = "max_new_tokens"
 DEFAULT_MAX_TOKENS = 512
 CONF_TOP_K = "top_k"
@@ -211,11 +227,6 @@ DEFAULT_OPTIONS = types.MappingProxyType(
     {
         CONF_PROMPT: DEFAULT_PROMPT,
         CONF_MAX_TOKENS: DEFAULT_MAX_TOKENS,
-        CONF_TOP_K: DEFAULT_TOP_K,
-        CONF_TOP_P: DEFAULT_TOP_P,
-        CONF_MIN_P: DEFAULT_MIN_P,
-        CONF_TYPICAL_P: DEFAULT_TYPICAL_P,
-        CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
         CONF_REQUEST_TIMEOUT: DEFAULT_REQUEST_TIMEOUT,
         CONF_ENABLE_STREAMING: DEFAULT_ENABLE_STREAMING,
         CONF_LLAMACPP_ENABLE_FLASH_ATTENTION: DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION,
@@ -247,9 +258,6 @@ def option_overrides(backend_type: str) -> dict[str, Any]:
             CONF_TOOL_CALL_PREFIX: "<start_function_call>",
             CONF_TOOL_CALL_SUFFIX: "<end_function_call>",
             CONF_TOOL_RESPONSE_AS_STRING: False, # gemma function calling requires tool responses as a dictionary
-            CONF_TEMPERATURE: 1.0,
-            CONF_TOP_P: 0.95,
-            CONF_TOP_K: 64,
         },
         "home-llama-3.2": {
             CONF_PROMPT: DEFAULT_PROMPT_BASE_LEGACY,
@@ -317,21 +325,14 @@ def option_overrides(backend_type: str) -> dict[str, Any]:
         },
         "qwen3": {
             CONF_PROMPT: DEFAULT_PROMPT_BASE,
-            CONF_TEMPERATURE: 0.6,
-            CONF_TOP_K: 20,
-            CONF_TOP_P: 0.95
         },
         "mistral": {
             CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_EXTRAS + NO_SYSTEM_PROMPT_EXTRAS,
-            CONF_MIN_P: 0.1,
-            CONF_TYPICAL_P: 0.9,
             # no prompt formats with tool calling support, so just use legacy tool calling
             CONF_ENABLE_LEGACY_TOOL_CALLING: True,
         },
         "mixtral": {
             CONF_PROMPT: DEFAULT_PROMPT_BASE + ICL_EXTRAS + NO_SYSTEM_PROMPT_EXTRAS,
-            CONF_MIN_P: 0.1,
-            CONF_TYPICAL_P: 0.9,
             # no prompt formats with tool calling support, so just use legacy tool calling
             CONF_ENABLE_LEGACY_TOOL_CALLING: True,
         },
@@ -361,5 +362,6 @@ def option_overrides(backend_type: str) -> dict[str, Any]:
         },
     }
 
-INTEGRATION_VERSION = "0.4.4"
-EMBEDDED_LLAMA_CPP_PYTHON_VERSION = "0.3.20"
+# Upstream repository that prebuilt llama-cpp-python wheels are sourced from
+LLAMA_CPP_PYTHON_WHEEL_REPO = "acon96/llama-cpp-python"
+EMBEDDED_LLAMA_CPP_PYTHON_VERSION = "0.3.35+homellm"

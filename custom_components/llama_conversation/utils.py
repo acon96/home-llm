@@ -1,3 +1,4 @@
+from contextlib import suppress
 from functools import partial
 import time
 import logging
@@ -6,6 +7,7 @@ import re
 import sys
 import platform
 import multiprocessing
+import traceback
 import site
 import voluptuous as vol
 import base64
@@ -24,14 +26,15 @@ from homeassistant.requirements import pip_kwargs
 from homeassistant.util import color, package as package_util, json as ha_json
 from homeassistant.util.package import is_installed
 
-try: # HA < 2026.9
-    from voluptuous_openapi import convert as convert_to_openapi
-except ModuleNotFoundError: # HA >= 2026.9
+try: # HA >= 2026.9
     from probatio import to_openapi as convert_to_openapi
+except ModuleNotFoundError: # HA < 2026.9
+    from voluptuous_openapi import convert as convert_to_openapi
 
 from .const import (
     DOMAIN,
     EMBEDDED_LLAMA_CPP_PYTHON_VERSION,
+    LLAMA_CPP_PYTHON_WHEEL_REPO,
     ALLOWED_SERVICE_CALL_ARGUMENTS,
     SERVICE_TOOL_ALLOWED_SERVICES,
     SERVICE_TOOL_ALLOWED_DOMAINS,
@@ -92,20 +95,47 @@ def closest_color(requested_color: tuple[int, int, int]) -> str:
             closest_name = name
     return closest_name
 
+# Combinator validators that wrap a collection of sub-validators. These are the
+# public names shared by both voluptuous (HA < 2026.9) and probatio (HA >=
+# 2026.9, which installs itself as a drop-in replacement for ``voluptuous``), and
+# each instance stores its branches in the public ``.validators`` attribute. This
+# is the public-API stand-in for the old private ``vol.validators
+# ._WithSubValidators`` base class -- whose exact subclasses were
+# All/Any/Union/SomeOf -- which probatio no longer ships and which made the old
+# ``isinstance(...)`` check raise AttributeError.
+_COMBINATOR_CLASSES = (vol.All, vol.Any, vol.Union, vol.SomeOf)
+
 def flatten_vol_schema(schema):
+    """Flatten a voluptuous/probatio schema into the argument names it defines.
+
+    Emits one entry per scalar argument (a single value), whether its validator is
+    a callable, a literal (e.g. ``Any("auto", "low")``), or a sequence. A field
+    whose value is a nested mapping (a ``dict`` or a ``Schema`` wrapping one) is
+    expanded into ``<field>/<subfield>`` paths instead. Combinators
+    (``All``/``Any``/``Union``/``SomeOf``) are transparent, so a name is recorded
+    even when every branch is a non-callable literal.
+    """
     flattened = []
     def _flatten(current_schema, prefix=''):
         if isinstance(current_schema, vol.Schema):
-            if isinstance(current_schema.schema, vol.validators._WithSubValidators):
+            if isinstance(current_schema.schema, _COMBINATOR_CLASSES):
                 for subval in current_schema.schema.validators:
                     _flatten(subval, prefix)
             elif isinstance(current_schema.schema, dict):
                 for key, val in current_schema.schema.items():
                     _flatten(val, prefix + str(key) + '/')
-        elif isinstance(current_schema, vol.validators._WithSubValidators):
+        elif isinstance(current_schema, _COMBINATOR_CLASSES):
             for subval in current_schema.validators:
                 _flatten(subval, prefix)
-        elif callable(current_schema):
+        elif isinstance(current_schema, dict):
+            # A plain (unwrapped) nested mapping: expand it the same way as a
+            # ``Schema``-wrapped one, so its fields are not dropped.
+            for key, val in current_schema.items():
+                _flatten(val, prefix + str(key) + '/')
+        else:
+            # A scalar argument (a single value): record its name regardless of
+            # whether the value is callable, so ``Any("a", "b")``-style fields and
+            # bare sequences are kept instead of being silently dropped.
             flattened.append(prefix[:-1] if prefix else prefix)
     _flatten(schema)
     return flattened
@@ -174,9 +204,10 @@ def download_model_from_hf(model_name: str, quantization_type: str, storage_fold
         local_files_only=file_lookup_only
     )
 
-def _load_extension():
+def _load_extension(conn):
     """
-    Makes sure it is possible to load llama-cpp-python without crashing Home Assistant.
+    Runs in the spawned process: tries to import llama-cpp-python and reports the outcome
+    back through ``conn``.
     This needs to be at the root file level because we are using the 'spawn' start method.
     Also ignore ModuleNotFoundError because that just means it's not installed. Not that it will crash HA
     """
@@ -184,17 +215,63 @@ def _load_extension():
     try:
         importlib.import_module("llama_cpp")
     except ModuleNotFoundError:
-        pass
-    
+        conn.send("ok")
+        return
+    except BaseException:
+        # send the real traceback back so the actual failure is visible in the logs
+        conn.send(traceback.format_exc())
+        return
+    conn.send("ok")
+
+def _get_config_dir() -> str:
+    """Return the config directory this integration is installed under.
+
+    Custom integrations always live at ``{config_dir}/custom_components/{domain}``,
+    and this file is ``{config_dir}/custom_components/llama_conversation/utils.py``.
+    """
+    return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 def validate_llama_cpp_python_installation():
     """
-    Spawns another process and tries to import llama.cpp to avoid crashing the main process
+    Spawns another process and tries to import llama.cpp to avoid crashing the main process.
+    Re-raises with the child's traceback (when available) so the root cause is visible
+    instead of a bare exit code.
     """
     mp_ctx = multiprocessing.get_context('spawn') # required because of aio
-    process = mp_ctx.Process(target=_load_extension)
-    process.start()
+    # A spawned child gets a fresh sys.modules but inherits the parent's sys.path
+    # (spawn snapshots it during start()). It re-imports _load_extension from
+    # custom_components.llama_conversation.utils, which only resolves if the
+    # config dir is on that path. HA <= 2026.8 left the config dir on sys.path
+    # for the whole process (the container ran `python -m homeassistant` from
+    # it, which puts the working directory on the path); HA >= 2026.9 launches
+    # python with -P (home-assistant/core#180967), so it no longer does, and
+    # the child died with ModuleNotFoundError: No module named
+    # 'custom_components'. Mount the config dir just long enough for start()
+    # to snapshot it into the child, then unmount it the same way
+    # homeassistant.loader does.
+    config_dir = _get_config_dir()
+    was_mounted = config_dir in sys.path
+    if not was_mounted:
+        sys.path.insert(0, config_dir)
+    try:
+        parent_conn, child_conn = mp_ctx.Pipe()
+        process = mp_ctx.Process(target=_load_extension, args=(child_conn,))
+        process.start()
+    finally:
+        if not was_mounted:
+            with suppress(ValueError):
+                sys.path.remove(config_dir)
+            sys.path_importer_cache.pop(config_dir, None)
+    child_conn.close()
+    try:
+        result = parent_conn.recv()
+    except (EOFError, OSError):
+        # the child died before it could report (e.g. segfault inside a native library)
+        result = None
     process.join()
 
+    if result and result != "ok":
+        raise Exception(f"Failed to properly initialize llama-cpp-python:\n{result}")
     if process.exitcode != 0:
         raise Exception(f"Failed to properly initialize llama-cpp-python. (Exit code {process.exitcode}.)")
 
@@ -214,23 +291,90 @@ def get_platform_suffix() -> str:
 
     return platform_suffix
 
+def get_libc() -> str:
+    """Get the C library in use ("musl" or "glibc"), or "" when unknown/non-Linux."""
+    try:
+        libc_name = platform.libc_ver()[0].lower()
+    except (ValueError, OSError, AttributeError):
+        return ""
+    return libc_name if libc_name in ("musl", "glibc") else ""
+
+def get_upstream_wheel_suffixes() -> List[str]:
+    """Get the upstream wheel platform-suffix candidates for this platform, in order of preference.
+
+    The upstream (abetlen/llama-cpp-python) releases ship one ``py3-none`` wheel per
+    C library and architecture:
+      - ``py3-none-musllinux_1_2_{arch}`` for musl systems (Home Assistant OS and the
+        Home Assistant container)
+      - ``py3-none-manylinux2014_{arch}.manylinux_2_17_{arch}`` for glibc systems
+    When the libc cannot be detected both are returned; the platform tag check in pip
+    rejects the wrong one quickly, so trying both is safe.
+    """
+    arch = get_platform_suffix()
+    musl_suffix = f"py3-none-musllinux_1_2_{arch}"
+    glibc_suffix = f"py3-none-manylinux2014_{arch}.manylinux_2_17_{arch}"
+    libc = get_libc()
+    if libc == "musl":
+        return [musl_suffix]
+    if libc == "glibc":
+        return [glibc_suffix]
+    # unknown libc: Home Assistant OS and the container are both musl-based, try that first
+    return [musl_suffix, glibc_suffix]
+
 def get_potential_wheels(folder: str, platform_suffix: str) -> List[str]:
     return sorted([ path for path in os.listdir(folder) if path.endswith(f"{platform_suffix}.whl") ], reverse=True)
 
+def _version_sort_key(version: str) -> tuple:
+    base_version, _, local_version = version.partition("+")
+    return (
+        tuple(int(part) for part in re.findall(r"\d+", base_version)),
+        bool(local_version),
+        version,
+    )
+
 async def get_available_llama_cpp_versions(hass: HomeAssistant) -> List[Tuple[str, bool]]:
-    github_index_url = "https://acon96.github.io/llama-cpp-python/whl/ha/llama-cpp-python/"
-    session = aiohttp_client.async_get_clientsession(hass)
+    """List llama-cpp-python versions installable from the upstream GitHub releases
+    (i.e. they ship a prebuilt wheel for this platform) plus any wheels placed in the
+    integration directory."""
+    releases_url = f"https://api.github.com/repos/{LLAMA_CPP_PYTHON_WHEEL_REPO}/releases"
     try:
-        async with session.get(github_index_url) as resp:
+        session = aiohttp_client.async_get_clientsession(hass)
+        async with session.get(
+            releases_url,
+            params={"per_page": 10, "page": 1},
+            headers={"Accept": "application/vnd.github+json"},
+        ) as resp:
             if resp.status != 200:
                 raise Exception(f"Failed to fetch available versions from GitHub (HTTP {resp.status})")
-            text = await resp.text()
-            # pull version numbers out of h2 tags
-            versions = re.findall(r"<h2.*>(.+)</h2>", text)
-            remote =  sorted([(v, False) for v in versions], reverse=True)
+            releases = await resp.json()
+
+        _LOGGER.debug("Fetched %d releases from GitHub", len(releases))
+
+        # get_libc() (via platform.libc_ver()) does a blocking file read,
+        # so keep it out of the event loop
+        wanted_suffixes = set(await hass.async_add_executor_job(get_upstream_wheel_suffixes))
+        remote_versions = set()
+        for release in releases:
+            for asset in release.get("assets", []):
+                wheel_name = asset.get("name", "")
+                if not wheel_name.startswith("llama_cpp_python-"):
+                    continue
+                for suffix in wanted_suffixes:
+                    wheel_suffix = f"-{suffix}.whl"
+                    if wheel_name.endswith(wheel_suffix):
+                        version = wheel_name[
+                            len("llama_cpp_python-") : -len(wheel_suffix)
+                        ]
+                        if version:
+                            remote_versions.add(version)
+                        break
+        remote = [(version, False) for version in remote_versions]
+        remote.sort(key=lambda item: _version_sort_key(item[0]), reverse=True)
+
+        _LOGGER.debug("Available versions from GitHub: %s", [v[0] for v in remote])
     except Exception as ex:
         _LOGGER.warning(f"Error fetching available versions from GitHub: {repr(ex)}")
-        remote = []
+        remote = [(EMBEDDED_LLAMA_CPP_PYTHON_VERSION, False)]
 
     platform_suffix = get_platform_suffix()
     folder = os.path.dirname(__file__)
@@ -308,31 +452,56 @@ def install_llama_cpp_python(
     
     if force_reinstall:
         _LOGGER.info("Force reinstalling llama-cpp-python")
-        
-    platform_suffix = get_platform_suffix()
 
     if not specific_version:
         specific_version = EMBEDDED_LLAMA_CPP_PYTHON_VERSION
     
     if ".whl" in specific_version:
-        wheel_location = os.path.join(os.path.dirname(__file__), specific_version)
+        wheel_locations = [os.path.join(os.path.dirname(__file__), specific_version)]
     else:
-        wheel_location = f"https://github.com/acon96/llama-cpp-python/releases/download/{specific_version}/llama_cpp_python-{specific_version}-py3-none-linux_{platform_suffix}.whl"
+        # prebuilt wheels are sourced from the upstream llama-cpp-python releases.
+        # release tags are prefixed with "v" (e.g. v0.3.35) and every platform has
+        # its own wheel (musllinux for HAOS/container, manylinux for glibc)
+        # Forked builds use PEP 440 local versions (e.g. 0.3.35+homellm), while
+        # their release tag may be the base version without the usual "v" prefix.
+        # Keep the full version in the artifact filename, and try both tag styles.
+        if "+" in specific_version:
+            release_version = specific_version.split("+", 1)[0]
+            release_tags = (release_version, f"v{release_version}")
+        else:
+            release_tags = (f"v{specific_version}",)
+        wheel_locations = [
+            f"https://github.com/{LLAMA_CPP_PYTHON_WHEEL_REPO}/releases/download/{tag}/llama_cpp_python-{specific_version}-{suffix}.whl"
+            for tag in release_tags
+            for suffix in get_upstream_wheel_suffixes()
+        ]
 
-    install_success, install_error = _install_package_with_stderr(
-        wheel_location, reinstall=force_reinstall, **pip_kwargs(config_dir)
-    )
+    install_success = False
+    install_error = None
+    installed_from = None
+    for index, wheel_location in enumerate(wheel_locations):
+        install_success, install_error = _install_package_with_stderr(
+            wheel_location,
+            # when falling back to a second candidate (unknown libc), make sure uv
+            # replaces whatever a previous candidate may have installed
+            reinstall=force_reinstall or index > 0,
+            **pip_kwargs(config_dir),
+        )
+        if install_success:
+            installed_from = wheel_location
+            break
+        _LOGGER.warning("Failed to install llama-cpp-python from %s: %s", wheel_location, install_error)
 
     if install_success:
-        _LOGGER.info("llama-cpp-python successfully installed")
+        _LOGGER.info("llama-cpp-python successfully installed from %s", installed_from)
         return True
     
     # if it is just the wrong version installed then ignore the installation error
     if not installed_wrong_version:
         error_message = (
-            f"Unable to install package {wheel_location}: {install_error or 'unknown installation error'}. "
+            f"Unable to install package from {', '.join(wheel_locations)}: {install_error or 'unknown installation error'}. "
             "Please manually build or download the wheels and place them in the `/config/custom_components/llama_conversation` directory. "
-            "Make sure that you download the correct .whl file for your platform from the GitHub releases page."
+            f"Make sure that you download the correct .whl file for your platform from the GitHub releases page of {LLAMA_CPP_PYTHON_WHEEL_REPO}."
         )
         if raise_on_error:
             raise LlamaCppPythonInstallError(error_message)

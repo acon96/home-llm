@@ -37,11 +37,6 @@ from custom_components.llama_conversation.const import (
     CONF_TOOL_RESPONSE_AS_STRING,
     CONF_RESPONSE_JSON_SCHEMA,
     DEFAULT_MAX_TOKENS,
-    DEFAULT_TEMPERATURE,
-    DEFAULT_TOP_K,
-    DEFAULT_TOP_P,
-    DEFAULT_TYPICAL_P,
-    DEFAULT_MIN_P,
     DEFAULT_ENABLE_THINK_MODE,
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_API_PATH,
@@ -196,11 +191,6 @@ class OllamaAPIClient(LocalLLMClient):
         model_name = entity_options.get(CONF_CHAT_MODEL, "")
         context_length = entity_options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
         max_tokens = entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
-        temperature = entity_options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
-        top_p = entity_options.get(CONF_TOP_P, DEFAULT_TOP_P)
-        top_k = entity_options.get(CONF_TOP_K, DEFAULT_TOP_K)
-        typical_p = entity_options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)
-        min_p = entity_options.get(CONF_MIN_P, DEFAULT_MIN_P)
         timeout = entity_options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
         keep_alive = entity_options.get(CONF_OLLAMA_KEEP_ALIVE_MIN, DEFAULT_OLLAMA_KEEP_ALIVE_MIN)
         enable_legacy_tool_calling = entity_options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
@@ -215,13 +205,9 @@ class OllamaAPIClient(LocalLLMClient):
         }
 
         if not use_default_sampler_options:
-            options.update({
-                "top_p": top_p,
-                "top_k": top_k,
-                "typical_p": typical_p,
-                "temperature": temperature,
-                "min_p": min_p,
-            })
+            for key in (CONF_TOP_P, CONF_TOP_K, CONF_TYPICAL_P, CONF_TEMPERATURE, CONF_MIN_P):
+                if entity_options.get(key) is not None:
+                    options[key] = entity_options[key]
 
         messages = get_oai_formatted_messages(conversation, tool_args_to_str=False, tool_result_to_str=tool_response_as_string)
         tools = None
@@ -302,11 +288,6 @@ class OllamaAPIClient(LocalLLMClient):
         model_name = entity_options.get(CONF_CHAT_MODEL, "")
         context_length = entity_options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
         max_tokens = entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
-        temperature = entity_options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
-        top_p = entity_options.get(CONF_TOP_P, DEFAULT_TOP_P)
-        top_k = entity_options.get(CONF_TOP_K, DEFAULT_TOP_K)
-        typical_p = entity_options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)
-        min_p = entity_options.get(CONF_MIN_P, DEFAULT_MIN_P)
         timeout = entity_options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
         keep_alive = entity_options.get(CONF_OLLAMA_KEEP_ALIVE_MIN, DEFAULT_OLLAMA_KEEP_ALIVE_MIN)
         enable_legacy_tool_calling = entity_options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
@@ -321,13 +302,9 @@ class OllamaAPIClient(LocalLLMClient):
         }
 
         if not use_default_sampler_options:
-            options.update({
-                "top_p": top_p,
-                "top_k": top_k,
-                "typical_p": typical_p,
-                "temperature": temperature,
-                "min_p": min_p,
-            })
+            for key in (CONF_TOP_P, CONF_TOP_K, CONF_TYPICAL_P, CONF_TEMPERATURE, CONF_MIN_P):
+                if entity_options.get(key) is not None:
+                    options[key] = entity_options[key]
 
 
         messages = get_oai_formatted_messages(conversation, tool_args_to_str=False, tool_result_to_str=tool_response_as_string)

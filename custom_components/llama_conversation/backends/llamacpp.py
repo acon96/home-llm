@@ -48,11 +48,6 @@ from custom_components.llama_conversation.const import (
     DEFAULT_TOOL_RESPONSE_AS_STRING,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
-    DEFAULT_TEMPERATURE,
-    DEFAULT_TOP_K,
-    DEFAULT_TOP_P,
-    DEFAULT_MIN_P,
-    DEFAULT_TYPICAL_P,
     DEFAULT_USE_SERVER_SAMPLING_DEFAULTS,
     DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION,
     DEFAULT_USE_GBNF_GRAMMAR,
@@ -140,7 +135,18 @@ class LlamaCppClient(LocalLLMClient):
 
     def _ensure_llama_cpp_runtime_available(self) -> None:
         try:
-            validate_llama_cpp_python_installation()
+            try:
+                validate_llama_cpp_python_installation()
+            except Exception as err:
+                if importlib.util.find_spec("llama_cpp") is not None:
+                    # the package is installed but fails to import (corrupt or stale
+                    # install): force a reinstall once before giving up
+                    _LOGGER.warning(
+                        "llama-cpp-python is installed but fails to import (%s). Force reinstalling.", err
+                    )
+                    install_llama_cpp_python(self.hass.config.config_dir, force_reinstall=True, raise_on_error=True)
+                    validate_llama_cpp_python_installation()
+
             if importlib.util.find_spec("llama_cpp") is None:
                 install_llama_cpp_python(self.hass.config.config_dir, raise_on_error=True)
                 validate_llama_cpp_python_installation()
@@ -398,11 +404,14 @@ class LlamaCppClient(LocalLLMClient):
                 tools = get_oai_formatted_tools(llm_api, self._async_get_all_exposed_domains())
 
             model_name = entity_options.get(CONF_CHAT_MODEL, "")
-            temperature = entity_options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
-            top_k = int(entity_options.get(CONF_TOP_K, DEFAULT_TOP_K))
-            top_p = entity_options.get(CONF_TOP_P, DEFAULT_TOP_P)
-            min_p = entity_options.get(CONF_MIN_P, DEFAULT_MIN_P)
-            typical_p = entity_options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)
+            use_server_sampling_defaults = entity_options.get(
+                CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS
+            )
+            sampling_params = {
+                key: entity_options[key]
+                for key in (CONF_TEMPERATURE, CONF_TOP_K, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P)
+                if not use_server_sampling_defaults and entity_options.get(key) is not None
+            }
             grammar = self.grammars.get(model_name) if entity_options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR) else None
 
             _LOGGER.debug("Priming model cache via chat completion API...")
@@ -412,11 +421,7 @@ class LlamaCppClient(LocalLLMClient):
                 self.models[model_name].create_chat_completion(
                     messages,
                     tools=tools if tools is not None else [],
-                    temperature=temperature,
-                    top_k=top_k,
-                    top_p=top_p,
-                    min_p=min_p,
-                    typical_p=typical_p,
+                    **sampling_params,
                     max_tokens=1,
                     grammar=grammar,
                     stream=False,
@@ -456,11 +461,6 @@ class LlamaCppClient(LocalLLMClient):
         """Async generator that yields TextGenerationResult as tokens are produced."""
         model_name = entity_options.get(CONF_CHAT_MODEL, "")
         max_tokens = entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
-        temperature = entity_options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
-        top_k = int(entity_options.get(CONF_TOP_K, DEFAULT_TOP_K))
-        top_p = entity_options.get(CONF_TOP_P, DEFAULT_TOP_P)
-        min_p = entity_options.get(CONF_MIN_P, DEFAULT_MIN_P)
-        typical_p = entity_options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)
         grammar = self.grammars.get(model_name) if entity_options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR) else None
         enable_legacy_tool_calling = entity_options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
         tool_response_as_string = entity_options.get(CONF_TOOL_RESPONSE_AS_STRING, DEFAULT_TOOL_RESPONSE_AS_STRING)
@@ -483,15 +483,16 @@ class LlamaCppClient(LocalLLMClient):
             }
 
         use_server_sampling_defaults = entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS)
+        sampling_params = {
+            key: entity_options[key]
+            for key in (CONF_TEMPERATURE, CONF_TOP_K, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P)
+            if not use_server_sampling_defaults and entity_options.get(key) is not None
+        }
         try:
             chat_completion = self.models[model_name].create_chat_completion(
                 messages,
                 tools=tools if tools is not None else [],
-                temperature=temperature if not use_server_sampling_defaults else None,
-                top_k=top_k if not use_server_sampling_defaults else None,
-                top_p=top_p if not use_server_sampling_defaults else None,
-                min_p=min_p if not use_server_sampling_defaults else None,
-                typical_p=typical_p if not use_server_sampling_defaults else None,
+                **sampling_params,
                 max_tokens=max_tokens,
                 grammar=grammar,
                 stream=True,
@@ -502,11 +503,7 @@ class LlamaCppClient(LocalLLMClient):
             _LOGGER.error("Llama.cpp API error during streaming generation: params=%s, error=%s", {
                 "messages": len(messages),
                 "tools": len(tools) if tools else 0,
-                "temperature": temperature,
-                "top_k": top_k,
-                "top_p": top_p,
-                "min_p": min_p,
-                "typical_p": typical_p,
+                **sampling_params,
                 "max_tokens": max_tokens,
                 "response_format": response_format,
                 "has_grammar": bool(grammar),
@@ -542,11 +539,6 @@ class LlamaCppClient(LocalLLMClient):
     ) -> TextGenerationResult:
         model_name = entity_options.get(CONF_CHAT_MODEL, "")
         max_tokens = entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
-        temperature = entity_options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
-        top_k = int(entity_options.get(CONF_TOP_K, DEFAULT_TOP_K))
-        top_p = entity_options.get(CONF_TOP_P, DEFAULT_TOP_P)
-        min_p = entity_options.get(CONF_MIN_P, DEFAULT_MIN_P)
-        typical_p = entity_options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)
         grammar = self.grammars.get(model_name) if entity_options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR) else None
         enable_legacy_tool_calling = entity_options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
         tool_response_as_string = entity_options.get(CONF_TOOL_RESPONSE_AS_STRING, DEFAULT_TOOL_RESPONSE_AS_STRING)
@@ -557,6 +549,15 @@ class LlamaCppClient(LocalLLMClient):
         tools = None
         if llm_api and not enable_legacy_tool_calling:
             tools = get_oai_formatted_tools(llm_api, self._async_get_all_exposed_domains())
+
+        use_server_sampling_defaults = entity_options.get(
+            CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS
+        )
+        sampling_params = {
+            key: entity_options[key]
+            for key in (CONF_TEMPERATURE, CONF_TOP_K, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P)
+            if not use_server_sampling_defaults and entity_options.get(key) is not None
+        }
 
         response_json_schema = entity_options.get(CONF_RESPONSE_JSON_SCHEMA)
         response_format: Optional[ChatCompletionRequestResponseFormat] = None
@@ -570,11 +571,7 @@ class LlamaCppClient(LocalLLMClient):
             response = self.models[model_name].create_chat_completion(
                 messages,
                 tools=tools if tools is not None else [],
-                temperature=temperature,
-                top_k=top_k,
-                top_p=top_p,
-                min_p=min_p,
-                typical_p=typical_p,
+                **sampling_params,
                 max_tokens=max_tokens,
                 grammar=grammar,
                 stream=False,
@@ -584,11 +581,7 @@ class LlamaCppClient(LocalLLMClient):
             _LOGGER.error("Llama.cpp API error during generation: params=%s, error=%s", {
                 "messages": len(messages),
                 "tools": len(tools) if tools else 0,
-                "temperature": temperature,
-                "top_k": top_k,
-                "top_p": top_p,
-                "min_p": min_p,
-                "typical_p": typical_p,
+                **sampling_params,
                 "max_tokens": max_tokens,
                 "response_format": response_format,
                 "has_grammar": bool(grammar),
