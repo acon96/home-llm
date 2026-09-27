@@ -363,5 +363,5 @@ def option_overrides(backend_type: str) -> dict[str, Any]:
 
 INTEGRATION_VERSION = "0.4.4"
 # Upstream repository that prebuilt llama-cpp-python wheels are sourced from
-LLAMA_CPP_PYTHON_WHEEL_REPO = "abetlen/llama-cpp-python"
-EMBEDDED_LLAMA_CPP_PYTHON_VERSION = "0.3.35"
+LLAMA_CPP_PYTHON_WHEEL_REPO = "acon96/llama-cpp-python"
+EMBEDDED_LLAMA_CPP_PYTHON_VERSION = "0.3.35+homellm"

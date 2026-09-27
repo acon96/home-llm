@@ -151,6 +151,19 @@ def test_install_llama_cpp_python_specific_version(monkeypatch):
     assert calls[0][1]["reinstall"] is True
 
 
+def test_install_llama_cpp_python_specific_forked_version(monkeypatch):
+    monkeypatch.setattr(utils.platform, "machine", lambda: "arm64")
+    monkeypatch.setattr(utils.platform, "libc_ver", lambda: ("glibc", "2.36"))
+    calls = _mock_install(monkeypatch, [(True, None)])
+
+    assert install_llama_cpp_python("/tmp/fake-config", True, "0.3.35+homellm") is True
+    expected_url = (
+        f"https://github.com/{LLAMA_CPP_PYTHON_WHEEL_REPO}/releases/download/0.3.35"
+        "/llama_cpp_python-0.3.35+homellm-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl"
+    )
+    assert calls[0][0] == expected_url
+
+
 def test_install_llama_cpp_python_local_wheel(monkeypatch):
     monkeypatch.setattr(utils.platform, "machine", lambda: "arm64")
     monkeypatch.setattr(utils.platform, "libc_ver", lambda: ("musl", "1"))
@@ -193,9 +206,11 @@ def _mock_releases(monkeypatch, releases, status=200):
     class FakeSession:
         def __init__(self):
             self.url = None
+            self.params = None
 
         def get(self, url, **kwargs):
             self.url = url
+            self.params = kwargs.get("params")
             return FakeResponse()
 
     session = FakeSession()
@@ -223,6 +238,11 @@ def _musl_aarch64_release_payload():
         _release("v0.3.33", [
             "llama_cpp_python-0.3.33-py3-none-musllinux_1_2_aarch64.whl",
         ]),
+        # Local-version fork builds are identified by their artifact version, not
+        # by the release tag (which may omit the local identifier).
+        _release("0.3.35", [
+            "llama_cpp_python-0.3.35+homellm-py3-none-musllinux_1_2_aarch64.whl",
+        ]),
     ]
 
 
@@ -237,8 +257,9 @@ async def test_get_available_llama_cpp_versions_lists_installable_upstream_relea
     assert session.url.startswith(
         f"https://api.github.com/repos/{LLAMA_CPP_PYTHON_WHEEL_REPO}/releases"
     )
+    assert session.params == {"per_page": 50, "page": 1}
     remote = [version for version, is_local in versions if not is_local]
-    assert remote == ["0.3.35", "0.3.33"]
+    assert remote == ["0.3.35+homellm", "0.3.35", "0.3.33"]
 
 
 @pytest.mark.asyncio

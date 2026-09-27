@@ -325,35 +325,53 @@ def get_potential_wheels(folder: str, platform_suffix: str) -> List[str]:
     return sorted([ path for path in os.listdir(folder) if path.endswith(f"{platform_suffix}.whl") ], reverse=True)
 
 def _version_sort_key(version: str) -> tuple:
-    return tuple(int(part) for part in re.findall(r"\d+", version))
+    base_version, _, local_version = version.partition("+")
+    return (
+        tuple(int(part) for part in re.findall(r"\d+", base_version)),
+        bool(local_version),
+        version,
+    )
 
 async def get_available_llama_cpp_versions(hass: HomeAssistant) -> List[Tuple[str, bool]]:
     """List llama-cpp-python versions installable from the upstream GitHub releases
     (i.e. they ship a prebuilt wheel for this platform) plus any wheels placed in the
     integration directory."""
-    releases_url = f"https://api.github.com/repos/{LLAMA_CPP_PYTHON_WHEEL_REPO}/releases?per_page=30"
+    releases_url = f"https://api.github.com/repos/{LLAMA_CPP_PYTHON_WHEEL_REPO}/releases"
     try:
         session = aiohttp_client.async_get_clientsession(hass)
-        async with session.get(releases_url, headers={"Accept": "application/vnd.github+json"}) as resp:
+        async with session.get(
+            releases_url,
+            params={"per_page": 10, "page": 1},
+            headers={"Accept": "application/vnd.github+json"},
+        ) as resp:
             if resp.status != 200:
                 raise Exception(f"Failed to fetch available versions from GitHub (HTTP {resp.status})")
             releases = await resp.json()
 
+        _LOGGER.debug("Fetched %d releases from GitHub", len(releases))
+
         # get_libc() (via platform.libc_ver()) does a blocking file read,
         # so keep it out of the event loop
         wanted_suffixes = set(await hass.async_add_executor_job(get_upstream_wheel_suffixes))
-        remote = []
+        remote_versions = set()
         for release in releases:
-            # only consider plain version releases; suffixed ones (e.g. v0.3.35-cu124)
-            # only ship GPU builds
-            match = re.match(r"^v(\d+\.\d+\.\d+)$", release.get("tag_name", ""))
-            if not match:
-                continue
-            version = match.group(1)
-            assets = {asset.get("name", "") for asset in release.get("assets", [])}
-            if any(f"llama_cpp_python-{version}-{suffix}.whl" in assets for suffix in wanted_suffixes):
-                remote.append((version, False))
+            for asset in release.get("assets", []):
+                wheel_name = asset.get("name", "")
+                if not wheel_name.startswith("llama_cpp_python-"):
+                    continue
+                for suffix in wanted_suffixes:
+                    wheel_suffix = f"-{suffix}.whl"
+                    if wheel_name.endswith(wheel_suffix):
+                        version = wheel_name[
+                            len("llama_cpp_python-") : -len(wheel_suffix)
+                        ]
+                        if version:
+                            remote_versions.add(version)
+                        break
+        remote = [(version, False) for version in remote_versions]
         remote.sort(key=lambda item: _version_sort_key(item[0]), reverse=True)
+
+        _LOGGER.debug("Available versions from GitHub: %s", [v[0] for v in remote])
     except Exception as ex:
         _LOGGER.warning(f"Error fetching available versions from GitHub: {repr(ex)}")
         remote = [(EMBEDDED_LLAMA_CPP_PYTHON_VERSION, False)]
@@ -444,8 +462,17 @@ def install_llama_cpp_python(
         # prebuilt wheels are sourced from the upstream llama-cpp-python releases.
         # release tags are prefixed with "v" (e.g. v0.3.35) and every platform has
         # its own wheel (musllinux for HAOS/container, manylinux for glibc)
+        # Forked builds use PEP 440 local versions (e.g. 0.3.35+homellm), while
+        # their release tag may be the base version without the usual "v" prefix.
+        # Keep the full version in the artifact filename, and try both tag styles.
+        if "+" in specific_version:
+            release_version = specific_version.split("+", 1)[0]
+            release_tags = (release_version, f"v{release_version}")
+        else:
+            release_tags = (f"v{specific_version}",)
         wheel_locations = [
-            f"https://github.com/{LLAMA_CPP_PYTHON_WHEEL_REPO}/releases/download/v{specific_version}/llama_cpp_python-{specific_version}-{suffix}.whl"
+            f"https://github.com/{LLAMA_CPP_PYTHON_WHEEL_REPO}/releases/download/{tag}/llama_cpp_python-{specific_version}-{suffix}.whl"
+            for tag in release_tags
             for suffix in get_upstream_wheel_suffixes()
         ]
 
