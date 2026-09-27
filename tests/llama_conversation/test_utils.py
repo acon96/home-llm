@@ -10,6 +10,7 @@ Covers the switch to upstream (abetlen/llama-cpp-python) release wheels:
 
 import multiprocessing
 import os
+import sys
 
 import pytest
 
@@ -279,3 +280,22 @@ async def test_validate_llama_cpp_python_installation_spawns_and_passes(monkeypa
     # and report success for a not-installed (or importable) llama_cpp
     monkeypatch.setenv("PYTHONPATH", REPO_ROOT + os.pathsep + os.environ.get("PYTHONPATH", ""))
     validate_llama_cpp_python_installation()
+
+
+@pytest.mark.asyncio
+async def test_validate_llama_cpp_python_installation_config_dir_not_on_sys_path(hass):
+    # HA >= 2026.9 launches python with -P (home-assistant/core#180967): the
+    # config dir is no longer on the parent's sys.path, and a spawned child
+    # inherits exactly that path with a fresh sys.modules. The config dir must
+    # be mounted in time for start() to snapshot it into the child, or the
+    # child dies with ModuleNotFoundError: No module named 'custom_components'
+    # and the validation fails with a bare exit code.
+    while REPO_ROOT in sys.path:
+        sys.path.remove(REPO_ROOT)
+    try:
+        validate_llama_cpp_python_installation()
+        # the function must not leave the config dir mounted
+        assert REPO_ROOT not in sys.path
+    finally:
+        if REPO_ROOT not in sys.path:
+            sys.path.insert(0, REPO_ROOT)

@@ -1,3 +1,4 @@
+from contextlib import suppress
 from functools import partial
 import time
 import logging
@@ -222,6 +223,14 @@ def _load_extension(conn):
         return
     conn.send("ok")
 
+def _get_config_dir() -> str:
+    """Return the config directory this integration is installed under.
+
+    Custom integrations always live at ``{config_dir}/custom_components/{domain}``,
+    and this file is ``{config_dir}/custom_components/llama_conversation/utils.py``.
+    """
+    return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 def validate_llama_cpp_python_installation():
     """
     Spawns another process and tries to import llama.cpp to avoid crashing the main process.
@@ -229,9 +238,30 @@ def validate_llama_cpp_python_installation():
     instead of a bare exit code.
     """
     mp_ctx = multiprocessing.get_context('spawn') # required because of aio
-    parent_conn, child_conn = mp_ctx.Pipe()
-    process = mp_ctx.Process(target=_load_extension, args=(child_conn,))
-    process.start()
+    # A spawned child gets a fresh sys.modules but inherits the parent's sys.path
+    # (spawn snapshots it during start()). It re-imports _load_extension from
+    # custom_components.llama_conversation.utils, which only resolves if the
+    # config dir is on that path. HA <= 2026.8 left the config dir on sys.path
+    # for the whole process (the container ran `python -m homeassistant` from
+    # it, which puts the working directory on the path); HA >= 2026.9 launches
+    # python with -P (home-assistant/core#180967), so it no longer does, and
+    # the child died with ModuleNotFoundError: No module named
+    # 'custom_components'. Mount the config dir just long enough for start()
+    # to snapshot it into the child, then unmount it the same way
+    # homeassistant.loader does.
+    config_dir = _get_config_dir()
+    was_mounted = config_dir in sys.path
+    if not was_mounted:
+        sys.path.insert(0, config_dir)
+    try:
+        parent_conn, child_conn = mp_ctx.Pipe()
+        process = mp_ctx.Process(target=_load_extension, args=(child_conn,))
+        process.start()
+    finally:
+        if not was_mounted:
+            with suppress(ValueError):
+                sys.path.remove(config_dir)
+            sys.path_importer_cache.pop(config_dir, None)
     child_conn.close()
     try:
         result = parent_conn.recv()
