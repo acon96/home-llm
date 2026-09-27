@@ -88,7 +88,7 @@ NO_SYSTEM_PROMPT_EXTRAS = """
 <user_instruction>:"""
 DEFAULT_PROMPT = DEFAULT_PROMPT_BASE + ICL_EXTRAS
 CONF_CHAT_MODEL = "huggingface_model"
-DEFAULT_CHAT_MODEL = "acon96/Home-3B-v3-GGUF"
+DEFAULT_CHAT_MODEL = "acon96/Home-Llama-3.2-3B"
 RECOMMENDED_CHAT_MODELS = [ 
     "acon96/Home-FunctionGemma-270m",
     "acon96/Home-Llama-3.2-3B",
@@ -362,7 +362,6 @@ def option_overrides(backend_type: str) -> dict[str, Any]:
         },
     }
 
-INTEGRATION_VERSION = "0.4.4"
 # Upstream repository that prebuilt llama-cpp-python wheels are sourced from
 LLAMA_CPP_PYTHON_WHEEL_REPO = "acon96/llama-cpp-python"
 EMBEDDED_LLAMA_CPP_PYTHON_VERSION = "0.3.35+homellm"
