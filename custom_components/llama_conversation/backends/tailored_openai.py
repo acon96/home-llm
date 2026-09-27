@@ -25,9 +25,6 @@ from custom_components.llama_conversation.const import (
     CONF_CONTEXT_LENGTH,
     CONF_API_PATH,
     DEFAULT_MAX_TOKENS,
-    DEFAULT_TOP_K,
-    DEFAULT_MIN_P,
-    DEFAULT_TYPICAL_P,
     DEFAULT_USE_GBNF_GRAMMAR,
     DEFAULT_GBNF_GRAMMAR_FILE,
     DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
@@ -108,9 +105,9 @@ class TextGenerationWebuiClient(GenericOpenAIAPIClient):
         request_params["truncation_length"] = entity_options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
         use_server_sampling_defaults = entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS)
         if not use_server_sampling_defaults:
-            request_params["top_k"] = entity_options.get(CONF_TOP_K, DEFAULT_TOP_K)
-            request_params["min_p"] = entity_options.get(CONF_MIN_P, DEFAULT_MIN_P)
-            request_params["typical_p"] = entity_options.get(CONF_TYPICAL_P, DEFAULT_TYPICAL_P)
+            for key in (CONF_TOP_K, CONF_MIN_P, CONF_TYPICAL_P):
+                if entity_options.get(key) is not None:
+                    request_params[key] = entity_options[key]
 
         return endpoint, request_params
     
@@ -134,13 +131,12 @@ class LlamaCppServerClient(GenericOpenAIAPIClient):
         return f"Llama.cpp Server at '{format_url(hostname=host, port=port, ssl=ssl, path=path)}'"
     
     def _chat_completion_params(self, entity_options: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
-        top_k = int(entity_options.get(CONF_TOP_K, DEFAULT_TOP_K))
         max_tokens = int(entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS))
         endpoint, request_params = super()._chat_completion_params(entity_options)
 
         use_server_sampling_defaults = entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS)
-        if not use_server_sampling_defaults:
-            request_params["top_k"] = top_k
+        if not use_server_sampling_defaults and entity_options.get(CONF_TOP_K) is not None:
+            request_params["top_k"] = int(entity_options[CONF_TOP_K])
         request_params["max_tokens"] = max_tokens
 
         if entity_options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):

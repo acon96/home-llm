@@ -113,11 +113,6 @@ from .const import (
     AREA_PROMPT,
     USER_INSTRUCTION,
     DEFAULT_PROMPT,
-    DEFAULT_TEMPERATURE,
-    DEFAULT_TOP_K,
-    DEFAULT_TOP_P,
-    DEFAULT_MIN_P,
-    DEFAULT_TYPICAL_P,
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_ENABLE_STREAMING,
     DEFAULT_USE_SERVER_SAMPLING_DEFAULTS,
@@ -136,6 +131,7 @@ from .const import (
     DEFAULT_REFRESH_SYSTEM_PROMPT,
     DEFAULT_REMEMBER_CONVERSATION,
     DEFAULT_REMEMBER_NUM_INTERACTIONS,
+    DEFAULT_REMEMBER_CONVERSATION_TIME_MINUTES,
     DEFAULT_MAX_TOOL_CALL_ITERATIONS,
     DEFAULT_PROMPT_CACHING_ENABLED,
     DEFAULT_PROMPT_CACHING_INTERVAL,
@@ -634,8 +630,7 @@ def local_llama_config_option_schema(
     result: dict = {
         vol.Optional(
             CONF_TEMPERATURE,
-            description={"suggested_value": options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)},
-            default=options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE),
+            description={"suggested_value": options[CONF_TEMPERATURE]} if CONF_TEMPERATURE in options else {},
         ): NumberSelector(NumberSelectorConfig(min=0.0, max=2.0, step=0.05, mode=NumberSelectorMode.BOX)),
         vol.Required(
             CONF_ENABLE_STREAMING,
@@ -791,25 +786,21 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options.get(CONF_MAX_TOKENS)},
                 default=DEFAULT_MAX_TOKENS,
             ): NumberSelector(NumberSelectorConfig(min=1, max=8192, step=1)),
-            vol.Required(
+            vol.Optional(
                 CONF_TOP_K,
-                description={"suggested_value": options.get(CONF_TOP_K)},
-                default=DEFAULT_TOP_K,
+                description={"suggested_value": options[CONF_TOP_K]} if CONF_TOP_K in options else {},
             ): NumberSelector(NumberSelectorConfig(min=1, max=256, step=1)),
-            vol.Required(
+            vol.Optional(
                 CONF_TOP_P,
-                description={"suggested_value": options.get(CONF_TOP_P)},
-                default=DEFAULT_TOP_P,
+                description={"suggested_value": options[CONF_TOP_P]} if CONF_TOP_P in options else {},
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Required(
+            vol.Optional(
                 CONF_MIN_P,
-                description={"suggested_value": options.get(CONF_MIN_P)},
-                default=DEFAULT_MIN_P,
+                description={"suggested_value": options[CONF_MIN_P]} if CONF_MIN_P in options else {},
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Required(
+            vol.Optional(
                 CONF_TYPICAL_P,
-                description={"suggested_value": options.get(CONF_TYPICAL_P)},
-                default=DEFAULT_TYPICAL_P,
+                description={"suggested_value": options[CONF_TYPICAL_P]} if CONF_TYPICAL_P in options else {},
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
             # TODO: add rope_scaling_type
             vol.Required(
@@ -860,25 +851,21 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options.get(CONF_CONTEXT_LENGTH)},
                 default=DEFAULT_CONTEXT_LENGTH,
             ): NumberSelector(NumberSelectorConfig(min=512, max=1_048_576, step=512)),
-            vol.Required(
+            vol.Optional(
                 CONF_TOP_K,
-                description={"suggested_value": options.get(CONF_TOP_K)},
-                default=DEFAULT_TOP_K,
+                description={"suggested_value": options[CONF_TOP_K]} if CONF_TOP_K in options else {},
             ): NumberSelector(NumberSelectorConfig(min=1, max=256, step=1)),
-            vol.Required(
+            vol.Optional(
                 CONF_TOP_P,
-                description={"suggested_value": options.get(CONF_TOP_P)},
-                default=DEFAULT_TOP_P,
+                description={"suggested_value": options[CONF_TOP_P]} if CONF_TOP_P in options else {},
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Required(
+            vol.Optional(
                 CONF_MIN_P,
-                description={"suggested_value": options.get(CONF_MIN_P)},
-                default=DEFAULT_MIN_P,
+                description={"suggested_value": options[CONF_MIN_P]} if CONF_MIN_P in options else {},
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Required(
+            vol.Optional(
                 CONF_TYPICAL_P,
-                description={"suggested_value": options.get(CONF_TYPICAL_P)},
-                default=DEFAULT_TYPICAL_P,
+                description={"suggested_value": options[CONF_TYPICAL_P]} if CONF_TYPICAL_P in options else {},
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
             vol.Required(
                 CONF_REQUEST_TIMEOUT,
@@ -902,10 +889,9 @@ def local_llama_config_option_schema(
         })
     elif backend_type in BACKEND_TYPE_GENERIC_OPENAI:
         result.update({
-            vol.Required(
+            vol.Optional(
                 CONF_TOP_P,
-                description={"suggested_value": options.get(CONF_TOP_P)},
-                default=DEFAULT_TOP_P,
+                description={"suggested_value": options[CONF_TOP_P]} if CONF_TOP_P in options else {},
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
             vol.Required(
                 CONF_REQUEST_TIMEOUT,
@@ -914,22 +900,24 @@ def local_llama_config_option_schema(
             ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
         })
     elif backend_type in BACKEND_TYPE_GENERIC_OPENAI_RESPONSES:
-        del result[CONF_REMEMBER_NUM_INTERACTIONS]
+        result = {
+            key: value
+            for key, value in result.items()
+            if getattr(key, "schema", None) != CONF_REMEMBER_NUM_INTERACTIONS
+        }
         result.update({
             vol.Required(
                 CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
                 description={"suggested_value": options.get(CONF_REMEMBER_CONVERSATION_TIME_MINUTES)},
-                default=DEFAULT_TOP_P,
+                default=DEFAULT_REMEMBER_CONVERSATION_TIME_MINUTES,
             ): NumberSelector(NumberSelectorConfig(min=0, max=180, step=0.5, unit_of_measurement=UnitOfTime.MINUTES, mode=NumberSelectorMode.BOX)),
-            vol.Required(
+            vol.Optional(
                 CONF_TEMPERATURE,
-                description={"suggested_value": options.get(CONF_TEMPERATURE)},
-                default=DEFAULT_TEMPERATURE,
+                description={"suggested_value": options[CONF_TEMPERATURE]} if CONF_TEMPERATURE in options else {},
             ): NumberSelector(NumberSelectorConfig(min=0, max=3, step=0.05)),
-            vol.Required(
+            vol.Optional(
                 CONF_TOP_P,
-                description={"suggested_value": options.get(CONF_TOP_P)},
-                default=DEFAULT_TOP_P,
+                description={"suggested_value": options[CONF_TOP_P]} if CONF_TOP_P in options else {},
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
             vol.Required(
                 CONF_REQUEST_TIMEOUT,
@@ -944,15 +932,13 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options.get(CONF_MAX_TOKENS)},
                 default=DEFAULT_MAX_TOKENS,
             ): NumberSelector(NumberSelectorConfig(min=1, max=8192, step=1)),
-            vol.Required(
+            vol.Optional(
                 CONF_TOP_K,
-                description={"suggested_value": options.get(CONF_TOP_K)},
-                default=DEFAULT_TOP_K,
+                description={"suggested_value": options[CONF_TOP_K]} if CONF_TOP_K in options else {},
             ): NumberSelector(NumberSelectorConfig(min=1, max=256, step=1)),
-            vol.Required(
+            vol.Optional(
                 CONF_TOP_P,
-                description={"suggested_value": options.get(CONF_TOP_P)},
-                default=DEFAULT_TOP_P,
+                description={"suggested_value": options[CONF_TOP_P]} if CONF_TOP_P in options else {},
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
             vol.Required(
                 CONF_USE_GBNF_GRAMMAR,
@@ -982,20 +968,17 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options.get(CONF_CONTEXT_LENGTH)},
                 default=DEFAULT_CONTEXT_LENGTH,
             ): NumberSelector(NumberSelectorConfig(min=512, max=1_048_576, step=512)),
-            vol.Required(
+            vol.Optional(
                 CONF_TOP_K,
-                description={"suggested_value": options.get(CONF_TOP_K)},
-                default=DEFAULT_TOP_K,
+                description={"suggested_value": options[CONF_TOP_K]} if CONF_TOP_K in options else {},
             ): NumberSelector(NumberSelectorConfig(min=1, max=256, step=1)),
-            vol.Required(
+            vol.Optional(
                 CONF_TOP_P,
-                description={"suggested_value": options.get(CONF_TOP_P)},
-                default=DEFAULT_TOP_P,
+                description={"suggested_value": options[CONF_TOP_P]} if CONF_TOP_P in options else {},
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Required(
+            vol.Optional(
                 CONF_TYPICAL_P,
-                description={"suggested_value": options.get(CONF_TYPICAL_P)},
-                default=DEFAULT_TYPICAL_P,
+                description={"suggested_value": options[CONF_TYPICAL_P]} if CONF_TYPICAL_P in options else {},
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
             vol.Required(
                 CONF_OLLAMA_JSON_MODE,
@@ -1020,15 +1003,13 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options.get(CONF_MAX_TOKENS)},
                 default=DEFAULT_MAX_TOKENS,
             ): NumberSelector(NumberSelectorConfig(min=1, max=8192, step=1)),
-            vol.Required(
+            vol.Optional(
                 CONF_TOP_K,
-                description={"suggested_value": options.get(CONF_TOP_K)},
-                default=DEFAULT_TOP_K,
+                description={"suggested_value": options[CONF_TOP_K]} if CONF_TOP_K in options else {},
             ): NumberSelector(NumberSelectorConfig(min=1, max=256, step=1)),
-            vol.Required(
+            vol.Optional(
                 CONF_TOP_P,
-                description={"suggested_value": options.get(CONF_TOP_P)},
-                default=DEFAULT_TOP_P,
+                description={"suggested_value": options[CONF_TOP_P]} if CONF_TOP_P in options else {},
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
             vol.Required(
                 CONF_REQUEST_TIMEOUT,
@@ -1314,6 +1295,9 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
                 try:
                     # validate input
                     schema(user_input)
+                    for key in (CONF_TEMPERATURE, CONF_TOP_K, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P):
+                        if key not in user_input:
+                            self.model_config.pop(key, None)
                     self.model_config.update(user_input)
                     
                     return await self.async_step_finish()

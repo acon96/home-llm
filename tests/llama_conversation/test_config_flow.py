@@ -3,6 +3,7 @@
 import asyncio
 
 import pytest
+import voluptuous as vol
 
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -16,6 +17,8 @@ from custom_components.llama_conversation.const import (
     BACKEND_TYPE_LLAMA_CPP,
     BACKEND_TYPE_TEXT_GEN_WEBUI,
     BACKEND_TYPE_GENERIC_OPENAI,
+    BACKEND_TYPE_GENERIC_OPENAI_RESPONSES,
+    BACKEND_TYPE_ANTHROPIC,
     CONF_BACKEND_TYPE,
     CONF_SELECTED_LANGUAGE,
     BACKEND_TYPE_LLAMA_CPP_SERVER,
@@ -45,6 +48,7 @@ from custom_components.llama_conversation.const import (
     CONF_TOP_P,
     CONF_TYPICAL_P,
     CONF_TEMPERATURE,
+    CONF_USE_SERVER_SAMPLING_DEFAULTS,
     DEFAULT_CONTEXT_LENGTH,
     DEFAULT_ENABLE_STREAMING,
     DEFAULT_LLAMACPP_BATCH_SIZE,
@@ -63,6 +67,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
     DEFAULT_TYPICAL_P,
+    DEFAULT_USE_SERVER_SAMPLING_DEFAULTS,
     DOMAIN,
 )
 
@@ -147,6 +152,34 @@ def test_schema_llama_cpp_defaults_and_overrides(hass: HomeAssistant):
     assert _get_suggested(schema, CONF_TOOL_CALL_PREFIX) == "<tc>"
 
 
+def test_sampling_parameters_are_optional_and_unset_by_default(hass: HomeAssistant):
+    for backend in (
+        BACKEND_TYPE_LLAMA_CPP,
+        BACKEND_TYPE_TEXT_GEN_WEBUI,
+        BACKEND_TYPE_GENERIC_OPENAI,
+        BACKEND_TYPE_GENERIC_OPENAI_RESPONSES,
+        BACKEND_TYPE_LLAMA_CPP_SERVER,
+        BACKEND_TYPE_OLLAMA,
+        BACKEND_TYPE_ANTHROPIC,
+    ):
+        schema = _schema(hass, backend)
+        sampling_keys = {
+            getattr(key, "schema", None): key
+            for key in schema
+            if getattr(key, "schema", None)
+            in {CONF_TEMPERATURE, CONF_TOP_K, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P}
+        }
+        assert sampling_keys
+        assert all(not isinstance(key, vol.Required) for key in sampling_keys.values())
+        assert all(
+            key.default() is vol.UNDEFINED if callable(key.default) else key.default is vol.UNDEFINED
+            for key in sampling_keys.values()
+        )
+
+        defaults = {key.schema: key.default() if callable(key.default) else key.default for key in schema}
+        assert defaults[CONF_USE_SERVER_SAMPLING_DEFAULTS] is DEFAULT_USE_SERVER_SAMPLING_DEFAULTS
+
+
 def test_schema_text_gen_webui_options_preserved(hass: HomeAssistant):
     overrides = {
         CONF_REQUEST_TIMEOUT: 123,
@@ -172,7 +205,7 @@ def test_schema_generic_openai_options_preserved(hass: HomeAssistant):
     schema = _schema(hass, BACKEND_TYPE_GENERIC_OPENAI, overrides)
 
     assert {CONF_TOP_P, CONF_REQUEST_TIMEOUT}.issubset({getattr(k, "schema", None) for k in schema})
-    assert _get_default(schema, CONF_TOP_P) == DEFAULT_TOP_P
+    assert _get_default(schema, CONF_TOP_P) is vol.UNDEFINED
     assert _get_default(schema, CONF_REQUEST_TIMEOUT) == DEFAULT_REQUEST_TIMEOUT
     assert _get_default(schema, CONF_ENABLE_STREAMING) is DEFAULT_ENABLE_STREAMING
     assert _get_suggested(schema, CONF_TOP_P) == 0.25
@@ -201,7 +234,7 @@ def test_schema_ollama_defaults_and_overrides(hass: HomeAssistant):
     assert _get_default(schema, CONF_OLLAMA_KEEP_ALIVE_MIN) == DEFAULT_OLLAMA_KEEP_ALIVE_MIN
     assert _get_default(schema, CONF_OLLAMA_JSON_MODE) is DEFAULT_OLLAMA_JSON_MODE
     assert _get_default(schema, CONF_CONTEXT_LENGTH) == DEFAULT_CONTEXT_LENGTH
-    assert _get_default(schema, CONF_TOP_K) == DEFAULT_TOP_K
+    assert _get_default(schema, CONF_TOP_K) is vol.UNDEFINED
     assert _get_suggested(schema, CONF_OLLAMA_KEEP_ALIVE_MIN) == 5
     assert _get_suggested(schema, CONF_CONTEXT_LENGTH) == 1024
     assert _get_suggested(schema, CONF_TOP_K) == 7

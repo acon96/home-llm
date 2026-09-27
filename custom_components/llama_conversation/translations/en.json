@@ -66,7 +66,7 @@
                         "downloaded_model_file": "Local file name",
                         "downloaded_model_quantization": "Downloaded model quantization"
                     },
-                    "description": "Select a model to use. \n\n**Models supported out of the box:**\n1. [Home LLM](https://huggingface.co/collections/acon96/home-llm-6618762669211da33bb22c5a): Home 3B & Home 1B\n2. Mistral: [Mistral 7B](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2) or [Mixtral 8x7B](https://huggingface.co/mistralai/Mixtral-8x7B-Instruct-v0.1)\n3. Llama 3: [8B](https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct) and [70B](https://huggingface.co/meta-llama/Meta-Llama-3-70B-Instruct)",
+                    "description": "Select a model to use.\n\nIf you provide a local model file, it will be used instead of downloading from HuggingFace.\n\n**Models supported out of the box:**\n1. [Home LLM](https://huggingface.co/collections/acon96/home-llm-6618762669211da33bb22c5a): Includes models from 270M to 4B\n2. [Qwen 3.5 Family](https://huggingface.co/collections/Qwen/qwen35): includes models from 800M to 100B+\n3. [LFM 2.5 Family](https://huggingface.co/collections/LiquidAI/lfm25): includes models form 350M to 8B",
                     "title": "Pick Model"
                 },
                 "model_parameters": {
@@ -225,7 +225,7 @@
                         "downloaded_model_file": "Local file name",
                         "downloaded_model_quantization": "Downloaded model quantization"
                     },
-                    "description": "Select a model to use. \n\n**Models supported out of the box:**\n1. [Home LLM](https://huggingface.co/collections/acon96/home-llm-6618762669211da33bb22c5a): Home 3B & Home 1B\n2. Mistral: [Mistral 7B](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2) or [Mixtral 8x7B](https://huggingface.co/mistralai/Mixtral-8x7B-Instruct-v0.1)\n3. Llama 3: [8B](https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct) and [70B](https://huggingface.co/meta-llama/Meta-Llama-3-70B-Instruct)",
+                    "description": "Select a model to use.\n\nIf you provide a local model file, it will be used instead of downloading from HuggingFace.\n\n**Models supported out of the box:**\n1. [Home LLM](https://huggingface.co/collections/acon96/home-llm-6618762669211da33bb22c5a): Includes models from 270M to 4B\n2. [Qwen 3.5 Family](https://huggingface.co/collections/Qwen/qwen35): includes models from 800M to 100B+\n3. [LFM 2.5 Family](https://huggingface.co/collections/LiquidAI/lfm25): includes models form 350M to 8B",
                     "title": "Pick Model"
                 },
                 "model_parameters": {

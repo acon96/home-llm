@@ -31,9 +31,6 @@ from custom_components.llama_conversation.const import (
     CONF_API_PATH,
     CONF_BASE_URL,
     DEFAULT_MAX_TOKENS,
-    DEFAULT_TEMPERATURE,
-    DEFAULT_TOP_P,
-    DEFAULT_TOP_K,
     DEFAULT_USE_SERVER_SAMPLING_DEFAULTS,
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
@@ -303,9 +300,9 @@ class AnthropicAPIClient(LocalLLMClient):
 
         model_name = entity_options.get(CONF_CHAT_MODEL, "")
         max_tokens = int(entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS))
-        temperature = entity_options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
-        top_p = entity_options.get(CONF_TOP_P, DEFAULT_TOP_P)
-        top_k = entity_options.get(CONF_TOP_K, DEFAULT_TOP_K)
+        temperature = entity_options.get(CONF_TEMPERATURE)
+        top_p = entity_options.get(CONF_TOP_P)
+        top_k = entity_options.get(CONF_TOP_K)
         timeout = entity_options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
         enable_legacy_tool_calling = entity_options.get(
             CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING
@@ -432,9 +429,9 @@ class AnthropicAPIClient(LocalLLMClient):
     ) -> TextGenerationResult:
         model_name = entity_options.get(CONF_CHAT_MODEL, "")
         max_tokens = int(entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS))
-        temperature = entity_options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
-        top_p = entity_options.get(CONF_TOP_P, DEFAULT_TOP_P)
-        top_k = entity_options.get(CONF_TOP_K, DEFAULT_TOP_K)
+        temperature = entity_options.get(CONF_TEMPERATURE)
+        top_p = entity_options.get(CONF_TOP_P)
+        top_k = entity_options.get(CONF_TOP_K)
         timeout = entity_options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
         enable_legacy_tool_calling = entity_options.get(
             CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING

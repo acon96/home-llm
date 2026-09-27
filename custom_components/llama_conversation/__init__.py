@@ -225,10 +225,10 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: LocalLLMConfigE
         hass.config_entries.async_update_entry(config_entry, minor_version=2)
 
     if config_entry.version == 3 and config_entry.minor_version == 2:
-        # don't auto enable server default sampling when upgrading because the user might depend on the current settings
+        # Enable server sampler defaults for entries that predate this option.
         new_options = dict(config_entry.options)
         if CONF_USE_SERVER_SAMPLING_DEFAULTS not in new_options:
-            new_options[CONF_USE_SERVER_SAMPLING_DEFAULTS] = False
+            new_options[CONF_USE_SERVER_SAMPLING_DEFAULTS] = True
             hass.config_entries.async_update_entry(
                 config_entry, options=MappingProxyType(new_options)
             )
