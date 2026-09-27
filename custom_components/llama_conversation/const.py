@@ -88,7 +88,7 @@ NO_SYSTEM_PROMPT_EXTRAS = """
 <user_instruction>:"""
 DEFAULT_PROMPT = DEFAULT_PROMPT_BASE + ICL_EXTRAS
 CONF_CHAT_MODEL = "huggingface_model"
-DEFAULT_CHAT_MODEL = "acon96/Home-3B-v3-GGUF"
+DEFAULT_CHAT_MODEL = "acon96/Home-Llama-3.2-3B"
 RECOMMENDED_CHAT_MODELS = [ 
     "acon96/Home-FunctionGemma-270m",
     "acon96/Home-Llama-3.2-3B",
