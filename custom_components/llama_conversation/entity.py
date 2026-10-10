@@ -195,6 +195,7 @@ class LocalLLMClient:
         blocking_result = await self._generate(conv, chat_log.llm_api, agent_id, entity_options)
 
         async def async_iterator():
+            yield conversation.AssistantContentDeltaDict(role="assistant")
             yield conversation.AssistantContentDeltaDict(
                 content=blocking_result.response,
                 tool_calls=blocking_result.tool_calls
@@ -219,6 +220,7 @@ class LocalLLMClient:
         chat_log: conversation.chat_log.ChatLog
     ):
         async def async_iterator():
+            yield conversation.AssistantContentDeltaDict(role="assistant")
             async for input_chunk in result:
                 _LOGGER.debug("Received chunk: %s", input_chunk)
 
