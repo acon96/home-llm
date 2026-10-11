@@ -10,8 +10,6 @@
             "other_existing_local": "Inny model jest już załadowany lokalnie. Proszę go wyładować lub skonfigurować model zdalny.",
             "unknown": "Nieoczekiwany błąd",
             "pip_wheel_error": "Pip zwrócił błąd podczas instalacji pliku wheel! Proszę sprawdzić logi Home Assistant, aby uzyskać więcej szczegółów.",
-            "sys_refresh_caching_enabled": "Aby buforowanie promptów działało, odświeżanie promptu systemowego musi być włączone!",
-            "missing_gbnf_file": "Plik GBNF nie został znaleziony: {filename}",
             "missing_icl_file": "Plik CSV z przykładem nauki w kontekście nie został znaleziony: {filename}"
         },
         "progress": {
@@ -37,11 +35,7 @@
                     "ssl": "Użyj HTTPS",
                     "openai_api_key": "Klucz API",
                     "openai_path": "Ścieżka API",
-                    "openai_validate_model": "Sprawdzić, czy model istnieje?",
-                    "text_generation_webui_admin_key": "Klucz administratora",
-                    "text_generation_webui_preset": "Nazwa ustawienia generacji/postaci",
                     "remote_use_chat_endpoint": "Użyj punktu końcowego uzupełnień chata",
-                    "text_generation_webui_chat_mode": "Tryb czatu",
                     "selected_language": "Język modelu"
                 },
                 "description": "Podaj szczegóły połączenia, aby połączyć się z API, które hostuje model.\n\n**Gotowe modele do zainstalowania:**\n1. [Home LLM](https://huggingface.co/collections/acon96/home-llm-6618762669211da33bb22c5a): Home 3B & Home 1B\n2. Mistral: [Mistral 7B](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2) i [Mixtral 8x7B](https://huggingface.co/mistralai/Mixtral-8x7B-Instruct-v0.1)\n3. Llama 3: [8B](https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct) i [70B](https://huggingface.co/meta-llama/Meta-Llama-3-70B-Instruct)",
@@ -75,19 +69,12 @@
                     "extra_attributes_to_expose": "Dodatkowy atrybut do ujawnienia w kontekście",
                     "enable_flash_attention": "Włącz Flash Attention",
                     "gbnf_grammar": "Włącz GBNF Grammar",
-                    "gbnf_grammar_file": "Nazwa pliku GBNF Grammar",
                     "openai_api_key": "Klucz API",
-                    "text_generation_webui_admin_key": "Klucz administratora",
                     "service_call_regex": "Wyrażenie regularne wywołania usługi",
-                    "refresh_prompt_per_turn": "Odśwież prompt systemowy przy każdej turze",
-                    "remember_conversation": "Pamiętaj rozmowę",
-                    "remember_num_interactions": "Liczba przeszłych interakcji do zapamiętania",
                     "in_context_examples": "Włącz naukę z kontekstu (ICL) przykładów",
                     "in_context_examples_file": "Nazwa pliku CSV z przykładami do nauki z kontekstu",
                     "num_in_context_examples": "Liczba przykładów ICL do wygenerowania",
-                    "text_generation_webui_preset": "Ustawienie generacji/Nazwa postaci",
                     "remote_use_chat_endpoint": "Użyj punktu końcowego chat completions",
-                    "text_generation_webui_chat_mode": "Tryb czatu",
                     "prompt_caching": "Włącz buforowanie promptów",
                     "prompt_caching_interval": "Najkrótszy interwał odświeżania buforowania promptów (sec)",
                     "context_length": "Długość kontekstu",
@@ -132,19 +119,12 @@
                     "extra_attributes_to_expose": "Dodatkowy atrybut do ujawnienia w kontekście",
                     "enable_flash_attention": "Włącz Flash Attention",
                     "gbnf_grammar": "Włącz GBNF Grammar",
-                    "gbnf_grammar_file": "Nazwa pliku GBNF Grammar",
                     "openai_api_key": "Klucz API",
-                    "text_generation_webui_admin_key": "Klucz administratora",
                     "service_call_regex": "Wyrażenie regularne wywołania usługi",
-                    "refresh_prompt_per_turn": "Odśwież prompt systemowy przy każdej turze",
-                    "remember_conversation": "Pamiętaj rozmowę",
-                    "remember_num_interactions": "Liczba przeszłych interakcji do zapamiętania",
                     "in_context_examples": "Włącz naukę z kontekstu (ICL) przykładów",
                     "in_context_examples_file": "Nazwa pliku CSV z przykładami do nauki z kontekstu",
                     "num_in_context_examples": "Liczba przykładów ICL do wygenerowania",
-                    "text_generation_webui_preset": "Ustawienie generacji/Nazwa postaci",
                     "remote_use_chat_endpoint": "Użyj punktu końcowego chat completions",
-                    "text_generation_webui_chat_mode": "Tryb czatu",
                     "prompt_caching": "Włącz buforowanie promptów",
                     "prompt_caching_interval": "Najkrótszy interwał odświeżania buforowania promptów (sec)",
                     "context_length": "Długość kontekstu",
@@ -196,18 +176,10 @@
             "options": {
                 "llama_cpp_hf": "Llama.cpp (HuggingFace)",
                 "llama_cpp_existing": "Llama.cpp (istniejący model)",
-                "text-generation-webui_api": "text-generation-webui API",
                 "generic_openai": "Ogólne API kompatybilne z OpenAI",
                 "generic_openai_responses": "Ogólne API odpowiedzi kompatybilne z OpenAPI",
                 "llama_cpp_server": "Llama.cpp Server",
                 "ollama": "Ollama API"
-            }
-        },
-        "text_generation_webui_chat_mode": {
-            "options": {
-                "chat": "Chat",
-                "instruct": "Instruct",
-                "chat-instruct": "Chat-Instruct"
             }
         },
         "selected_language": {

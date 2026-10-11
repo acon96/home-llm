@@ -1,4 +1,5 @@
 from contextlib import suppress
+from dataclasses import replace
 from functools import partial
 import time
 import logging
@@ -60,6 +61,48 @@ class MissingQuantizationException(Exception):
 
 class LlamaCppPythonInstallError(HomeAssistantError):
     """Raised when llama-cpp-python cannot be installed from the hosted wheels."""
+
+
+class PreparedLLMAPI(llm.API):
+    """Hands an already resolved APIInstance to ChatLog.async_provide_llm_data.
+
+    Home LLM lists the callable tools (and, when the prompt asks for them, Home Assistant's own tool
+    instructions) inside its own system prompt, so the LLM API has to be resolved before control is
+    handed to the chat log. ChatLog.async_provide_llm_data accepts an llm.API but not an APIInstance, so
+    this wrapper returns the instance that was just built instead of letting the chat log resolve - and
+    collect the exposed entity registry for - a second one on every turn.
+
+    Home Assistant appends instance.api_prompt to the system prompt on its own accord. Home LLM prompts
+    are driven entirely by the integration's Jinja template, so the wrapper blanks it and exposes the
+    original text to the template as the llm_api_instructions variable instead. That leaves the user in
+    charge of whether those instructions appear at all, and where.
+    """
+
+    def __init__(self, instance: llm.APIInstance) -> None:
+        super().__init__(hass=instance.api.hass, id=instance.api.id, name=instance.api.name)
+        self.instance = instance
+
+    async def async_get_api_instance(self, llm_context: llm.LLMContext) -> llm.APIInstance:
+        """Return the prepared instance without Home Assistant's prompt suffix."""
+        return replace(self.instance, api_prompt="")
+
+
+JINJA_OPENERS = ("{{", "{%", "{#")
+
+
+def prompt_as_literal(text: str) -> str:
+    """Keep already rendered prompt text literal when Home Assistant renders the prompt once more.
+
+    ChatLog.async_provide_llm_data renders the prompt it is handed, while Home LLM has already rendered
+    its own template into it. Everything that survives that first render - device names, aliases, areas,
+    states - is data rather than template source, so any Jinja tag opener found in it is split with a
+    space to guarantee it stays literal text. Well formed JSON (the in-context learning examples) never
+    produces a tag opener, so this is a no-op for normal prompts.
+    """
+    for opener in JINJA_OPENERS:
+        if opener in text:
+            text = text.replace(opener, f"{opener[0]} {opener[1:]}")
+    return text
 
 class MalformedToolCallException(Exception):
     def __init__(self, agent_id: str, tool_call_id: str, tool_name: str, tool_args: str, error_msg: str):

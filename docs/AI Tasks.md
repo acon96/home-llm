@@ -12,6 +12,8 @@ The specific configuration options for AI Tasks are:
 
 If no structured data extraction method is specified, then the task entity will always return raw text.
 
+The system prompt of a task is the prompt configured on the task entity itself, exactly like a conversation agent, and the model's answer is recorded in the task's conversation log along with any tool call it triggered. With the `tool` extraction method the `submit_response` tool is executed by Home Assistant, so the data the model submits is validated and reported like any other tool call. Retries ask the model again with the error from the previous attempt as a follow up message.
+
 ## Using an AI Task in a Script or Automation
 To use an AI Task in a Home Assistant script or automation, you can utilize the `ai_task.generate_data` action. This action allows you to specify the task name, instructions, and the structure of the expected output. Below is an example of a script that generates a joke about a smart device in your home.
 

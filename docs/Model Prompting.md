@@ -92,10 +92,28 @@ Prompt Variables:
 - `formatted_devices` expands into a multi-line block where each line is the format `<entity_id> '<friendly_name> = <state>;<extra_attributes_to_expose>`
 - `formatted_tools`: when using Reduced, or Full tool format is selected, the entire array is converted to JSON. When using Minimal, each tool is returned separated by a comma.
 - `response_examples`: an array of randomly generated in-context-learning examples containing the `request`, `response`, and `tool` properties that can be used to build a properly formatted ICL example
+- `ha_name`: the name of your Home Assistant installation, as set in Settings > General
+- `llm_api_instructions`: the instruction text the selected LLM API provides for its tools. Home Assistant normally appends this to the end of the system prompt by itself, Home-LLM instead leaves it to you: put `{{ llm_api_instructions }}` in the prompt wherever you want it, or leave it out entirely to describe the tools your own way
+
+### What Home Assistant Adds To Your Prompt
+
+The prompt you write is the prompt the model gets, with two additions that come from Home Assistant rather than from this integration:
+
+- Assist satellites (and anything else passing an extra system prompt) have their text appended after yours, which is how a satellite tells the model to answer in one short sentence for the speaker.
+- When the selected LLM API does not offer a tool whose name ends in `GetDateTime`, Home Assistant appends its own `Current time is ... Today's date is ...` line. The Assist API always offers that tool, so nothing is added there; the built-in Home-LLM API and setups without an LLM API do get the extra line. Render the date yourself with `{{ now() }}` if you want it in your own format and position.
 
 `formatted_devices` and `formatted_tools` are provided for simplicity in exposing the correct devices and tools to the model if you are using the Home-LLM model or do not want to customize the formatting of the devices and tools.
 
 The examples used for the `response_examples` variable are loaded from the `in_context_examples.csv` file in the `/custom_components/llama_conversation/` folder. For different language add extra suffix to name of this file eg. for polish responses set `in_context_examples_pl.csv` (note: currently only polish language is supported).
+
+### How Long Your Prompt Lives
+
+The prompt is rendered on the first turn of a conversation and reused byte for byte on every turn after it, which is what lets a backend reuse its key/value cache instead of reading the device list again. Two consequences are worth knowing:
+
+- `{{ devices }}` and everything else you render describe the house as it was when the conversation started. A conversation is meant to be short lived, and the model is expected to act on what its tools report rather than on what the prompt once said.
+- Editing the prompt template renders it again, for conversations started after the edit.
+
+The rest of the conversation is sent along with the prompt, with the oldest messages dropping out whenever the conversation and the answer no longer fit inside the model context length. See the [context length option](./Backend%20Configuration.md#options-table).
 
 ### Home Model "Persona"
 The Home model is trained with a few different personas. They can be activated by using their system prompt found below:

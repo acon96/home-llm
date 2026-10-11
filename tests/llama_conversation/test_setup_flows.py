@@ -22,15 +22,13 @@ from custom_components.llama_conversation.const import (
     CONF_CHAT_MODEL,
     CONF_DOWNLOADED_MODEL_FILE,
     CONF_DOWNLOADED_MODEL_QUANTIZATION,
-    CONF_GBNF_GRAMMAR_FILE,
     CONF_INSTALLED_LLAMACPP_VERSION,
     CONF_LLAMACPP_REINSTALL,
     CONF_MAX_TOOL_CALL_ITERATIONS,
     CONF_PROMPT,
     CONF_REQUEST_TIMEOUT,
-    CONF_REMEMBER_NUM_INTERACTIONS,
     CONF_SELECTED_LANGUAGE,
-    CONF_USE_GBNF_GRAMMAR,
+    CONF_THINKING_PREFIX,
     DOMAIN,
 )
 
@@ -244,30 +242,21 @@ async def test_subentry_flow_local_missing_model_file_returns_error(hass):
 
 
 @pytest.mark.asyncio
-async def test_subentry_flow_model_parameters_rejects_missing_gbnf_file(hass):
+async def test_subentry_flow_keeps_options_that_are_no_longer_on_the_form(hass):
+    """Saving the form must not quietly drop settings the form does not show."""
     entry = SimpleNamespace(
         state=ConfigEntryState.LOADED,
-        data={CONF_BACKEND_TYPE: BACKEND_TYPE_LLAMA_CPP},
+        data={CONF_BACKEND_TYPE: BACKEND_TYPE_GENERIC_OPENAI},
         options={CONF_SELECTED_LANGUAGE: "en"},
-        runtime_data=DummyRuntimeData(),
+        runtime_data=DummyRuntimeData(["model-a"]),
     )
     flow = _build_subentry_flow(hass, entry)
-    flow.model_config = {
-        CONF_CHAT_MODEL: "demo-model",
-        CONF_DOWNLOADED_MODEL_FILE: "/tmp/demo-model.gguf",
-    }
+    flow.model_config = {CONF_CHAT_MODEL: "model-a", CONF_THINKING_PREFIX: "<thinking>"}
 
-    result = await flow.async_step_model_parameters(
-        {
-            CONF_USE_GBNF_GRAMMAR: True,
-            CONF_GBNF_GRAMMAR_FILE: "missing.gbnf",
-        }
-    )
+    result = await flow.async_step_model_parameters({CONF_LLM_HASS_API: []})
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "model_parameters"
-    assert result["errors"]["base"] == "missing_gbnf_file"
-    assert result["description_placeholders"]["filename"] == "missing.gbnf"
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_THINKING_PREFIX] == "<thinking>"
 
 
 @pytest.mark.asyncio
@@ -284,14 +273,13 @@ async def test_subentry_flow_model_parameters_normalizes_int_fields(hass):
     result = await flow.async_step_model_parameters(
         {
             CONF_LLM_HASS_API: [],
-            CONF_REMEMBER_NUM_INTERACTIONS: "3",
             CONF_MAX_TOOL_CALL_ITERATIONS: "2",
             CONF_REQUEST_TIMEOUT: "45",
         }
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_REMEMBER_NUM_INTERACTIONS] == 3
+
     assert result["data"][CONF_MAX_TOOL_CALL_ITERATIONS] == 2
     assert result["data"][CONF_REQUEST_TIMEOUT] == 45
 

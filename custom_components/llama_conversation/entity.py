@@ -22,6 +22,7 @@ from homeassistant.util import color
 from .utils import closest_color, parse_raw_tool_call, flatten_vol_schema
 from .const import (
     CONF_CHAT_MODEL,
+    ESTIMATED_CHARS_PER_TOKEN,
     CONF_SELECTED_LANGUAGE,
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
     CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
@@ -213,11 +214,36 @@ class LocalLLMClient:
                       f"{model} and it exceeded the context size for the model. " +
                       f"Please reduce the number of entities exposed ({num_entities}) or increase the model's context size ({context_size})")
         
+    @staticmethod
+    def _message_text(content: Sequence[conversation.Content]) -> str:
+        """Everything a backend has to spend prompt tokens on for these messages."""
+        parts: List[str] = []
+        for item in content:
+            parts.append(str(getattr(item, "content", "") or ""))
+            for tool_call in getattr(item, "tool_calls", None) or []:
+                parts.append(tool_call.tool_name)
+                parts.append(str(tool_call.tool_args))
+
+            tool_result = getattr(item, "tool_result", None)
+            if tool_result is not None:
+                parts.append(str(tool_result))
+
+        return "".join(parts)
+
+    def _count_tokens(self, content: Sequence[conversation.Content], entity_options: Dict[str, Any]) -> int:
+        """Estimate how large these messages are to the backend.
+
+        Home LLM trims a conversation to the model context before every request, and an estimate is close
+        enough to do that with. Backends holding a tokenizer of their own override this because theirs is
+        the size that actually makes a request fail.
+        """
+        return len(self._message_text(content)) // ESTIMATED_CHARS_PER_TOKEN
+
     async def _transform_result_stream(
         self,
         result: AsyncIterator[TextGenerationResult],
         agent_id: str,
-        chat_log: conversation.chat_log.ChatLog
+        chat_log: conversation.chat_log.ChatLog,
     ):
         async def async_iterator():
             yield conversation.AssistantContentDeltaDict(role="assistant")
@@ -619,6 +645,10 @@ class LocalLLMClient:
             "response_examples": [],
             "tool_call_prefix": tool_call_prefix,
             "tool_call_suffix": tool_call_suffix,
+            "ha_name": self.hass.config.location_name,
+            # Home Assistant would append these tool instructions to the prompt itself. The prompt stays
+            # under the user's control, so they only appear where the template asks for them.
+            "llm_api_instructions": llm_api.api_prompt if llm_api else "",
         }
 
         if llm_api:

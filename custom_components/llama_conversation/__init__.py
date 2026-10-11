@@ -9,7 +9,7 @@ from typing import Final
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import ATTR_ENTITY_ID, Platform, CONF_HOST, CONF_PORT, CONF_SSL, CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, llm, device_registry as dr, entity_registry as er
+from homeassistant.helpers import config_validation as cv, llm, device_registry as dr, entity_registry as er, issue_registry as ir
 from homeassistant.util.json import JsonObjectType
 from types import MappingProxyType
 
@@ -28,19 +28,16 @@ from .const import (
     CONF_API_KEY,
     CONF_API_PATH,
     CONF_CHAT_MODEL, CONF_DOWNLOADED_MODEL_QUANTIZATION, CONF_DOWNLOADED_MODEL_FILE, CONF_REQUEST_TIMEOUT, CONF_MAX_TOOL_CALL_ITERATIONS,
-    CONF_ENABLE_STREAMING, CONF_USE_SERVER_SAMPLING_DEFAULTS,
-    CONF_REFRESH_SYSTEM_PROMPT, CONF_REMEMBER_CONVERSATION, CONF_REMEMBER_NUM_INTERACTIONS, CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
+    CONF_ENABLE_STREAMING, CONF_GBNF_GRAMMAR,
     CONF_PROMPT, CONF_TEMPERATURE, CONF_TOP_K, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P, CONF_MAX_TOKENS,
     CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES, CONF_IN_CONTEXT_EXAMPLES_FILE, CONF_NUM_IN_CONTEXT_EXAMPLES, CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, 
     CONF_THINKING_PREFIX, CONF_THINKING_SUFFIX, CONF_TOOL_CALL_PREFIX, CONF_TOOL_CALL_SUFFIX,
     CONF_PROMPT_CACHING_ENABLED, CONF_PROMPT_CACHING_INTERVAL, CONF_CONTEXT_LENGTH,
     CONF_LLAMACPP_BATCH_SIZE, CONF_LLAMACPP_THREAD_COUNT, CONF_LLAMACPP_BATCH_THREAD_COUNT,
-    CONF_LLAMACPP_ENABLE_FLASH_ATTENTION, CONF_USE_GBNF_GRAMMAR, CONF_GBNF_GRAMMAR_FILE,
-    CONF_TEXT_GEN_WEBUI_PRESET, CONF_TEXT_GEN_WEBUI_CHAT_MODE, CONF_ENABLE_LEGACY_TOOL_CALLING,
+    CONF_LLAMACPP_ENABLE_FLASH_ATTENTION, CONF_ENABLE_LEGACY_TOOL_CALLING,
     CONF_OLLAMA_JSON_MODE, CONF_OLLAMA_KEEP_ALIVE_MIN,
     DEFAULT_BACKEND_TYPE,
     BACKEND_TYPE_LLAMA_CPP,
-    BACKEND_TYPE_TEXT_GEN_WEBUI,
     BACKEND_TYPE_GENERIC_OPENAI,
     BACKEND_TYPE_GENERIC_OPENAI_RESPONSES,
     BACKEND_TYPE_LLAMA_CPP_SERVER,
@@ -52,12 +49,29 @@ from .const import (
 from .entity import LocalLLMClient, LocalLLMConfigEntry
 from .backends.llamacpp import LlamaCppClient
 from .backends.generic_openai import GenericOpenAIAPIClient, GenericOpenAIResponsesAPIClient
-from .backends.tailored_openai import TextGenerationWebuiClient, LlamaCppServerClient
+from .backends.tailored_openai import LlamaCppServerClient
 from .backends.ollama import OllamaAPIClient
 from .backends.anthropic import AnthropicAPIClient
 from .utils import get_llama_cpp_python_version, download_model_from_hf
 
 _LOGGER = logging.getLogger(__name__)
+
+# Options and backends that no longer exist. Migration code still needs their old spellings to move or
+# drop whatever an entry saved under them.
+BACKEND_TYPE_TEXT_GEN_WEBUI: Final[str] = "text-generation-webui_api"
+REMOVED_OPTION_KEYS: Final[tuple[str, ...]] = (
+    "refresh_prompt_per_turn",
+    "remember_conversation",
+    "remember_num_interactions",
+    "remember_conversation_time_minutes",
+    "use_server_sampling_defaults",
+    "gbnf_grammar",
+    "gbnf_grammar_file",
+    "text_generation_webui_preset",
+    "text_generation_webui_admin_key",
+    "text_generation_webui_chat_mode",
+)
+SAMPLING_OPTION_KEYS: Final[tuple[str, ...]] = (CONF_TEMPERATURE, CONF_TOP_K, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -67,7 +81,6 @@ BACKEND_TO_CLS: dict[str, type[LocalLLMClient]] = {
     BACKEND_TYPE_LLAMA_CPP: LlamaCppClient,
     BACKEND_TYPE_GENERIC_OPENAI: GenericOpenAIAPIClient,
     BACKEND_TYPE_GENERIC_OPENAI_RESPONSES: GenericOpenAIResponsesAPIClient,
-    BACKEND_TYPE_TEXT_GEN_WEBUI: TextGenerationWebuiClient,
     BACKEND_TYPE_LLAMA_CPP_SERVER: LlamaCppServerClient,
     BACKEND_TYPE_OLLAMA: OllamaAPIClient,
     BACKEND_TYPE_ANTHROPIC: AnthropicAPIClient,
@@ -143,16 +156,15 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: LocalLLMConfigE
         ENTRY_OPTIONS_KEYS = [CONF_SELECTED_LANGUAGE, CONF_HOST, CONF_PORT, CONF_SSL, CONF_API_KEY, CONF_API_PATH]
         SUBENTRY_KEYS = [
             CONF_CHAT_MODEL, CONF_DOWNLOADED_MODEL_QUANTIZATION, CONF_DOWNLOADED_MODEL_FILE, CONF_REQUEST_TIMEOUT, CONF_MAX_TOOL_CALL_ITERATIONS,
-            CONF_ENABLE_STREAMING,
-            CONF_REFRESH_SYSTEM_PROMPT, CONF_REMEMBER_CONVERSATION, CONF_REMEMBER_NUM_INTERACTIONS, CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
+            CONF_ENABLE_STREAMING, CONF_GBNF_GRAMMAR,
             CONF_LLM_HASS_API, CONF_PROMPT, CONF_TEMPERATURE, CONF_TOP_K, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P, CONF_MAX_TOKENS,
             CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES, CONF_IN_CONTEXT_EXAMPLES_FILE, CONF_NUM_IN_CONTEXT_EXAMPLES, CONF_EXTRA_ATTRIBUTES_TO_EXPOSE, 
             CONF_THINKING_PREFIX, CONF_THINKING_SUFFIX, CONF_TOOL_CALL_PREFIX, CONF_TOOL_CALL_SUFFIX,
             CONF_PROMPT_CACHING_ENABLED, CONF_PROMPT_CACHING_INTERVAL, CONF_CONTEXT_LENGTH,
             CONF_LLAMACPP_BATCH_SIZE, CONF_LLAMACPP_THREAD_COUNT, CONF_LLAMACPP_BATCH_THREAD_COUNT,
-            CONF_LLAMACPP_ENABLE_FLASH_ATTENTION, CONF_USE_GBNF_GRAMMAR, CONF_GBNF_GRAMMAR_FILE,
-            CONF_TEXT_GEN_WEBUI_PRESET, CONF_TEXT_GEN_WEBUI_CHAT_MODE, CONF_ENABLE_LEGACY_TOOL_CALLING,
-            CONF_OLLAMA_JSON_MODE, CONF_OLLAMA_KEEP_ALIVE_MIN
+            CONF_LLAMACPP_ENABLE_FLASH_ATTENTION, CONF_ENABLE_LEGACY_TOOL_CALLING,
+            CONF_OLLAMA_JSON_MODE, CONF_OLLAMA_KEEP_ALIVE_MIN,
+            *REMOVED_OPTION_KEYS,
         ]
 
         # Build entry data/options & subentry data from existing options and model info
@@ -225,17 +237,93 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: LocalLLMConfigE
         hass.config_entries.async_update_entry(config_entry, minor_version=2)
 
     if config_entry.version == 3 and config_entry.minor_version == 2:
-        # don't auto enable server default sampling when upgrading because the user might depend on the current settings
-        new_options = dict(config_entry.options)
-        if CONF_USE_SERVER_SAMPLING_DEFAULTS not in new_options:
-            new_options[CONF_USE_SERVER_SAMPLING_DEFAULTS] = False
-            hass.config_entries.async_update_entry(
-                config_entry, options=MappingProxyType(new_options)
-            )
-
+        # v3.2 recorded whether to keep the server's sampling defaults. v4 dropped that option, so
+        # whatever sampling parameters an entry has are simply left alone from here on.
         hass.config_entries.async_update_entry(config_entry, minor_version=3)
 
+    if config_entry.version == 3:
+        await async_migrate_to_v4(hass, config_entry)
+
     return True
+
+
+async def async_migrate_to_v4(hass: HomeAssistant, config_entry: LocalLLMConfigEntry):
+    """Move a v3 entry onto the v4 option set.
+
+    v4 drops the options that the model defaults or Home Assistant handle better than a setting does:
+    refreshing the system prompt per turn, remembering a fixed number of messages, deferring to the
+    server sampling defaults, the grammar file, and the text-generation-webui backend.
+    """
+    options = dict(config_entry.options)
+    data = dict(config_entry.data)
+    # read before the removed keys are dropped below
+    used_server_sampling_defaults = options.get("use_server_sampling_defaults") is True or any(
+        subentry.data.get("use_server_sampling_defaults") is True for subentry in config_entry.subentries.values()
+    )
+    issues: list[str] = []
+
+    if data.get(CONF_BACKEND_TYPE) == BACKEND_TYPE_TEXT_GEN_WEBUI:
+        data[CONF_BACKEND_TYPE] = BACKEND_TYPE_GENERIC_OPENAI
+        for subentry in config_entry.subentries.values():
+            preset = subentry.data.get("text_generation_webui_preset")
+            chat_mode = subentry.data.get("text_generation_webui_chat_mode", "chat")
+            if preset or chat_mode != "chat":
+                issues.append(f"'{subentry.title}' used the preset '{preset or 'none'}' and the '{chat_mode}' chat mode")
+
+    for key in REMOVED_OPTION_KEYS:
+        options.pop(key, None)
+        # the text-generation-webui admin key was stored with the connection settings
+        data.pop(key, None)
+
+    # the configured sampling parameters were being ignored, so drop them instead of starting to send them
+    if used_server_sampling_defaults:
+        for key in SAMPLING_OPTION_KEYS:
+            options.pop(key, None)
+
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data=MappingProxyType(data),
+        options=MappingProxyType(options),
+        version=4,
+        minor_version=0,
+    )
+
+    for subentry in config_entry.subentries.values():
+        new_options = dict(subentry.data)
+
+        # the grammar lived in a file inside custom_components, where an update would overwrite it
+        grammar_file = new_options.pop("gbnf_grammar_file", None)
+        if new_options.pop("gbnf_grammar", False) and grammar_file:
+            path = os.path.join(os.path.dirname(__file__), grammar_file)
+            try:
+                with open(path) as grammar:
+                    new_options[CONF_GBNF_GRAMMAR] = "".join(grammar.readlines())
+            except OSError:
+                _LOGGER.warning("Could not read %s while migrating %s, disabling its grammar", path, subentry.title)
+
+        # the configured sampling parameters were being ignored, so drop them instead of starting to send them
+        if used_server_sampling_defaults:
+            for key in SAMPLING_OPTION_KEYS:
+                new_options.pop(key, None)
+
+        for key in REMOVED_OPTION_KEYS:
+            new_options.pop(key, None)
+
+        if new_options != dict(subentry.data):
+            hass.config_entries.async_update_subentry(config_entry, subentry, data=MappingProxyType(new_options))
+
+    if issues:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "text_generation_webui_removed",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="text_generation_webui_removed",
+            translation_placeholders={"details": "\n".join(issues)},
+        )
+
+    _LOGGER.debug("Migration to v4 complete")
 
 class HassServiceTool(llm.Tool):
     """Tool to get the current time."""

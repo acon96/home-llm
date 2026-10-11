@@ -7,7 +7,7 @@ import logging
 import os
 import threading
 import time
-from typing import Any, Callable, List, Generator, AsyncGenerator, Optional, cast
+from typing import Any, Callable, List, Generator, AsyncGenerator, Optional, Sequence, cast
 
 from homeassistant.components import conversation as conversation
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
@@ -31,11 +31,9 @@ from custom_components.llama_conversation.const import (
     CONF_TOP_P,
     CONF_TYPICAL_P,
     CONF_MIN_P,
-    CONF_USE_SERVER_SAMPLING_DEFAULTS,
     CONF_DOWNLOADED_MODEL_FILE,
     CONF_LLAMACPP_ENABLE_FLASH_ATTENTION,
-    CONF_USE_GBNF_GRAMMAR,
-    CONF_GBNF_GRAMMAR_FILE,
+    CONF_GBNF_GRAMMAR,
     CONF_PROMPT_CACHING_ENABLED,
     CONF_PROMPT_CACHING_INTERVAL,
     CONF_CONTEXT_LENGTH,
@@ -48,10 +46,8 @@ from custom_components.llama_conversation.const import (
     DEFAULT_TOOL_RESPONSE_AS_STRING,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
-    DEFAULT_USE_SERVER_SAMPLING_DEFAULTS,
     DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION,
-    DEFAULT_USE_GBNF_GRAMMAR,
-    DEFAULT_GBNF_GRAMMAR_FILE,
+    DEFAULT_GBNF_GRAMMAR,
     DEFAULT_PROMPT_CACHING_ENABLED,
     DEFAULT_PROMPT_CACHING_INTERVAL,
     DEFAULT_CONTEXT_LENGTH,
@@ -91,7 +87,7 @@ def snapshot_settings(options: dict[str, Any]) -> dict[str, Any]:
         CONF_LLAMACPP_CACHE_SIZE_MB: options.get(CONF_LLAMACPP_CACHE_SIZE_MB, DEFAULT_LLAMACPP_CACHE_SIZE_MB),
         CONF_LLAMACPP_ENABLE_FLASH_ATTENTION: options.get(CONF_LLAMACPP_ENABLE_FLASH_ATTENTION, DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION),
         CONF_INSTALLED_LLAMACPP_VERSION: options.get(CONF_INSTALLED_LLAMACPP_VERSION, ""),
-        CONF_GBNF_GRAMMAR_FILE: options.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE),
+        CONF_GBNF_GRAMMAR: str(options.get(CONF_GBNF_GRAMMAR, DEFAULT_GBNF_GRAMMAR)).strip(),
         CONF_PROMPT_CACHING_ENABLED: options.get(CONF_PROMPT_CACHING_ENABLED, DEFAULT_PROMPT_CACHING_ENABLED),
     }
 
@@ -218,22 +214,33 @@ class LlamaCppClient(LocalLLMClient):
         self.models[model_name] = llm
 
         self.grammars[model_name] = None
-        if entity_options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
-            self._load_grammar(model_name, entity_options.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE))
+        grammar = str(entity_options.get(CONF_GBNF_GRAMMAR, DEFAULT_GBNF_GRAMMAR)).strip()
+        if grammar:
+            self._load_grammar(model_name, grammar)
 
 
-    def _load_grammar(self, model_name: str, filename: str) -> Any:
+    def _load_grammar(self, model_name: str, grammar_str: str) -> Any:
         LlamaGrammar: type[LlamaGrammarType] = getattr(self.llama_cpp_module, "LlamaGrammar")
-        _LOGGER.debug(f"Loading grammar {filename}...")
+        _LOGGER.debug("Compiling grammar for %s...", model_name)
         try:
-            with open(os.path.join(os.path.dirname(__file__), filename)) as f:
-                grammar_str = "".join(f.readlines())
             self.grammars[model_name] = LlamaGrammar.from_string(grammar_str)
-            self.loaded_model_settings[model_name][CONF_GBNF_GRAMMAR_FILE] = filename
+            self.loaded_model_settings.setdefault(model_name, {})[CONF_GBNF_GRAMMAR] = grammar_str
             _LOGGER.debug("Loaded grammar")
         except Exception:
             _LOGGER.exception("Failed to load grammar!")
             self.grammars[model_name] = None
+
+    def _count_tokens(self, content: Sequence[conversation.Content], entity_options: dict[str, Any]) -> int:
+        """Count the prompt with the model's own tokenizer, which is the size that overflows."""
+        model = self.models.get(entity_options.get(CONF_CHAT_MODEL, ""))
+        if model is None:
+            return super()._count_tokens(content, entity_options)
+
+        try:
+            return len(model.tokenize(self._message_text(content)))
+        except Exception:
+            _LOGGER.debug("Failed to tokenize the prompt, estimating its size instead", exc_info=True)
+            return super()._count_tokens(content, entity_options)
 
     def _update_options(self, entity_options: dict[str, Any]):
         LocalLLMClient._update_options(self, entity_options)
@@ -283,9 +290,9 @@ class LlamaCppClient(LocalLLMClient):
             self.loaded_model_settings[model_name] = model_settings
             self.models[model_name] = llm
 
-        if entity_options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR):
-            current_grammar = entity_options.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE)
-            if model_name not in self.grammars or self.loaded_model_settings[CONF_GBNF_GRAMMAR_FILE] != current_grammar:
+        current_grammar = str(entity_options.get(CONF_GBNF_GRAMMAR, DEFAULT_GBNF_GRAMMAR)).strip()
+        if current_grammar:
+            if self.loaded_model_settings.get(model_name, {}).get(CONF_GBNF_GRAMMAR) != current_grammar:
                 self._load_grammar(model_name, current_grammar)
         else:
             self.grammars[model_name] = None
@@ -404,15 +411,13 @@ class LlamaCppClient(LocalLLMClient):
                 tools = get_oai_formatted_tools(llm_api, self._async_get_all_exposed_domains())
 
             model_name = entity_options.get(CONF_CHAT_MODEL, "")
-            use_server_sampling_defaults = entity_options.get(
-                CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS
-            )
+            # sampling parameters that are not configured are left to the server
             sampling_params = {
                 key: entity_options[key]
                 for key in (CONF_TEMPERATURE, CONF_TOP_K, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P)
-                if not use_server_sampling_defaults and entity_options.get(key) is not None
+                if entity_options.get(key) is not None
             }
-            grammar = self.grammars.get(model_name) if entity_options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR) else None
+            grammar = self.grammars.get(model_name)
 
             _LOGGER.debug("Priming model cache via chat completion API...")
             try:
@@ -461,7 +466,7 @@ class LlamaCppClient(LocalLLMClient):
         """Async generator that yields TextGenerationResult as tokens are produced."""
         model_name = entity_options.get(CONF_CHAT_MODEL, "")
         max_tokens = entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
-        grammar = self.grammars.get(model_name) if entity_options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR) else None
+        grammar = self.grammars.get(model_name)
         enable_legacy_tool_calling = entity_options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
         tool_response_as_string = entity_options.get(CONF_TOOL_RESPONSE_AS_STRING, DEFAULT_TOOL_RESPONSE_AS_STRING)
 
@@ -482,11 +487,11 @@ class LlamaCppClient(LocalLLMClient):
                 "schema": response_json_schema,
             }
 
-        use_server_sampling_defaults = entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS)
+        # sampling parameters that are not configured are left to the server
         sampling_params = {
             key: entity_options[key]
             for key in (CONF_TEMPERATURE, CONF_TOP_K, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P)
-            if not use_server_sampling_defaults and entity_options.get(key) is not None
+            if entity_options.get(key) is not None
         }
         try:
             chat_completion = self.models[model_name].create_chat_completion(
@@ -539,7 +544,7 @@ class LlamaCppClient(LocalLLMClient):
     ) -> TextGenerationResult:
         model_name = entity_options.get(CONF_CHAT_MODEL, "")
         max_tokens = entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
-        grammar = self.grammars.get(model_name) if entity_options.get(CONF_USE_GBNF_GRAMMAR, DEFAULT_USE_GBNF_GRAMMAR) else None
+        grammar = self.grammars.get(model_name)
         enable_legacy_tool_calling = entity_options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
         tool_response_as_string = entity_options.get(CONF_TOOL_RESPONSE_AS_STRING, DEFAULT_TOOL_RESPONSE_AS_STRING)
 
@@ -550,13 +555,11 @@ class LlamaCppClient(LocalLLMClient):
         if llm_api and not enable_legacy_tool_calling:
             tools = get_oai_formatted_tools(llm_api, self._async_get_all_exposed_domains())
 
-        use_server_sampling_defaults = entity_options.get(
-            CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS
-        )
+        # sampling parameters that are not configured are left to the server
         sampling_params = {
             key: entity_options[key]
             for key in (CONF_TEMPERATURE, CONF_TOP_K, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P)
-            if not use_server_sampling_defaults and entity_options.get(key) is not None
+            if entity_options.get(key) is not None
         }
 
         response_json_schema = entity_options.get(CONF_RESPONSE_JSON_SCHEMA)

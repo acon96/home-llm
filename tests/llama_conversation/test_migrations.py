@@ -1,9 +1,12 @@
 """Regression tests for config entry migration in __init__.py."""
 
+import dataclasses
+
 import pytest
 
 from homeassistant.const import CONF_LLM_HASS_API, CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.config_entries import ConfigSubentry
+from homeassistant.helpers import issue_registry as ir
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.llama_conversation import async_migrate_entry
@@ -17,8 +20,11 @@ from custom_components.llama_conversation.const import (
     CONF_DOWNLOADED_MODEL_FILE,
     CONF_DOWNLOADED_MODEL_QUANTIZATION,
     CONF_API_PATH,
+    CONF_GBNF_GRAMMAR,
     CONF_PROMPT,
     CONF_REQUEST_TIMEOUT,
+    CONF_TEMPERATURE,
+    CONF_TOP_P,
     DOMAIN,
 )
 
@@ -141,10 +147,9 @@ async def test_migrate_v3_minor1_converts_api_to_list(monkeypatch, hass, api_val
 
     def fake_update_entry(cfg_entry, **kwargs):
         calls.append(kwargs)
-        if "options" in kwargs:
-            cfg_entry._options = kwargs["options"]  # type: ignore[attr-defined]
-        if "minor_version" in kwargs:
-            cfg_entry._minor_version = kwargs["minor_version"]  # type: ignore[attr-defined]
+        # apply it, like the real one does, so the next migration step sees the change
+        for field, value in kwargs.items():
+            object.__setattr__(cfg_entry, field, value)
 
     monkeypatch.setattr(hass.config_entries, "async_update_entry", fake_update_entry)
 
@@ -155,5 +160,135 @@ async def test_migrate_v3_minor1_converts_api_to_list(monkeypatch, hass, api_val
     assert options_calls, "async_update_entry should be called with options"
     assert options_calls[-1]["options"][CONF_LLM_HASS_API] == expected_list
 
-    minor_calls = [c for c in calls if c.get("minor_version")]
-    assert minor_calls and minor_calls[-1]["minor_version"] == 2
+    # the entry is stamped with v4 on the way, which keeps the converted list
+    version_calls = [c for c in calls if c.get("version") == 4]
+    assert version_calls, "the entry should end up on v4"
+    assert version_calls[-1]["options"][CONF_LLM_HASS_API] == expected_list
+
+
+def _fake_config_entries(monkeypatch, hass):
+    """Make the migration able to chain: apply every update like the real thing does."""
+
+    def fake_update_entry(cfg_entry, **kwargs):
+        for field, value in kwargs.items():
+            object.__setattr__(cfg_entry, field, value)
+
+    def fake_update_subentry(cfg_entry, subentry, *, data=None, **_kwargs):
+        cfg_entry.subentries[subentry.subentry_id] = dataclasses.replace(subentry, data=data)
+
+    monkeypatch.setattr(hass.config_entries, "async_update_entry", fake_update_entry)
+    monkeypatch.setattr(hass.config_entries, "async_update_subentry", fake_update_subentry)
+
+
+@pytest.mark.asyncio
+async def test_migrate_v4_drops_removed_options_and_reads_the_grammar(monkeypatch, hass):
+    subentry = ConfigSubentry(
+        data={
+            CONF_CHAT_MODEL: "model-a",
+            "gbnf_grammar": True,
+            "gbnf_grammar_file": "output.gbnf",
+            "refresh_prompt_per_turn": True,
+            "remember_num_interactions": 5,
+            CONF_CONTEXT_LENGTH: 2048,
+        },
+        subentry_id="sub",
+        subentry_type="conversation",
+        title="sub",
+        unique_id=None,
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_BACKEND_TYPE: BACKEND_TYPE_LLAMA_CPP},
+        options={"remember_conversation": True, "use_server_sampling_defaults": False},
+        version=3,
+        minor_version=3,
+    )
+    entry.subentries = {"sub": subentry}
+    entry.add_to_hass(hass)
+    _fake_config_entries(monkeypatch, hass)
+
+    assert await async_migrate_entry(hass, entry) is True
+
+    assert (entry.version, entry.minor_version) == (4, 0)
+    assert dict(entry.options) == {}
+
+    new_data = dict(entry.subentries["sub"].data)
+    # the grammar is the text itself now, taken from the file the entry pointed at
+    assert new_data[CONF_GBNF_GRAMMAR].startswith("root") and "homeassistant" in new_data[CONF_GBNF_GRAMMAR]
+    for key in ("gbnf_grammar", "gbnf_grammar_file", "refresh_prompt_per_turn", "remember_num_interactions"):
+        assert key not in new_data
+    assert new_data[CONF_CONTEXT_LENGTH] == 2048  # everything else is left alone
+
+    # nothing was dropped silently, so there is nothing to tell the user about
+    assert ir.async_get(hass).async_get_issue(DOMAIN, "text_generation_webui_removed") is None
+
+
+@pytest.mark.asyncio
+async def test_migrate_v4_converts_text_generation_webui(monkeypatch, hass):
+    subentry = ConfigSubentry(
+        data={
+            CONF_CHAT_MODEL: "model-a",
+            "text_generation_webui_preset": "my-preset",
+            "text_generation_webui_chat_mode": "instruct",
+            "text_generation_webui_admin_key": "secret",
+        },
+        subentry_id="sub",
+        subentry_type="conversation",
+        title="sub",
+        unique_id=None,
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_BACKEND_TYPE: "text-generation-webui_api"},
+        options={},
+        version=3,
+        minor_version=3,
+    )
+    entry.subentries = {"sub": subentry}
+    entry.add_to_hass(hass)
+    _fake_config_entries(monkeypatch, hass)
+
+    assert await async_migrate_entry(hass, entry) is True
+
+    assert entry.data[CONF_BACKEND_TYPE] == BACKEND_TYPE_GENERIC_OPENAI
+    new_data = dict(entry.subentries["sub"].data)
+    assert not any(key.startswith("text_generation_webui") for key in new_data)
+
+    issue = ir.async_get(hass).async_get_issue(DOMAIN, "text_generation_webui_removed")
+    assert issue is not None
+    assert "my-preset" in issue.translation_placeholders["details"]
+    assert "instruct" in issue.translation_placeholders["details"]
+
+
+@pytest.mark.asyncio
+async def test_migrate_v4_drops_sampling_the_entry_was_ignoring(monkeypatch, hass):
+    subentry = ConfigSubentry(
+        data={
+            CONF_CHAT_MODEL: "model-a",
+            CONF_TEMPERATURE: 0.2,
+            CONF_TOP_P: 0.9,
+            "use_server_sampling_defaults": True,
+        },
+        subentry_id="sub",
+        subentry_type="conversation",
+        title="sub",
+        unique_id=None,
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_BACKEND_TYPE: BACKEND_TYPE_GENERIC_OPENAI},
+        options={},
+        version=3,
+        minor_version=3,
+    )
+    entry.subentries = {"sub": subentry}
+    entry.add_to_hass(hass)
+    _fake_config_entries(monkeypatch, hass)
+
+    assert await async_migrate_entry(hass, entry) is True
+
+    # the entry never sent them, so it must not start sending them after the upgrade
+    new_data = dict(entry.subentries["sub"].data)
+    assert CONF_TEMPERATURE not in new_data
+    assert CONF_TOP_P not in new_data
+    assert new_data[CONF_CHAT_MODEL] == "model-a"

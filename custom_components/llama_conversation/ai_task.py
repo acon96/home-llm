@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import AsyncGenerator
 from enum import StrEnum
 from typing import Any
 
@@ -16,11 +17,12 @@ from homeassistant.helpers import llm
 from homeassistant.components import ai_task, conversation
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.json import json_loads, JSON_DECODE_EXCEPTIONS
 
 from .entity import LocalLLMEntity, LocalLLMClient
+from .utils import PreparedLLMAPI, prompt_as_literal
 from .const import (
     CONF_PROMPT,
     CONF_RESPONSE_JSON_SCHEMA,
@@ -117,44 +119,67 @@ class LocalLLMTaskEntity(
 
     async def _generate_once(
         self,
-        message_history: list[conversation.Content],
-        llm_api: llm.APIInstance | None,
+        chat_log: conversation.ChatLog,
         entity_options: dict[str, Any],
-    ) -> tuple[str, list | None, Exception | None]:
-        """Generate a single response from the LLM."""
-        collected_tools = None
+    ) -> tuple[str, list[llm.ToolInput]]:
+        """Ask the backend for a single assistant message and add it to the chat log."""
         text = ""
+        tool_calls: list[llm.ToolInput] = []
 
-        # call the LLM client directly (not _async_generate) since that will attempt to execute tool calls
-        try:
-            if self.client._supports_streaming(entity_options):
-                async for chunk in self.client._generate_stream(
-                    message_history,
-                    llm_api,
-                    self.entity_id,
-                    entity_options,
-                ):
-                    if chunk.response:
-                        text += chunk.response
-                    if chunk.tool_calls:
-                        collected_tools = chunk.tool_calls
-            else:
-                blocking_result = await self.client._generate(
-                    message_history,
-                    llm_api,
-                    self.entity_id,
-                    entity_options,
+        async for content in chat_log.async_add_delta_content_stream(
+            self.entity_id, self._async_deltas(chat_log, entity_options)
+        ):
+            if isinstance(content, conversation.AssistantContent):
+                text = content.content or ""
+                tool_calls.extend(content.tool_calls or [])
+
+        _LOGGER.debug("AI Task '%s' generated text: %s (tools=%s)", self.entity_id, text, tool_calls or None)
+        return text, tool_calls
+
+    async def _async_deltas(
+        self,
+        chat_log: conversation.ChatLog,
+        entity_options: dict[str, Any],
+    ) -> AsyncGenerator[conversation.AssistantContentDeltaDict, None]:
+        """Stream one backend completion into the chat log's delta format.
+
+        A delta with a role starts a message, a delta without one is concatenated to the message in
+        progress, which is what the backends produce. Tool calls are dropped when the task has no LLM API
+        to run them, because the chat log refuses them outright.
+        """
+        message_history = list(chat_log.content)
+        llm_api = chat_log.llm_api
+
+        yield conversation.AssistantContentDeltaDict(role="assistant")
+        if self.client._supports_streaming(entity_options):
+            async for chunk in self.client._generate_stream(
+                message_history, llm_api, self.entity_id, entity_options
+            ):
+                yield conversation.AssistantContentDeltaDict(
+                    content=chunk.response,
+                    tool_calls=self._tool_calls_for_log(chunk.tool_calls, llm_api),
                 )
-                if blocking_result.response:
-                    text = blocking_result.response.strip()
-                if blocking_result.tool_calls:
-                    collected_tools = blocking_result.tool_calls
+        else:
+            blocking_result = await self.client._generate(
+                message_history, llm_api, self.entity_id, entity_options
+            )
+            yield conversation.AssistantContentDeltaDict(
+                content=blocking_result.response,
+                tool_calls=self._tool_calls_for_log(blocking_result.tool_calls, llm_api),
+            )
 
-            _LOGGER.debug("AI Task '%s' generated text: %s (tools=%s)", self.entity_id, text, collected_tools)
-            return text, collected_tools, None
-        except JSON_DECODE_EXCEPTIONS as err:
-            _LOGGER.debug("AI Task '%s' json error generated text: %s (tools=%s)", self.entity_id, text, collected_tools)
-            return text, collected_tools, err
+    @staticmethod
+    def _tool_calls_for_log(
+        tool_calls: list[llm.ToolInput] | None,
+        llm_api: llm.APIInstance | None,
+    ) -> list[llm.ToolInput] | None:
+        """Ignore tool calls the chat log has no API to execute."""
+        if not tool_calls:
+            return None
+        if llm_api is None:
+            _LOGGER.warning("Model attempted to call a tool but no LLM API was provided, ignoring tool calls")
+            return None
+        return tool_calls
 
     def _extract_data(
         self,
@@ -169,7 +194,7 @@ class LocalLLMTaskEntity(
             if extraction_method == ResultExtractionMethod.NONE or structure is None:
                 return ai_task.GenDataTaskResult(
                     conversation_id=chat_log.conversation_id,
-                    data=raw_text,
+                    data=raw_text.strip(),
                 ), None
 
             if extraction_method == ResultExtractionMethod.STRUCTURED_OUTPUT:
@@ -213,51 +238,68 @@ class LocalLLMTaskEntity(
         max_attempts = retries + 1
 
         entity_options = {**self.runtime_options}
+        api: llm.API | None = task.llm_api
         if task.structure: # set up extraction method specifics
             if extraction_method == ResultExtractionMethod.STRUCTURED_OUTPUT:
                 _LOGGER.debug("Using structure for AI Task '%s': %s", task.name, task.structure)
                 entity_options[CONF_RESPONSE_JSON_SCHEMA] = convert_to_openapi(task.structure, custom_serializer=llm.selector_serializer)
             elif extraction_method == ResultExtractionMethod.TOOL:
-                chat_log.llm_api = await SubmitResponseAPI(self.hass, [SubmitResponseTool(task.structure)]).async_get_api_instance(
-                    llm.LLMContext(DOMAIN, context=None, language=None, assistant=None, device_id=None)
-                )
-        
-        message_history = list(chat_log.content) if chat_log.content else []
-        task_prompt = self.client._generate_system_prompt(raw_task_prompt, llm_api=chat_log.llm_api, entity_options=entity_options)
-        system_message = conversation.SystemContent(content=task_prompt)
-        if message_history and isinstance(message_history[0], conversation.SystemContent):
-            message_history[0] = system_message
-        else:
-            message_history.insert(0, system_message)
+                submit_api = SubmitResponseAPI(self.hass, [SubmitResponseTool(task.structure)])
+                api = submit_api if api is None else llm.MergedAPI([api, submit_api])
 
-        if not any(isinstance(msg, conversation.UserContent) for msg in message_history):
-            message_history.append(
-                conversation.UserContent(
-                    content=task.instructions, attachments=task.attachments
-                )
-            )
+        # The AI Task integration opened the chat log with its own default prompt and the instructions of
+        # the task already in it. Hand our prompt (with the live device states) and tools back to the log
+        # so that the model, the trace and any chat log subscriber all see the same conversation.
+        llm_context = llm.LLMContext(
+            platform=DOMAIN,
+            context=None,
+            language=None,
+            assistant=ai_task.DOMAIN,
+            device_id=None,
+        )
+        instance = await api.async_get_api_instance(llm_context) if api is not None else None
         try:
-            last_error: Exception | None = None
-            for attempt in range(max_attempts):
-                _LOGGER.debug("Generating response for %s (attempt %s/%s)...", task.name, attempt + 1, max_attempts)
-                text, tool_calls, err = await self._generate_once(message_history, chat_log.llm_api, entity_options)
-                if err:
-                    last_error = err
-                    message_history.append(conversation.AssistantContent(agent_id=self.entity_id, content=text, tool_calls=tool_calls))
-                    message_history.append(conversation.UserContent(content=f"Error: {str(err)}. Please try again."))
-                    continue
-                
-                data, err = self._extract_data(text, tool_calls, extraction_method, chat_log, task.structure)
-                if err:
-                    last_error = err
-                    message_history.append(conversation.AssistantContent(agent_id=self.entity_id, content=text, tool_calls=tool_calls))
-                    message_history.append(conversation.UserContent(content=f"Error: {str(err)}. Please try again."))
-                    continue
-                
-                if data:
-                    return data
-        except Exception as err:
-            _LOGGER.exception("Unhandled exception while running AI Task '%s'", task.name)
-            raise HomeAssistantError(f"Unhandled error while running AI Task '{task.name}'") from err
-        
+            task_prompt = self.client._generate_system_prompt(raw_task_prompt, instance, entity_options)
+        except TemplateError as err:
+            raise HomeAssistantError(f"Sorry, I had a problem with my template: {err}") from err
+
+        try:
+            await chat_log.async_provide_llm_data(
+                llm_context,
+                PreparedLLMAPI(instance) if instance is not None else None,
+                prompt_as_literal(task_prompt),
+            )
+        except conversation.ConverseError as err:
+            raise HomeAssistantError(str(err)) from err
+
+        last_error: Exception | None = None
+        for attempt in range(max_attempts):
+            _LOGGER.debug("Generating response for %s (attempt %s/%s)...", task.name, attempt + 1, max_attempts)
+            data: ai_task.GenDataTaskResult | None = None
+            error: Exception | None = None
+            try:
+                text, tool_calls = await self._generate_once(chat_log, entity_options)
+                data, error = self._extract_data(text, tool_calls, extraction_method, chat_log, task.structure)
+            except JSON_DECODE_EXCEPTIONS as err:
+                _LOGGER.debug("AI Task '%s' produced text that was not valid JSON", task.name)
+                error = HomeAssistantError(f"Please produce properly formatted JSON: {repr(err)}")
+            except HomeAssistantError:
+                # A backend or a tool already described this failure the way Home Assistant should show
+                # it, so repeating it to the model would only hide it behind a retry.
+                raise
+            except Exception as err:
+                _LOGGER.exception("Unhandled exception while running AI Task '%s'", task.name)
+                raise HomeAssistantError(f"Unhandled error while running AI Task '{task.name}'") from err
+
+            if error is None and data is not None:
+                return data
+
+            last_error = error
+            if attempt < max_attempts - 1:
+                # The chat log is the message history, so the correction has to go through it to give the
+                # model something to work with on the next attempt.
+                chat_log.async_add_user_content(
+                    conversation.UserContent(content=f"Error: {last_error}. Please try again.")
+                )
+
         raise last_error or HomeAssistantError(f"AI Task '{task.name}' failed after {max_attempts} attempts")
