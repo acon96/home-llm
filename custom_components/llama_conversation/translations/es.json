@@ -1,0 +1,382 @@
+{
+    "config": {
+        "error": {
+            "failed_to_connect": "No se pudo conectar con la API remota: {exception}",
+            "invalid_hostname": "El nombre de host proporcionado no es v\u00e1lido. Introduzca solo el dominio o la direcci\u00f3n IP, no el punto de acceso completo de la API.",
+            "unknown": "Error inesperado",
+            "pip_wheel_error": "Pip devolvi\u00f3 un error al instalar el archivo wheel. Consulte los registros de Home Assistant para obtener m\u00e1s detalles."
+        },
+        "progress": {
+            "download": "Espere mientras se descarga el modelo de HuggingFace. Esto puede tardar unos minutos.",
+            "install_local_wheels": "Espere mientras se instala Llama.cpp..."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "model_backend": "Backend",
+                    "selected_language": "Idioma del modelo",
+                    "host": "Nombre de host de la API",
+                    "port": "Puerto de la API",
+                    "ssl": "Usar HTTPS",
+                    "openai_api_key": "Clave de API",
+                    "openai_path": "Ruta de la API",
+                    "anthropic_base_url": "URL base de la API compatible con Anthropic"
+                },
+                "description": "Seleccione el backend y/o proporcione los datos de conexi\u00f3n a la API que aloja el modelo.",
+                "title": "Configurar backend"
+            }
+        },
+        "abort": {
+            "duplicate_client": "No se puede crear un proveedor de modelos duplicado."
+        },
+        "issues": {
+            "text_generation_webui_removed": {
+                "title": "text-generation-webui ya no es compatible",
+                "description": "Se ha eliminado el backend text-generation-webui y sus modelos se han cambiado a la API compatible con OpenAI. Se han descartado los ajustes exclusivos de text-generation-webui:\n{details}\n\nCompruebe que los modelos afectados siguen funcionando como se espera."
+            }
+        }
+    },
+    "config_subentries": {
+        "conversation": {
+            "initiate_flow": {
+                "user": "A\u00f1adir agente de conversaci\u00f3n",
+                "reconfigure": "Reconfigurar agente de conversaci\u00f3n"
+            },
+            "entry_type": "Agente de conversaci\u00f3n",
+            "error": {
+                "download_failed": "La descarga no se complet\u00f3: {exception}",
+                "missing_quantization": "El nivel de cuantizaci\u00f3n GGUF {missing} no existe en el repositorio de HuggingFace proporcionado. Se encontraron los siguientes niveles de cuantizaci\u00f3n: {available}",
+                "no_supported_ggufs": "El repositorio de HuggingFace proporcionado no contiene archivos GGUF compatibles.",
+                "missing_model_api": "El modelo seleccionado no est\u00e1 disponible en esta API. Los modelos disponibles se muestran en la lista desplegable.",
+                "missing_model_file": "El archivo proporcionado no existe.",
+                "other_existing_local": "Ya hay otro modelo cargado localmente. Desc\u00e1rguelo de la memoria o configure un modelo remoto.",
+                "unknown": "Error inesperado",
+                "sys_refresh_caching_enabled": "La actualizaci\u00f3n del prompt del sistema debe estar activada para que funcione la cach\u00e9 de prompts.",
+                "missing_gbnf_file": "No se encontr\u00f3 el archivo GBNF: {filename}",
+                "missing_icl_file": "No se encontr\u00f3 el archivo CSV de ejemplos de aprendizaje en contexto: {filename}",
+                "legacy_tool_calling_with_iterations": "El modo heredado/de un solo intento (Activar llamadas a herramientas heredadas) es incompatible con un valor de iteraciones de llamadas a herramientas mayor que 0. Establezca las iteraciones m\u00e1ximas de llamadas a herramientas en 0 para modelos heredados/de un solo intento, o desactive las llamadas a herramientas heredadas para usar el modo de agente."
+            },
+            "progress": {
+                "download": "Espere mientras se descarga el modelo de HuggingFace. Esto puede tardar unos minutos."
+            },
+            "abort": {
+                "reconfigure_successful": "Las opciones del modelo se actualizaron correctamente."
+            },
+            "step": {
+                "pick_model": {
+                    "data": {
+                        "huggingface_model": "Nombre del modelo",
+                        "downloaded_model_file": "Nombre del archivo local",
+                        "downloaded_model_quantization": "Cuantizaci\u00f3n del modelo descargado"
+                    },
+                    "description": "Seleccione un modelo.\n\nSi proporciona un archivo de modelo local, se usar\u00e1 en lugar de descargarlo de HuggingFace.\n\n**Modelos compatibles sin configuraci\u00f3n adicional:**\n1. [Home LLM](https://huggingface.co/collections/acon96/home-llm-6618762669211da33bb22c5a): incluye modelos de 270M a 4B\n2. [Familia Qwen 3.5](https://huggingface.co/collections/Qwen/qwen35): incluye modelos de 800M a 100B+\n3. [Familia LFM 2.5](https://huggingface.co/collections/LiquidAI/lfm25): incluye modelos de 350M a 8B",
+                    "title": "Seleccionar modelo"
+                },
+                "model_parameters": {
+                    "data": {
+                        "max_new_tokens": "N\u00famero m\u00e1ximo de tokens en la respuesta",
+                        "llm_hass_api": "API de LLM seleccionadas",
+                        "prompt": "Prompt del sistema",
+                        "temperature": "Temperatura",
+                        "top_k": "Top K",
+                        "top_p": "Top P",
+                        "min_p": "Min P",
+                        "typical_p": "Typical P",
+                        "request_timeout": "Tiempo de espera de solicitudes remotas (segundos)",
+                        "enable_streaming": "Activar respuestas en streaming",
+                        "ollama_keep_alive": "(ollama) Tiempo de mantenimiento en memoria/inactividad (minutos)",
+                        "ollama_json_mode": "(ollama) Modo de salida JSON",
+                        "extra_attributes_to_expose": "Atributo adicional que se expone en el contexto",
+                        "enable_flash_attention": "Activar Flash Attention",
+                        "gbnf_grammar": "Gram\u00e1tica GBNF",
+                        "openai_api_key": "Clave de API",
+                        "service_call_regex": "Expresi\u00f3n regular para llamadas a servicios",
+                        "in_context_examples": "Activar ejemplos de aprendizaje en contexto (ICL)",
+                        "in_context_examples_file": "Nombre del archivo CSV de ejemplos de aprendizaje en contexto",
+                        "num_in_context_examples": "N\u00famero de ejemplos ICL que se generan",
+                        "prompt_caching": "Activar cach\u00e9 de prompts",
+                        "prompt_caching_interval": "Intervalo m\u00ednimo de actualizaci\u00f3n de la cach\u00e9 de prompts (segundos)",
+                        "context_length": "Longitud del contexto",
+                        "batch_size": "(llama.cpp) Tama\u00f1o del lote",
+                        "n_threads": "(llama.cpp) N\u00famero de hilos",
+                        "n_batch_threads": "(llama.cpp) N\u00famero de hilos por lote",
+                        "llama_cpp_cache_size_mb": "(llama.cpp) Tama\u00f1o de la cach\u00e9 KV en disco (MB)",
+                        "thinking_prefix": "Prefijo del contenido de razonamiento",
+                        "thinking_suffix": "Sufijo del contenido de razonamiento",
+                        "tool_call_prefix": "Prefijo de las llamadas a herramientas",
+                        "tool_call_suffix": "Sufijo de las llamadas a herramientas",
+                        "enable_legacy_tool_calling": "Activar llamadas a herramientas heredadas",
+                        "tool_response_as_string": "Respuesta de herramienta como cadena de texto",
+                        "max_tool_call_iterations": "N\u00famero m\u00e1ximo de intentos de llamadas a herramientas"
+                    },
+                    "data_description": {
+                        "llm_hass_api": "Seleccione 'Assist' para que el modelo pueda controlar dispositivos. Si usa un modelo Home-LLM (v1-3), seleccione 'Home Assistant Services'.",
+                        "prompt": "Consulte [aqu\u00ed](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) para obtener m\u00e1s informaci\u00f3n sobre los prompts del modelo.",
+                        "in_context_examples": "Active esta opci\u00f3n si usa un modelo que no se ha ajustado espec\u00edficamente para esta integraci\u00f3n.",
+                        "extra_attributes_to_expose": "Esta es la lista de 'atributos' de Home Assistant que se exponen al modelo. Limita la informaci\u00f3n que el modelo puede ver y sobre la que puede responder preguntas.",
+                        "gbnf_grammar": "Restringe la salida de llama.cpp a una gram\u00e1tica escrita en GBNF. D\u00e9jelo vac\u00edo para que el modelo responda libremente.",
+                        "prompt_caching": "La cach\u00e9 de prompts intenta procesar previamente el prompt (estado de la casa) y almacenar el procesamiento necesario para comprenderlo. Al activar esta opci\u00f3n, el modelo vuelve a procesar el prompt cuando cambia el estado de una entidad de la casa, respetando el intervalo indicado a continuaci\u00f3n.",
+                        "enable_legacy_tool_calling": "Procesa preferentemente las llamadas a herramientas de forma local, en lugar de depender del backend para gestionar su formato. Puede ser m\u00e1s fiable, pero requiere configurar correctamente el prefijo y el sufijo de las llamadas a herramientas.",
+                        "tool_response_as_string": "Algunas plantillas de prompts requieren que la respuesta de la herramienta se proporcione como una cadena serializada en JSON, en lugar del objeto sin procesar.",
+                        "max_tool_call_iterations": "Establezca 0 para generar la respuesta y la llamada a herramienta en un solo intento, sin bucles (use esta opci\u00f3n para los modelos Home v1-v3).",
+                        "enable_streaming": "Cuando esta opci\u00f3n est\u00e1 activada, las respuestas se transmiten token a token si el backend lo permite.",
+                        "context_length": "El modelo no puede usar m\u00e1s de esta cantidad de tokens para la conversaci\u00f3n y su respuesta en conjunto. Home LLM descarta los mensajes m\u00e1s antiguos que ya no caben, de modo que una conversaci\u00f3n larga se mantiene dentro del l\u00edmite en lugar de fallar."
+                    },
+                    "description": "Configure el modelo seg\u00fan el formato de prompts que necesita. Existen muchas opciones y elegir las correctas es esencial para obtener un rendimiento \u00f3ptimo. Consulte [aqu\u00ed](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) para obtener m\u00e1s informaci\u00f3n sobre las opciones de esta p\u00e1gina.\n\n**Es posible que se hayan seleccionado algunos valores predeterminados seg\u00fan el nombre del modelo o del archivo seleccionado.** Si ha cambiado el nombre de un archivo o usa una versi\u00f3n ajustada de un modelo compatible, puede que no se hayan detectado los valores predeterminados.",
+                    "title": "Configurar el modelo seleccionado"
+                },
+                "reconfigure": {
+                    "data": {
+                        "max_new_tokens": "N\u00famero m\u00e1ximo de tokens en la respuesta",
+                        "llm_hass_api": "API de LLM seleccionadas",
+                        "prompt": "Prompt del sistema",
+                        "temperature": "Temperatura",
+                        "top_k": "Top K",
+                        "top_p": "Top P",
+                        "min_p": "Min P",
+                        "typical_p": "Typical P",
+                        "request_timeout": "Tiempo de espera de solicitudes remotas (segundos)",
+                        "enable_streaming": "Activar respuestas en streaming",
+                        "ollama_keep_alive": "(ollama) Tiempo de mantenimiento en memoria/inactividad (minutos)",
+                        "ollama_json_mode": "(ollama) Modo de salida JSON",
+                        "extra_attributes_to_expose": "Atributo adicional que se expone en el contexto",
+                        "enable_flash_attention": "Activar Flash Attention",
+                        "gbnf_grammar": "Gram\u00e1tica GBNF",
+                        "openai_api_key": "Clave de API",
+                        "service_call_regex": "Expresi\u00f3n regular para llamadas a servicios",
+                        "in_context_examples": "Activar ejemplos de aprendizaje en contexto (ICL)",
+                        "in_context_examples_file": "Nombre del archivo CSV de ejemplos de aprendizaje en contexto",
+                        "num_in_context_examples": "N\u00famero de ejemplos ICL que se generan",
+                        "prompt_caching": "Activar cach\u00e9 de prompts",
+                        "prompt_caching_interval": "Intervalo m\u00ednimo de actualizaci\u00f3n de la cach\u00e9 de prompts (segundos)",
+                        "context_length": "Longitud del contexto",
+                        "batch_size": "(llama.cpp) Tama\u00f1o del lote",
+                        "n_threads": "(llama.cpp) N\u00famero de hilos",
+                        "n_batch_threads": "(llama.cpp) N\u00famero de hilos por lote",
+                        "llama_cpp_cache_size_mb": "(llama.cpp) Tama\u00f1o de la cach\u00e9 KV en disco (MB)",
+                        "thinking_prefix": "Prefijo del contenido de razonamiento",
+                        "thinking_suffix": "Sufijo del contenido de razonamiento",
+                        "tool_call_prefix": "Prefijo de las llamadas a herramientas",
+                        "tool_call_suffix": "Sufijo de las llamadas a herramientas",
+                        "enable_legacy_tool_calling": "Activar llamadas a herramientas heredadas",
+                        "tool_response_as_string": "Respuesta de herramienta como cadena de texto",
+                        "max_tool_call_iterations": "N\u00famero m\u00e1ximo de intentos de llamadas a herramientas"
+                    },
+                    "data_description": {
+                        "llm_hass_api": "Seleccione 'Assist' para que el modelo pueda controlar dispositivos. Si usa un modelo Home-LLM (v1-3), seleccione 'Home Assistant Services'.",
+                        "prompt": "Consulte [aqu\u00ed](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) para obtener m\u00e1s informaci\u00f3n sobre los prompts del modelo.",
+                        "in_context_examples": "Active esta opci\u00f3n si usa un modelo que no se ha ajustado espec\u00edficamente para esta integraci\u00f3n.",
+                        "extra_attributes_to_expose": "Esta es la lista de 'atributos' de Home Assistant que se exponen al modelo. Limita la informaci\u00f3n que el modelo puede ver y sobre la que puede responder preguntas.",
+                        "gbnf_grammar": "Restringe la salida de llama.cpp a una gram\u00e1tica escrita en GBNF. D\u00e9jelo vac\u00edo para que el modelo responda libremente.",
+                        "prompt_caching": "La cach\u00e9 de prompts intenta procesar previamente el prompt (estado de la casa) y almacenar el procesamiento necesario para comprenderlo. Al activar esta opci\u00f3n, el modelo vuelve a procesar el prompt cuando cambia el estado de una entidad de la casa, respetando el intervalo indicado a continuaci\u00f3n.",
+                        "enable_legacy_tool_calling": "Procesa preferentemente las llamadas a herramientas de forma local, en lugar de depender del backend para gestionar su formato. Puede ser m\u00e1s fiable, pero requiere configurar correctamente el prefijo y el sufijo de las llamadas a herramientas.",
+                        "tool_response_as_string": "Algunas plantillas de prompts requieren que la respuesta de la herramienta se proporcione como una cadena serializada en JSON, en lugar del objeto sin procesar.",
+                        "max_tool_call_iterations": "Establezca 0 para generar la respuesta y la llamada a herramienta en un solo intento, sin bucles (use esta opci\u00f3n para los modelos Home v1-v3).",
+                        "enable_streaming": "Cuando esta opci\u00f3n est\u00e1 activada, las respuestas se transmiten token a token si el backend lo permite.",
+                        "context_length": "El modelo no puede usar m\u00e1s de esta cantidad de tokens para la conversaci\u00f3n y su respuesta en conjunto. Home LLM descarta los mensajes m\u00e1s antiguos que ya no caben, de modo que una conversaci\u00f3n larga se mantiene dentro del l\u00edmite en lugar de fallar."
+                    },
+                    "description": "Configure el modelo seg\u00fan el formato de prompts que necesita. Existen muchas opciones y elegir las correctas es esencial para obtener un rendimiento \u00f3ptimo. Consulte [aqu\u00ed](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) para obtener m\u00e1s informaci\u00f3n sobre las opciones de esta p\u00e1gina.\n\n**Es posible que se hayan seleccionado algunos valores predeterminados seg\u00fan el nombre del modelo o del archivo seleccionado.** Si ha cambiado el nombre de un archivo o usa una versi\u00f3n ajustada de un modelo compatible, puede que no se hayan detectado los valores predeterminados.",
+                    "title": "Configurar el modelo seleccionado"
+                }
+            }
+        },
+        "ai_task": {
+            "initiate_flow": {
+                "user": "A\u00f1adir gestor de tareas de IA",
+                "reconfigure": "Reconfigurar gestor de tareas de IA"
+            },
+            "entry_type": "Gestor de tareas de IA",
+            "error": {
+                "download_failed": "La descarga no se complet\u00f3: {exception}",
+                "missing_quantization": "El nivel de cuantizaci\u00f3n GGUF {missing} no existe en el repositorio de HuggingFace proporcionado. Se encontraron los siguientes niveles de cuantizaci\u00f3n: {available}",
+                "no_supported_ggufs": "El repositorio de HuggingFace proporcionado no contiene archivos GGUF compatibles.",
+                "missing_model_api": "El modelo seleccionado no est\u00e1 disponible en esta API. Los modelos disponibles se muestran en la lista desplegable.",
+                "missing_model_file": "El archivo proporcionado no existe.",
+                "other_existing_local": "Ya hay otro modelo cargado localmente. Desc\u00e1rguelo de la memoria o configure un modelo remoto.",
+                "unknown": "Error inesperado",
+                "sys_refresh_caching_enabled": "La actualizaci\u00f3n del prompt del sistema debe estar activada para que funcione la cach\u00e9 de prompts.",
+                "missing_gbnf_file": "No se encontr\u00f3 el archivo GBNF: {filename}",
+                "missing_icl_file": "No se encontr\u00f3 el archivo CSV de ejemplos de aprendizaje en contexto: {filename}",
+                "legacy_tool_calling_with_iterations": "El modo heredado/de un solo intento (Activar llamadas a herramientas heredadas) es incompatible con un valor de iteraciones de llamadas a herramientas mayor que 0. Establezca las iteraciones m\u00e1ximas de llamadas a herramientas en 0 para modelos heredados/de un solo intento, o desactive las llamadas a herramientas heredadas para usar el modo de agente."
+            },
+            "progress": {
+                "download": "Espere mientras se descarga el modelo de HuggingFace. Esto puede tardar unos minutos."
+            },
+            "abort": {
+                "reconfigure_successful": "Las opciones del modelo se actualizaron correctamente."
+            },
+            "step": {
+                "pick_model": {
+                    "data": {
+                        "huggingface_model": "Nombre del modelo",
+                        "downloaded_model_file": "Nombre del archivo local",
+                        "downloaded_model_quantization": "Cuantizaci\u00f3n del modelo descargado"
+                    },
+                    "description": "Seleccione un modelo.\n\nSi proporciona un archivo de modelo local, se usar\u00e1 en lugar de descargarlo de HuggingFace.\n\n**Modelos compatibles sin configuraci\u00f3n adicional:**\n1. [Home LLM](https://huggingface.co/collections/acon96/home-llm-6618762669211da33bb22c5a): incluye modelos de 270M a 4B\n2. [Familia Qwen 3.5](https://huggingface.co/collections/Qwen/qwen35): incluye modelos de 800M a 100B+\n3. [Familia LFM 2.5](https://huggingface.co/collections/LiquidAI/lfm25): incluye modelos de 350M a 8B",
+                    "title": "Seleccionar modelo"
+                },
+                "model_parameters": {
+                    "data": {
+                        "max_new_tokens": "N\u00famero m\u00e1ximo de tokens en la respuesta",
+                        "prompt": "Prompt del sistema",
+                        "temperature": "Temperatura",
+                        "top_k": "Top K",
+                        "top_p": "Top P",
+                        "min_p": "Min P",
+                        "typical_p": "Typical P",
+                        "request_timeout": "Tiempo de espera de solicitudes remotas (segundos)",
+                        "enable_streaming": "Activar respuestas en streaming",
+                        "ollama_keep_alive": "(ollama) Tiempo de mantenimiento en memoria/inactividad (minutos)",
+                        "ollama_json_mode": "(ollama) Modo de salida JSON",
+                        "extra_attributes_to_expose": "Atributo adicional que se expone en el contexto",
+                        "enable_flash_attention": "Activar Flash Attention",
+                        "gbnf_grammar": "Gram\u00e1tica GBNF",
+                        "openai_api_key": "Clave de API",
+                        "service_call_regex": "Expresi\u00f3n regular para llamadas a servicios",
+                        "in_context_examples": "Activar ejemplos de aprendizaje en contexto (ICL)",
+                        "in_context_examples_file": "Nombre del archivo CSV de ejemplos de aprendizaje en contexto",
+                        "num_in_context_examples": "N\u00famero de ejemplos ICL que se generan",
+                        "prompt_caching": "Activar cach\u00e9 de prompts",
+                        "prompt_caching_interval": "Intervalo m\u00ednimo de actualizaci\u00f3n de la cach\u00e9 de prompts (segundos)",
+                        "context_length": "Longitud del contexto",
+                        "batch_size": "(llama.cpp) Tama\u00f1o del lote",
+                        "n_threads": "(llama.cpp) N\u00famero de hilos",
+                        "n_batch_threads": "(llama.cpp) N\u00famero de hilos por lote",
+                        "llama_cpp_cache_size_mb": "(llama.cpp) Tama\u00f1o de la cach\u00e9 KV en disco (MB)",
+                        "thinking_prefix": "Prefijo del contenido de razonamiento",
+                        "thinking_suffix": "Sufijo del contenido de razonamiento",
+                        "tool_call_prefix": "Prefijo de las llamadas a herramientas",
+                        "tool_call_suffix": "Sufijo de las llamadas a herramientas",
+                        "enable_legacy_tool_calling": "Activar llamadas a herramientas heredadas",
+                        "tool_response_as_string": "Respuesta de herramienta como cadena de texto",
+                        "max_tool_call_iterations": "N\u00famero m\u00e1ximo de intentos de llamadas a herramientas",
+                        "ai_task_extraction_method": "M\u00e9todo de extracci\u00f3n de datos estructurados",
+                        "ai_task_retries": "Reintentos para la extracci\u00f3n de datos estructurados"
+                    },
+                    "data_description": {
+                        "prompt": "Consulte [aqu\u00ed](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) para obtener m\u00e1s informaci\u00f3n sobre los prompts del modelo.",
+                        "in_context_examples": "Active esta opci\u00f3n si usa un modelo que no se ha ajustado espec\u00edficamente para esta integraci\u00f3n.",
+                        "extra_attributes_to_expose": "Esta es la lista de 'atributos' de Home Assistant que se exponen al modelo. Limita la informaci\u00f3n que el modelo puede ver y sobre la que puede responder preguntas.",
+                        "gbnf_grammar": "Restringe la salida de llama.cpp a una gram\u00e1tica escrita en GBNF. D\u00e9jelo vac\u00edo para que el modelo responda libremente.",
+                        "prompt_caching": "La cach\u00e9 de prompts intenta procesar previamente el prompt (estado de la casa) y almacenar el procesamiento necesario para comprenderlo. Al activar esta opci\u00f3n, el modelo vuelve a procesar el prompt cuando cambia el estado de una entidad de la casa, respetando el intervalo indicado a continuaci\u00f3n.",
+                        "enable_legacy_tool_calling": "Procesa preferentemente las llamadas a herramientas de forma local, en lugar de depender del backend para gestionar su formato. Puede ser m\u00e1s fiable, pero requiere configurar correctamente el prefijo y el sufijo de las llamadas a herramientas.",
+                        "tool_response_as_string": "Algunas plantillas de prompts requieren que la respuesta de la herramienta se proporcione como una cadena serializada en JSON, en lugar del objeto sin procesar.",
+                        "max_tool_call_iterations": "Establezca 0 para generar la respuesta y la llamada a herramienta en un solo intento, sin bucles (use esta opci\u00f3n para los modelos Home v1-v3).",
+                        "enable_streaming": "Cuando esta opci\u00f3n est\u00e1 activada, las respuestas se transmiten token a token si el backend lo permite.",
+                        "ai_task_extraction_method": "Seleccione el m\u00e9todo para extraer datos estructurados de la respuesta del modelo. 'Structured Output' indica al backend que obligue al modelo a generar una salida conforme al esquema JSON proporcionado; 'Tool Calling' proporciona al modelo una herramienta que debe llamar con los argumentos adecuados para la estructura de salida deseada.",
+                        "context_length": "El modelo no puede usar m\u00e1s de esta cantidad de tokens para la conversaci\u00f3n y su respuesta en conjunto. Home LLM descarta los mensajes m\u00e1s antiguos que ya no caben, de modo que una conversaci\u00f3n larga se mantiene dentro del l\u00edmite en lugar de fallar."
+                    },
+                    "description": "Configure el modelo seg\u00fan el formato de prompts que necesita. Existen muchas opciones y elegir las correctas es esencial para obtener un rendimiento \u00f3ptimo. Consulte [aqu\u00ed](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) para obtener m\u00e1s informaci\u00f3n sobre las opciones de esta p\u00e1gina.\n\n**Es posible que se hayan seleccionado algunos valores predeterminados seg\u00fan el nombre del modelo o del archivo seleccionado.** Si ha cambiado el nombre de un archivo o usa una versi\u00f3n ajustada de un modelo compatible, puede que no se hayan detectado los valores predeterminados.",
+                    "title": "Configurar el modelo seleccionado"
+                },
+                "reconfigure": {
+                    "data": {
+                        "max_new_tokens": "N\u00famero m\u00e1ximo de tokens en la respuesta",
+                        "llm_hass_api": "API de LLM seleccionadas",
+                        "prompt": "Prompt del sistema",
+                        "temperature": "Temperatura",
+                        "top_k": "Top K",
+                        "top_p": "Top P",
+                        "min_p": "Min P",
+                        "typical_p": "Typical P",
+                        "request_timeout": "Tiempo de espera de solicitudes remotas (segundos)",
+                        "enable_streaming": "Activar respuestas en streaming",
+                        "ollama_keep_alive": "(ollama) Tiempo de mantenimiento en memoria/inactividad (minutos)",
+                        "ollama_json_mode": "(ollama) Modo de salida JSON",
+                        "extra_attributes_to_expose": "Atributo adicional que se expone en el contexto",
+                        "enable_flash_attention": "Activar Flash Attention",
+                        "gbnf_grammar": "Gram\u00e1tica GBNF",
+                        "openai_api_key": "Clave de API",
+                        "service_call_regex": "Expresi\u00f3n regular para llamadas a servicios",
+                        "in_context_examples": "Activar ejemplos de aprendizaje en contexto (ICL)",
+                        "in_context_examples_file": "Nombre del archivo CSV de ejemplos de aprendizaje en contexto",
+                        "num_in_context_examples": "N\u00famero de ejemplos ICL que se generan",
+                        "prompt_caching": "Activar cach\u00e9 de prompts",
+                        "prompt_caching_interval": "Intervalo m\u00ednimo de actualizaci\u00f3n de la cach\u00e9 de prompts (segundos)",
+                        "context_length": "Longitud del contexto",
+                        "batch_size": "(llama.cpp) Tama\u00f1o del lote",
+                        "n_threads": "(llama.cpp) N\u00famero de hilos",
+                        "n_batch_threads": "(llama.cpp) N\u00famero de hilos por lote",
+                        "llama_cpp_cache_size_mb": "(llama.cpp) Tama\u00f1o de la cach\u00e9 KV en disco (MB)",
+                        "thinking_prefix": "Prefijo del contenido de razonamiento",
+                        "thinking_suffix": "Sufijo del contenido de razonamiento",
+                        "tool_call_prefix": "Prefijo de las llamadas a herramientas",
+                        "tool_call_suffix": "Sufijo de las llamadas a herramientas",
+                        "enable_legacy_tool_calling": "Activar llamadas a herramientas heredadas",
+                        "tool_response_as_string": "Respuesta de herramienta como cadena de texto",
+                        "max_tool_call_iterations": "N\u00famero m\u00e1ximo de intentos de llamadas a herramientas"
+                    },
+                    "data_description": {
+                        "llm_hass_api": "Seleccione 'Assist' para que el modelo pueda controlar dispositivos. Si usa un modelo Home-LLM v1, v2 o v3, seleccione 'Home-LLM (v1-3)'.",
+                        "prompt": "Consulte [aqu\u00ed](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) para obtener m\u00e1s informaci\u00f3n sobre los prompts del modelo.",
+                        "in_context_examples": "Active esta opci\u00f3n si usa un modelo que no se ha ajustado espec\u00edficamente para esta integraci\u00f3n.",
+                        "extra_attributes_to_expose": "Esta es la lista de 'atributos' de Home Assistant que se exponen al modelo. Limita la informaci\u00f3n que el modelo puede ver y sobre la que puede responder preguntas.",
+                        "gbnf_grammar": "Restringe la salida de llama.cpp a una gram\u00e1tica escrita en GBNF. D\u00e9jelo vac\u00edo para que el modelo responda libremente.",
+                        "prompt_caching": "La cach\u00e9 de prompts intenta procesar previamente el prompt (estado de la casa) y almacenar el procesamiento necesario para comprenderlo. Al activar esta opci\u00f3n, el modelo vuelve a procesar el prompt cuando cambia el estado de una entidad de la casa, respetando el intervalo indicado a continuaci\u00f3n.",
+                        "enable_legacy_tool_calling": "Procesa preferentemente las llamadas a herramientas de forma local, en lugar de depender del backend para gestionar su formato. Puede ser m\u00e1s fiable, pero requiere configurar correctamente el prefijo y el sufijo de las llamadas a herramientas.",
+                        "tool_response_as_string": "Algunas plantillas de prompts requieren que la respuesta de la herramienta se proporcione como una cadena serializada en JSON, en lugar del objeto sin procesar.",
+                        "max_tool_call_iterations": "Establezca 0 para generar la respuesta y la llamada a herramienta en un solo intento, sin bucles (use esta opci\u00f3n para los modelos Home v1-v3).",
+                        "enable_streaming": "Cuando esta opci\u00f3n est\u00e1 activada, las respuestas se transmiten token a token si el backend lo permite.",
+                        "context_length": "El modelo no puede usar m\u00e1s de esta cantidad de tokens para la conversaci\u00f3n y su respuesta en conjunto. Home LLM descarta los mensajes m\u00e1s antiguos que ya no caben, de modo que una conversaci\u00f3n larga se mantiene dentro del l\u00edmite en lugar de fallar."
+                    },
+                    "description": "Configure el modelo seg\u00fan el formato de prompts que necesita. Existen muchas opciones y elegir las correctas es esencial para obtener un rendimiento \u00f3ptimo. Consulte [aqu\u00ed](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) para obtener m\u00e1s informaci\u00f3n sobre las opciones de esta p\u00e1gina.\n\n**Es posible que se hayan seleccionado algunos valores predeterminados seg\u00fan el nombre del modelo o del archivo seleccionado.** Si ha cambiado el nombre de un archivo o usa una versi\u00f3n ajustada de un modelo compatible, puede que no se hayan detectado los valores predeterminados.",
+                    "title": "Configurar el modelo seleccionado"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "selected_language": "Idioma del modelo",
+                    "host": "Nombre de host de la API",
+                    "port": "Puerto de la API",
+                    "ssl": "Usar HTTPS",
+                    "openai_api_key": "Clave de API",
+                    "openai_path": "Ruta de la API"
+                },
+                "description": "Proporcione los datos de conexi\u00f3n a la API que aloja el modelo.",
+                "title": "Configurar conexi\u00f3n"
+            },
+            "reinstall": {
+                "data": {
+                    "reinstall_llama_cpp": "Reinstalar Llama.cpp",
+                    "installed_llama_cpp_version": "Versi\u00f3n que se (re)instalar\u00e1"
+                },
+                "description": "__Si tiene problemas con Llama.cpp__, puede forzar la reinstalaci\u00f3n del paquete aqu\u00ed. Se intentar\u00e1 reinstalar o actualizar el paquete llama-cpp-python desde GitHub *o* desde un archivo wheel local situado en el directorio `/config/custom_components/llama_conversation/`.",
+                "title": "Reinstalar Llama.cpp"
+            }
+        },
+        "error": {
+            "failed_to_connect": "No se pudo conectar con la API remota: {exception}",
+            "invalid_hostname": "El nombre de host proporcionado no es v\u00e1lido. Introduzca solo el dominio o la direcci\u00f3n IP, no el punto de acceso completo de la API.",
+            "unknown": "Error inesperado",
+            "pip_wheel_error": "Pip devolvi\u00f3 un error al instalar el archivo wheel. Consulte los registros de Home Assistant para obtener m\u00e1s detalles."
+        },
+        "progress": {
+            "install_local_wheels": "Espere mientras se instala Llama.cpp..."
+        }
+    },
+    "selector": {
+        "model_backend": {
+            "options": {
+                "llama_cpp_python": "Llama.cpp",
+                "generic_openai": "API 'Conversations' compatible con OpenAI",
+                "generic_openai_responses": "API 'Responses' compatible con OpenAPI",
+                "llama_cpp_server": "Servidor Llama.cpp",
+                "ollama": "API de Ollama",
+                "anthropic": "API 'Messages' compatible con Anthropic"
+            }
+        },
+        "selected_language": {
+            "options": {
+                "en": "Ingl\u00e9s",
+                "de": "Alem\u00e1n",
+                "fr": "Franc\u00e9s",
+                "es": "Espa\u00f1ol",
+                "pl": "Polaco"
+            }
+        }
+    }
+}

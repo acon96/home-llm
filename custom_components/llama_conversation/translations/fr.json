@@ -1,0 +1,382 @@
+{
+    "config": {
+        "error": {
+            "failed_to_connect": "Impossible de se connecter \u00e0 l'API distante : {exception}",
+            "invalid_hostname": "Le nom d'h\u00f4te fourni est invalide. Saisissez uniquement le domaine ou l'adresse IP, et non l'URL compl\u00e8te du point de terminaison de l'API.",
+            "unknown": "Erreur inattendue",
+            "pip_wheel_error": "Pip a renvoy\u00e9 une erreur lors de l'installation du fichier wheel ! Consultez les journaux de Home Assistant pour plus de d\u00e9tails."
+        },
+        "progress": {
+            "download": "Veuillez patienter pendant le t\u00e9l\u00e9chargement du mod\u00e8le depuis HuggingFace. Cela peut prendre quelques minutes.",
+            "install_local_wheels": "Veuillez patienter pendant l'installation de Llama.cpp..."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "model_backend": "Backend",
+                    "selected_language": "Langue du mod\u00e8le",
+                    "host": "Nom d'h\u00f4te de l'API",
+                    "port": "Port de l'API",
+                    "ssl": "Utiliser HTTPS",
+                    "openai_api_key": "Cl\u00e9 d'API",
+                    "openai_path": "Chemin de l'API",
+                    "anthropic_base_url": "URL de base de l'API compatible avec Anthropic"
+                },
+                "description": "S\u00e9lectionnez le backend et/ou fournissez les param\u00e8tres de connexion \u00e0 l'API qui h\u00e9berge le mod\u00e8le.",
+                "title": "Configurer le backend"
+            }
+        },
+        "abort": {
+            "duplicate_client": "Impossible de cr\u00e9er un fournisseur de mod\u00e8les en double !"
+        },
+        "issues": {
+            "text_generation_webui_removed": {
+                "title": "text-generation-webui n'est plus pris en charge",
+                "description": "Le backend text-generation-webui a \u00e9t\u00e9 supprim\u00e9 et ses mod\u00e8les ont \u00e9t\u00e9 transf\u00e9r\u00e9s vers l'API compatible avec OpenAI. Les param\u00e8tres propres \u00e0 text-generation-webui ont \u00e9t\u00e9 abandonn\u00e9s :\n{details}\n\nV\u00e9rifiez que les mod\u00e8les concern\u00e9s se comportent toujours comme pr\u00e9vu."
+            }
+        }
+    },
+    "config_subentries": {
+        "conversation": {
+            "initiate_flow": {
+                "user": "Ajouter un agent de conversation",
+                "reconfigure": "Reconfigurer un agent de conversation"
+            },
+            "entry_type": "Agent de conversation",
+            "error": {
+                "download_failed": "Le t\u00e9l\u00e9chargement n'a pas abouti : {exception}",
+                "missing_quantization": "Le niveau de quantification GGUF {missing} n'existe pas dans le d\u00e9p\u00f4t HuggingFace fourni. Les niveaux de quantification suivants ont \u00e9t\u00e9 trouv\u00e9s : {available}",
+                "no_supported_ggufs": "Le d\u00e9p\u00f4t HuggingFace fourni ne contient aucun fichier GGUF compatible !",
+                "missing_model_api": "Le mod\u00e8le s\u00e9lectionn\u00e9 n'est pas disponible via cette API. Les mod\u00e8les disponibles figurent dans la liste d\u00e9roulante.",
+                "missing_model_file": "Le fichier fourni n'existe pas.",
+                "other_existing_local": "Un autre mod\u00e8le est d\u00e9j\u00e0 charg\u00e9 localement. D\u00e9chargez-le ou configurez un mod\u00e8le distant.",
+                "unknown": "Erreur inattendue",
+                "sys_refresh_caching_enabled": "L'actualisation du prompt syst\u00e8me doit \u00eatre activ\u00e9e pour que la mise en cache des prompts fonctionne !",
+                "missing_gbnf_file": "Le fichier GBNF est introuvable : {filename}",
+                "missing_icl_file": "Le fichier CSV d'exemples d'apprentissage en contexte est introuvable : {filename}",
+                "legacy_tool_calling_with_iterations": "Le mode ancien/\u00e0 tentative unique (Activer les appels d'outils h\u00e9rit\u00e9s) est incompatible avec un nombre maximal d'it\u00e9rations d'appels d'outils sup\u00e9rieur \u00e0 0. R\u00e9glez ce nombre sur 0 pour les mod\u00e8les anciens/\u00e0 tentative unique, ou d\u00e9sactivez les appels d'outils h\u00e9rit\u00e9s pour utiliser le mode agentique."
+            },
+            "progress": {
+                "download": "Veuillez patienter pendant le t\u00e9l\u00e9chargement du mod\u00e8le depuis HuggingFace. Cela peut prendre quelques minutes."
+            },
+            "abort": {
+                "reconfigure_successful": "Les options du mod\u00e8le ont \u00e9t\u00e9 mises \u00e0 jour."
+            },
+            "step": {
+                "pick_model": {
+                    "data": {
+                        "huggingface_model": "Nom du mod\u00e8le",
+                        "downloaded_model_file": "Nom du fichier local",
+                        "downloaded_model_quantization": "Quantification du mod\u00e8le t\u00e9l\u00e9charg\u00e9"
+                    },
+                    "description": "S\u00e9lectionnez un mod\u00e8le.\n\nSi vous fournissez un fichier de mod\u00e8le local, il sera utilis\u00e9 au lieu de t\u00e9l\u00e9charger le mod\u00e8le depuis HuggingFace.\n\n**Mod\u00e8les pris en charge sans configuration suppl\u00e9mentaire :**\n1. [Home LLM](https://huggingface.co/collections/acon96/home-llm-6618762669211da33bb22c5a) : comprend des mod\u00e8les de 270M \u00e0 4B\n2. [Famille Qwen 3.5](https://huggingface.co/collections/Qwen/qwen35) : comprend des mod\u00e8les de 800M \u00e0 100B+\n3. [Famille LFM 2.5](https://huggingface.co/collections/LiquidAI/lfm25) : comprend des mod\u00e8les de 350M \u00e0 8B",
+                    "title": "S\u00e9lectionner un mod\u00e8le"
+                },
+                "model_parameters": {
+                    "data": {
+                        "max_new_tokens": "Nombre maximal de tokens dans la r\u00e9ponse",
+                        "llm_hass_api": "API LLM s\u00e9lectionn\u00e9es",
+                        "prompt": "Prompt syst\u00e8me",
+                        "temperature": "Temp\u00e9rature",
+                        "top_k": "Top K",
+                        "top_p": "Top P",
+                        "min_p": "Min P",
+                        "typical_p": "Typical P",
+                        "request_timeout": "D\u00e9lai des requ\u00eates distantes (secondes)",
+                        "enable_streaming": "Activer les r\u00e9ponses en streaming",
+                        "ollama_keep_alive": "(ollama) D\u00e9lai de maintien en m\u00e9moire/d'inactivit\u00e9 (minutes)",
+                        "ollama_json_mode": "(ollama) Mode de sortie JSON",
+                        "extra_attributes_to_expose": "Attribut suppl\u00e9mentaire \u00e0 exposer dans le contexte",
+                        "enable_flash_attention": "Activer Flash Attention",
+                        "gbnf_grammar": "Grammaire GBNF",
+                        "openai_api_key": "Cl\u00e9 d'API",
+                        "service_call_regex": "Expression r\u00e9guli\u00e8re des appels de service",
+                        "in_context_examples": "Activer les exemples d'apprentissage en contexte (ICL)",
+                        "in_context_examples_file": "Nom du fichier CSV d'exemples d'apprentissage en contexte",
+                        "num_in_context_examples": "Nombre d'exemples ICL \u00e0 g\u00e9n\u00e9rer",
+                        "prompt_caching": "Activer la mise en cache des prompts",
+                        "prompt_caching_interval": "Intervalle minimal d'actualisation du cache des prompts (secondes)",
+                        "context_length": "Longueur du contexte",
+                        "batch_size": "(llama.cpp) Taille du lot",
+                        "n_threads": "(llama.cpp) Nombre de threads",
+                        "n_batch_threads": "(llama.cpp) Nombre de threads par lot",
+                        "llama_cpp_cache_size_mb": "(llama.cpp) Taille du cache KV sur disque (Mo)",
+                        "thinking_prefix": "Pr\u00e9fixe du contenu de raisonnement",
+                        "thinking_suffix": "Suffixe du contenu de raisonnement",
+                        "tool_call_prefix": "Pr\u00e9fixe des appels d'outils",
+                        "tool_call_suffix": "Suffixe des appels d'outils",
+                        "enable_legacy_tool_calling": "Activer les appels d'outils h\u00e9rit\u00e9s",
+                        "tool_response_as_string": "R\u00e9ponse de l'outil sous forme de cha\u00eene",
+                        "max_tool_call_iterations": "Nombre maximal de tentatives d'appels d'outils"
+                    },
+                    "data_description": {
+                        "llm_hass_api": "S\u00e9lectionnez 'Assist' pour permettre au mod\u00e8le de contr\u00f4ler les appareils. Si vous utilisez un mod\u00e8le Home-LLM (v1-3), s\u00e9lectionnez 'Home Assistant Services'.",
+                        "prompt": "Consultez [cette page](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) pour en savoir plus sur les prompts du mod\u00e8le.",
+                        "in_context_examples": "Activez cette option si vous utilisez un mod\u00e8le qui n'a pas \u00e9t\u00e9 sp\u00e9cifiquement ajust\u00e9 pour cette int\u00e9gration.",
+                        "extra_attributes_to_expose": "Il s'agit de la liste des 'attributs' Home Assistant expos\u00e9s au mod\u00e8le. Elle limite les informations que le mod\u00e8le peut consulter et sur lesquelles il peut r\u00e9pondre aux questions.",
+                        "gbnf_grammar": "Contraint la sortie de llama.cpp \u00e0 une grammaire \u00e9crite en GBNF. Laissez ce champ vide pour permettre au mod\u00e8le de r\u00e9pondre librement.",
+                        "prompt_caching": "La mise en cache des prompts tente de pr\u00e9traiter le prompt (\u00e9tat de la maison) et de mettre en cache le traitement n\u00e9cessaire \u00e0 sa compr\u00e9hension. Lorsque cette option est activ\u00e9e, le mod\u00e8le retraite le prompt \u00e0 chaque changement d'\u00e9tat d'une entit\u00e9 de la maison, dans la limite de l'intervalle ci-dessous.",
+                        "enable_legacy_tool_calling": "Privil\u00e9gie le traitement local des appels d'outils plut\u00f4t que de confier leur format au backend. Cela peut \u00eatre plus fiable, mais n\u00e9cessite de d\u00e9finir correctement le pr\u00e9fixe et le suffixe des appels d'outils.",
+                        "tool_response_as_string": "Certains mod\u00e8les de prompts attendent une r\u00e9ponse d'outil sous forme de cha\u00eene s\u00e9rialis\u00e9e en JSON, plut\u00f4t que l'objet brut.",
+                        "max_tool_call_iterations": "R\u00e9glez sur 0 pour g\u00e9n\u00e9rer la r\u00e9ponse et l'appel d'outil en une seule tentative, sans boucle (\u00e0 utiliser pour les mod\u00e8les Home v1-v3).",
+                        "enable_streaming": "Lorsque cette option est activ\u00e9e, les r\u00e9ponses sont transmises token par token si le backend le permet.",
+                        "context_length": "Le mod\u00e8le ne peut pas utiliser plus de ce nombre de tokens pour la conversation et sa r\u00e9ponse r\u00e9unies. Home LLM supprime les messages les plus anciens qui ne tiennent plus dans le contexte, afin de maintenir les longues conversations dans la limite au lieu de provoquer une erreur."
+                    },
+                    "description": "Configurez le mod\u00e8le selon le format de prompts dont il a besoin. De nombreuses options sont disponibles et choisir celles adapt\u00e9es \u00e0 votre mod\u00e8le est essentiel pour obtenir des performances optimales. Consultez [cette page](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) pour en savoir plus sur les options de cette page.\n\n**Certains param\u00e8tres par d\u00e9faut ont peut-\u00eatre \u00e9t\u00e9 choisis selon le nom du mod\u00e8le ou du fichier s\u00e9lectionn\u00e9.** Si vous avez renomm\u00e9 un fichier ou utilisez une version ajust\u00e9e d'un mod\u00e8le pris en charge, les param\u00e8tres par d\u00e9faut n'ont peut-\u00eatre pas \u00e9t\u00e9 d\u00e9tect\u00e9s.",
+                    "title": "Configurer le mod\u00e8le s\u00e9lectionn\u00e9"
+                },
+                "reconfigure": {
+                    "data": {
+                        "max_new_tokens": "Nombre maximal de tokens dans la r\u00e9ponse",
+                        "llm_hass_api": "API LLM s\u00e9lectionn\u00e9es",
+                        "prompt": "Prompt syst\u00e8me",
+                        "temperature": "Temp\u00e9rature",
+                        "top_k": "Top K",
+                        "top_p": "Top P",
+                        "min_p": "Min P",
+                        "typical_p": "Typical P",
+                        "request_timeout": "D\u00e9lai des requ\u00eates distantes (secondes)",
+                        "enable_streaming": "Activer les r\u00e9ponses en streaming",
+                        "ollama_keep_alive": "(ollama) D\u00e9lai de maintien en m\u00e9moire/d'inactivit\u00e9 (minutes)",
+                        "ollama_json_mode": "(ollama) Mode de sortie JSON",
+                        "extra_attributes_to_expose": "Attribut suppl\u00e9mentaire \u00e0 exposer dans le contexte",
+                        "enable_flash_attention": "Activer Flash Attention",
+                        "gbnf_grammar": "Grammaire GBNF",
+                        "openai_api_key": "Cl\u00e9 d'API",
+                        "service_call_regex": "Expression r\u00e9guli\u00e8re des appels de service",
+                        "in_context_examples": "Activer les exemples d'apprentissage en contexte (ICL)",
+                        "in_context_examples_file": "Nom du fichier CSV d'exemples d'apprentissage en contexte",
+                        "num_in_context_examples": "Nombre d'exemples ICL \u00e0 g\u00e9n\u00e9rer",
+                        "prompt_caching": "Activer la mise en cache des prompts",
+                        "prompt_caching_interval": "Intervalle minimal d'actualisation du cache des prompts (secondes)",
+                        "context_length": "Longueur du contexte",
+                        "batch_size": "(llama.cpp) Taille du lot",
+                        "n_threads": "(llama.cpp) Nombre de threads",
+                        "n_batch_threads": "(llama.cpp) Nombre de threads par lot",
+                        "llama_cpp_cache_size_mb": "(llama.cpp) Taille du cache KV sur disque (Mo)",
+                        "thinking_prefix": "Pr\u00e9fixe du contenu de raisonnement",
+                        "thinking_suffix": "Suffixe du contenu de raisonnement",
+                        "tool_call_prefix": "Pr\u00e9fixe des appels d'outils",
+                        "tool_call_suffix": "Suffixe des appels d'outils",
+                        "enable_legacy_tool_calling": "Activer les appels d'outils h\u00e9rit\u00e9s",
+                        "tool_response_as_string": "R\u00e9ponse de l'outil sous forme de cha\u00eene",
+                        "max_tool_call_iterations": "Nombre maximal de tentatives d'appels d'outils"
+                    },
+                    "data_description": {
+                        "llm_hass_api": "S\u00e9lectionnez 'Assist' pour permettre au mod\u00e8le de contr\u00f4ler les appareils. Si vous utilisez un mod\u00e8le Home-LLM (v1-3), s\u00e9lectionnez 'Home Assistant Services'.",
+                        "prompt": "Consultez [cette page](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) pour en savoir plus sur les prompts du mod\u00e8le.",
+                        "in_context_examples": "Activez cette option si vous utilisez un mod\u00e8le qui n'a pas \u00e9t\u00e9 sp\u00e9cifiquement ajust\u00e9 pour cette int\u00e9gration.",
+                        "extra_attributes_to_expose": "Il s'agit de la liste des 'attributs' Home Assistant expos\u00e9s au mod\u00e8le. Elle limite les informations que le mod\u00e8le peut consulter et sur lesquelles il peut r\u00e9pondre aux questions.",
+                        "gbnf_grammar": "Contraint la sortie de llama.cpp \u00e0 une grammaire \u00e9crite en GBNF. Laissez ce champ vide pour permettre au mod\u00e8le de r\u00e9pondre librement.",
+                        "prompt_caching": "La mise en cache des prompts tente de pr\u00e9traiter le prompt (\u00e9tat de la maison) et de mettre en cache le traitement n\u00e9cessaire \u00e0 sa compr\u00e9hension. Lorsque cette option est activ\u00e9e, le mod\u00e8le retraite le prompt \u00e0 chaque changement d'\u00e9tat d'une entit\u00e9 de la maison, dans la limite de l'intervalle ci-dessous.",
+                        "enable_legacy_tool_calling": "Privil\u00e9gie le traitement local des appels d'outils plut\u00f4t que de confier leur format au backend. Cela peut \u00eatre plus fiable, mais n\u00e9cessite de d\u00e9finir correctement le pr\u00e9fixe et le suffixe des appels d'outils.",
+                        "tool_response_as_string": "Certains mod\u00e8les de prompts attendent une r\u00e9ponse d'outil sous forme de cha\u00eene s\u00e9rialis\u00e9e en JSON, plut\u00f4t que l'objet brut.",
+                        "max_tool_call_iterations": "R\u00e9glez sur 0 pour g\u00e9n\u00e9rer la r\u00e9ponse et l'appel d'outil en une seule tentative, sans boucle (\u00e0 utiliser pour les mod\u00e8les Home v1-v3).",
+                        "enable_streaming": "Lorsque cette option est activ\u00e9e, les r\u00e9ponses sont transmises token par token si le backend le permet.",
+                        "context_length": "Le mod\u00e8le ne peut pas utiliser plus de ce nombre de tokens pour la conversation et sa r\u00e9ponse r\u00e9unies. Home LLM supprime les messages les plus anciens qui ne tiennent plus dans le contexte, afin de maintenir les longues conversations dans la limite au lieu de provoquer une erreur."
+                    },
+                    "description": "Configurez le mod\u00e8le selon le format de prompts dont il a besoin. De nombreuses options sont disponibles et choisir celles adapt\u00e9es \u00e0 votre mod\u00e8le est essentiel pour obtenir des performances optimales. Consultez [cette page](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) pour en savoir plus sur les options de cette page.\n\n**Certains param\u00e8tres par d\u00e9faut ont peut-\u00eatre \u00e9t\u00e9 choisis selon le nom du mod\u00e8le ou du fichier s\u00e9lectionn\u00e9.** Si vous avez renomm\u00e9 un fichier ou utilisez une version ajust\u00e9e d'un mod\u00e8le pris en charge, les param\u00e8tres par d\u00e9faut n'ont peut-\u00eatre pas \u00e9t\u00e9 d\u00e9tect\u00e9s.",
+                    "title": "Configurer le mod\u00e8le s\u00e9lectionn\u00e9"
+                }
+            }
+        },
+        "ai_task": {
+            "initiate_flow": {
+                "user": "Ajouter un gestionnaire de t\u00e2ches IA",
+                "reconfigure": "Reconfigurer un gestionnaire de t\u00e2ches IA"
+            },
+            "entry_type": "Gestionnaire de t\u00e2ches IA",
+            "error": {
+                "download_failed": "Le t\u00e9l\u00e9chargement n'a pas abouti : {exception}",
+                "missing_quantization": "Le niveau de quantification GGUF {missing} n'existe pas dans le d\u00e9p\u00f4t HuggingFace fourni. Les niveaux de quantification suivants ont \u00e9t\u00e9 trouv\u00e9s : {available}",
+                "no_supported_ggufs": "Le d\u00e9p\u00f4t HuggingFace fourni ne contient aucun fichier GGUF compatible !",
+                "missing_model_api": "Le mod\u00e8le s\u00e9lectionn\u00e9 n'est pas disponible via cette API. Les mod\u00e8les disponibles figurent dans la liste d\u00e9roulante.",
+                "missing_model_file": "Le fichier fourni n'existe pas.",
+                "other_existing_local": "Un autre mod\u00e8le est d\u00e9j\u00e0 charg\u00e9 localement. D\u00e9chargez-le ou configurez un mod\u00e8le distant.",
+                "unknown": "Erreur inattendue",
+                "sys_refresh_caching_enabled": "L'actualisation du prompt syst\u00e8me doit \u00eatre activ\u00e9e pour que la mise en cache des prompts fonctionne !",
+                "missing_gbnf_file": "Le fichier GBNF est introuvable : {filename}",
+                "missing_icl_file": "Le fichier CSV d'exemples d'apprentissage en contexte est introuvable : {filename}",
+                "legacy_tool_calling_with_iterations": "Le mode ancien/\u00e0 tentative unique (Activer les appels d'outils h\u00e9rit\u00e9s) est incompatible avec un nombre maximal d'it\u00e9rations d'appels d'outils sup\u00e9rieur \u00e0 0. R\u00e9glez ce nombre sur 0 pour les mod\u00e8les anciens/\u00e0 tentative unique, ou d\u00e9sactivez les appels d'outils h\u00e9rit\u00e9s pour utiliser le mode agentique."
+            },
+            "progress": {
+                "download": "Veuillez patienter pendant le t\u00e9l\u00e9chargement du mod\u00e8le depuis HuggingFace. Cela peut prendre quelques minutes."
+            },
+            "abort": {
+                "reconfigure_successful": "Les options du mod\u00e8le ont \u00e9t\u00e9 mises \u00e0 jour."
+            },
+            "step": {
+                "pick_model": {
+                    "data": {
+                        "huggingface_model": "Nom du mod\u00e8le",
+                        "downloaded_model_file": "Nom du fichier local",
+                        "downloaded_model_quantization": "Quantification du mod\u00e8le t\u00e9l\u00e9charg\u00e9"
+                    },
+                    "description": "S\u00e9lectionnez un mod\u00e8le.\n\nSi vous fournissez un fichier de mod\u00e8le local, il sera utilis\u00e9 au lieu de t\u00e9l\u00e9charger le mod\u00e8le depuis HuggingFace.\n\n**Mod\u00e8les pris en charge sans configuration suppl\u00e9mentaire :**\n1. [Home LLM](https://huggingface.co/collections/acon96/home-llm-6618762669211da33bb22c5a) : comprend des mod\u00e8les de 270M \u00e0 4B\n2. [Famille Qwen 3.5](https://huggingface.co/collections/Qwen/qwen35) : comprend des mod\u00e8les de 800M \u00e0 100B+\n3. [Famille LFM 2.5](https://huggingface.co/collections/LiquidAI/lfm25) : comprend des mod\u00e8les de 350M \u00e0 8B",
+                    "title": "S\u00e9lectionner un mod\u00e8le"
+                },
+                "model_parameters": {
+                    "data": {
+                        "max_new_tokens": "Nombre maximal de tokens dans la r\u00e9ponse",
+                        "prompt": "Prompt syst\u00e8me",
+                        "temperature": "Temp\u00e9rature",
+                        "top_k": "Top K",
+                        "top_p": "Top P",
+                        "min_p": "Min P",
+                        "typical_p": "Typical P",
+                        "request_timeout": "D\u00e9lai des requ\u00eates distantes (secondes)",
+                        "enable_streaming": "Activer les r\u00e9ponses en streaming",
+                        "ollama_keep_alive": "(ollama) D\u00e9lai de maintien en m\u00e9moire/d'inactivit\u00e9 (minutes)",
+                        "ollama_json_mode": "(ollama) Mode de sortie JSON",
+                        "extra_attributes_to_expose": "Attribut suppl\u00e9mentaire \u00e0 exposer dans le contexte",
+                        "enable_flash_attention": "Activer Flash Attention",
+                        "gbnf_grammar": "Grammaire GBNF",
+                        "openai_api_key": "Cl\u00e9 d'API",
+                        "service_call_regex": "Expression r\u00e9guli\u00e8re des appels de service",
+                        "in_context_examples": "Activer les exemples d'apprentissage en contexte (ICL)",
+                        "in_context_examples_file": "Nom du fichier CSV d'exemples d'apprentissage en contexte",
+                        "num_in_context_examples": "Nombre d'exemples ICL \u00e0 g\u00e9n\u00e9rer",
+                        "prompt_caching": "Activer la mise en cache des prompts",
+                        "prompt_caching_interval": "Intervalle minimal d'actualisation du cache des prompts (secondes)",
+                        "context_length": "Longueur du contexte",
+                        "batch_size": "(llama.cpp) Taille du lot",
+                        "n_threads": "(llama.cpp) Nombre de threads",
+                        "n_batch_threads": "(llama.cpp) Nombre de threads par lot",
+                        "llama_cpp_cache_size_mb": "(llama.cpp) Taille du cache KV sur disque (Mo)",
+                        "thinking_prefix": "Pr\u00e9fixe du contenu de raisonnement",
+                        "thinking_suffix": "Suffixe du contenu de raisonnement",
+                        "tool_call_prefix": "Pr\u00e9fixe des appels d'outils",
+                        "tool_call_suffix": "Suffixe des appels d'outils",
+                        "enable_legacy_tool_calling": "Activer les appels d'outils h\u00e9rit\u00e9s",
+                        "tool_response_as_string": "R\u00e9ponse de l'outil sous forme de cha\u00eene",
+                        "max_tool_call_iterations": "Nombre maximal de tentatives d'appels d'outils",
+                        "ai_task_extraction_method": "M\u00e9thode d'extraction des donn\u00e9es structur\u00e9es",
+                        "ai_task_retries": "Nombre de nouvelles tentatives d'extraction des donn\u00e9es structur\u00e9es"
+                    },
+                    "data_description": {
+                        "prompt": "Consultez [cette page](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) pour en savoir plus sur les prompts du mod\u00e8le.",
+                        "in_context_examples": "Activez cette option si vous utilisez un mod\u00e8le qui n'a pas \u00e9t\u00e9 sp\u00e9cifiquement ajust\u00e9 pour cette int\u00e9gration.",
+                        "extra_attributes_to_expose": "Il s'agit de la liste des 'attributs' Home Assistant expos\u00e9s au mod\u00e8le. Elle limite les informations que le mod\u00e8le peut consulter et sur lesquelles il peut r\u00e9pondre aux questions.",
+                        "gbnf_grammar": "Contraint la sortie de llama.cpp \u00e0 une grammaire \u00e9crite en GBNF. Laissez ce champ vide pour permettre au mod\u00e8le de r\u00e9pondre librement.",
+                        "prompt_caching": "La mise en cache des prompts tente de pr\u00e9traiter le prompt (\u00e9tat de la maison) et de mettre en cache le traitement n\u00e9cessaire \u00e0 sa compr\u00e9hension. Lorsque cette option est activ\u00e9e, le mod\u00e8le retraite le prompt \u00e0 chaque changement d'\u00e9tat d'une entit\u00e9 de la maison, dans la limite de l'intervalle ci-dessous.",
+                        "enable_legacy_tool_calling": "Privil\u00e9gie le traitement local des appels d'outils plut\u00f4t que de confier leur format au backend. Cela peut \u00eatre plus fiable, mais n\u00e9cessite de d\u00e9finir correctement le pr\u00e9fixe et le suffixe des appels d'outils.",
+                        "tool_response_as_string": "Certains mod\u00e8les de prompts attendent une r\u00e9ponse d'outil sous forme de cha\u00eene s\u00e9rialis\u00e9e en JSON, plut\u00f4t que l'objet brut.",
+                        "max_tool_call_iterations": "R\u00e9glez sur 0 pour g\u00e9n\u00e9rer la r\u00e9ponse et l'appel d'outil en une seule tentative, sans boucle (\u00e0 utiliser pour les mod\u00e8les Home v1-v3).",
+                        "enable_streaming": "Lorsque cette option est activ\u00e9e, les r\u00e9ponses sont transmises token par token si le backend le permet.",
+                        "ai_task_extraction_method": "S\u00e9lectionnez la m\u00e9thode d'extraction des donn\u00e9es structur\u00e9es de la r\u00e9ponse du mod\u00e8le. 'Structured Output' demande au backend de forcer le mod\u00e8le \u00e0 produire une sortie conforme au sch\u00e9ma JSON fourni ; 'Tool Calling' fournit au mod\u00e8le un outil \u00e0 appeler avec les arguments adapt\u00e9s \u00e0 la structure de sortie souhait\u00e9e.",
+                        "context_length": "Le mod\u00e8le ne peut pas utiliser plus de ce nombre de tokens pour la conversation et sa r\u00e9ponse r\u00e9unies. Home LLM supprime les messages les plus anciens qui ne tiennent plus dans le contexte, afin de maintenir les longues conversations dans la limite au lieu de provoquer une erreur."
+                    },
+                    "description": "Configurez le mod\u00e8le selon le format de prompts dont il a besoin. De nombreuses options sont disponibles et choisir celles adapt\u00e9es \u00e0 votre mod\u00e8le est essentiel pour obtenir des performances optimales. Consultez [cette page](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) pour en savoir plus sur les options de cette page.\n\n**Certains param\u00e8tres par d\u00e9faut ont peut-\u00eatre \u00e9t\u00e9 choisis selon le nom du mod\u00e8le ou du fichier s\u00e9lectionn\u00e9.** Si vous avez renomm\u00e9 un fichier ou utilisez une version ajust\u00e9e d'un mod\u00e8le pris en charge, les param\u00e8tres par d\u00e9faut n'ont peut-\u00eatre pas \u00e9t\u00e9 d\u00e9tect\u00e9s.",
+                    "title": "Configurer le mod\u00e8le s\u00e9lectionn\u00e9"
+                },
+                "reconfigure": {
+                    "data": {
+                        "max_new_tokens": "Nombre maximal de tokens dans la r\u00e9ponse",
+                        "llm_hass_api": "API LLM s\u00e9lectionn\u00e9es",
+                        "prompt": "Prompt syst\u00e8me",
+                        "temperature": "Temp\u00e9rature",
+                        "top_k": "Top K",
+                        "top_p": "Top P",
+                        "min_p": "Min P",
+                        "typical_p": "Typical P",
+                        "request_timeout": "D\u00e9lai des requ\u00eates distantes (secondes)",
+                        "enable_streaming": "Activer les r\u00e9ponses en streaming",
+                        "ollama_keep_alive": "(ollama) D\u00e9lai de maintien en m\u00e9moire/d'inactivit\u00e9 (minutes)",
+                        "ollama_json_mode": "(ollama) Mode de sortie JSON",
+                        "extra_attributes_to_expose": "Attribut suppl\u00e9mentaire \u00e0 exposer dans le contexte",
+                        "enable_flash_attention": "Activer Flash Attention",
+                        "gbnf_grammar": "Grammaire GBNF",
+                        "openai_api_key": "Cl\u00e9 d'API",
+                        "service_call_regex": "Expression r\u00e9guli\u00e8re des appels de service",
+                        "in_context_examples": "Activer les exemples d'apprentissage en contexte (ICL)",
+                        "in_context_examples_file": "Nom du fichier CSV d'exemples d'apprentissage en contexte",
+                        "num_in_context_examples": "Nombre d'exemples ICL \u00e0 g\u00e9n\u00e9rer",
+                        "prompt_caching": "Activer la mise en cache des prompts",
+                        "prompt_caching_interval": "Intervalle minimal d'actualisation du cache des prompts (secondes)",
+                        "context_length": "Longueur du contexte",
+                        "batch_size": "(llama.cpp) Taille du lot",
+                        "n_threads": "(llama.cpp) Nombre de threads",
+                        "n_batch_threads": "(llama.cpp) Nombre de threads par lot",
+                        "llama_cpp_cache_size_mb": "(llama.cpp) Taille du cache KV sur disque (Mo)",
+                        "thinking_prefix": "Pr\u00e9fixe du contenu de raisonnement",
+                        "thinking_suffix": "Suffixe du contenu de raisonnement",
+                        "tool_call_prefix": "Pr\u00e9fixe des appels d'outils",
+                        "tool_call_suffix": "Suffixe des appels d'outils",
+                        "enable_legacy_tool_calling": "Activer les appels d'outils h\u00e9rit\u00e9s",
+                        "tool_response_as_string": "R\u00e9ponse de l'outil sous forme de cha\u00eene",
+                        "max_tool_call_iterations": "Nombre maximal de tentatives d'appels d'outils"
+                    },
+                    "data_description": {
+                        "llm_hass_api": "S\u00e9lectionnez 'Assist' pour permettre au mod\u00e8le de contr\u00f4ler les appareils. Si vous utilisez un mod\u00e8le Home-LLM v1, v2 ou v3, s\u00e9lectionnez 'Home-LLM (v1-3)'.",
+                        "prompt": "Consultez [cette page](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) pour en savoir plus sur les prompts du mod\u00e8le.",
+                        "in_context_examples": "Activez cette option si vous utilisez un mod\u00e8le qui n'a pas \u00e9t\u00e9 sp\u00e9cifiquement ajust\u00e9 pour cette int\u00e9gration.",
+                        "extra_attributes_to_expose": "Il s'agit de la liste des 'attributs' Home Assistant expos\u00e9s au mod\u00e8le. Elle limite les informations que le mod\u00e8le peut consulter et sur lesquelles il peut r\u00e9pondre aux questions.",
+                        "gbnf_grammar": "Contraint la sortie de llama.cpp \u00e0 une grammaire \u00e9crite en GBNF. Laissez ce champ vide pour permettre au mod\u00e8le de r\u00e9pondre librement.",
+                        "prompt_caching": "La mise en cache des prompts tente de pr\u00e9traiter le prompt (\u00e9tat de la maison) et de mettre en cache le traitement n\u00e9cessaire \u00e0 sa compr\u00e9hension. Lorsque cette option est activ\u00e9e, le mod\u00e8le retraite le prompt \u00e0 chaque changement d'\u00e9tat d'une entit\u00e9 de la maison, dans la limite de l'intervalle ci-dessous.",
+                        "enable_legacy_tool_calling": "Privil\u00e9gie le traitement local des appels d'outils plut\u00f4t que de confier leur format au backend. Cela peut \u00eatre plus fiable, mais n\u00e9cessite de d\u00e9finir correctement le pr\u00e9fixe et le suffixe des appels d'outils.",
+                        "tool_response_as_string": "Certains mod\u00e8les de prompts attendent une r\u00e9ponse d'outil sous forme de cha\u00eene s\u00e9rialis\u00e9e en JSON, plut\u00f4t que l'objet brut.",
+                        "max_tool_call_iterations": "R\u00e9glez sur 0 pour g\u00e9n\u00e9rer la r\u00e9ponse et l'appel d'outil en une seule tentative, sans boucle (\u00e0 utiliser pour les mod\u00e8les Home v1-v3).",
+                        "enable_streaming": "Lorsque cette option est activ\u00e9e, les r\u00e9ponses sont transmises token par token si le backend le permet.",
+                        "context_length": "Le mod\u00e8le ne peut pas utiliser plus de ce nombre de tokens pour la conversation et sa r\u00e9ponse r\u00e9unies. Home LLM supprime les messages les plus anciens qui ne tiennent plus dans le contexte, afin de maintenir les longues conversations dans la limite au lieu de provoquer une erreur."
+                    },
+                    "description": "Configurez le mod\u00e8le selon le format de prompts dont il a besoin. De nombreuses options sont disponibles et choisir celles adapt\u00e9es \u00e0 votre mod\u00e8le est essentiel pour obtenir des performances optimales. Consultez [cette page](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) pour en savoir plus sur les options de cette page.\n\n**Certains param\u00e8tres par d\u00e9faut ont peut-\u00eatre \u00e9t\u00e9 choisis selon le nom du mod\u00e8le ou du fichier s\u00e9lectionn\u00e9.** Si vous avez renomm\u00e9 un fichier ou utilisez une version ajust\u00e9e d'un mod\u00e8le pris en charge, les param\u00e8tres par d\u00e9faut n'ont peut-\u00eatre pas \u00e9t\u00e9 d\u00e9tect\u00e9s.",
+                    "title": "Configurer le mod\u00e8le s\u00e9lectionn\u00e9"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "selected_language": "Langue du mod\u00e8le",
+                    "host": "Nom d'h\u00f4te de l'API",
+                    "port": "Port de l'API",
+                    "ssl": "Utiliser HTTPS",
+                    "openai_api_key": "Cl\u00e9 d'API",
+                    "openai_path": "Chemin de l'API"
+                },
+                "description": "Fournissez les param\u00e8tres de connexion \u00e0 l'API qui h\u00e9berge le mod\u00e8le.",
+                "title": "Configurer la connexion"
+            },
+            "reinstall": {
+                "data": {
+                    "reinstall_llama_cpp": "R\u00e9installer Llama.cpp",
+                    "installed_llama_cpp_version": "Version \u00e0 (r\u00e9)installer"
+                },
+                "description": "__Si vous rencontrez des probl\u00e8mes avec Llama.cpp__, vous pouvez forcer la r\u00e9installation du paquet ici. Cette op\u00e9ration tentera de r\u00e9installer ou de mettre \u00e0 jour le paquet llama-cpp-python depuis GitHub *ou* depuis un fichier wheel local plac\u00e9 dans le r\u00e9pertoire `/config/custom_components/llama_conversation/`.",
+                "title": "R\u00e9installer Llama.cpp"
+            }
+        },
+        "error": {
+            "failed_to_connect": "Impossible de se connecter \u00e0 l'API distante : {exception}",
+            "invalid_hostname": "Le nom d'h\u00f4te fourni est invalide. Saisissez uniquement le domaine ou l'adresse IP, et non l'URL compl\u00e8te du point de terminaison de l'API.",
+            "unknown": "Erreur inattendue",
+            "pip_wheel_error": "Pip a renvoy\u00e9 une erreur lors de l'installation du fichier wheel ! Consultez les journaux de Home Assistant pour plus de d\u00e9tails."
+        },
+        "progress": {
+            "install_local_wheels": "Veuillez patienter pendant l'installation de Llama.cpp..."
+        }
+    },
+    "selector": {
+        "model_backend": {
+            "options": {
+                "llama_cpp_python": "Llama.cpp",
+                "generic_openai": "API 'Conversations' compatible avec OpenAI",
+                "generic_openai_responses": "API 'Responses' compatible avec OpenAPI",
+                "llama_cpp_server": "Serveur Llama.cpp",
+                "ollama": "API Ollama",
+                "anthropic": "API 'Messages' compatible avec Anthropic"
+            }
+        },
+        "selected_language": {
+            "options": {
+                "en": "Anglais",
+                "de": "Allemand",
+                "fr": "Fran\u00e7ais",
+                "es": "Espagnol",
+                "pl": "Polonais"
+            }
+        }
+    }
+}
