@@ -12,7 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.helpers import llm
 from openai import AsyncOpenAI, OpenAIError
 
-from custom_components.llama_conversation.utils import format_url, get_oai_formatted_messages, get_oai_formatted_tools
+from custom_components.llama_conversation.utils import format_url, get_oai_formatted_messages, get_oai_formatted_tools, parse_extra_headers, parse_extra_body
 from custom_components.llama_conversation.const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -21,8 +21,9 @@ from custom_components.llama_conversation.const import (
     CONF_REQUEST_TIMEOUT,
     CONF_API_KEY,
     CONF_API_PATH,
-    CONF_ENABLE_LEGACY_TOOL_CALLING,
-    CONF_TOOL_RESPONSE_AS_STRING,
+    CONF_EXTRA_HEADERS,
+    CONF_EXTRA_BODY,
+    CONF_ENABLE_LEGACY_TOOL_CALLING,    CONF_TOOL_RESPONSE_AS_STRING,
     CONF_RESPONSE_JSON_SCHEMA,
     DEFAULT_MAX_TOKENS,
     DEFAULT_REQUEST_TIMEOUT,
@@ -34,6 +35,13 @@ from custom_components.llama_conversation.const import (
 from custom_components.llama_conversation.entity import TextGenerationResult, LocalLLMClient
 
 _LOGGER = logging.getLogger(__name__)
+
+def _extra_headers_from_options(client_options: dict[str, Any]) -> dict[str, str]:
+    try:
+        return parse_extra_headers(client_options.get(CONF_EXTRA_HEADERS, ""))
+    except ValueError as err:
+        _LOGGER.warning("Ignoring malformed extra headers: %s", err)
+        return {}
 
 class GenericOpenAIAPIClient(LocalLLMClient):
     """Implements the OpenAPI-compatible text completion and chat completion API backends."""
@@ -53,6 +61,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         )
 
         self.api_key = client_options.get(CONF_API_KEY, "")
+        self.extra_headers = _extra_headers_from_options(client_options)
 
     @staticmethod
     def get_name(client_options: dict[str, Any]):
@@ -61,12 +70,13 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         ssl = client_options[CONF_SSL]
         path = "/" + client_options[CONF_API_PATH]
         return f"Generic OpenAI at '{format_url(hostname=host, port=port, ssl=ssl, path=path)}'"
-    
+
     @staticmethod
     async def async_validate_connection(hass: HomeAssistant, user_input: Dict[str, Any]) -> str | None:
         api_key = user_input.get(CONF_API_KEY)
         api_base_path = user_input.get(CONF_API_PATH, DEFAULT_API_PATH)
         try:
+            extra_headers = parse_extra_headers(user_input.get(CONF_EXTRA_HEADERS, ""))
             async with AsyncOpenAI(
                 api_key=api_key,
                 base_url=format_url(
@@ -75,6 +85,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
                     ssl=user_input[CONF_SSL],
                     path=f"/{api_base_path.lstrip('/')}",
                 ),
+                default_headers=extra_headers,
                 timeout=5,
             ) as client:
                 await client.models.list()
@@ -83,7 +94,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
 
     async def async_get_available_models(self) -> List[str]:
         try:
-            async with AsyncOpenAI(api_key=self.api_key, base_url=self.api_host, timeout=5) as client:
+            async with AsyncOpenAI(api_key=self.api_key, base_url=self.api_host, default_headers=self.extra_headers, timeout=5) as client:
                 return [m.id async for m in client.models.list()]
         except (asyncio.TimeoutError, OpenAIError):
             _LOGGER.warning("Falling back to recommended models because the API model list request failed.")
@@ -136,7 +147,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
 
         async def anext_token() -> AsyncGenerator[Tuple[Optional[str], Optional[List[dict]]], None]:
             try:                    
-                async with AsyncOpenAI(api_key=self.api_key, base_url=self.api_host, timeout=timeout) as client:
+                async with AsyncOpenAI(api_key=self.api_key, base_url=self.api_host, default_headers=self.extra_headers, timeout=timeout) as client:
                     async with client.chat.completions.stream(**request_params, extra_body=additional_params) as stream:
                         async for event in stream:
                             if event.type == "content.delta": # normal text chunks we can yield
@@ -195,7 +206,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         _LOGGER.debug(f"Generating non-stream completion with {len(messages)} messages...")
 
         try:
-            async with AsyncOpenAI(api_key=self.api_key, base_url=self.api_host, timeout=timeout) as client:
+            async with AsyncOpenAI(api_key=self.api_key, base_url=self.api_host, default_headers=self.extra_headers, timeout=timeout) as client:
                 completion = await client.chat.completions.create(**request_params, extra_body=additional_params)
         except asyncio.TimeoutError as err:
             _LOGGER.debug("OpenAI API timeout during generation: params=%s, error=%s", request_params, err)
@@ -246,7 +257,11 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         )
     
     def _chat_completion_params(self, entity_options: dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
-        request_params = {}
+        try:
+            request_params = parse_extra_body(entity_options.get(CONF_EXTRA_BODY, ""))
+        except ValueError as err:
+            _LOGGER.warning("Ignoring malformed extra body: %s", err)
+            request_params = {}
         endpoint = "/chat/completions"
         return endpoint, request_params
 
@@ -273,6 +288,7 @@ class GenericOpenAIResponsesAPIClient(LocalLLMClient):
             path="/" + client_options.get(CONF_API_PATH, DEFAULT_API_PATH)
         )
         self.api_key = client_options.get(CONF_API_KEY, "")
+        self.extra_headers = _extra_headers_from_options(client_options)
 
     @staticmethod
     def get_name(client_options: dict[str, Any]):
@@ -384,7 +400,7 @@ class GenericOpenAIResponsesAPIClient(LocalLLMClient):
 
         async def anext_token() -> AsyncGenerator[Tuple[Optional[str], Optional[List[dict]]], None]:
             try:
-                async with AsyncOpenAI(api_key=self.api_key, base_url=self.api_host, timeout=timeout) as client:
+                async with AsyncOpenAI(api_key=self.api_key, base_url=self.api_host, default_headers=self.extra_headers, timeout=timeout) as client:
                     async with client.responses.stream(**request_params) as stream:
                         async for event in stream:
                             if event.type == "response.output_text.delta":
@@ -433,7 +449,7 @@ class GenericOpenAIResponsesAPIClient(LocalLLMClient):
             }
 
         try:
-            async with AsyncOpenAI(api_key=self.api_key, base_url=self.api_host, timeout=timeout) as client:
+            async with AsyncOpenAI(api_key=self.api_key, base_url=self.api_host, default_headers=self.extra_headers, timeout=timeout) as client:
                 response = await client.responses.create(**request_params)
         except asyncio.TimeoutError as err:
             _LOGGER.debug("OpenAI Responses API timeout during generation: params=%s, error=%s", request_params, err)
