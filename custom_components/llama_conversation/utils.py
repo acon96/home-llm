@@ -600,6 +600,19 @@ def parse_extra_headers(raw: str) -> Dict[str, str]:
         headers[key] = value
     return headers
 
+def parse_extra_body(raw: str) -> Dict[str, Any]:
+    """Parse user-supplied extra request body parameters from a JSON object."""
+    raw = (raw or "").strip()
+    if not raw:
+        return {}
+    try:
+        parsed = json.loads(raw)
+    except (ValueError, TypeError) as err:
+        raise ValueError(f"Extra request parameters must be a JSON object: {err}") from err
+    if not isinstance(parsed, dict):
+        raise ValueError("Extra request parameters must be a JSON object.")
+    return parsed
+
 
 def get_oai_formatted_tools(llm_api: llm.APIInstance, domains: list[str]) -> List[ChatCompletionTool]:    
     result: List[ChatCompletionTool] = []

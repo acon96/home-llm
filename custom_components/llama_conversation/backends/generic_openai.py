@@ -12,7 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.helpers import llm
 from openai import AsyncOpenAI, OpenAIError
 
-from custom_components.llama_conversation.utils import format_url, get_oai_formatted_messages, get_oai_formatted_tools, parse_extra_headers
+from custom_components.llama_conversation.utils import format_url, get_oai_formatted_messages, get_oai_formatted_tools, parse_extra_headers, parse_extra_body
 from custom_components.llama_conversation.const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -22,8 +22,8 @@ from custom_components.llama_conversation.const import (
     CONF_API_KEY,
     CONF_API_PATH,
     CONF_EXTRA_HEADERS,
-    CONF_ENABLE_LEGACY_TOOL_CALLING,
-    CONF_TOOL_RESPONSE_AS_STRING,
+    CONF_EXTRA_BODY,
+    CONF_ENABLE_LEGACY_TOOL_CALLING,    CONF_TOOL_RESPONSE_AS_STRING,
     CONF_RESPONSE_JSON_SCHEMA,
     DEFAULT_MAX_TOKENS,
     DEFAULT_REQUEST_TIMEOUT,
@@ -257,7 +257,11 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         )
     
     def _chat_completion_params(self, entity_options: dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
-        request_params = {}
+        try:
+            request_params = parse_extra_body(entity_options.get(CONF_EXTRA_BODY, ""))
+        except ValueError as err:
+            _LOGGER.warning("Ignoring malformed extra body: %s", err)
+            request_params = {}
         endpoint = "/chat/completions"
         return endpoint, request_params
 
