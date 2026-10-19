@@ -3,6 +3,7 @@ from dataclasses import replace
 from functools import partial
 import time
 import logging
+import json
 import os
 import re
 import sys
@@ -562,6 +563,43 @@ def install_llama_cpp_python(
 
 def format_url(*, hostname: str, port: str, ssl: bool, path: str):
     return f"{'https' if ssl else 'http'}://{hostname}{ ':' + port if port else ''}{path}"
+
+def parse_extra_headers(raw: str) -> Dict[str, str]:
+    """Parse user-supplied extra HTTP headers into a dictionary.
+
+    Accepts either a JSON object ({"X-Header": "value"}) or one header per line
+    in "Key: Value" or "Key=Value" form. Raises ValueError with a short
+    explanation when the input cannot be parsed.
+    """
+    raw = (raw or "").strip()
+    if not raw:
+        return {}
+
+    try:
+        parsed = json.loads(raw)
+    except (ValueError, TypeError):
+        parsed = None
+
+    if isinstance(parsed, dict):
+        if not all(isinstance(k, str) and isinstance(v, str) for k, v in parsed.items()):
+            raise ValueError("Extra headers JSON must map header names to string values.")
+        return parsed
+
+    headers: Dict[str, str] = {}
+    for line in raw.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        separator = line.find(":") if (":" in line and (line.find("=") == -1 or line.find(":") < line.find("="))) else line.find("=")
+        if separator == -1:
+            raise ValueError(f"Extra headers must be 'Key: Value' per line or a JSON object. Invalid line: {line!r}")
+        key = line[:separator].strip()
+        value = line[separator + 1:].strip()
+        if not key or not value:
+            raise ValueError(f"Extra headers must be 'Key: Value' per line or a JSON object. Invalid line: {line!r}")
+        headers[key] = value
+    return headers
+
 
 def get_oai_formatted_tools(llm_api: llm.APIInstance, domains: list[str]) -> List[ChatCompletionTool]:    
     result: List[ChatCompletionTool] = []

@@ -85,6 +85,7 @@ from .const import (
     CONF_OLLAMA_KEEP_ALIVE_MIN,
     CONF_OLLAMA_JSON_MODE,
     CONF_API_PATH,
+    CONF_EXTRA_HEADERS,
     CONF_CONTEXT_LENGTH,
     CONF_GBNF_GRAMMAR,
     CONF_LLAMACPP_BATCH_SIZE,
@@ -202,6 +203,12 @@ def remote_connection_schema(backend_type: str, *, host=None, port=None, ssl=Non
         default_path = ""
     elif backend_type in [BACKEND_TYPE_GENERIC_OPENAI, BACKEND_TYPE_GENERIC_OPENAI_RESPONSES]:
         default_port = ""
+        extra = {
+            vol.Optional(
+                CONF_EXTRA_HEADERS,
+                default="",
+            ): TextSelector(TextSelectorConfig(multiline=True)),
+        }
 
     return vol.Schema(
         {
