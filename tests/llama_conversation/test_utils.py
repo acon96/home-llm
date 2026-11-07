@@ -9,10 +9,14 @@ Covers the switch to upstream (abetlen/llama-cpp-python) release wheels:
 """
 
 import multiprocessing
+import json
 import os
 import sys
 
 import pytest
+
+from homeassistant.components import conversation
+from homeassistant.helpers import llm
 
 from custom_components.llama_conversation import utils
 from custom_components.llama_conversation.const import (
@@ -355,3 +359,34 @@ async def test_validate_llama_cpp_python_installation_config_dir_not_on_sys_path
     finally:
         if REPO_ROOT not in sys.path:
             sys.path.insert(0, REPO_ROOT)
+
+def test_get_oai_formatted_messages_serializes_tool_results():
+    # Home Assistant 2026.10 changed ToolResultContent.result from a plain dict to an
+    # llm.ToolResult, and the deprecated tool_result property raises AttributeError when
+    # serializing a plain dict (issue #412). The chat log shape, the wrapped-error shape
+    # produced by MalformedToolCallException, and the correction messages themselves must
+    # all serialize without touching the deprecated property.
+    from custom_components.llama_conversation.utils import (
+        MalformedToolCallException,
+        get_oai_formatted_messages,
+        wrap_tool_result,
+        tool_result_data,
+    )
+
+    chat_log_style = conversation.ToolResultContent("agent", "id1", "test_tool", llm.ToolResult(data={"answer": 42}))
+    wrapped_error_style = conversation.ToolResultContent("agent", "id2", "test_tool", wrap_tool_result({"answer": 7}))
+    assert tool_result_data(chat_log_style) == {"answer": 42}
+    assert tool_result_data(wrapped_error_style) == {"answer": 7}
+
+    for content in (chat_log_style, wrapped_error_style):
+        expected = tool_result_data(content)
+        as_string = get_oai_formatted_messages([content], tool_result_to_str=True)
+        assert as_string[0]["role"] == "tool"
+        assert json.loads(as_string[0]["content"]) == expected
+
+        as_structured = get_oai_formatted_messages([content], tool_result_to_str=False)
+        assert as_structured[0]["content"][0]["response"]["result"] == expected
+
+    correction = MalformedToolCallException("agent", "id3", "unknown", "{bad", "bad json").as_tool_messages()
+    messages = get_oai_formatted_messages(list(correction), tool_result_to_str=True)
+    assert json.loads(messages[-1]["content"])["error"].startswith("Error occurred calling tool")

@@ -56,7 +56,7 @@ class RecordingTool(llm.Tool):
 
     async def async_call(self, hass, tool_input, llm_context):
         self.calls.append(tool_input)
-        return self._result
+        return llm.ToolResult(data=self._result)
 
 
 class StubAPI(llm.API):
@@ -389,7 +389,7 @@ async def test_home_assistant_only_adds_its_own_date_time_prompt_when_uncovered(
         parameters = vol.Schema({})
 
         async def async_call(self, hass, tool_input, llm_context):
-            return {"result": "now"}
+            return llm.ToolResult(data={"result": "now"})
 
     answer = [{"role": "assistant", "content": "ok"}]
     no_tools = ScriptedClient(hass, replies=[answer])
