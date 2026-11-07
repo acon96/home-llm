@@ -65,6 +65,7 @@ class ResultExtractionMethod(StrEnum):
 class SubmitResponseTool(llm.Tool):
     name = "submit_response"
     description = "Submit the structured response payload for the AI task"
+    integration = DOMAIN
 
     def __init__(self, parameters_schema: vol.Schema):
         self.parameters = parameters_schema
@@ -74,8 +75,8 @@ class SubmitResponseTool(llm.Tool):
         hass: HomeAssistant,
         tool_input: llm.ToolInput,
         llm_context: llm.LLMContext,
-    ) -> dict:
-        return tool_input.tool_args or {}
+    ) -> llm.ToolResult:
+        return llm.ToolResult(data=tool_input.tool_args or {})
 
 
 class SubmitResponseAPI(llm.API):

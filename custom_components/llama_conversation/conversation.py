@@ -14,7 +14,7 @@ from homeassistant.exceptions import TemplateError, HomeAssistantError
 from homeassistant.helpers import intent, llm
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from custom_components.llama_conversation.utils import MalformedToolCallException, PreparedLLMAPI, prompt_as_literal, strip_thinking_blocks
+from custom_components.llama_conversation.utils import MalformedToolCallException, PreparedLLMAPI, prompt_as_literal, strip_thinking_blocks, tool_result_data
 
 from .entity import LocalLLMEntity, LocalLLMClient, LocalLLMConfigEntry
 from .const import (
@@ -311,8 +311,10 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent, LocalLLMEntit
         """
         response: intent.IntentResponse | None = None
         for content in chat_log.content[chat_log.llm_input_provided_index:]:
-            if isinstance(content, conversation.ToolResultContent) and isinstance(content.tool_result, llm.IntentResponseDict):
-                response = getattr(content.tool_result, "original", None) or response
+            if isinstance(content, conversation.ToolResultContent):
+                result_data = tool_result_data(content)
+                if isinstance(result_data, llm.IntentResponseDict):
+                    response = getattr(result_data, "original", None) or response
 
         return response or intent.IntentResponse(language=user_input.language)
 
