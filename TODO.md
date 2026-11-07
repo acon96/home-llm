@@ -7,7 +7,7 @@
 - [x] vision support for remote backends  
 - [ ] vision support for local backend (llama.cpp + llava)  
 - [ ] move llamacpp to a separate process because of all the crashing  
-- [ ] optional sampling parameters in options panel (don't pass to backend if not set)  
+- [x] optional sampling parameters in options panel (don't pass to backend if not set)  
 - [x] update dataset so new models will work with the Assist API  
 - [ ] make ICL examples into conversation turns  
 - [ ] translate ICL examples + make better ones  

@@ -1,4 +1,5 @@
 from contextlib import suppress
+from dataclasses import replace
 from functools import partial
 import time
 import logging
@@ -61,6 +62,73 @@ class MissingQuantizationException(Exception):
 class LlamaCppPythonInstallError(HomeAssistantError):
     """Raised when llama-cpp-python cannot be installed from the hosted wheels."""
 
+
+class PreparedLLMAPI(llm.API):
+    """Hands an already resolved APIInstance to ChatLog.async_provide_llm_data.
+
+    Home LLM lists the callable tools (and, when the prompt asks for them, Home Assistant's own tool
+    instructions) inside its own system prompt, so the LLM API has to be resolved before control is
+    handed to the chat log. ChatLog.async_provide_llm_data accepts an llm.API but not an APIInstance, so
+    this wrapper returns the instance that was just built instead of letting the chat log resolve - and
+    collect the exposed entity registry for - a second one on every turn.
+
+    Home Assistant appends instance.api_prompt to the system prompt on its own accord. Home LLM prompts
+    are driven entirely by the integration's Jinja template, so the wrapper blanks it and exposes the
+    original text to the template as the llm_api_instructions variable instead. That leaves the user in
+    charge of whether those instructions appear at all, and where.
+    """
+
+    def __init__(self, instance: llm.APIInstance) -> None:
+        super().__init__(hass=instance.api.hass, id=instance.api.id, name=instance.api.name)
+        self.instance = instance
+
+    async def async_get_api_instance(self, llm_context: llm.LLMContext) -> llm.APIInstance:
+        """Return the prepared instance without Home Assistant's prompt suffix."""
+        return replace(self.instance, api_prompt="")
+
+
+JINJA_OPENERS = ("{{", "{%", "{#")
+
+
+def prompt_as_literal(text: str) -> str:
+    """Keep already rendered prompt text literal when Home Assistant renders the prompt once more.
+
+    ChatLog.async_provide_llm_data renders the prompt it is handed, while Home LLM has already rendered
+    its own template into it. Everything that survives that first render - device names, aliases, areas,
+    states - is data rather than template source, so any Jinja tag opener found in it is split with a
+    space to guarantee it stays literal text. Well formed JSON (the in-context learning examples) never
+    produces a tag opener, so this is a no-op for normal prompts.
+    """
+    for opener in JINJA_OPENERS:
+        if opener in text:
+            text = text.replace(opener, f"{opener[0]} {opener[1:]}")
+    return text
+
+def wrap_tool_result(data: Any) -> Any:
+    """Wrap tool result data in llm.ToolResult on Home Assistant versions that require it.
+
+    Home Assistant 2026.10 changed ToolResultContent.result from a plain JSON object to an
+    llm.ToolResult. Older versions expect the raw data instead, so this returns data
+    unchanged when llm.ToolResult is not available.
+    """
+    tool_result_cls = getattr(llm, "ToolResult", None)
+    if tool_result_cls is not None:
+        return tool_result_cls(data=data)
+    return data
+
+def tool_result_data(message: conversation.ToolResultContent) -> Any:
+    """Return the payload data of a tool result content across Home Assistant versions.
+
+    Reading the deprecated ToolResultContent.tool_result property logs a deprecation
+    warning on Home Assistant 2026.10+ and fails with an AttributeError when result is a
+    plain dict, so this unwraps result.data when present and falls back to the raw
+    tool_result field on older versions.
+    """
+    result = getattr(message, "result", None)
+    if result is not None:
+        return getattr(result, "data", result)
+    return getattr(message, "tool_result", None)
+
 class MalformedToolCallException(Exception):
     def __init__(self, agent_id: str, tool_call_id: str, tool_name: str, tool_args: str, error_msg: str):
         super().__init__(agent_id, tool_call_id, tool_name, tool_args, error_msg)
@@ -77,7 +145,7 @@ class MalformedToolCallException(Exception):
             ),
             conversation.ToolResultContent(
             self.agent_id, self.tool_call_id, self.tool_name, 
-            {"error": f"Error occurred calling tool with args='{self.tool_args}': {self.error_msg}" }
+            wrap_tool_result({"error": f"Error occurred calling tool with args='{self.tool_args}': {self.error_msg}" })
         )]
 
 def closest_color(requested_color: tuple[int, int, int]) -> str:
@@ -608,12 +676,13 @@ def get_oai_formatted_messages(
                     ]
                 })
         elif message.role == "tool_result":
+            tool_result = tool_result_data(message)
             if tool_result_to_str:
-                content = json_helper.json_dumps(message.tool_result)
+                content = json_helper.json_dumps(tool_result)
             else:
                 content = [{
                     "name": message.tool_name,
-                    "response": { "result": message.tool_result },
+                    "response": { "result": tool_result },
                     }
                 ]
             messages.append({

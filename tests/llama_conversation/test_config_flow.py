@@ -15,7 +15,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from custom_components.llama_conversation.config_flow import ConfigFlow, local_llama_config_option_schema
 from custom_components.llama_conversation.const import (
     BACKEND_TYPE_LLAMA_CPP,
-    BACKEND_TYPE_TEXT_GEN_WEBUI,
     BACKEND_TYPE_GENERIC_OPENAI,
     BACKEND_TYPE_GENERIC_OPENAI_RESPONSES,
     BACKEND_TYPE_ANTHROPIC,
@@ -26,7 +25,7 @@ from custom_components.llama_conversation.const import (
     CONF_CONTEXT_LENGTH,
     CONF_ENABLE_STREAMING,
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
-    CONF_GBNF_GRAMMAR_FILE,
+    CONF_GBNF_GRAMMAR,
     CONF_LLAMACPP_BATCH_SIZE,
     CONF_LLAMACPP_BATCH_THREAD_COUNT,
     CONF_LLAMACPP_ENABLE_FLASH_ATTENTION,
@@ -40,16 +39,14 @@ from custom_components.llama_conversation.const import (
     CONF_PROMPT_CACHING_ENABLED,
     CONF_PROMPT_CACHING_INTERVAL,
     CONF_REQUEST_TIMEOUT,
-    CONF_TEXT_GEN_WEBUI_CHAT_MODE,
-    CONF_TEXT_GEN_WEBUI_PRESET,
     CONF_THINKING_PREFIX,
     CONF_TOOL_CALL_PREFIX,
     CONF_TOP_K,
     CONF_TOP_P,
     CONF_TYPICAL_P,
     CONF_TEMPERATURE,
-    CONF_USE_SERVER_SAMPLING_DEFAULTS,
     DEFAULT_CONTEXT_LENGTH,
+    DEFAULT_GBNF_GRAMMAR,
     DEFAULT_ENABLE_STREAMING,
     DEFAULT_LLAMACPP_BATCH_SIZE,
     DEFAULT_LLAMACPP_BATCH_THREAD_COUNT,
@@ -61,13 +58,9 @@ from custom_components.llama_conversation.const import (
     DEFAULT_PROMPT,
     DEFAULT_PROMPT_CACHING_INTERVAL,
     DEFAULT_REQUEST_TIMEOUT,
-    DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
-    DEFAULT_THINKING_PREFIX,
-    DEFAULT_TOOL_CALL_PREFIX,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
     DEFAULT_TYPICAL_P,
-    DEFAULT_USE_SERVER_SAMPLING_DEFAULTS,
     DOMAIN,
 )
 
@@ -127,7 +120,7 @@ def test_schema_llama_cpp_defaults_and_overrides(hass: HomeAssistant):
         CONF_TYPICAL_P,
         CONF_PROMPT_CACHING_ENABLED,
         CONF_PROMPT_CACHING_INTERVAL,
-        CONF_GBNF_GRAMMAR_FILE,
+        CONF_GBNF_GRAMMAR,
         CONF_LLAMACPP_BATCH_SIZE,
         CONF_LLAMACPP_THREAD_COUNT,
         CONF_LLAMACPP_BATCH_THREAD_COUNT,
@@ -149,13 +142,13 @@ def test_schema_llama_cpp_defaults_and_overrides(hass: HomeAssistant):
     assert _get_suggested(schema, CONF_LLAMACPP_ENABLE_FLASH_ATTENTION) is True
     assert _get_suggested(schema, CONF_PROMPT_CACHING_INTERVAL) == 15
     assert _get_suggested(schema, CONF_TOP_K) == 12
-    assert _get_suggested(schema, CONF_TOOL_CALL_PREFIX) == "<tc>"
+    # the prompt format comes from the model family, it is not offered any more
+    assert CONF_TOOL_CALL_PREFIX not in {getattr(k, "schema", None) for k in schema}
 
 
 def test_sampling_parameters_are_optional_and_unset_by_default(hass: HomeAssistant):
     for backend in (
         BACKEND_TYPE_LLAMA_CPP,
-        BACKEND_TYPE_TEXT_GEN_WEBUI,
         BACKEND_TYPE_GENERIC_OPENAI,
         BACKEND_TYPE_GENERIC_OPENAI_RESPONSES,
         BACKEND_TYPE_LLAMA_CPP_SERVER,
@@ -176,27 +169,8 @@ def test_sampling_parameters_are_optional_and_unset_by_default(hass: HomeAssista
             for key in sampling_keys.values()
         )
 
-        defaults = {key.schema: key.default() if callable(key.default) else key.default for key in schema}
-        assert defaults[CONF_USE_SERVER_SAMPLING_DEFAULTS] is DEFAULT_USE_SERVER_SAMPLING_DEFAULTS
-
-
-def test_schema_text_gen_webui_options_preserved(hass: HomeAssistant):
-    overrides = {
-        CONF_REQUEST_TIMEOUT: 123,
-        CONF_TEXT_GEN_WEBUI_PRESET: "custom-preset",
-        CONF_TEXT_GEN_WEBUI_CHAT_MODE: DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
-        CONF_CONTEXT_LENGTH: 2048,
-    }
-
-    schema = _schema(hass, BACKEND_TYPE_TEXT_GEN_WEBUI, overrides)
-
-    expected = {CONF_TEXT_GEN_WEBUI_CHAT_MODE, CONF_TEXT_GEN_WEBUI_PRESET, CONF_REQUEST_TIMEOUT, CONF_CONTEXT_LENGTH}
-    assert expected.issubset({getattr(k, "schema", None) for k in schema})
-    assert _get_default(schema, CONF_REQUEST_TIMEOUT) == DEFAULT_REQUEST_TIMEOUT
-    assert _get_default(schema, CONF_CONTEXT_LENGTH) == DEFAULT_CONTEXT_LENGTH
-    assert _get_suggested(schema, CONF_REQUEST_TIMEOUT) == 123
-    assert _get_suggested(schema, CONF_TEXT_GEN_WEBUI_PRESET) == "custom-preset"
-    assert _get_suggested(schema, CONF_CONTEXT_LENGTH) == 2048
+        # there is no opt out any more: an unset sampling parameter means the server decides
+        assert "use_server_sampling_defaults" not in sampling_keys
 
 
 def test_schema_generic_openai_options_preserved(hass: HomeAssistant):
@@ -220,8 +194,8 @@ def test_schema_llama_cpp_server_includes_gbnf(hass: HomeAssistant):
     schema = _schema(hass, BACKEND_TYPE_LLAMA_CPP_SERVER)
     keys = {getattr(k, "schema", None) for k in schema}
 
-    assert {CONF_MAX_TOKENS, CONF_TOP_K, CONF_GBNF_GRAMMAR_FILE}.issubset(keys)
-    assert _get_default(schema, CONF_GBNF_GRAMMAR_FILE) == "output.gbnf"
+    assert {CONF_MAX_TOKENS, CONF_TOP_K, CONF_GBNF_GRAMMAR}.issubset(keys)
+    assert _get_default(schema, CONF_GBNF_GRAMMAR) == DEFAULT_GBNF_GRAMMAR
 
 
 def test_schema_ollama_defaults_and_overrides(hass: HomeAssistant):
@@ -248,11 +222,11 @@ def test_schema_includes_llm_api_selector(monkeypatch, hass: HomeAssistant):
     schema = _schema(hass, BACKEND_TYPE_LLAMA_CPP)
 
     assert _get_default(schema, CONF_LLM_HASS_API) is None
-    # Base prompt and thinking prefixes use defaults when not overridden
     prompt_default = _get_default(schema, CONF_PROMPT)
     assert prompt_default is not None and "You are 'Al'" in prompt_default
-    assert _get_default(schema, CONF_THINKING_PREFIX) == DEFAULT_THINKING_PREFIX
-    assert _get_default(schema, CONF_TOOL_CALL_PREFIX) == DEFAULT_TOOL_CALL_PREFIX
+    # the prompt format is decided by the model family, so it is not on the form
+    keys = {getattr(key, "schema", None) for key in schema}
+    assert not {CONF_THINKING_PREFIX, CONF_TOOL_CALL_PREFIX} & keys
 
 
 @pytest.mark.asyncio

@@ -60,7 +60,6 @@ from .const import (
     CONF_TYPICAL_P,
     CONF_REQUEST_TIMEOUT,
     CONF_ENABLE_STREAMING,
-    CONF_USE_SERVER_SAMPLING_DEFAULTS,
     CONF_BACKEND_TYPE,
     CONF_INSTALLED_LLAMACPP_VERSION,
     CONF_SELECTED_LANGUAGE,
@@ -75,14 +74,7 @@ from .const import (
     CONF_ENABLE_LEGACY_TOOL_CALLING,
     CONF_TOOL_RESPONSE_AS_STRING,
     CONF_LLAMACPP_ENABLE_FLASH_ATTENTION,
-    CONF_USE_GBNF_GRAMMAR,
-    CONF_GBNF_GRAMMAR_FILE,
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
-    CONF_TEXT_GEN_WEBUI_PRESET,
-    CONF_REFRESH_SYSTEM_PROMPT,
-    CONF_REMEMBER_CONVERSATION,
-    CONF_REMEMBER_NUM_INTERACTIONS,
-    CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
     CONF_MAX_TOOL_CALL_ITERATIONS,
     CONF_PROMPT_CACHING_ENABLED,
     CONF_PROMPT_CACHING_INTERVAL,
@@ -90,12 +82,11 @@ from .const import (
     CONF_IN_CONTEXT_EXAMPLES_FILE,
     CONF_NUM_IN_CONTEXT_EXAMPLES,
     CONF_API_KEY,
-    CONF_TEXT_GEN_WEBUI_ADMIN_KEY,
-    CONF_TEXT_GEN_WEBUI_CHAT_MODE,
     CONF_OLLAMA_KEEP_ALIVE_MIN,
     CONF_OLLAMA_JSON_MODE,
     CONF_API_PATH,
     CONF_CONTEXT_LENGTH,
+    CONF_GBNF_GRAMMAR,
     CONF_LLAMACPP_BATCH_SIZE,
     CONF_LLAMACPP_THREAD_COUNT,
     CONF_LLAMACPP_BATCH_THREAD_COUNT,
@@ -115,49 +106,32 @@ from .const import (
     DEFAULT_PROMPT,
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_ENABLE_STREAMING,
-    DEFAULT_USE_SERVER_SAMPLING_DEFAULTS,
     DEFAULT_BACKEND_TYPE,
     DEFAULT_DOWNLOADED_MODEL_QUANTIZATION,
-    DEFAULT_THINKING_PREFIX,
-    DEFAULT_THINKING_SUFFIX,
-    DEFAULT_TOOL_CALL_PREFIX,
-    DEFAULT_TOOL_CALL_SUFFIX,
-    DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
-    DEFAULT_TOOL_RESPONSE_AS_STRING,
     DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION,
-    DEFAULT_USE_GBNF_GRAMMAR,
-    DEFAULT_GBNF_GRAMMAR_FILE,
     DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
-    DEFAULT_REFRESH_SYSTEM_PROMPT,
-    DEFAULT_REMEMBER_CONVERSATION,
-    DEFAULT_REMEMBER_NUM_INTERACTIONS,
-    DEFAULT_REMEMBER_CONVERSATION_TIME_MINUTES,
     DEFAULT_MAX_TOOL_CALL_ITERATIONS,
     DEFAULT_PROMPT_CACHING_ENABLED,
     DEFAULT_PROMPT_CACHING_INTERVAL,
     DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
     DEFAULT_IN_CONTEXT_EXAMPLES_FILE,
     DEFAULT_NUM_IN_CONTEXT_EXAMPLES,
-    DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
     DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
     DEFAULT_OLLAMA_JSON_MODE,
     DEFAULT_API_PATH,
     DEFAULT_CONTEXT_LENGTH,
+    DEFAULT_GBNF_GRAMMAR,
     DEFAULT_LLAMACPP_BATCH_SIZE,
     DEFAULT_LLAMACPP_THREAD_COUNT,
     DEFAULT_LLAMACPP_BATCH_THREAD_COUNT,
     DEFAULT_LLAMACPP_CACHE_SIZE_MB,
     BACKEND_TYPE_LLAMA_CPP,
-    BACKEND_TYPE_TEXT_GEN_WEBUI,
     BACKEND_TYPE_GENERIC_OPENAI,
     BACKEND_TYPE_GENERIC_OPENAI_RESPONSES,
     BACKEND_TYPE_LLAMA_CPP_SERVER,
     BACKEND_TYPE_OLLAMA,
     BACKEND_TYPE_ANTHROPIC,
     CONF_BASE_URL,
-    TEXT_GEN_WEBUI_CHAT_MODE_CHAT,
-    TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT,
-    TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT,
     DOMAIN,
     HOME_LLM_API_ID,
     DEFAULT_OPTIONS,
@@ -185,7 +159,6 @@ def pick_backend_schema(backend_type=None, selected_language=None):
             ): SelectSelector(SelectSelectorConfig(
                 options=[
                     BACKEND_TYPE_LLAMA_CPP,
-                    BACKEND_TYPE_TEXT_GEN_WEBUI,
                     BACKEND_TYPE_GENERIC_OPENAI,
                     BACKEND_TYPE_GENERIC_OPENAI_RESPONSES,
                     BACKEND_TYPE_LLAMA_CPP_SERVER,
@@ -222,9 +195,7 @@ def remote_connection_schema(backend_type: str, *, host=None, port=None, ssl=Non
             ),
         })
 
-    if backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
-        extra[vol.Optional(CONF_TEXT_GEN_WEBUI_ADMIN_KEY)] = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
-    elif backend_type == BACKEND_TYPE_LLAMA_CPP_SERVER:
+    if backend_type == BACKEND_TYPE_LLAMA_CPP_SERVER:
         default_port = "8000"
     elif backend_type == BACKEND_TYPE_OLLAMA:
         default_port = "11434"
@@ -249,8 +220,8 @@ def remote_connection_schema(backend_type: str, *, host=None, port=None, ssl=Non
 class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
     """Handle a config flow for Local LLM Conversation."""
 
-    VERSION = 3
-    MINOR_VERSION = 3
+    VERSION = 4
+    MINOR_VERSION = 0
 
     install_wheel_task = None
     install_wheel_error = None
@@ -637,41 +608,6 @@ def local_llama_config_option_schema(
             description={"suggested_value": options.get(CONF_ENABLE_STREAMING, DEFAULT_ENABLE_STREAMING)},
             default=options.get(CONF_ENABLE_STREAMING, DEFAULT_ENABLE_STREAMING),
         ): BooleanSelector(BooleanSelectorConfig()),
-        vol.Required(
-            CONF_USE_SERVER_SAMPLING_DEFAULTS,
-            description={"suggested_value": options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS)},
-            default=options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS),
-        ): BooleanSelector(BooleanSelectorConfig()),
-        vol.Required(
-            CONF_THINKING_PREFIX,
-            description={"suggested_value": options.get(CONF_THINKING_PREFIX)},
-            default=DEFAULT_THINKING_PREFIX,
-        ): str,
-        vol.Required(
-            CONF_THINKING_SUFFIX,
-            description={"suggested_value": options.get(CONF_THINKING_SUFFIX)},
-            default=DEFAULT_THINKING_SUFFIX,
-        ): str,
-        vol.Required(
-            CONF_TOOL_CALL_PREFIX,
-            description={"suggested_value": options.get(CONF_TOOL_CALL_PREFIX)},
-            default=DEFAULT_TOOL_CALL_PREFIX,
-        ): str,
-        vol.Required(
-            CONF_TOOL_CALL_SUFFIX,
-            description={"suggested_value": options.get(CONF_TOOL_CALL_SUFFIX)},
-            default=DEFAULT_TOOL_CALL_SUFFIX,
-        ): str,
-        vol.Required(
-            CONF_ENABLE_LEGACY_TOOL_CALLING,
-            description={"suggested_value": options.get(CONF_ENABLE_LEGACY_TOOL_CALLING)},
-            default=DEFAULT_ENABLE_LEGACY_TOOL_CALLING
-        ): bool,
-        vol.Required(
-            CONF_TOOL_RESPONSE_AS_STRING,
-            description={"suggested_value": options.get(CONF_TOOL_RESPONSE_AS_STRING)},
-            default=DEFAULT_TOOL_RESPONSE_AS_STRING
-        ): bool,
     }
 
     if subentry_type == ai_task.DOMAIN:
@@ -739,26 +675,6 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options.get(CONF_LLM_HASS_API)},
                 default=None,
             ): SelectSelector(SelectSelectorConfig(options=apis, multiple=True)),
-            vol.Optional(
-                CONF_REFRESH_SYSTEM_PROMPT,
-                description={"suggested_value": options.get(CONF_REFRESH_SYSTEM_PROMPT, DEFAULT_REFRESH_SYSTEM_PROMPT)},
-                default=options.get(CONF_REFRESH_SYSTEM_PROMPT, DEFAULT_REFRESH_SYSTEM_PROMPT),
-            ): BooleanSelector(BooleanSelectorConfig()),
-            vol.Optional(
-                CONF_REMEMBER_CONVERSATION,
-                description={"suggested_value": options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION)},
-                default=options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION),
-            ): BooleanSelector(BooleanSelectorConfig()),
-            vol.Optional(
-                CONF_REMEMBER_NUM_INTERACTIONS,
-                description={"suggested_value": options.get(CONF_REMEMBER_NUM_INTERACTIONS, DEFAULT_REMEMBER_NUM_INTERACTIONS)},
-                default=options.get(CONF_REMEMBER_NUM_INTERACTIONS, DEFAULT_REMEMBER_NUM_INTERACTIONS),
-            ): NumberSelector(NumberSelectorConfig(min=0, max=100, mode=NumberSelectorMode.BOX)),
-            vol.Optional(
-                CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
-                description={"suggested_value": options.get(CONF_REMEMBER_CONVERSATION_TIME_MINUTES, DEFAULT_REMEMBER_CONVERSATION)},
-                default=options.get(CONF_REMEMBER_CONVERSATION_TIME_MINUTES, DEFAULT_REMEMBER_CONVERSATION),
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1440, mode=NumberSelectorMode.BOX)),
             vol.Required(
                 CONF_MAX_TOOL_CALL_ITERATIONS,
                 description={"suggested_value": options.get(CONF_MAX_TOOL_CALL_ITERATIONS)},
@@ -834,83 +750,13 @@ def local_llama_config_option_schema(
                 default=DEFAULT_LLAMACPP_CACHE_SIZE_MB,
             ): NumberSelector(NumberSelectorConfig(min=0, max=1024, step=1)),
             vol.Required(
-                CONF_USE_GBNF_GRAMMAR,
-                description={"suggested_value": options.get(CONF_USE_GBNF_GRAMMAR)},
-                default=DEFAULT_USE_GBNF_GRAMMAR,
-            ): BooleanSelector(BooleanSelectorConfig()),
-            vol.Required(
-                CONF_GBNF_GRAMMAR_FILE,
-                description={"suggested_value": options.get(CONF_GBNF_GRAMMAR_FILE)},
-                default=DEFAULT_GBNF_GRAMMAR_FILE,
-            ): str
-        })
-    elif backend_type == BACKEND_TYPE_TEXT_GEN_WEBUI:
-        result.update({
-            vol.Required(
-                CONF_CONTEXT_LENGTH,
-                description={"suggested_value": options.get(CONF_CONTEXT_LENGTH)},
-                default=DEFAULT_CONTEXT_LENGTH,
-            ): NumberSelector(NumberSelectorConfig(min=512, max=1_048_576, step=512)),
-            vol.Optional(
-                CONF_TOP_K,
-                description={"suggested_value": options[CONF_TOP_K]} if CONF_TOP_K in options else {},
-            ): NumberSelector(NumberSelectorConfig(min=1, max=256, step=1)),
-            vol.Optional(
-                CONF_TOP_P,
-                description={"suggested_value": options[CONF_TOP_P]} if CONF_TOP_P in options else {},
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Optional(
-                CONF_MIN_P,
-                description={"suggested_value": options[CONF_MIN_P]} if CONF_MIN_P in options else {},
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Optional(
-                CONF_TYPICAL_P,
-                description={"suggested_value": options[CONF_TYPICAL_P]} if CONF_TYPICAL_P in options else {},
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Required(
-                CONF_REQUEST_TIMEOUT,
-                description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
-                default=DEFAULT_REQUEST_TIMEOUT,
-            ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
-            vol.Optional(
-                CONF_TEXT_GEN_WEBUI_PRESET,
-                description={"suggested_value": options.get(CONF_TEXT_GEN_WEBUI_PRESET)},
-            ): str,
-            vol.Required(
-                CONF_TEXT_GEN_WEBUI_CHAT_MODE,
-                description={"suggested_value": options.get(CONF_TEXT_GEN_WEBUI_CHAT_MODE)},
-                default=DEFAULT_TEXT_GEN_WEBUI_CHAT_MODE,
-            ): SelectSelector(SelectSelectorConfig(
-                options=[TEXT_GEN_WEBUI_CHAT_MODE_CHAT, TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT, TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT],
-                translation_key=CONF_TEXT_GEN_WEBUI_CHAT_MODE,
-                multiple=False,
-                mode=SelectSelectorMode.DROPDOWN,
-            )),
-        })
-    elif backend_type in BACKEND_TYPE_GENERIC_OPENAI:
-        result.update({
-            vol.Optional(
-                CONF_TOP_P,
-                description={"suggested_value": options[CONF_TOP_P]} if CONF_TOP_P in options else {},
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Required(
-                CONF_REQUEST_TIMEOUT,
-                description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
-                default=DEFAULT_REQUEST_TIMEOUT,
-            ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
+                CONF_GBNF_GRAMMAR,
+                description={"suggested_value": options.get(CONF_GBNF_GRAMMAR, DEFAULT_GBNF_GRAMMAR)},
+                default=options.get(CONF_GBNF_GRAMMAR, DEFAULT_GBNF_GRAMMAR),
+            ): TextSelector(TextSelectorConfig(multiline=True))
         })
     elif backend_type in BACKEND_TYPE_GENERIC_OPENAI_RESPONSES:
-        result = {
-            key: value
-            for key, value in result.items()
-            if getattr(key, "schema", None) != CONF_REMEMBER_NUM_INTERACTIONS
-        }
         result.update({
-            vol.Required(
-                CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
-                description={"suggested_value": options.get(CONF_REMEMBER_CONVERSATION_TIME_MINUTES)},
-                default=DEFAULT_REMEMBER_CONVERSATION_TIME_MINUTES,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=180, step=0.5, unit_of_measurement=UnitOfTime.MINUTES, mode=NumberSelectorMode.BOX)),
             vol.Optional(
                 CONF_TEMPERATURE,
                 description={"suggested_value": options[CONF_TEMPERATURE]} if CONF_TEMPERATURE in options else {},
@@ -941,15 +787,10 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options[CONF_TOP_P]} if CONF_TOP_P in options else {},
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
             vol.Required(
-                CONF_USE_GBNF_GRAMMAR,
-                description={"suggested_value": options.get(CONF_USE_GBNF_GRAMMAR)},
-                default=DEFAULT_USE_GBNF_GRAMMAR,
-            ): BooleanSelector(BooleanSelectorConfig()),
-            vol.Required(
-                CONF_GBNF_GRAMMAR_FILE,
-                description={"suggested_value": options.get(CONF_GBNF_GRAMMAR_FILE)},
-                default=DEFAULT_GBNF_GRAMMAR_FILE,
-            ): str,
+                CONF_GBNF_GRAMMAR,
+                description={"suggested_value": options.get(CONF_GBNF_GRAMMAR, DEFAULT_GBNF_GRAMMAR)},
+                default=options.get(CONF_GBNF_GRAMMAR, DEFAULT_GBNF_GRAMMAR),
+            ): TextSelector(TextSelectorConfig(multiline=True)),
             vol.Required(
                 CONF_REQUEST_TIMEOUT,
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
@@ -1029,7 +870,6 @@ def local_llama_config_option_schema(
         CONF_MAX_TOKENS,
         CONF_ENABLE_STREAMING,
         # sampling parameters
-        CONF_USE_SERVER_SAMPLING_DEFAULTS,
         CONF_TEMPERATURE,
         CONF_TOP_P,
         CONF_MIN_P,
@@ -1043,14 +883,9 @@ def local_llama_config_option_schema(
         CONF_MAX_TOOL_CALL_ITERATIONS,
         CONF_ENABLE_LEGACY_TOOL_CALLING,
         CONF_TOOL_RESPONSE_AS_STRING,
-        CONF_USE_GBNF_GRAMMAR,
-        CONF_GBNF_GRAMMAR_FILE,
+        CONF_GBNF_GRAMMAR,
         # integration specific options
         CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
-        CONF_REFRESH_SYSTEM_PROMPT,
-        CONF_REMEMBER_CONVERSATION,
-        CONF_REMEMBER_NUM_INTERACTIONS,
-        CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
         CONF_PROMPT_CACHING_ENABLED,
         CONF_PROMPT_CACHING_INTERVAL,
         CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
@@ -1062,9 +897,6 @@ def local_llama_config_option_schema(
         CONF_LLAMACPP_THREAD_COUNT,
         CONF_LLAMACPP_BATCH_THREAD_COUNT,
         CONF_LLAMACPP_ENABLE_FLASH_ATTENTION,
-        CONF_TEXT_GEN_WEBUI_ADMIN_KEY,
-        CONF_TEXT_GEN_WEBUI_PRESET,
-        CONF_TEXT_GEN_WEBUI_CHAT_MODE,
         CONF_OLLAMA_KEEP_ALIVE_MIN,
         CONF_OLLAMA_JSON_MODE,
     ]
@@ -1261,18 +1093,6 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
 
         if user_input:
             if not is_ai_task:
-                if not user_input.get(CONF_REFRESH_SYSTEM_PROMPT) and user_input.get(CONF_PROMPT_CACHING_ENABLED):
-                    errors["base"] = "sys_refresh_caching_enabled"
-
-                if user_input.get(CONF_ENABLE_LEGACY_TOOL_CALLING) and int(user_input.get(CONF_MAX_TOOL_CALL_ITERATIONS, 0)) > 0:
-                    errors["base"] = "legacy_tool_calling_with_iterations"
-
-                if user_input.get(CONF_USE_GBNF_GRAMMAR):
-                    filename = user_input.get(CONF_GBNF_GRAMMAR_FILE, DEFAULT_GBNF_GRAMMAR_FILE)
-                    if not os.path.isfile(os.path.join(os.path.dirname(__file__), filename)):
-                        errors["base"] = "missing_gbnf_file"
-                        description_placeholders["filename"] = filename
-
                 if user_input.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES):
                     filename = user_input.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE)
                     if not os.path.isfile(os.path.join(os.path.dirname(__file__), filename)):
@@ -1281,7 +1101,6 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
 
             # --- Normalize numeric fields to ints to avoid slice/type errors later ---
             for key in (
-                CONF_REMEMBER_NUM_INTERACTIONS,
                 CONF_MAX_TOOL_CALL_ITERATIONS,
                 CONF_CONTEXT_LENGTH,
                 CONF_MAX_TOKENS,

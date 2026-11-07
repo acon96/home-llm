@@ -25,7 +25,6 @@ from custom_components.llama_conversation.const import (
     CONF_TOP_P,
     CONF_TYPICAL_P,
     CONF_MIN_P,
-    CONF_USE_SERVER_SAMPLING_DEFAULTS,
     CONF_ENABLE_THINK_MODE,
     CONF_REQUEST_TIMEOUT,
     CONF_API_KEY,
@@ -45,7 +44,6 @@ from custom_components.llama_conversation.const import (
     DEFAULT_CONTEXT_LENGTH,
     DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
     DEFAULT_TOOL_RESPONSE_AS_STRING,
-    DEFAULT_USE_SERVER_SAMPLING_DEFAULTS,
 )
 
 from custom_components.llama_conversation.entity import LocalLLMClient, TextGenerationResult
@@ -197,17 +195,15 @@ class OllamaAPIClient(LocalLLMClient):
         tool_response_as_string = entity_options.get(CONF_TOOL_RESPONSE_AS_STRING, DEFAULT_TOOL_RESPONSE_AS_STRING)
         think_mode = entity_options.get(CONF_ENABLE_THINK_MODE, DEFAULT_ENABLE_THINK_MODE)
         json_mode = entity_options.get(CONF_OLLAMA_JSON_MODE, DEFAULT_OLLAMA_JSON_MODE)
-        use_default_sampler_options = entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS)
-
         options = {
             "num_ctx": context_length,
             "num_predict": max_tokens,
         }
 
-        if not use_default_sampler_options:
-            for key in (CONF_TOP_P, CONF_TOP_K, CONF_TYPICAL_P, CONF_TEMPERATURE, CONF_MIN_P):
-                if entity_options.get(key) is not None:
-                    options[key] = entity_options[key]
+        # sampling parameters that are not configured are left to the server
+        for key in (CONF_TOP_P, CONF_TOP_K, CONF_TYPICAL_P, CONF_TEMPERATURE, CONF_MIN_P):
+            if entity_options.get(key) is not None:
+                options[key] = entity_options[key]
 
         messages = get_oai_formatted_messages(conversation, tool_args_to_str=False, tool_result_to_str=tool_response_as_string)
         tools = None
@@ -294,17 +290,15 @@ class OllamaAPIClient(LocalLLMClient):
         tool_response_as_string = entity_options.get(CONF_TOOL_RESPONSE_AS_STRING, DEFAULT_TOOL_RESPONSE_AS_STRING)
         think_mode = entity_options.get(CONF_ENABLE_THINK_MODE, DEFAULT_ENABLE_THINK_MODE)
         json_mode = entity_options.get(CONF_OLLAMA_JSON_MODE, DEFAULT_OLLAMA_JSON_MODE)
-        use_default_sampler_options = entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS)
-
         options = {
             "num_ctx": context_length,
             "num_predict": max_tokens,
         }
 
-        if not use_default_sampler_options:
-            for key in (CONF_TOP_P, CONF_TOP_K, CONF_TYPICAL_P, CONF_TEMPERATURE, CONF_MIN_P):
-                if entity_options.get(key) is not None:
-                    options[key] = entity_options[key]
+        # sampling parameters that are not configured are left to the server
+        for key in (CONF_TOP_P, CONF_TOP_K, CONF_TYPICAL_P, CONF_TEMPERATURE, CONF_MIN_P):
+            if entity_options.get(key) is not None:
+                options[key] = entity_options[key]
 
 
         messages = get_oai_formatted_messages(conversation, tool_args_to_str=False, tool_result_to_str=tool_response_as_string)

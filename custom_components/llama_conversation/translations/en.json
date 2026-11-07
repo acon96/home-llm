@@ -20,9 +20,6 @@
                     "ssl": "Use HTTPS",
                     "openai_api_key": "API Key",
                     "openai_path": "API Path",
-                    "text_generation_webui_admin_key": "Admin Key",
-                    "text_generation_webui_preset": "Generation Preset/Character Name",
-                    "text_generation_webui_chat_mode": "Chat Mode",
                     "anthropic_base_url": "Anthropic Compatible API Base URL"
                 },
                 "description": "Please select the backend and/or provide the connection details to connect to the API that is hosting the model.",
@@ -30,7 +27,13 @@
             }
         },
         "abort": {
-           "duplicate_client": "Cannot create duplicate model provider!"
+            "duplicate_client": "Cannot create duplicate model provider!"
+        },
+        "issues": {
+            "text_generation_webui_removed": {
+                "title": "text-generation-webui is no longer supported",
+                "description": "The text-generation-webui backend has been removed and its models were switched to the OpenAI compatible API. Settings that only text-generation-webui understood were dropped:\n{details}\n\nPlease check that the affected models still behave as expected."
+            }
         }
     },
     "config_subentries": {
@@ -81,24 +84,16 @@
                         "typical_p": "Typical P",
                         "request_timeout": "Remote Request Timeout (seconds)",
                         "enable_streaming": "Enable Streaming",
-                        "use_server_sampling_defaults": "Use server defaults for sampling parameters",
                         "ollama_keep_alive": "(ollama) Keep Alive/Inactivity Timeout (minutes)",
                         "ollama_json_mode": "(ollama) JSON Output Mode",
                         "extra_attributes_to_expose": "Additional attribute to expose in the context",
                         "enable_flash_attention": "Enable Flash Attention",
-                        "gbnf_grammar": "Enable GBNF Grammar",
-                        "gbnf_grammar_file": "GBNF Grammar Filename",
+                        "gbnf_grammar": "GBNF grammar",
                         "openai_api_key": "API Key",
-                        "text_generation_webui_admin_key": "(text-generation-webui) Admin Key",
                         "service_call_regex": "Service Call Regex",
-                        "refresh_prompt_per_turn": "Refresh System Prompt Every Turn",
-                        "remember_conversation": "Remember conversation",
-                        "remember_num_interactions": "Number of past interactions to remember",
                         "in_context_examples": "Enable in context learning (ICL) examples",
                         "in_context_examples_file": "In context learning examples CSV filename",
                         "num_in_context_examples": "Number of ICL examples to generate",
-                        "text_generation_webui_preset": "(text-generation-webui) Generation Preset/Character Name",
-                        "text_generation_webui_chat_mode": "(text-generation-webui) Chat Mode",
                         "prompt_caching": "Enable Prompt Caching",
                         "prompt_caching_interval": "Prompt Caching fastest refresh interval (sec)",
                         "context_length": "Context Length",
@@ -119,13 +114,13 @@
                         "prompt": "See [here](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) for more information on model prompting.",
                         "in_context_examples": "If you are using a model that is not specifically fine-tuned for use with this integration: enable this",
                         "extra_attributes_to_expose": "This is the list of Home Assistant 'attributes' that are exposed to the model. This limits how much information the model is able to see and answer questions on.",
-                        "gbnf_grammar": "Forces the model to output properly formatted responses. Ensure the file specified below exists in the integration directory.",
+                        "gbnf_grammar": "Constrains llama.cpp output to a grammar written in GBNF. Leave it empty to let the model answer freely.",
                         "prompt_caching": "Prompt caching attempts to pre-process the prompt (house state) and cache the processing that needs to be done to understand the prompt. Enabling this will cause the model to re-process the prompt any time an entity state changes in the house, restricted by the interval below.",
                         "enable_legacy_tool_calling": "Prefer to process tool calls locally rather than relying on the backend to handle the tool calling format. Can be more reliable, however it requires properly setting the tool call prefix and suffix.",
                         "tool_response_as_string": "Some prompt templates expect the tool response to be provided as a JSON serialized string, rather than the raw object.",
                         "max_tool_call_iterations": "Set to 0 to generate the response and tool call in one attempt, without looping (use this for Home models v1-v3).",
                         "enable_streaming": "When enabled, responses are streamed token-by-token when the backend supports it.",
-                        "use_server_sampling_defaults": "**Recommended for most users.** Inference engines and model providers have gotten much better at shipping models with well-tuned sampling defaults. Omits temperature, top_p, top_k, min_p, and typical_p from requests so the server uses the values it knows are best for the loaded model. Only disable this if you are experiencing odd output behavior or intentionally want to run at a lower temperature."
+                        "context_length": "The model can not use more than this many tokens for the conversation and its reply together. Home LLM drops the oldest messages that no longer fit, so a long conversation stays inside the limit instead of failing."
                     },
                     "description": "Please configure the model according to how it should be prompted. There are many different options and selecting the correct ones for your model is essential to getting optimal performance. See [here](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) for more information about the options on this page.\n\n**Some defaults may have been chosen for you based on the name of the selected model name or filename.** If you renamed a file or are using a fine-tuning of a supported model, then the defaults may not have been detected.",
                     "title": "Configure the selected model"
@@ -142,24 +137,16 @@
                         "typical_p": "Typical P",
                         "request_timeout": "Remote Request Timeout (seconds)",
                         "enable_streaming": "Enable Streaming",
-                        "use_server_sampling_defaults": "Use server defaults for sampling parameters",
                         "ollama_keep_alive": "(ollama) Keep Alive/Inactivity Timeout (minutes)",
                         "ollama_json_mode": "(ollama) JSON Output Mode",
                         "extra_attributes_to_expose": "Additional attribute to expose in the context",
                         "enable_flash_attention": "Enable Flash Attention",
-                        "gbnf_grammar": "Enable GBNF Grammar",
-                        "gbnf_grammar_file": "GBNF Grammar Filename",
+                        "gbnf_grammar": "GBNF grammar",
                         "openai_api_key": "API Key",
-                        "text_generation_webui_admin_key": "(text-generation-webui) Admin Key",
                         "service_call_regex": "Service Call Regex",
-                        "refresh_prompt_per_turn": "Refresh System Prompt Every Turn",
-                        "remember_conversation": "Remember conversation",
-                        "remember_num_interactions": "Number of past interactions to remember",
                         "in_context_examples": "Enable in context learning (ICL) examples",
                         "in_context_examples_file": "In context learning examples CSV filename",
                         "num_in_context_examples": "Number of ICL examples to generate",
-                        "text_generation_webui_preset": "(text-generation-webui) Generation Preset/Character Name",
-                        "text_generation_webui_chat_mode": "(text-generation-webui) Chat Mode",
                         "prompt_caching": "Enable Prompt Caching",
                         "prompt_caching_interval": "Prompt Caching fastest refresh interval (sec)",
                         "context_length": "Context Length",
@@ -180,13 +167,13 @@
                         "prompt": "See [here](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) for more information on model prompting.",
                         "in_context_examples": "If you are using a model that is not specifically fine-tuned for use with this integration: enable this",
                         "extra_attributes_to_expose": "This is the list of Home Assistant 'attributes' that are exposed to the model. This limits how much information the model is able to see and answer questions on.",
-                        "gbnf_grammar": "Forces the model to output properly formatted responses. Ensure the file specified below exists in the integration directory.",
+                        "gbnf_grammar": "Constrains llama.cpp output to a grammar written in GBNF. Leave it empty to let the model answer freely.",
                         "prompt_caching": "Prompt caching attempts to pre-process the prompt (house state) and cache the processing that needs to be done to understand the prompt. Enabling this will cause the model to re-process the prompt any time an entity state changes in the house, restricted by the interval below.",
                         "enable_legacy_tool_calling": "Prefer to process tool calls locally rather than relying on the backend to handle the tool calling format. Can be more reliable, however it requires properly setting the tool call prefix and suffix.",
                         "tool_response_as_string": "Some prompt templates expect the tool response to be provided as a JSON serialized string, rather than the raw object.",
                         "max_tool_call_iterations": "Set to 0 to generate the response and tool call in one attempt, without looping (use this for Home models v1-v3).",
                         "enable_streaming": "When enabled, responses are streamed token-by-token when the backend supports it.",
-                        "use_server_sampling_defaults": "**Recommended for most users.** Inference engines and model providers have gotten much better at shipping models with well-tuned sampling defaults. Omits temperature, top_p, top_k, min_p, and typical_p from requests so the server uses the values it knows are best for the loaded model. Only disable this if you are experiencing odd output behavior or intentionally want to run at a lower temperature."
+                        "context_length": "The model can not use more than this many tokens for the conversation and its reply together. Home LLM drops the oldest messages that no longer fit, so a long conversation stays inside the limit instead of failing."
                     },
                     "description": "Please configure the model according to how it should be prompted. There are many different options and selecting the correct ones for your model is essential to getting optimal performance. See [here](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) for more information about the options on this page.\n\n**Some defaults may have been chosen for you based on the name of the selected model name or filename.** If you renamed a file or are using a fine-tuning of a supported model, then the defaults may not have been detected.",
                     "title": "Configure the selected model"
@@ -239,21 +226,16 @@
                         "typical_p": "Typical P",
                         "request_timeout": "Remote Request Timeout (seconds)",
                         "enable_streaming": "Enable Streaming",
-                        "use_server_sampling_defaults": "Use server defaults for sampling parameters",
                         "ollama_keep_alive": "(ollama) Keep Alive/Inactivity Timeout (minutes)",
                         "ollama_json_mode": "(ollama) JSON Output Mode",
                         "extra_attributes_to_expose": "Additional attribute to expose in the context",
                         "enable_flash_attention": "Enable Flash Attention",
-                        "gbnf_grammar": "Enable GBNF Grammar",
-                        "gbnf_grammar_file": "GBNF Grammar Filename",
+                        "gbnf_grammar": "GBNF grammar",
                         "openai_api_key": "API Key",
-                        "text_generation_webui_admin_key": "(text-generation-webui) Admin Key",
                         "service_call_regex": "Service Call Regex",
                         "in_context_examples": "Enable in context learning (ICL) examples",
                         "in_context_examples_file": "In context learning examples CSV filename",
                         "num_in_context_examples": "Number of ICL examples to generate",
-                        "text_generation_webui_preset": "(text-generation-webui) Generation Preset/Character Name",
-                        "text_generation_webui_chat_mode": "(text-generation-webui) Chat Mode",
                         "prompt_caching": "Enable Prompt Caching",
                         "prompt_caching_interval": "Prompt Caching fastest refresh interval (sec)",
                         "context_length": "Context Length",
@@ -275,14 +257,14 @@
                         "prompt": "See [here](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) for more information on model prompting.",
                         "in_context_examples": "If you are using a model that is not specifically fine-tuned for use with this integration: enable this",
                         "extra_attributes_to_expose": "This is the list of Home Assistant 'attributes' that are exposed to the model. This limits how much information the model is able to see and answer questions on.",
-                        "gbnf_grammar": "Forces the model to output properly formatted responses. Ensure the file specified below exists in the integration directory.",
+                        "gbnf_grammar": "Constrains llama.cpp output to a grammar written in GBNF. Leave it empty to let the model answer freely.",
                         "prompt_caching": "Prompt caching attempts to pre-process the prompt (house state) and cache the processing that needs to be done to understand the prompt. Enabling this will cause the model to re-process the prompt any time an entity state changes in the house, restricted by the interval below.",
                         "enable_legacy_tool_calling": "Prefer to process tool calls locally rather than relying on the backend to handle the tool calling format. Can be more reliable, however it requires properly setting the tool call prefix and suffix.",
                         "tool_response_as_string": "Some prompt templates expect the tool response to be provided as a JSON serialized string, rather than the raw object.",
                         "max_tool_call_iterations": "Set to 0 to generate the response and tool call in one attempt, without looping (use this for Home models v1-v3).",
                         "enable_streaming": "When enabled, responses are streamed token-by-token when the backend supports it.",
-                        "use_server_sampling_defaults": "**Recommended for most users.** Inference engines and model providers have gotten much better at shipping models with well-tuned sampling defaults. Omits temperature, top_p, top_k, min_p, and typical_p from requests so the server uses the values it knows are best for the loaded model. Only disable this if you are experiencing odd output behavior or intentionally want to run at a lower temperature.",
-                        "ai_task_extraction_method": "Select the method used to extract structured data from the model's response. 'Structured Output' tells the backend to force the model to produce output following the provided JSON Schema; 'Tool Calling' provides a tool to the model that should be called with the appropriate arguments that match the desired output structure."
+                        "ai_task_extraction_method": "Select the method used to extract structured data from the model's response. 'Structured Output' tells the backend to force the model to produce output following the provided JSON Schema; 'Tool Calling' provides a tool to the model that should be called with the appropriate arguments that match the desired output structure.",
+                        "context_length": "The model can not use more than this many tokens for the conversation and its reply together. Home LLM drops the oldest messages that no longer fit, so a long conversation stays inside the limit instead of failing."
                     },
                     "description": "Please configure the model according to how it should be prompted. There are many different options and selecting the correct ones for your model is essential to getting optimal performance. See [here](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) for more information about the options on this page.\n\n**Some defaults may have been chosen for you based on the name of the selected model name or filename.** If you renamed a file or are using a fine-tuning of a supported model, then the defaults may not have been detected.",
                     "title": "Configure the selected model"
@@ -299,24 +281,16 @@
                         "typical_p": "Typical P",
                         "request_timeout": "Remote Request Timeout (seconds)",
                         "enable_streaming": "Enable Streaming",
-                        "use_server_sampling_defaults": "Use server defaults for sampling parameters",
                         "ollama_keep_alive": "(ollama) Keep Alive/Inactivity Timeout (minutes)",
                         "ollama_json_mode": "(ollama) JSON Output Mode",
                         "extra_attributes_to_expose": "Additional attribute to expose in the context",
                         "enable_flash_attention": "Enable Flash Attention",
-                        "gbnf_grammar": "Enable GBNF Grammar",
-                        "gbnf_grammar_file": "GBNF Grammar Filename",
+                        "gbnf_grammar": "GBNF grammar",
                         "openai_api_key": "API Key",
-                        "text_generation_webui_admin_key": "(text-generation-webui) Admin Key",
                         "service_call_regex": "Service Call Regex",
-                        "refresh_prompt_per_turn": "Refresh System Prompt Every Turn",
-                        "remember_conversation": "Remember conversation",
-                        "remember_num_interactions": "Number of past interactions to remember",
                         "in_context_examples": "Enable in context learning (ICL) examples",
                         "in_context_examples_file": "In context learning examples CSV filename",
                         "num_in_context_examples": "Number of ICL examples to generate",
-                        "text_generation_webui_preset": "(text-generation-webui) Generation Preset/Character Name",
-                        "text_generation_webui_chat_mode": "(text-generation-webui) Chat Mode",
                         "prompt_caching": "Enable Prompt Caching",
                         "prompt_caching_interval": "Prompt Caching fastest refresh interval (sec)",
                         "context_length": "Context Length",
@@ -337,13 +311,13 @@
                         "prompt": "See [here](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) for more information on model prompting.",
                         "in_context_examples": "If you are using a model that is not specifically fine-tuned for use with this integration: enable this",
                         "extra_attributes_to_expose": "This is the list of Home Assistant 'attributes' that are exposed to the model. This limits how much information the model is able to see and answer questions on.",
-                        "gbnf_grammar": "Forces the model to output properly formatted responses. Ensure the file specified below exists in the integration directory.",
+                        "gbnf_grammar": "Constrains llama.cpp output to a grammar written in GBNF. Leave it empty to let the model answer freely.",
                         "prompt_caching": "Prompt caching attempts to pre-process the prompt (house state) and cache the processing that needs to be done to understand the prompt. Enabling this will cause the model to re-process the prompt any time an entity state changes in the house, restricted by the interval below.",
                         "enable_legacy_tool_calling": "Prefer to process tool calls locally rather than relying on the backend to handle the tool calling format. Can be more reliable, however it requires properly setting the tool call prefix and suffix.",
                         "tool_response_as_string": "Some prompt templates expect the tool response to be provided as a JSON serialized string, rather than the raw object.",
                         "max_tool_call_iterations": "Set to 0 to generate the response and tool call in one attempt, without looping (use this for Home models v1-v3).",
                         "enable_streaming": "When enabled, responses are streamed token-by-token when the backend supports it.",
-                        "use_server_sampling_defaults": "**Recommended for most users.** Inference engines and model providers have gotten much better at shipping models with well-tuned sampling defaults. Omits temperature, top_p, top_k, min_p, and typical_p from requests so the server uses the values it knows are best for the loaded model. Only disable this if you are experiencing odd output behavior or intentionally want to run at a lower temperature."
+                        "context_length": "The model can not use more than this many tokens for the conversation and its reply together. Home LLM drops the oldest messages that no longer fit, so a long conversation stays inside the limit instead of failing."
                     },
                     "description": "Please configure the model according to how it should be prompted. There are many different options and selecting the correct ones for your model is essential to getting optimal performance. See [here](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) for more information about the options on this page.\n\n**Some defaults may have been chosen for you based on the name of the selected model name or filename.** If you renamed a file or are using a fine-tuning of a supported model, then the defaults may not have been detected.",
                     "title": "Configure the selected model"
@@ -360,10 +334,7 @@
                     "port": "API Port",
                     "ssl": "Use HTTPS",
                     "openai_api_key": "API Key",
-                    "openai_path": "API Path",
-                    "text_generation_webui_admin_key": "Admin Key",
-                    "text_generation_webui_preset": "Generation Preset/Character Name",
-                    "text_generation_webui_chat_mode": "Chat Mode"
+                    "openai_path": "API Path"
                 },
                 "description": "Please provide the connection details to connect to the API that is hosting the model.",
                 "title": "Configure Connection"
@@ -395,15 +366,7 @@
                 "generic_openai_responses": "OpenAPI Compatible 'Responses' API",
                 "llama_cpp_server": "Llama.cpp Server",
                 "ollama": "Ollama API",
-                "text-generation-webui_api": "text-generation-webui API",
                 "anthropic": "Anthropic Compatible 'Messages' API"
-            }
-        },
-        "text_generation_webui_chat_mode": {
-            "options": {
-                "chat": "Chat",
-                "instruct": "Instruct",
-                "chat-instruct": "Chat-Instruct"
             }
         },
         "selected_language": {

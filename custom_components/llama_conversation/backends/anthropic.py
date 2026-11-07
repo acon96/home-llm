@@ -23,7 +23,6 @@ from custom_components.llama_conversation.const import (
     CONF_TEMPERATURE,
     CONF_TOP_P,
     CONF_TOP_K,
-    CONF_USE_SERVER_SAMPLING_DEFAULTS,
     CONF_REQUEST_TIMEOUT,
     CONF_ENABLE_LEGACY_TOOL_CALLING,
     CONF_TOOL_RESPONSE_AS_STRING,
@@ -31,7 +30,6 @@ from custom_components.llama_conversation.const import (
     CONF_API_PATH,
     CONF_BASE_URL,
     DEFAULT_MAX_TOKENS,
-    DEFAULT_USE_SERVER_SAMPLING_DEFAULTS,
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
     DEFAULT_TOOL_RESPONSE_AS_STRING,
@@ -39,7 +37,7 @@ from custom_components.llama_conversation.const import (
 )
 
 from custom_components.llama_conversation.entity import LocalLLMClient, TextGenerationResult
-from custom_components.llama_conversation.utils import get_file_contents_base64, parse_tool_arguments_with_repair_fallback
+from custom_components.llama_conversation.utils import get_file_contents_base64, parse_tool_arguments_with_repair_fallback, tool_result_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -114,7 +112,7 @@ def _convert_to_anthropic_messages(
                 messages.append({"role": "assistant", "content": content})
         elif message.role == "tool_result":
             # Anthropic expects tool results in user messages with tool_result content
-            tool_result = message.tool_result if hasattr(message, 'tool_result') else {}
+            tool_result = tool_result_data(message)
             if tool_result_to_str:
                 result_content = ha_json.json_dumps(tool_result) if isinstance(tool_result, dict) else str(tool_result)
             else:
@@ -342,13 +340,13 @@ class AnthropicAPIClient(LocalLLMClient):
                 request_params["system"] = system_prompt
             if tools:
                 request_params["tools"] = tools
-            if not entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS):
-                if temperature is not None:
-                    request_params["temperature"] = temperature
-                if top_p is not None:
-                    request_params["top_p"] = top_p
-                if top_k is not None and top_k > 0:
-                    request_params["top_k"] = top_k
+            # sampling parameters that are not configured are left to the provider
+            if temperature is not None:
+                request_params["temperature"] = temperature
+            if top_p is not None:
+                request_params["top_p"] = top_p
+            if top_k is not None and top_k > 0:
+                request_params["top_k"] = top_k
 
             try:
                 current_tool_call: Dict[str, Any] | None = None
@@ -457,13 +455,13 @@ class AnthropicAPIClient(LocalLLMClient):
             request_params["system"] = system_prompt
         if tools:
             request_params["tools"] = tools
-        if not entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS):
-            if temperature is not None:
-                request_params["temperature"] = temperature
-            if top_p is not None:
-                request_params["top_p"] = top_p
-            if top_k is not None and top_k > 0:
-                request_params["top_k"] = top_k
+        # sampling parameters that are not configured are left to the provider
+        if temperature is not None:
+            request_params["temperature"] = temperature
+        if top_p is not None:
+            request_params["top_p"] = top_p
+        if top_k is not None and top_k > 0:
+            request_params["top_k"] = top_k
 
         try:
             client = await self._async_build_client(timeout=timeout)

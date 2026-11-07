@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import datetime
 import logging
 from typing import List, Dict, Tuple, AsyncGenerator, Any, Optional
 
@@ -21,21 +20,15 @@ from custom_components.llama_conversation.const import (
     CONF_TOP_P,
     CONF_REQUEST_TIMEOUT,
     CONF_API_KEY,
-    CONF_REMEMBER_CONVERSATION,
-    CONF_REMEMBER_CONVERSATION_TIME_MINUTES,
     CONF_API_PATH,
     CONF_ENABLE_LEGACY_TOOL_CALLING,
     CONF_TOOL_RESPONSE_AS_STRING,
     CONF_RESPONSE_JSON_SCHEMA,
-    CONF_USE_SERVER_SAMPLING_DEFAULTS,
     DEFAULT_MAX_TOKENS,
     DEFAULT_REQUEST_TIMEOUT,
-    DEFAULT_REMEMBER_CONVERSATION,
-    DEFAULT_REMEMBER_CONVERSATION_TIME_MINUTES,
     DEFAULT_API_PATH,
     DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
     DEFAULT_TOOL_RESPONSE_AS_STRING,
-    DEFAULT_USE_SERVER_SAMPLING_DEFAULTS,
     RECOMMENDED_CHAT_MODELS,
 )
 from custom_components.llama_conversation.entity import TextGenerationResult, LocalLLMClient
@@ -112,17 +105,16 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         _, additional_params = self._chat_completion_params(entity_options)
         messages = get_oai_formatted_messages(conversation, user_content_as_list=True, tool_result_to_str=tool_response_as_string)
 
-        use_server_sampling_defaults = entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS)
         request_params = {
             "model": model_name,
             # "stream": True, # we are using the streaming method, therefore we dont need to specify it
             "max_tokens": max_tokens,
             "messages": messages
         }
-        if not use_server_sampling_defaults:
-            for key in (CONF_TEMPERATURE, CONF_TOP_P):
-                if entity_options.get(key) is not None:
-                    request_params[key] = entity_options[key]
+        # sampling parameters that are not configured are left to the server
+        for key in (CONF_TEMPERATURE, CONF_TOP_P):
+            if entity_options.get(key) is not None:
+                request_params[key] = entity_options[key]
 
         response_json_schema = entity_options.get(CONF_RESPONSE_JSON_SCHEMA)
         if response_json_schema:
@@ -176,16 +168,15 @@ class GenericOpenAIAPIClient(LocalLLMClient):
         endpoint, additional_params = self._chat_completion_params(entity_options)
         messages = get_oai_formatted_messages(conversation, user_content_as_list=True, tool_result_to_str=tool_response_as_string)
 
-        use_server_sampling_defaults = entity_options.get(CONF_USE_SERVER_SAMPLING_DEFAULTS, DEFAULT_USE_SERVER_SAMPLING_DEFAULTS)
         request_params: Dict[str, Any] = {
             "model": model_name,
             "max_tokens": max_tokens,
             "messages": messages,
         }
-        if not use_server_sampling_defaults:
-            for key in (CONF_TEMPERATURE, CONF_TOP_P):
-                if entity_options.get(key) is not None:
-                    request_params[key] = entity_options[key]
+        # sampling parameters that are not configured are left to the server
+        for key in (CONF_TEMPERATURE, CONF_TOP_P):
+            if entity_options.get(key) is not None:
+                request_params[key] = entity_options[key]
 
         response_json_schema = entity_options.get(CONF_RESPONSE_JSON_SCHEMA)
         if response_json_schema:
@@ -269,7 +260,9 @@ class GenericOpenAIResponsesAPIClient(LocalLLMClient):
     _attr_supports_streaming = True
 
     _last_response_id: str | None = None
-    _last_response_id_time: datetime.datetime | None = None
+    # Number of messages (not counting the system prompt) the last request was built from. Used to
+    # recognize the conversation the stored response id belongs to.
+    _last_response_turns: int | None = None
 
     def __init__(self, hass: HomeAssistant, client_options: dict[str, Any]) -> None:
         super().__init__(hass, client_options)
@@ -290,39 +283,39 @@ class GenericOpenAIResponsesAPIClient(LocalLLMClient):
         return f"Generic OpenAI at '{format_url(hostname=host, port=port, ssl=ssl, path=path)}'"
 
     def _build_responses_request_params(self, conversation: List[conversation.Content], entity_options: Dict[str, Any]) -> Dict[str, Any]:
-        """Build the base request params dict for the Responses API call."""
+        """Build the base request params dict for the Responses API call.
+
+        The Responses API keeps the conversation on its own servers, so a conversation that is known to
+        continue only sends the message being answered. Home LLM is not told which conversation it is
+        working on, so the stored response id is only reused when the chat log has grown by exactly the
+        answer and the follow up message it produced. Every other case - the first turn, another model on
+        the same connection, a conversation that was trimmed - resends the whole exchange together with the
+        system prompt, because the server cannot be assumed to have either of them.
+
+        This integration has no conversation id to identify the conversation with, so two conversations
+        interleaved on one connection fall back to resending the history. That is correct but expensive;
+        giving the backends a conversation id would remove the guess work.
+        """
+        turns = [content for content in conversation if not isinstance(content, conversation.SystemContent)]
+        system_prompt = next((content.content for content in conversation if isinstance(content, conversation.SystemContent)), None)
+
         params: Dict[str, Any] = {}
+        if system_prompt:
+            params["instructions"] = system_prompt
 
-        input_text: str | None = None
-        for msg in reversed(conversation):
-            try:
-                if msg.role == "user":
-                    input_text = msg.content
-                    break
-            except Exception:
-                continue
+        continuing = self._last_response_id is not None and self._last_response_turns == len(turns) - 2
+        if continuing:
+            _LOGGER.debug("Continuing response %s for the %s messages in the chat log", self._last_response_id, len(turns))
+            params["previous_response_id"] = self._last_response_id
+            params["input"] = turns[-1].content or ""
+        else:
+            params["input"] = [
+                {"role": turn.role, "content": turn.content or ""}
+                for turn in turns
+                if isinstance(turn, (conversation.UserContent, conversation.AssistantContent)) and turn.content
+            ]
 
-        if input_text is None:
-            input_text = getattr(conversation[-1], "content", "")
-
-        params["input"] = input_text
-
-        if (
-            self._last_response_id
-            and self._last_response_id_time
-            and entity_options.get(CONF_REMEMBER_CONVERSATION, DEFAULT_REMEMBER_CONVERSATION)
-        ):
-            configured_memory_time: datetime.timedelta = datetime.timedelta(
-                minutes=entity_options.get(CONF_REMEMBER_CONVERSATION_TIME_MINUTES, DEFAULT_REMEMBER_CONVERSATION_TIME_MINUTES)
-            )
-            last_conversation_age: datetime.timedelta = datetime.datetime.now() - self._last_response_id_time
-            _LOGGER.debug(f"Conversation ID age: {last_conversation_age}")
-            if last_conversation_age < configured_memory_time:
-                _LOGGER.debug(f"Using previous response ID {self._last_response_id} for context")
-                params["previous_response_id"] = self._last_response_id
-            else:
-                _LOGGER.debug(f"Previous response ID {self._last_response_id} is too old, not using it for context")
-
+        self._last_response_turns = len(turns)
         return params
 
     def _check_response_status(self, response) -> None:
@@ -400,7 +393,6 @@ class GenericOpenAIResponsesAPIClient(LocalLLMClient):
                                 yield None, [{"function": {"name": event.name, "arguments": event.arguments}}]
                         final = await stream.get_final_response()
                         self._last_response_id = final.id
-                        self._last_response_id_time = datetime.datetime.now()
             except asyncio.TimeoutError as err:
                 _LOGGER.debug("OpenAI Responses API timeout during streaming generation: params=%s, error=%s", request_params, err)
                 raise HomeAssistantError(
@@ -459,7 +451,6 @@ class GenericOpenAIResponsesAPIClient(LocalLLMClient):
             if not text:
                 return TextGenerationResult(raise_error=True, error_msg="The Responses API returned an empty response.")
             self._last_response_id = response.id
-            self._last_response_id_time = datetime.datetime.now()
             return TextGenerationResult(response=text)
         except Exception as err:
             _LOGGER.exception("Failed to parse Responses API payload: %s", err)
