@@ -182,10 +182,12 @@ def flatten_advanced_section(user_input: dict[str, Any] | None) -> dict[str, Any
     result = dict(user_input)
     advanced = result.pop(CONF_ADVANCED_SECTION, None)
     if isinstance(advanced, dict):
+        advanced = dict(advanced)
         if CONF_EXTRA_HEADERS in advanced:
-            result[CONF_EXTRA_HEADERS] = parse_extra_headers(advanced[CONF_EXTRA_HEADERS])
+            advanced[CONF_EXTRA_HEADERS] = parse_extra_headers(advanced[CONF_EXTRA_HEADERS])
         if CONF_EXTRA_BODY in advanced:
-            result[CONF_EXTRA_BODY] = parse_extra_body(advanced[CONF_EXTRA_BODY])
+            advanced[CONF_EXTRA_BODY] = parse_extra_body(advanced[CONF_EXTRA_BODY])
+        result.update(advanced)
     return result
 
 def pick_backend_schema(backend_type=None, selected_language=None):
@@ -674,6 +676,9 @@ def local_llama_config_option_schema(
         ): BooleanSelector(BooleanSelectorConfig()),
     }
 
+    # options that are hidden in the collapsed 'Advanced Options' section
+    advanced: dict = {}
+
     if subentry_type == ai_task.DOMAIN:
         result.update({
             vol.Optional(
@@ -720,16 +725,6 @@ def local_llama_config_option_schema(
                 default=DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
             ): BooleanSelector(BooleanSelectorConfig()),
             vol.Required(
-                CONF_IN_CONTEXT_EXAMPLES_FILE,
-                description={"suggested_value": options.get(CONF_IN_CONTEXT_EXAMPLES_FILE)},
-                default=DEFAULT_IN_CONTEXT_EXAMPLES_FILE,
-            ): str,
-            vol.Required(
-                CONF_NUM_IN_CONTEXT_EXAMPLES,
-                description={"suggested_value": options.get(CONF_NUM_IN_CONTEXT_EXAMPLES)},
-                default=DEFAULT_NUM_IN_CONTEXT_EXAMPLES,
-            ): NumberSelector(NumberSelectorConfig(min=1, max=16, step=1)),
-            vol.Required(
                 CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
                 description={"suggested_value": options.get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE)},
                 default=DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
@@ -744,6 +739,18 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options.get(CONF_MAX_TOOL_CALL_ITERATIONS)},
                 default=DEFAULT_MAX_TOOL_CALL_ITERATIONS,
             ): int,
+        })
+        advanced.update({
+            vol.Required(
+                CONF_IN_CONTEXT_EXAMPLES_FILE,
+                description={"suggested_value": options.get(CONF_IN_CONTEXT_EXAMPLES_FILE)},
+                default=DEFAULT_IN_CONTEXT_EXAMPLES_FILE,
+            ): str,
+            vol.Required(
+                CONF_NUM_IN_CONTEXT_EXAMPLES,
+                description={"suggested_value": options.get(CONF_NUM_IN_CONTEXT_EXAMPLES)},
+                default=DEFAULT_NUM_IN_CONTEXT_EXAMPLES,
+            ): NumberSelector(NumberSelectorConfig(min=1, max=16, step=1)),
         })
 
     if backend_type == BACKEND_TYPE_LLAMA_CPP:
@@ -788,6 +795,8 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options.get(CONF_CONTEXT_LENGTH)},
                 default=DEFAULT_CONTEXT_LENGTH,
             ): NumberSelector(NumberSelectorConfig(min=512, max=1_048_576, step=512)),
+        })
+        advanced.update({
             vol.Required(
                 CONF_LLAMACPP_BATCH_SIZE,
                 description={"suggested_value": options.get(CONF_LLAMACPP_BATCH_SIZE)},
@@ -841,15 +850,12 @@ def local_llama_config_option_schema(
             ): NumberSelector(NumberSelectorConfig(min=1, max=8192, step=1)),
         })
         body_pairs = _kv_pairs(options.get(CONF_EXTRA_BODY))
-        result[vol.Optional(CONF_ADVANCED_SECTION)] = section(
-            vol.Schema({
-                vol.Optional(
-                    CONF_EXTRA_BODY,
-                    description={"suggested_value": body_pairs} if body_pairs else {},
-                ): _key_value_selector("extra_body"),
-            }),
-            {"collapsed": True},
-        )
+        advanced.update({
+            vol.Optional(
+                CONF_EXTRA_BODY,
+                description={"suggested_value": body_pairs} if body_pairs else {},
+            ): _key_value_selector("extra_body"),
+        })
     elif backend_type == BACKEND_TYPE_LLAMA_CPP_SERVER:
         result.update({
                 vol.Required(
@@ -866,15 +872,17 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options[CONF_TOP_P]} if CONF_TOP_P in options else {},
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
             vol.Required(
-                CONF_GBNF_GRAMMAR,
-                description={"suggested_value": options.get(CONF_GBNF_GRAMMAR, DEFAULT_GBNF_GRAMMAR)},
-                default=options.get(CONF_GBNF_GRAMMAR, DEFAULT_GBNF_GRAMMAR),
-            ): TextSelector(TextSelectorConfig(multiline=True)),
-            vol.Required(
                 CONF_REQUEST_TIMEOUT,
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
                 default=DEFAULT_REQUEST_TIMEOUT,
             ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
+        })
+        advanced.update({
+            vol.Required(
+                CONF_GBNF_GRAMMAR,
+                description={"suggested_value": options.get(CONF_GBNF_GRAMMAR, DEFAULT_GBNF_GRAMMAR)},
+                default=options.get(CONF_GBNF_GRAMMAR, DEFAULT_GBNF_GRAMMAR),
+            ): TextSelector(TextSelectorConfig(multiline=True)),
         })
     elif backend_type == BACKEND_TYPE_OLLAMA:
         result.update({
@@ -901,11 +909,6 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options[CONF_TYPICAL_P]} if CONF_TYPICAL_P in options else {},
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
             vol.Required(
-                CONF_OLLAMA_JSON_MODE,
-                description={"suggested_value": options.get(CONF_OLLAMA_JSON_MODE)},
-                default=DEFAULT_OLLAMA_JSON_MODE,
-            ): BooleanSelector(BooleanSelectorConfig()),
-            vol.Required(
                 CONF_REQUEST_TIMEOUT,
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
                 default=DEFAULT_REQUEST_TIMEOUT,
@@ -915,6 +918,13 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options.get(CONF_OLLAMA_KEEP_ALIVE_MIN)},
                 default=DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
             ): NumberSelector(NumberSelectorConfig(min=-1, max=1440, step=1, unit_of_measurement=UnitOfTime.MINUTES, mode=NumberSelectorMode.BOX)),
+        })
+        advanced.update({
+            vol.Required(
+                CONF_OLLAMA_JSON_MODE,
+                description={"suggested_value": options.get(CONF_OLLAMA_JSON_MODE)},
+                default=DEFAULT_OLLAMA_JSON_MODE,
+            ): BooleanSelector(BooleanSelectorConfig()),
         })
     elif backend_type == BACKEND_TYPE_ANTHROPIC:
         result.update({
@@ -937,6 +947,10 @@ def local_llama_config_option_schema(
                 default=DEFAULT_REQUEST_TIMEOUT,
             ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
         })
+
+    # attach the collapsed 'Advanced Options' section with the rarely used options
+    if advanced:
+        result[vol.Optional(CONF_ADVANCED_SECTION)] = section(vol.Schema(advanced), {"collapsed": True})
 
     # sort the options
     global_order = [
@@ -1171,14 +1185,19 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
         )
 
         if user_input:
-            if not is_ai_task:
-                if user_input.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES):
-                    filename = user_input.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE)
-                    if not os.path.isfile(os.path.join(os.path.dirname(__file__), filename)):
-                        errors["base"] = "missing_icl_file"
-                        description_placeholders["filename"] = filename
-
-            # --- Normalize numeric fields to ints to avoid slice/type errors later ---
+            # --- Normalize numeric fields to ints to avoid slice/type errors later. This
+            # happens before validation, and the collapsed advanced section arrives nested. ---
+            advanced_input = user_input.get(CONF_ADVANCED_SECTION)
+            if isinstance(advanced_input, dict):
+                for key in (
+                    CONF_NUM_IN_CONTEXT_EXAMPLES,
+                    CONF_LLAMACPP_BATCH_SIZE,
+                    CONF_LLAMACPP_THREAD_COUNT,
+                    CONF_LLAMACPP_BATCH_THREAD_COUNT,
+                    CONF_LLAMACPP_CACHE_SIZE_MB,
+                 ):
+                    if key in advanced_input:
+                        advanced_input[key] = _coerce_int(advanced_input[key], advanced_input.get(key) or 0)
             for key in (
                 CONF_MAX_TOOL_CALL_ITERATIONS,
                 CONF_CONTEXT_LENGTH,
@@ -1188,24 +1207,34 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
              ):
                 if key in user_input:
                     user_input[key] = _coerce_int(user_input[key], user_input.get(key) or 0)
-            
+
             if len(errors) == 0:
                 try:
-                    # validate input (the collapsed advanced section arrives nested)
+                    # validate input
                     schema(user_input)
                     user_input = flatten_advanced_section(user_input)
-                    for key in (CONF_TEMPERATURE, CONF_TOP_K, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P):
-                        if key not in user_input:
-                            self.model_config.pop(key, None)
-                    self.model_config.update(user_input)
-                    
-                    return await self.async_step_finish()
                 except ValueError as err:
                     _LOGGER.debug("Invalid extra request settings: %s", err)
                     errors["base"] = "invalid_extra_body"
                 except Exception:
                     _LOGGER.exception("An unknown error has occurred!")
                     errors["base"] = "unknown"
+
+            if len(errors) == 0:
+                if not is_ai_task:
+                    if user_input.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES):
+                        filename = user_input.get(CONF_IN_CONTEXT_EXAMPLES_FILE, DEFAULT_IN_CONTEXT_EXAMPLES_FILE)
+                        if not os.path.isfile(os.path.join(os.path.dirname(__file__), filename)):
+                            errors["base"] = "missing_icl_file"
+                            description_placeholders["filename"] = filename
+
+            if len(errors) == 0:
+                for key in (CONF_TEMPERATURE, CONF_TOP_K, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P):
+                    if key not in user_input:
+                        self.model_config.pop(key, None)
+                self.model_config.update(user_input)
+
+                return await self.async_step_finish()
 
         return self.async_show_form(
             step_id="model_parameters",

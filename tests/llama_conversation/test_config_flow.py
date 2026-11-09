@@ -37,11 +37,13 @@ from custom_components.llama_conversation.const import (
     CONF_GBNF_GRAMMAR,
     CONF_LLAMACPP_BATCH_SIZE,
     CONF_LLAMACPP_BATCH_THREAD_COUNT,
+    CONF_LLAMACPP_CACHE_SIZE_MB,
     CONF_LLAMACPP_ENABLE_FLASH_ATTENTION,
     CONF_LLAMACPP_THREAD_COUNT,
     CONF_MAX_TOKENS,
     CONF_MIN_P,
     CONF_NUM_IN_CONTEXT_EXAMPLES,
+    CONF_IN_CONTEXT_EXAMPLES_FILE,
     CONF_OLLAMA_JSON_MODE,
     CONF_OLLAMA_KEEP_ALIVE_MIN,
     CONF_PROMPT,
@@ -63,6 +65,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION,
     DEFAULT_LLAMACPP_THREAD_COUNT,
     DEFAULT_NUM_IN_CONTEXT_EXAMPLES,
+    DEFAULT_IN_CONTEXT_EXAMPLES_FILE,
     DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
     DEFAULT_OLLAMA_JSON_MODE,
     DEFAULT_PROMPT,
@@ -98,6 +101,14 @@ def _find_marker(schema_dict, key_name: str):
         if getattr(key, "schema", None) == key_name:
             return key
     raise AssertionError(f"Key {key_name} not found in schema")
+
+
+def _advanced_subschema(schema: dict) -> dict:
+    """Return the inner schema dict of the collapsed advanced options section."""
+    section_obj = schema[_find_marker(schema, CONF_ADVANCED_SECTION)]
+    assert isinstance(section_obj, data_entry_flow.section)
+    assert section_obj.options["collapsed"] is True
+    return section_obj.schema.schema
 
 
 def _get_default(schema: dict, key_name: str):
@@ -138,30 +149,37 @@ def test_schema_llama_cpp_defaults_and_overrides(hass: HomeAssistant):
         CONF_TYPICAL_P,
         CONF_PROMPT_CACHING_ENABLED,
         CONF_PROMPT_CACHING_INTERVAL,
+    }
+    assert expected_keys.issubset({getattr(k, "schema", None) for k in schema})
+
+    advanced = _advanced_subschema(schema)
+    advanced_keys = {getattr(k, "schema", None) for k in advanced}
+    assert {
         CONF_GBNF_GRAMMAR,
         CONF_LLAMACPP_BATCH_SIZE,
         CONF_LLAMACPP_THREAD_COUNT,
         CONF_LLAMACPP_BATCH_THREAD_COUNT,
         CONF_LLAMACPP_ENABLE_FLASH_ATTENTION,
-    }
-    assert expected_keys.issubset({getattr(k, "schema", None) for k in schema})
+        CONF_LLAMACPP_CACHE_SIZE_MB,
+    }.issubset(advanced_keys)
 
     assert _get_default(schema, CONF_CONTEXT_LENGTH) == DEFAULT_CONTEXT_LENGTH
-    assert _get_default(schema, CONF_LLAMACPP_BATCH_SIZE) == DEFAULT_LLAMACPP_BATCH_SIZE
-    assert _get_default(schema, CONF_LLAMACPP_THREAD_COUNT) == DEFAULT_LLAMACPP_THREAD_COUNT
-    assert _get_default(schema, CONF_LLAMACPP_BATCH_THREAD_COUNT) == DEFAULT_LLAMACPP_BATCH_THREAD_COUNT
-    assert _get_default(schema, CONF_LLAMACPP_ENABLE_FLASH_ATTENTION) is DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION
+    assert _get_default(advanced, CONF_LLAMACPP_BATCH_SIZE) == DEFAULT_LLAMACPP_BATCH_SIZE
+    assert _get_default(advanced, CONF_LLAMACPP_THREAD_COUNT) == DEFAULT_LLAMACPP_THREAD_COUNT
+    assert _get_default(advanced, CONF_LLAMACPP_BATCH_THREAD_COUNT) == DEFAULT_LLAMACPP_BATCH_THREAD_COUNT
+    assert _get_default(advanced, CONF_LLAMACPP_ENABLE_FLASH_ATTENTION) is DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION
     assert _get_default(schema, CONF_PROMPT_CACHING_INTERVAL) == DEFAULT_PROMPT_CACHING_INTERVAL
     # suggested values should reflect overrides
     assert _get_suggested(schema, CONF_CONTEXT_LENGTH) == 4096
-    assert _get_suggested(schema, CONF_LLAMACPP_BATCH_SIZE) == 8
-    assert _get_suggested(schema, CONF_LLAMACPP_THREAD_COUNT) == 6
-    assert _get_suggested(schema, CONF_LLAMACPP_BATCH_THREAD_COUNT) == 3
-    assert _get_suggested(schema, CONF_LLAMACPP_ENABLE_FLASH_ATTENTION) is True
+    assert _get_suggested(advanced, CONF_LLAMACPP_BATCH_SIZE) == 8
+    assert _get_suggested(advanced, CONF_LLAMACPP_THREAD_COUNT) == 6
+    assert _get_suggested(advanced, CONF_LLAMACPP_BATCH_THREAD_COUNT) == 3
+    assert _get_suggested(advanced, CONF_LLAMACPP_ENABLE_FLASH_ATTENTION) is True
     assert _get_suggested(schema, CONF_PROMPT_CACHING_INTERVAL) == 15
     assert _get_suggested(schema, CONF_TOP_K) == 12
     # the prompt format comes from the model family, it is not offered any more
     assert CONF_TOOL_CALL_PREFIX not in {getattr(k, "schema", None) for k in schema}
+    assert CONF_TOOL_CALL_PREFIX not in {getattr(k, "schema", None) for k in advanced}
 
 
 def test_sampling_parameters_are_optional_and_unset_by_default(hass: HomeAssistant):
@@ -205,7 +223,10 @@ def test_schema_generic_openai_options_preserved(hass: HomeAssistant):
     # Base prompt options still present
     prompt_default = _get_default(schema, CONF_PROMPT)
     assert prompt_default is not None and "You are 'Al'" in prompt_default
-    assert _get_default(schema, CONF_NUM_IN_CONTEXT_EXAMPLES) == DEFAULT_NUM_IN_CONTEXT_EXAMPLES
+    advanced = _advanced_subschema(schema)
+    assert _get_default(advanced, CONF_NUM_IN_CONTEXT_EXAMPLES) == DEFAULT_NUM_IN_CONTEXT_EXAMPLES
+    assert _get_default(advanced, CONF_IN_CONTEXT_EXAMPLES_FILE) == DEFAULT_IN_CONTEXT_EXAMPLES_FILE
+    assert CONF_IN_CONTEXT_EXAMPLES_FILE not in {getattr(k, "schema", None) for k in schema}
 
 
 def test_schema_generic_openai_backends_include_max_tokens_and_extra_body(hass: HomeAssistant):
@@ -231,19 +252,23 @@ def test_schema_llama_cpp_server_includes_gbnf(hass: HomeAssistant):
     schema = _schema(hass, BACKEND_TYPE_LLAMA_CPP_SERVER)
     keys = {getattr(k, "schema", None) for k in schema}
 
-    assert {CONF_MAX_TOKENS, CONF_TOP_K, CONF_GBNF_GRAMMAR}.issubset(keys)
-    assert _get_default(schema, CONF_GBNF_GRAMMAR) == DEFAULT_GBNF_GRAMMAR
+    assert {CONF_MAX_TOKENS, CONF_TOP_K}.issubset(keys)
+    advanced = _advanced_subschema(schema)
+    assert CONF_GBNF_GRAMMAR in {getattr(k, "schema", None) for k in advanced}
+    assert _get_default(advanced, CONF_GBNF_GRAMMAR) == DEFAULT_GBNF_GRAMMAR
 
 
 def test_schema_ollama_defaults_and_overrides(hass: HomeAssistant):
     overrides = {CONF_OLLAMA_KEEP_ALIVE_MIN: 5, CONF_CONTEXT_LENGTH: 1024, CONF_TOP_K: 7}
     schema = _schema(hass, BACKEND_TYPE_OLLAMA, overrides)
 
-    assert {CONF_MAX_TOKENS, CONF_CONTEXT_LENGTH, CONF_OLLAMA_KEEP_ALIVE_MIN, CONF_OLLAMA_JSON_MODE}.issubset(
+    assert {CONF_MAX_TOKENS, CONF_CONTEXT_LENGTH, CONF_OLLAMA_KEEP_ALIVE_MIN}.issubset(
         {getattr(k, "schema", None) for k in schema}
     )
+    advanced = _advanced_subschema(schema)
+    assert CONF_OLLAMA_JSON_MODE in {getattr(k, "schema", None) for k in advanced}
     assert _get_default(schema, CONF_OLLAMA_KEEP_ALIVE_MIN) == DEFAULT_OLLAMA_KEEP_ALIVE_MIN
-    assert _get_default(schema, CONF_OLLAMA_JSON_MODE) is DEFAULT_OLLAMA_JSON_MODE
+    assert _get_default(advanced, CONF_OLLAMA_JSON_MODE) is DEFAULT_OLLAMA_JSON_MODE
     assert _get_default(schema, CONF_CONTEXT_LENGTH) == DEFAULT_CONTEXT_LENGTH
     assert _get_default(schema, CONF_TOP_K) is vol.UNDEFINED
     assert _get_suggested(schema, CONF_OLLAMA_KEEP_ALIVE_MIN) == 5

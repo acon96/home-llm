@@ -99,22 +99,13 @@
                         "request_timeout": "Zeitlimit f\u00fcr entfernte Anfragen (Sekunden)",
                         "enable_streaming": "Streaming aktivieren",
                         "ollama_keep_alive": "(ollama) Zeitlimit f\u00fcr Speicherhaltung/Inaktivit\u00e4t (Minuten)",
-                        "ollama_json_mode": "(ollama) JSON-Ausgabemodus",
                         "extra_attributes_to_expose": "Zus\u00e4tzliches Attribut im Kontext bereitstellen",
-                        "enable_flash_attention": "Flash Attention aktivieren",
-                        "gbnf_grammar": "GBNF-Grammatik",
                         "openai_api_key": "API-Schl\u00fcssel",
                         "service_call_regex": "Regul\u00e4rer Ausdruck f\u00fcr Dienstaufrufe",
                         "in_context_examples": "Beispiele f\u00fcr In-Context Learning (ICL) aktivieren",
-                        "in_context_examples_file": "CSV-Dateiname der Beispiele f\u00fcr In-Context Learning",
-                        "num_in_context_examples": "Anzahl der zu erzeugenden ICL-Beispiele",
                         "prompt_caching": "Prompt-Caching aktivieren",
                         "prompt_caching_interval": "Mindestintervall zur Aktualisierung des Prompt-Caches (Sekunden)",
                         "context_length": "Kontextl\u00e4nge",
-                        "batch_size": "(llama.cpp) Batch-Gr\u00f6\u00dfe",
-                        "n_threads": "(llama.cpp) Anzahl der Threads",
-                        "n_batch_threads": "(llama.cpp) Anzahl der Batch-Threads",
-                        "llama_cpp_cache_size_mb": "(llama.cpp) Gr\u00f6\u00dfe des KV-Caches auf dem Datentr\u00e4ger (MB)",
                         "thinking_prefix": "Pr\u00e4fix des Denkinhalts",
                         "thinking_suffix": "Suffix des Denkinhalts",
                         "tool_call_prefix": "Pr\u00e4fix f\u00fcr Werkzeugaufrufe",
@@ -128,7 +119,6 @@
                         "prompt": "Weitere Informationen zu Modell-Prompts finden Sie [hier](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md).",
                         "in_context_examples": "Aktivieren Sie diese Option, wenn Sie ein Modell verwenden, das nicht speziell f\u00fcr diese Integration feinabgestimmt wurde.",
                         "extra_attributes_to_expose": "Dies ist die Liste der Home Assistant-'Attribute', die dem Modell bereitgestellt werden. Sie begrenzt, welche Informationen das Modell sehen und zu welchen es Fragen beantworten kann.",
-                        "gbnf_grammar": "Beschr\u00e4nkt die Ausgabe von llama.cpp auf eine in GBNF geschriebene Grammatik. Lassen Sie das Feld leer, damit das Modell frei antworten kann.",
                         "prompt_caching": "Prompt-Caching versucht, den Prompt (Hauszustand) vorzuverarbeiten und die zum Verst\u00e4ndnis erforderliche Verarbeitung zwischenzuspeichern. Bei aktivierter Option verarbeitet das Modell den Prompt erneut, wenn sich der Zustand einer Entit\u00e4t im Haus \u00e4ndert, begrenzt durch das unten angegebene Intervall.",
                         "enable_legacy_tool_calling": "Verarbeitet Werkzeugaufrufe vorzugsweise lokal, anstatt sich auf die Formatverarbeitung durch das Backend zu verlassen. Dies kann zuverl\u00e4ssiger sein, erfordert jedoch eine korrekte Einstellung des Pr\u00e4fixes und Suffixes f\u00fcr Werkzeugaufrufe.",
                         "tool_response_as_string": "Einige Prompt-Vorlagen erwarten die Werkzeugantwort als JSON-serialisierte Zeichenfolge statt als unverarbeitetes Objekt.",
@@ -143,10 +133,20 @@
                             "name": "Erweiterte Optionen",
                             "description": "Optionale Einstellungen, die die meisten Benutzer nicht ben\u00f6tigen. Klappen Sie diesen Bereich auf, um \u00c4nderungen vorzunehmen.",
                             "data": {
-                                "extra_body": "Zus\u00e4tzliche Anfrageparameter"
+                                "extra_body": "Zus\u00e4tzliche Anfrageparameter",
+                                "in_context_examples_file": "CSV-Dateiname der Beispiele f\u00fcr In-Context Learning",
+                                "num_in_context_examples": "Anzahl der zu erzeugenden ICL-Beispiele",
+                                "batch_size": "(llama.cpp) Batch-Gr\u00f6\u00dfe",
+                                "n_threads": "(llama.cpp) Anzahl der Threads",
+                                "n_batch_threads": "(llama.cpp) Anzahl der Batch-Threads",
+                                "enable_flash_attention": "Flash Attention aktivieren",
+                                "llama_cpp_cache_size_mb": "(llama.cpp) Gr\u00f6\u00dfe des KV-Caches auf dem Datentr\u00e4ger (MB)",
+                                "ollama_json_mode": "(ollama) JSON-Ausgabemodus",
+                                "gbnf_grammar_text": "GBNF-Grammatik"
                             },
                             "data_description": {
-                                "extra_body": "Zus\u00e4tzliche Parameter, die dem Anfragek\u00f6rper hinzugef\u00fcgt werden. Werte, die wie Zahlen, true/false, null oder JSON aussehen, werden als JSON gesendet; alles andere wird als Text gesendet."
+                                "extra_body": "Zus\u00e4tzliche Parameter, die dem Anfragek\u00f6rper hinzugef\u00fcgt werden. Werte, die wie Zahlen, true/false, null oder JSON aussehen, werden als JSON gesendet; alles andere wird als Text gesendet.",
+                                "gbnf_grammar_text": "Beschr\u00e4nkt die Ausgabe von llama.cpp auf eine in GBNF geschriebene Grammatik. Lassen Sie das Feld leer, damit das Modell frei antworten kann."
                             }
                         }
                     }
@@ -164,22 +164,13 @@
                         "request_timeout": "Zeitlimit f\u00fcr entfernte Anfragen (Sekunden)",
                         "enable_streaming": "Streaming aktivieren",
                         "ollama_keep_alive": "(ollama) Zeitlimit f\u00fcr Speicherhaltung/Inaktivit\u00e4t (Minuten)",
-                        "ollama_json_mode": "(ollama) JSON-Ausgabemodus",
                         "extra_attributes_to_expose": "Zus\u00e4tzliches Attribut im Kontext bereitstellen",
-                        "enable_flash_attention": "Flash Attention aktivieren",
-                        "gbnf_grammar": "GBNF-Grammatik",
                         "openai_api_key": "API-Schl\u00fcssel",
                         "service_call_regex": "Regul\u00e4rer Ausdruck f\u00fcr Dienstaufrufe",
                         "in_context_examples": "Beispiele f\u00fcr In-Context Learning (ICL) aktivieren",
-                        "in_context_examples_file": "CSV-Dateiname der Beispiele f\u00fcr In-Context Learning",
-                        "num_in_context_examples": "Anzahl der zu erzeugenden ICL-Beispiele",
                         "prompt_caching": "Prompt-Caching aktivieren",
                         "prompt_caching_interval": "Mindestintervall zur Aktualisierung des Prompt-Caches (Sekunden)",
                         "context_length": "Kontextl\u00e4nge",
-                        "batch_size": "(llama.cpp) Batch-Gr\u00f6\u00dfe",
-                        "n_threads": "(llama.cpp) Anzahl der Threads",
-                        "n_batch_threads": "(llama.cpp) Anzahl der Batch-Threads",
-                        "llama_cpp_cache_size_mb": "(llama.cpp) Gr\u00f6\u00dfe des KV-Caches auf dem Datentr\u00e4ger (MB)",
                         "thinking_prefix": "Pr\u00e4fix des Denkinhalts",
                         "thinking_suffix": "Suffix des Denkinhalts",
                         "tool_call_prefix": "Pr\u00e4fix f\u00fcr Werkzeugaufrufe",
@@ -193,7 +184,6 @@
                         "prompt": "Weitere Informationen zu Modell-Prompts finden Sie [hier](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md).",
                         "in_context_examples": "Aktivieren Sie diese Option, wenn Sie ein Modell verwenden, das nicht speziell f\u00fcr diese Integration feinabgestimmt wurde.",
                         "extra_attributes_to_expose": "Dies ist die Liste der Home Assistant-'Attribute', die dem Modell bereitgestellt werden. Sie begrenzt, welche Informationen das Modell sehen und zu welchen es Fragen beantworten kann.",
-                        "gbnf_grammar": "Beschr\u00e4nkt die Ausgabe von llama.cpp auf eine in GBNF geschriebene Grammatik. Lassen Sie das Feld leer, damit das Modell frei antworten kann.",
                         "prompt_caching": "Prompt-Caching versucht, den Prompt (Hauszustand) vorzuverarbeiten und die zum Verst\u00e4ndnis erforderliche Verarbeitung zwischenzuspeichern. Bei aktivierter Option verarbeitet das Modell den Prompt erneut, wenn sich der Zustand einer Entit\u00e4t im Haus \u00e4ndert, begrenzt durch das unten angegebene Intervall.",
                         "enable_legacy_tool_calling": "Verarbeitet Werkzeugaufrufe vorzugsweise lokal, anstatt sich auf die Formatverarbeitung durch das Backend zu verlassen. Dies kann zuverl\u00e4ssiger sein, erfordert jedoch eine korrekte Einstellung des Pr\u00e4fixes und Suffixes f\u00fcr Werkzeugaufrufe.",
                         "tool_response_as_string": "Einige Prompt-Vorlagen erwarten die Werkzeugantwort als JSON-serialisierte Zeichenfolge statt als unverarbeitetes Objekt.",
@@ -208,10 +198,20 @@
                             "name": "Erweiterte Optionen",
                             "description": "Optionale Einstellungen, die die meisten Benutzer nicht ben\u00f6tigen. Klappen Sie diesen Bereich auf, um \u00c4nderungen vorzunehmen.",
                             "data": {
-                                "extra_body": "Zus\u00e4tzliche Anfrageparameter"
+                                "extra_body": "Zus\u00e4tzliche Anfrageparameter",
+                                "in_context_examples_file": "CSV-Dateiname der Beispiele f\u00fcr In-Context Learning",
+                                "num_in_context_examples": "Anzahl der zu erzeugenden ICL-Beispiele",
+                                "batch_size": "(llama.cpp) Batch-Gr\u00f6\u00dfe",
+                                "n_threads": "(llama.cpp) Anzahl der Threads",
+                                "n_batch_threads": "(llama.cpp) Anzahl der Batch-Threads",
+                                "enable_flash_attention": "Flash Attention aktivieren",
+                                "llama_cpp_cache_size_mb": "(llama.cpp) Gr\u00f6\u00dfe des KV-Caches auf dem Datentr\u00e4ger (MB)",
+                                "ollama_json_mode": "(ollama) JSON-Ausgabemodus",
+                                "gbnf_grammar_text": "GBNF-Grammatik"
                             },
                             "data_description": {
-                                "extra_body": "Zus\u00e4tzliche Parameter, die dem Anfragek\u00f6rper hinzugef\u00fcgt werden. Werte, die wie Zahlen, true/false, null oder JSON aussehen, werden als JSON gesendet; alles andere wird als Text gesendet."
+                                "extra_body": "Zus\u00e4tzliche Parameter, die dem Anfragek\u00f6rper hinzugef\u00fcgt werden. Werte, die wie Zahlen, true/false, null oder JSON aussehen, werden als JSON gesendet; alles andere wird als Text gesendet.",
+                                "gbnf_grammar_text": "Beschr\u00e4nkt die Ausgabe von llama.cpp auf eine in GBNF geschriebene Grammatik. Lassen Sie das Feld leer, damit das Modell frei antworten kann."
                             }
                         }
                     }
@@ -266,22 +266,13 @@
                         "request_timeout": "Zeitlimit f\u00fcr entfernte Anfragen (Sekunden)",
                         "enable_streaming": "Streaming aktivieren",
                         "ollama_keep_alive": "(ollama) Zeitlimit f\u00fcr Speicherhaltung/Inaktivit\u00e4t (Minuten)",
-                        "ollama_json_mode": "(ollama) JSON-Ausgabemodus",
                         "extra_attributes_to_expose": "Zus\u00e4tzliches Attribut im Kontext bereitstellen",
-                        "enable_flash_attention": "Flash Attention aktivieren",
-                        "gbnf_grammar": "GBNF-Grammatik",
                         "openai_api_key": "API-Schl\u00fcssel",
                         "service_call_regex": "Regul\u00e4rer Ausdruck f\u00fcr Dienstaufrufe",
                         "in_context_examples": "Beispiele f\u00fcr In-Context Learning (ICL) aktivieren",
-                        "in_context_examples_file": "CSV-Dateiname der Beispiele f\u00fcr In-Context Learning",
-                        "num_in_context_examples": "Anzahl der zu erzeugenden ICL-Beispiele",
                         "prompt_caching": "Prompt-Caching aktivieren",
                         "prompt_caching_interval": "Mindestintervall zur Aktualisierung des Prompt-Caches (Sekunden)",
                         "context_length": "Kontextl\u00e4nge",
-                        "batch_size": "(llama.cpp) Batch-Gr\u00f6\u00dfe",
-                        "n_threads": "(llama.cpp) Anzahl der Threads",
-                        "n_batch_threads": "(llama.cpp) Anzahl der Batch-Threads",
-                        "llama_cpp_cache_size_mb": "(llama.cpp) Gr\u00f6\u00dfe des KV-Caches auf dem Datentr\u00e4ger (MB)",
                         "thinking_prefix": "Pr\u00e4fix des Denkinhalts",
                         "thinking_suffix": "Suffix des Denkinhalts",
                         "tool_call_prefix": "Pr\u00e4fix f\u00fcr Werkzeugaufrufe",
@@ -296,7 +287,6 @@
                         "prompt": "Weitere Informationen zu Modell-Prompts finden Sie [hier](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md).",
                         "in_context_examples": "Aktivieren Sie diese Option, wenn Sie ein Modell verwenden, das nicht speziell f\u00fcr diese Integration feinabgestimmt wurde.",
                         "extra_attributes_to_expose": "Dies ist die Liste der Home Assistant-'Attribute', die dem Modell bereitgestellt werden. Sie begrenzt, welche Informationen das Modell sehen und zu welchen es Fragen beantworten kann.",
-                        "gbnf_grammar": "Beschr\u00e4nkt die Ausgabe von llama.cpp auf eine in GBNF geschriebene Grammatik. Lassen Sie das Feld leer, damit das Modell frei antworten kann.",
                         "prompt_caching": "Prompt-Caching versucht, den Prompt (Hauszustand) vorzuverarbeiten und die zum Verst\u00e4ndnis erforderliche Verarbeitung zwischenzuspeichern. Bei aktivierter Option verarbeitet das Modell den Prompt erneut, wenn sich der Zustand einer Entit\u00e4t im Haus \u00e4ndert, begrenzt durch das unten angegebene Intervall.",
                         "enable_legacy_tool_calling": "Verarbeitet Werkzeugaufrufe vorzugsweise lokal, anstatt sich auf die Formatverarbeitung durch das Backend zu verlassen. Dies kann zuverl\u00e4ssiger sein, erfordert jedoch eine korrekte Einstellung des Pr\u00e4fixes und Suffixes f\u00fcr Werkzeugaufrufe.",
                         "tool_response_as_string": "Einige Prompt-Vorlagen erwarten die Werkzeugantwort als JSON-serialisierte Zeichenfolge statt als unverarbeitetes Objekt.",
@@ -312,10 +302,20 @@
                             "name": "Erweiterte Optionen",
                             "description": "Optionale Einstellungen, die die meisten Benutzer nicht ben\u00f6tigen. Klappen Sie diesen Bereich auf, um \u00c4nderungen vorzunehmen.",
                             "data": {
-                                "extra_body": "Zus\u00e4tzliche Anfrageparameter"
+                                "extra_body": "Zus\u00e4tzliche Anfrageparameter",
+                                "in_context_examples_file": "CSV-Dateiname der Beispiele f\u00fcr In-Context Learning",
+                                "num_in_context_examples": "Anzahl der zu erzeugenden ICL-Beispiele",
+                                "batch_size": "(llama.cpp) Batch-Gr\u00f6\u00dfe",
+                                "n_threads": "(llama.cpp) Anzahl der Threads",
+                                "n_batch_threads": "(llama.cpp) Anzahl der Batch-Threads",
+                                "enable_flash_attention": "Flash Attention aktivieren",
+                                "llama_cpp_cache_size_mb": "(llama.cpp) Gr\u00f6\u00dfe des KV-Caches auf dem Datentr\u00e4ger (MB)",
+                                "ollama_json_mode": "(ollama) JSON-Ausgabemodus",
+                                "gbnf_grammar_text": "GBNF-Grammatik"
                             },
                             "data_description": {
-                                "extra_body": "Zus\u00e4tzliche Parameter, die dem Anfragek\u00f6rper hinzugef\u00fcgt werden. Werte, die wie Zahlen, true/false, null oder JSON aussehen, werden als JSON gesendet; alles andere wird als Text gesendet."
+                                "extra_body": "Zus\u00e4tzliche Parameter, die dem Anfragek\u00f6rper hinzugef\u00fcgt werden. Werte, die wie Zahlen, true/false, null oder JSON aussehen, werden als JSON gesendet; alles andere wird als Text gesendet.",
+                                "gbnf_grammar_text": "Beschr\u00e4nkt die Ausgabe von llama.cpp auf eine in GBNF geschriebene Grammatik. Lassen Sie das Feld leer, damit das Modell frei antworten kann."
                             }
                         }
                     }
@@ -333,22 +333,13 @@
                         "request_timeout": "Zeitlimit f\u00fcr entfernte Anfragen (Sekunden)",
                         "enable_streaming": "Streaming aktivieren",
                         "ollama_keep_alive": "(ollama) Zeitlimit f\u00fcr Speicherhaltung/Inaktivit\u00e4t (Minuten)",
-                        "ollama_json_mode": "(ollama) JSON-Ausgabemodus",
                         "extra_attributes_to_expose": "Zus\u00e4tzliches Attribut im Kontext bereitstellen",
-                        "enable_flash_attention": "Flash Attention aktivieren",
-                        "gbnf_grammar": "GBNF-Grammatik",
                         "openai_api_key": "API-Schl\u00fcssel",
                         "service_call_regex": "Regul\u00e4rer Ausdruck f\u00fcr Dienstaufrufe",
                         "in_context_examples": "Beispiele f\u00fcr In-Context Learning (ICL) aktivieren",
-                        "in_context_examples_file": "CSV-Dateiname der Beispiele f\u00fcr In-Context Learning",
-                        "num_in_context_examples": "Anzahl der zu erzeugenden ICL-Beispiele",
                         "prompt_caching": "Prompt-Caching aktivieren",
                         "prompt_caching_interval": "Mindestintervall zur Aktualisierung des Prompt-Caches (Sekunden)",
                         "context_length": "Kontextl\u00e4nge",
-                        "batch_size": "(llama.cpp) Batch-Gr\u00f6\u00dfe",
-                        "n_threads": "(llama.cpp) Anzahl der Threads",
-                        "n_batch_threads": "(llama.cpp) Anzahl der Batch-Threads",
-                        "llama_cpp_cache_size_mb": "(llama.cpp) Gr\u00f6\u00dfe des KV-Caches auf dem Datentr\u00e4ger (MB)",
                         "thinking_prefix": "Pr\u00e4fix des Denkinhalts",
                         "thinking_suffix": "Suffix des Denkinhalts",
                         "tool_call_prefix": "Pr\u00e4fix f\u00fcr Werkzeugaufrufe",
@@ -362,7 +353,6 @@
                         "prompt": "Weitere Informationen zu Modell-Prompts finden Sie [hier](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md).",
                         "in_context_examples": "Aktivieren Sie diese Option, wenn Sie ein Modell verwenden, das nicht speziell f\u00fcr diese Integration feinabgestimmt wurde.",
                         "extra_attributes_to_expose": "Dies ist die Liste der Home Assistant-'Attribute', die dem Modell bereitgestellt werden. Sie begrenzt, welche Informationen das Modell sehen und zu welchen es Fragen beantworten kann.",
-                        "gbnf_grammar": "Beschr\u00e4nkt die Ausgabe von llama.cpp auf eine in GBNF geschriebene Grammatik. Lassen Sie das Feld leer, damit das Modell frei antworten kann.",
                         "prompt_caching": "Prompt-Caching versucht, den Prompt (Hauszustand) vorzuverarbeiten und die zum Verst\u00e4ndnis erforderliche Verarbeitung zwischenzuspeichern. Bei aktivierter Option verarbeitet das Modell den Prompt erneut, wenn sich der Zustand einer Entit\u00e4t im Haus \u00e4ndert, begrenzt durch das unten angegebene Intervall.",
                         "enable_legacy_tool_calling": "Verarbeitet Werkzeugaufrufe vorzugsweise lokal, anstatt sich auf die Formatverarbeitung durch das Backend zu verlassen. Dies kann zuverl\u00e4ssiger sein, erfordert jedoch eine korrekte Einstellung des Pr\u00e4fixes und Suffixes f\u00fcr Werkzeugaufrufe.",
                         "tool_response_as_string": "Einige Prompt-Vorlagen erwarten die Werkzeugantwort als JSON-serialisierte Zeichenfolge statt als unverarbeitetes Objekt.",
@@ -377,10 +367,20 @@
                             "name": "Erweiterte Optionen",
                             "description": "Optionale Einstellungen, die die meisten Benutzer nicht ben\u00f6tigen. Klappen Sie diesen Bereich auf, um \u00c4nderungen vorzunehmen.",
                             "data": {
-                                "extra_body": "Zus\u00e4tzliche Anfrageparameter"
+                                "extra_body": "Zus\u00e4tzliche Anfrageparameter",
+                                "in_context_examples_file": "CSV-Dateiname der Beispiele f\u00fcr In-Context Learning",
+                                "num_in_context_examples": "Anzahl der zu erzeugenden ICL-Beispiele",
+                                "batch_size": "(llama.cpp) Batch-Gr\u00f6\u00dfe",
+                                "n_threads": "(llama.cpp) Anzahl der Threads",
+                                "n_batch_threads": "(llama.cpp) Anzahl der Batch-Threads",
+                                "enable_flash_attention": "Flash Attention aktivieren",
+                                "llama_cpp_cache_size_mb": "(llama.cpp) Gr\u00f6\u00dfe des KV-Caches auf dem Datentr\u00e4ger (MB)",
+                                "ollama_json_mode": "(ollama) JSON-Ausgabemodus",
+                                "gbnf_grammar_text": "GBNF-Grammatik"
                             },
                             "data_description": {
-                                "extra_body": "Zus\u00e4tzliche Parameter, die dem Anfragek\u00f6rper hinzugef\u00fcgt werden. Werte, die wie Zahlen, true/false, null oder JSON aussehen, werden als JSON gesendet; alles andere wird als Text gesendet."
+                                "extra_body": "Zus\u00e4tzliche Parameter, die dem Anfragek\u00f6rper hinzugef\u00fcgt werden. Werte, die wie Zahlen, true/false, null oder JSON aussehen, werden als JSON gesendet; alles andere wird als Text gesendet.",
+                                "gbnf_grammar_text": "Beschr\u00e4nkt die Ausgabe von llama.cpp auf eine in GBNF geschriebene Grammatik. Lassen Sie das Feld leer, damit das Modell frei antworten kann."
                             }
                         }
                     }

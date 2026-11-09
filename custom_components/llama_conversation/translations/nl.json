@@ -4,11 +4,12 @@
             "failed_to_connect": "Verbinden met de externe API is mislukt: {exception}",
             "invalid_hostname": "De opgegeven hostnaam is ongeldig. Geef alleen het domein of IP-adres op, niet het volledige API-endpoint.",
             "unknown": "Onverwachte fout",
-            "pip_wheel_error": "Pip gaf een fout bij het installeren van de wheel! Bekijk de logs van Home Assistant voor meer details."
+            "pip_wheel_error": "Pip gaf een fout bij het installeren van de wheel! Bekijk de logs van Home Assistant voor meer details.",
+            "invalid_extra_headers": "Elke headerinvoer heeft een niet-lege naam nodig. Headerwaarden worden als tekst verzonden."
         },
         "progress": {
             "download": "Even geduld, het model wordt gedownload van HuggingFace. Dit kan een paar minuten duren.",
-            "install_local_wheels": "Even geduld, Llama.cpp wordt geïnstalleerd..."
+            "install_local_wheels": "Even geduld, Llama.cpp wordt ge\u00efnstalleerd..."
         },
         "step": {
             "user": {
@@ -26,7 +27,19 @@
                     "anthropic_base_url": "Basis-URL van Anthropic-compatibele API"
                 },
                 "description": "Selecteer de backend en/of geef de verbindingsgegevens op van de API waarop het model draait.",
-                "title": "Backend configureren"
+                "title": "Backend configureren",
+                "sections": {
+                    "advanced": {
+                        "name": "Geavanceerde opties",
+                        "description": "Optionele instellingen die de meeste gebruikers niet nodig hebben. Vouw deze sectie uit om wijzigingen aan te brengen.",
+                        "data": {
+                            "extra_headers": "Extra HTTP-headers"
+                        },
+                        "data_description": {
+                            "extra_headers": "Extra HTTP-headers die met elk verzoek naar de API worden verzonden. Voeg elke header toe als naam-waardepaar."
+                        }
+                    }
+                }
             }
         },
         "abort": {
@@ -51,7 +64,8 @@
                 "sys_refresh_caching_enabled": "Verversen van de systeemprompt moet ingeschakeld zijn om promptcaching te laten werken!",
                 "missing_gbnf_file": "Het GBNF-bestand is niet gevonden: {filename}",
                 "missing_icl_file": "Het CSV-bestand met in-context-learning-voorbeelden is niet gevonden: {filename}",
-                "legacy_tool_calling_with_iterations": "Legacy/1-shot-modus (Legacy tool calling inschakelen) werkt niet met een waarde voor Maximaal aantal tool call-pogingen groter dan 0. Zet Maximaal aantal tool call-pogingen op 0 voor Legacy/1-shot-modellen, of schakel Legacy tool calling uit om de agentische modus te gebruiken."
+                "legacy_tool_calling_with_iterations": "Legacy/1-shot-modus (Legacy tool calling inschakelen) werkt niet met een waarde voor Maximaal aantal tool call-pogingen groter dan 0. Zet Maximaal aantal tool call-pogingen op 0 voor Legacy/1-shot-modellen, of schakel Legacy tool calling uit om de agentische modus te gebruiken.",
+                "invalid_extra_body": "Elke parameterinvoer heeft een niet-lege naam nodig. Waarden die op JSON lijken (getallen, true/false, null, arrays, objecten) worden als JSON verzonden."
             },
             "progress": {
                 "download": "Even geduld, het model wordt gedownload van HuggingFace. Dit kan een paar minuten duren."
@@ -83,11 +97,7 @@
                         "enable_streaming": "Streaming inschakelen",
                         "use_server_sampling_defaults": "Standaardwaarden van de server gebruiken voor samplingparameters",
                         "ollama_keep_alive": "(ollama) Keep-alive/inactiviteitstime-out (minuten)",
-                        "ollama_json_mode": "(ollama) JSON-uitvoermodus",
                         "extra_attributes_to_expose": "Extra attribuut om in de context te tonen",
-                        "enable_flash_attention": "Flash Attention inschakelen",
-                        "gbnf_grammar": "GBNF-grammatica inschakelen",
-                        "gbnf_grammar_file": "Bestandsnaam GBNF-grammatica",
                         "openai_api_key": "API-sleutel",
                         "text_generation_webui_admin_key": "(text-generation-webui) Beheerderssleutel",
                         "service_call_regex": "Regex voor serviceaanroepen",
@@ -95,40 +105,54 @@
                         "remember_conversation": "Gesprek onthouden",
                         "remember_num_interactions": "Aantal eerdere interacties om te onthouden",
                         "in_context_examples": "In-context-learning-voorbeelden (ICL) inschakelen",
-                        "in_context_examples_file": "Bestandsnaam CSV met in-context-learning-voorbeelden",
-                        "num_in_context_examples": "Aantal te genereren ICL-voorbeelden",
                         "text_generation_webui_preset": "(text-generation-webui) Generatie-preset/naam van personage",
                         "text_generation_webui_chat_mode": "(text-generation-webui) Chatmodus",
                         "prompt_caching": "Promptcaching inschakelen",
                         "prompt_caching_interval": "Snelste verversingsinterval voor promptcaching (sec)",
                         "context_length": "Contextlengte",
-                        "batch_size": "(llama.cpp) Batchgrootte",
-                        "n_threads": "(llama.cpp) Aantal threads",
-                        "n_batch_threads": "(llama.cpp) Aantal batch-threads",
-                        "llama_cpp_cache_size_mb": "(llama.cpp) Grootte KV-cache op schijf (MB)",
                         "thinking_prefix": "Prefix voor redeneerinhoud",
                         "thinking_suffix": "Suffix voor redeneerinhoud",
                         "tool_call_prefix": "Prefix voor tool calls",
                         "tool_call_suffix": "Suffix voor tool calls",
                         "enable_legacy_tool_calling": "Legacy tool calling inschakelen",
                         "tool_response_as_string": "Toolantwoord als string",
-                        "max_tool_call_iterations": "Maximaal aantal tool call-pogingen"
+                        "max_tool_call_iterations": "Maximaal aantal tool call-pogingen",
+                        "max_tokens": "Maximale tokens"
                     },
                     "data_description": {
                         "llm_hass_api": "Kies 'Assist' als het model apparaten moet kunnen bedienen. Gebruik je het Home-LLM-model (v1-3), kies dan 'Home Assistant Services'",
                         "prompt": "Zie [hier](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) voor meer informatie over het prompten van modellen.",
                         "in_context_examples": "Schakel dit in als je een model gebruikt dat niet specifiek voor deze integratie is gefinetuned",
                         "extra_attributes_to_expose": "Dit is de lijst met 'attributen' van Home Assistant die aan het model worden getoond. Dit bepaalt hoeveel informatie het model kan zien en over welke vragen het kan antwoorden.",
-                        "gbnf_grammar": "Dwingt het model om correct opgemaakte antwoorden te geven. Zorg dat het hieronder opgegeven bestand in de map van de integratie staat.",
                         "prompt_caching": "Promptcaching probeert de prompt (de toestand van het huis) vooraf te verwerken en die verwerking in de cache op te slaan. Als je dit inschakelt, verwerkt het model de prompt opnieuw telkens als de status van een entiteit in huis verandert, beperkt door het interval hieronder.",
                         "enable_legacy_tool_calling": "Verwerk tool calls liever lokaal in plaats van de backend het tool call-formaat te laten afhandelen. Dit kan betrouwbaarder zijn, maar dan moeten de prefix en suffix voor tool calls goed zijn ingesteld.",
                         "tool_response_as_string": "Sommige prompttemplates verwachten het toolantwoord als JSON-geserialiseerde string in plaats van als ruw object.",
-                        "max_tool_call_iterations": "Zet op 0 om het antwoord en de tool call in één poging te genereren, zonder lus (gebruik dit voor Home-modellen v1-v3).",
+                        "max_tool_call_iterations": "Zet op 0 om het antwoord en de tool call in \u00e9\u00e9n poging te genereren, zonder lus (gebruik dit voor Home-modellen v1-v3).",
                         "enable_streaming": "Als dit is ingeschakeld, worden antwoorden token voor token gestreamd als de backend dat ondersteunt.",
                         "use_server_sampling_defaults": "**Aanbevolen voor de meeste gebruikers.** Inference-engines en modelproviders leveren modellen tegenwoordig met veel beter afgestemde standaardwaarden voor sampling. Hiermee worden temperature, top_p, top_k, min_p en typical_p weggelaten uit verzoeken, zodat de server de waarden gebruikt die het beste zijn voor het geladen model. Schakel dit alleen uit als je vreemde uitvoer krijgt of bewust met een lagere temperatuur wilt werken."
                     },
                     "description": "Configureer het model op de manier waarop het geprompt moet worden. Er zijn veel opties, en de juiste keuze voor jouw model is essentieel voor optimale prestaties. Zie [hier](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) voor meer informatie over de opties op deze pagina.\n\n**Sommige standaardwaarden zijn mogelijk al voor je gekozen op basis van de naam of bestandsnaam van het geselecteerde model.** Heb je een bestand hernoemd of gebruik je een fine-tune van een ondersteund model, dan zijn de standaardwaarden mogelijk niet herkend.",
-                    "title": "Het geselecteerde model configureren"
+                    "title": "Het geselecteerde model configureren",
+                    "sections": {
+                        "advanced": {
+                            "data": {
+                                "in_context_examples_file": "Bestandsnaam CSV met in-context-learning-voorbeelden",
+                                "num_in_context_examples": "Aantal te genereren ICL-voorbeelden",
+                                "gbnf_grammar_text": "GBNF-grammatica inschakelen",
+                                "batch_size": "(llama.cpp) Batchgrootte",
+                                "n_threads": "(llama.cpp) Aantal threads",
+                                "n_batch_threads": "(llama.cpp) Aantal batch-threads",
+                                "enable_flash_attention": "Flash Attention inschakelen",
+                                "llama_cpp_cache_size_mb": "(llama.cpp) Grootte KV-cache op schijf (MB)",
+                                "ollama_json_mode": "(ollama) JSON-uitvoermodus",
+                                "extra_body": "Extra verzoekparameters"
+                            },
+                            "data_description": {
+                                "gbnf_grammar_text": "Dwingt het model om correct opgemaakte antwoorden te geven. Zorg dat het hieronder opgegeven bestand in de map van de integratie staat.",
+                                "extra_body": "Extra parameters die aan de aanvraagbody worden toegevoegd. Waarden die eruitzien als getallen, true/false, null of JSON worden als JSON verzonden; al het andere wordt als tekst verzonden."
+                            }
+                        }
+                    }
                 },
                 "reconfigure": {
                     "data": {
@@ -144,11 +168,7 @@
                         "enable_streaming": "Streaming inschakelen",
                         "use_server_sampling_defaults": "Standaardwaarden van de server gebruiken voor samplingparameters",
                         "ollama_keep_alive": "(ollama) Keep-alive/inactiviteitstime-out (minuten)",
-                        "ollama_json_mode": "(ollama) JSON-uitvoermodus",
                         "extra_attributes_to_expose": "Extra attribuut om in de context te tonen",
-                        "enable_flash_attention": "Flash Attention inschakelen",
-                        "gbnf_grammar": "GBNF-grammatica inschakelen",
-                        "gbnf_grammar_file": "Bestandsnaam GBNF-grammatica",
                         "openai_api_key": "API-sleutel",
                         "text_generation_webui_admin_key": "(text-generation-webui) Beheerderssleutel",
                         "service_call_regex": "Regex voor serviceaanroepen",
@@ -156,40 +176,54 @@
                         "remember_conversation": "Gesprek onthouden",
                         "remember_num_interactions": "Aantal eerdere interacties om te onthouden",
                         "in_context_examples": "In-context-learning-voorbeelden (ICL) inschakelen",
-                        "in_context_examples_file": "Bestandsnaam CSV met in-context-learning-voorbeelden",
-                        "num_in_context_examples": "Aantal te genereren ICL-voorbeelden",
                         "text_generation_webui_preset": "(text-generation-webui) Generatie-preset/naam van personage",
                         "text_generation_webui_chat_mode": "(text-generation-webui) Chatmodus",
                         "prompt_caching": "Promptcaching inschakelen",
                         "prompt_caching_interval": "Snelste verversingsinterval voor promptcaching (sec)",
                         "context_length": "Contextlengte",
-                        "batch_size": "(llama.cpp) Batchgrootte",
-                        "n_threads": "(llama.cpp) Aantal threads",
-                        "n_batch_threads": "(llama.cpp) Aantal batch-threads",
-                        "llama_cpp_cache_size_mb": "(llama.cpp) Grootte KV-cache op schijf (MB)",
                         "thinking_prefix": "Prefix voor redeneerinhoud",
                         "thinking_suffix": "Suffix voor redeneerinhoud",
                         "tool_call_prefix": "Prefix voor tool calls",
                         "tool_call_suffix": "Suffix voor tool calls",
                         "enable_legacy_tool_calling": "Legacy tool calling inschakelen",
                         "tool_response_as_string": "Toolantwoord als string",
-                        "max_tool_call_iterations": "Maximaal aantal tool call-pogingen"
+                        "max_tool_call_iterations": "Maximaal aantal tool call-pogingen",
+                        "max_tokens": "Maximale tokens"
                     },
                     "data_description": {
                         "llm_hass_api": "Kies 'Assist' als het model apparaten moet kunnen bedienen. Gebruik je het Home-LLM-model (v1-3), kies dan 'Home Assistant Services'",
                         "prompt": "Zie [hier](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) voor meer informatie over het prompten van modellen.",
                         "in_context_examples": "Schakel dit in als je een model gebruikt dat niet specifiek voor deze integratie is gefinetuned",
                         "extra_attributes_to_expose": "Dit is de lijst met 'attributen' van Home Assistant die aan het model worden getoond. Dit bepaalt hoeveel informatie het model kan zien en over welke vragen het kan antwoorden.",
-                        "gbnf_grammar": "Dwingt het model om correct opgemaakte antwoorden te geven. Zorg dat het hieronder opgegeven bestand in de map van de integratie staat.",
                         "prompt_caching": "Promptcaching probeert de prompt (de toestand van het huis) vooraf te verwerken en die verwerking in de cache op te slaan. Als je dit inschakelt, verwerkt het model de prompt opnieuw telkens als de status van een entiteit in huis verandert, beperkt door het interval hieronder.",
                         "enable_legacy_tool_calling": "Verwerk tool calls liever lokaal in plaats van de backend het tool call-formaat te laten afhandelen. Dit kan betrouwbaarder zijn, maar dan moeten de prefix en suffix voor tool calls goed zijn ingesteld.",
                         "tool_response_as_string": "Sommige prompttemplates verwachten het toolantwoord als JSON-geserialiseerde string in plaats van als ruw object.",
-                        "max_tool_call_iterations": "Zet op 0 om het antwoord en de tool call in één poging te genereren, zonder lus (gebruik dit voor Home-modellen v1-v3).",
+                        "max_tool_call_iterations": "Zet op 0 om het antwoord en de tool call in \u00e9\u00e9n poging te genereren, zonder lus (gebruik dit voor Home-modellen v1-v3).",
                         "enable_streaming": "Als dit is ingeschakeld, worden antwoorden token voor token gestreamd als de backend dat ondersteunt.",
                         "use_server_sampling_defaults": "**Aanbevolen voor de meeste gebruikers.** Inference-engines en modelproviders leveren modellen tegenwoordig met veel beter afgestemde standaardwaarden voor sampling. Hiermee worden temperature, top_p, top_k, min_p en typical_p weggelaten uit verzoeken, zodat de server de waarden gebruikt die het beste zijn voor het geladen model. Schakel dit alleen uit als je vreemde uitvoer krijgt of bewust met een lagere temperatuur wilt werken."
                     },
                     "description": "Configureer het model op de manier waarop het geprompt moet worden. Er zijn veel opties, en de juiste keuze voor jouw model is essentieel voor optimale prestaties. Zie [hier](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) voor meer informatie over de opties op deze pagina.\n\n**Sommige standaardwaarden zijn mogelijk al voor je gekozen op basis van de naam of bestandsnaam van het geselecteerde model.** Heb je een bestand hernoemd of gebruik je een fine-tune van een ondersteund model, dan zijn de standaardwaarden mogelijk niet herkend.",
-                    "title": "Het geselecteerde model configureren"
+                    "title": "Het geselecteerde model configureren",
+                    "sections": {
+                        "advanced": {
+                            "data": {
+                                "in_context_examples_file": "Bestandsnaam CSV met in-context-learning-voorbeelden",
+                                "num_in_context_examples": "Aantal te genereren ICL-voorbeelden",
+                                "gbnf_grammar_text": "GBNF-grammatica inschakelen",
+                                "batch_size": "(llama.cpp) Batchgrootte",
+                                "n_threads": "(llama.cpp) Aantal threads",
+                                "n_batch_threads": "(llama.cpp) Aantal batch-threads",
+                                "enable_flash_attention": "Flash Attention inschakelen",
+                                "llama_cpp_cache_size_mb": "(llama.cpp) Grootte KV-cache op schijf (MB)",
+                                "ollama_json_mode": "(ollama) JSON-uitvoermodus",
+                                "extra_body": "Extra verzoekparameters"
+                            },
+                            "data_description": {
+                                "gbnf_grammar_text": "Dwingt het model om correct opgemaakte antwoorden te geven. Zorg dat het hieronder opgegeven bestand in de map van de integratie staat.",
+                                "extra_body": "Extra parameters die aan de aanvraagbody worden toegevoegd. Waarden die eruitzien als getallen, true/false, null of JSON worden als JSON verzonden; al het andere wordt als tekst verzonden."
+                            }
+                        }
+                    }
                 }
             }
         },
@@ -210,7 +244,8 @@
                 "sys_refresh_caching_enabled": "Verversen van de systeemprompt moet ingeschakeld zijn om promptcaching te laten werken!",
                 "missing_gbnf_file": "Het GBNF-bestand is niet gevonden: {filename}",
                 "missing_icl_file": "Het CSV-bestand met in-context-learning-voorbeelden is niet gevonden: {filename}",
-                "legacy_tool_calling_with_iterations": "Legacy/1-shot-modus (Legacy tool calling inschakelen) werkt niet met een waarde voor Maximaal aantal tool call-pogingen groter dan 0. Zet Maximaal aantal tool call-pogingen op 0 voor Legacy/1-shot-modellen, of schakel Legacy tool calling uit om de agentische modus te gebruiken."
+                "legacy_tool_calling_with_iterations": "Legacy/1-shot-modus (Legacy tool calling inschakelen) werkt niet met een waarde voor Maximaal aantal tool call-pogingen groter dan 0. Zet Maximaal aantal tool call-pogingen op 0 voor Legacy/1-shot-modellen, of schakel Legacy tool calling uit om de agentische modus te gebruiken.",
+                "invalid_extra_body": "Elke parameterinvoer heeft een niet-lege naam nodig. Waarden die op JSON lijken (getallen, true/false, null, arrays, objecten) worden als JSON verzonden."
             },
             "progress": {
                 "download": "Even geduld, het model wordt gedownload van HuggingFace. Dit kan een paar minuten duren."
@@ -241,26 +276,16 @@
                         "enable_streaming": "Streaming inschakelen",
                         "use_server_sampling_defaults": "Standaardwaarden van de server gebruiken voor samplingparameters",
                         "ollama_keep_alive": "(ollama) Keep-alive/inactiviteitstime-out (minuten)",
-                        "ollama_json_mode": "(ollama) JSON-uitvoermodus",
                         "extra_attributes_to_expose": "Extra attribuut om in de context te tonen",
-                        "enable_flash_attention": "Flash Attention inschakelen",
-                        "gbnf_grammar": "GBNF-grammatica inschakelen",
-                        "gbnf_grammar_file": "Bestandsnaam GBNF-grammatica",
                         "openai_api_key": "API-sleutel",
                         "text_generation_webui_admin_key": "(text-generation-webui) Beheerderssleutel",
                         "service_call_regex": "Regex voor serviceaanroepen",
                         "in_context_examples": "In-context-learning-voorbeelden (ICL) inschakelen",
-                        "in_context_examples_file": "Bestandsnaam CSV met in-context-learning-voorbeelden",
-                        "num_in_context_examples": "Aantal te genereren ICL-voorbeelden",
                         "text_generation_webui_preset": "(text-generation-webui) Generatie-preset/naam van personage",
                         "text_generation_webui_chat_mode": "(text-generation-webui) Chatmodus",
                         "prompt_caching": "Promptcaching inschakelen",
                         "prompt_caching_interval": "Snelste verversingsinterval voor promptcaching (sec)",
                         "context_length": "Contextlengte",
-                        "batch_size": "(llama.cpp) Batchgrootte",
-                        "n_threads": "(llama.cpp) Aantal threads",
-                        "n_batch_threads": "(llama.cpp) Aantal batch-threads",
-                        "llama_cpp_cache_size_mb": "(llama.cpp) Grootte KV-cache op schijf (MB)",
                         "thinking_prefix": "Prefix voor redeneerinhoud",
                         "thinking_suffix": "Suffix voor redeneerinhoud",
                         "tool_call_prefix": "Prefix voor tool calls",
@@ -269,23 +294,43 @@
                         "tool_response_as_string": "Toolantwoord als string",
                         "max_tool_call_iterations": "Maximaal aantal tool call-pogingen",
                         "ai_task_extraction_method": "Methode voor extractie van gestructureerde data",
-                        "ai_task_retries": "Aantal nieuwe pogingen voor extractie van gestructureerde data"
+                        "ai_task_retries": "Aantal nieuwe pogingen voor extractie van gestructureerde data",
+                        "max_tokens": "Maximale tokens"
                     },
                     "data_description": {
                         "prompt": "Zie [hier](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) voor meer informatie over het prompten van modellen.",
                         "in_context_examples": "Schakel dit in als je een model gebruikt dat niet specifiek voor deze integratie is gefinetuned",
                         "extra_attributes_to_expose": "Dit is de lijst met 'attributen' van Home Assistant die aan het model worden getoond. Dit bepaalt hoeveel informatie het model kan zien en over welke vragen het kan antwoorden.",
-                        "gbnf_grammar": "Dwingt het model om correct opgemaakte antwoorden te geven. Zorg dat het hieronder opgegeven bestand in de map van de integratie staat.",
                         "prompt_caching": "Promptcaching probeert de prompt (de toestand van het huis) vooraf te verwerken en die verwerking in de cache op te slaan. Als je dit inschakelt, verwerkt het model de prompt opnieuw telkens als de status van een entiteit in huis verandert, beperkt door het interval hieronder.",
                         "enable_legacy_tool_calling": "Verwerk tool calls liever lokaal in plaats van de backend het tool call-formaat te laten afhandelen. Dit kan betrouwbaarder zijn, maar dan moeten de prefix en suffix voor tool calls goed zijn ingesteld.",
                         "tool_response_as_string": "Sommige prompttemplates verwachten het toolantwoord als JSON-geserialiseerde string in plaats van als ruw object.",
-                        "max_tool_call_iterations": "Zet op 0 om het antwoord en de tool call in één poging te genereren, zonder lus (gebruik dit voor Home-modellen v1-v3).",
+                        "max_tool_call_iterations": "Zet op 0 om het antwoord en de tool call in \u00e9\u00e9n poging te genereren, zonder lus (gebruik dit voor Home-modellen v1-v3).",
                         "enable_streaming": "Als dit is ingeschakeld, worden antwoorden token voor token gestreamd als de backend dat ondersteunt.",
                         "use_server_sampling_defaults": "**Aanbevolen voor de meeste gebruikers.** Inference-engines en modelproviders leveren modellen tegenwoordig met veel beter afgestemde standaardwaarden voor sampling. Hiermee worden temperature, top_p, top_k, min_p en typical_p weggelaten uit verzoeken, zodat de server de waarden gebruikt die het beste zijn voor het geladen model. Schakel dit alleen uit als je vreemde uitvoer krijgt of bewust met een lagere temperatuur wilt werken.",
                         "ai_task_extraction_method": "Kies de methode om gestructureerde data uit het antwoord van het model te halen. 'Structured Output' laat de backend het model dwingen uitvoer te geven volgens het opgegeven JSON-schema; 'Tool Calling' geeft het model een tool die moet worden aangeroepen met argumenten die overeenkomen met de gewenste uitvoerstructuur."
                     },
                     "description": "Configureer het model op de manier waarop het geprompt moet worden. Er zijn veel opties, en de juiste keuze voor jouw model is essentieel voor optimale prestaties. Zie [hier](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) voor meer informatie over de opties op deze pagina.\n\n**Sommige standaardwaarden zijn mogelijk al voor je gekozen op basis van de naam of bestandsnaam van het geselecteerde model.** Heb je een bestand hernoemd of gebruik je een fine-tune van een ondersteund model, dan zijn de standaardwaarden mogelijk niet herkend.",
-                    "title": "Het geselecteerde model configureren"
+                    "title": "Het geselecteerde model configureren",
+                    "sections": {
+                        "advanced": {
+                            "data": {
+                                "in_context_examples_file": "Bestandsnaam CSV met in-context-learning-voorbeelden",
+                                "num_in_context_examples": "Aantal te genereren ICL-voorbeelden",
+                                "gbnf_grammar_text": "GBNF-grammatica inschakelen",
+                                "batch_size": "(llama.cpp) Batchgrootte",
+                                "n_threads": "(llama.cpp) Aantal threads",
+                                "n_batch_threads": "(llama.cpp) Aantal batch-threads",
+                                "enable_flash_attention": "Flash Attention inschakelen",
+                                "llama_cpp_cache_size_mb": "(llama.cpp) Grootte KV-cache op schijf (MB)",
+                                "ollama_json_mode": "(ollama) JSON-uitvoermodus",
+                                "extra_body": "Extra verzoekparameters"
+                            },
+                            "data_description": {
+                                "gbnf_grammar_text": "Dwingt het model om correct opgemaakte antwoorden te geven. Zorg dat het hieronder opgegeven bestand in de map van de integratie staat.",
+                                "extra_body": "Extra parameters die aan de aanvraagbody worden toegevoegd. Waarden die eruitzien als getallen, true/false, null of JSON worden als JSON verzonden; al het andere wordt als tekst verzonden."
+                            }
+                        }
+                    }
                 },
                 "reconfigure": {
                     "data": {
@@ -301,11 +346,7 @@
                         "enable_streaming": "Streaming inschakelen",
                         "use_server_sampling_defaults": "Standaardwaarden van de server gebruiken voor samplingparameters",
                         "ollama_keep_alive": "(ollama) Keep-alive/inactiviteitstime-out (minuten)",
-                        "ollama_json_mode": "(ollama) JSON-uitvoermodus",
                         "extra_attributes_to_expose": "Extra attribuut om in de context te tonen",
-                        "enable_flash_attention": "Flash Attention inschakelen",
-                        "gbnf_grammar": "GBNF-grammatica inschakelen",
-                        "gbnf_grammar_file": "Bestandsnaam GBNF-grammatica",
                         "openai_api_key": "API-sleutel",
                         "text_generation_webui_admin_key": "(text-generation-webui) Beheerderssleutel",
                         "service_call_regex": "Regex voor serviceaanroepen",
@@ -313,40 +354,54 @@
                         "remember_conversation": "Gesprek onthouden",
                         "remember_num_interactions": "Aantal eerdere interacties om te onthouden",
                         "in_context_examples": "In-context-learning-voorbeelden (ICL) inschakelen",
-                        "in_context_examples_file": "Bestandsnaam CSV met in-context-learning-voorbeelden",
-                        "num_in_context_examples": "Aantal te genereren ICL-voorbeelden",
                         "text_generation_webui_preset": "(text-generation-webui) Generatie-preset/naam van personage",
                         "text_generation_webui_chat_mode": "(text-generation-webui) Chatmodus",
                         "prompt_caching": "Promptcaching inschakelen",
                         "prompt_caching_interval": "Snelste verversingsinterval voor promptcaching (sec)",
                         "context_length": "Contextlengte",
-                        "batch_size": "(llama.cpp) Batchgrootte",
-                        "n_threads": "(llama.cpp) Aantal threads",
-                        "n_batch_threads": "(llama.cpp) Aantal batch-threads",
-                        "llama_cpp_cache_size_mb": "(llama.cpp) Grootte KV-cache op schijf (MB)",
                         "thinking_prefix": "Prefix voor redeneerinhoud",
                         "thinking_suffix": "Suffix voor redeneerinhoud",
                         "tool_call_prefix": "Prefix voor tool calls",
                         "tool_call_suffix": "Suffix voor tool calls",
                         "enable_legacy_tool_calling": "Legacy tool calling inschakelen",
                         "tool_response_as_string": "Toolantwoord als string",
-                        "max_tool_call_iterations": "Maximaal aantal tool call-pogingen"
+                        "max_tool_call_iterations": "Maximaal aantal tool call-pogingen",
+                        "max_tokens": "Maximale tokens"
                     },
                     "data_description": {
                         "llm_hass_api": "Kies 'Assist' als het model apparaten moet kunnen bedienen. Gebruik je het Home-LLM-model v1, v2 of v3, kies dan 'Home-LLM (v1-3)'",
                         "prompt": "Zie [hier](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) voor meer informatie over het prompten van modellen.",
                         "in_context_examples": "Schakel dit in als je een model gebruikt dat niet specifiek voor deze integratie is gefinetuned",
                         "extra_attributes_to_expose": "Dit is de lijst met 'attributen' van Home Assistant die aan het model worden getoond. Dit bepaalt hoeveel informatie het model kan zien en over welke vragen het kan antwoorden.",
-                        "gbnf_grammar": "Dwingt het model om correct opgemaakte antwoorden te geven. Zorg dat het hieronder opgegeven bestand in de map van de integratie staat.",
                         "prompt_caching": "Promptcaching probeert de prompt (de toestand van het huis) vooraf te verwerken en die verwerking in de cache op te slaan. Als je dit inschakelt, verwerkt het model de prompt opnieuw telkens als de status van een entiteit in huis verandert, beperkt door het interval hieronder.",
                         "enable_legacy_tool_calling": "Verwerk tool calls liever lokaal in plaats van de backend het tool call-formaat te laten afhandelen. Dit kan betrouwbaarder zijn, maar dan moeten de prefix en suffix voor tool calls goed zijn ingesteld.",
                         "tool_response_as_string": "Sommige prompttemplates verwachten het toolantwoord als JSON-geserialiseerde string in plaats van als ruw object.",
-                        "max_tool_call_iterations": "Zet op 0 om het antwoord en de tool call in één poging te genereren, zonder lus (gebruik dit voor Home-modellen v1-v3).",
+                        "max_tool_call_iterations": "Zet op 0 om het antwoord en de tool call in \u00e9\u00e9n poging te genereren, zonder lus (gebruik dit voor Home-modellen v1-v3).",
                         "enable_streaming": "Als dit is ingeschakeld, worden antwoorden token voor token gestreamd als de backend dat ondersteunt.",
                         "use_server_sampling_defaults": "**Aanbevolen voor de meeste gebruikers.** Inference-engines en modelproviders leveren modellen tegenwoordig met veel beter afgestemde standaardwaarden voor sampling. Hiermee worden temperature, top_p, top_k, min_p en typical_p weggelaten uit verzoeken, zodat de server de waarden gebruikt die het beste zijn voor het geladen model. Schakel dit alleen uit als je vreemde uitvoer krijgt of bewust met een lagere temperatuur wilt werken."
                     },
                     "description": "Configureer het model op de manier waarop het geprompt moet worden. Er zijn veel opties, en de juiste keuze voor jouw model is essentieel voor optimale prestaties. Zie [hier](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) voor meer informatie over de opties op deze pagina.\n\n**Sommige standaardwaarden zijn mogelijk al voor je gekozen op basis van de naam of bestandsnaam van het geselecteerde model.** Heb je een bestand hernoemd of gebruik je een fine-tune van een ondersteund model, dan zijn de standaardwaarden mogelijk niet herkend.",
-                    "title": "Het geselecteerde model configureren"
+                    "title": "Het geselecteerde model configureren",
+                    "sections": {
+                        "advanced": {
+                            "data": {
+                                "in_context_examples_file": "Bestandsnaam CSV met in-context-learning-voorbeelden",
+                                "num_in_context_examples": "Aantal te genereren ICL-voorbeelden",
+                                "gbnf_grammar_text": "GBNF-grammatica inschakelen",
+                                "batch_size": "(llama.cpp) Batchgrootte",
+                                "n_threads": "(llama.cpp) Aantal threads",
+                                "n_batch_threads": "(llama.cpp) Aantal batch-threads",
+                                "enable_flash_attention": "Flash Attention inschakelen",
+                                "llama_cpp_cache_size_mb": "(llama.cpp) Grootte KV-cache op schijf (MB)",
+                                "ollama_json_mode": "(ollama) JSON-uitvoermodus",
+                                "extra_body": "Extra verzoekparameters"
+                            },
+                            "data_description": {
+                                "gbnf_grammar_text": "Dwingt het model om correct opgemaakte antwoorden te geven. Zorg dat het hieronder opgegeven bestand in de map van de integratie staat.",
+                                "extra_body": "Extra parameters die aan de aanvraagbody worden toegevoegd. Waarden die eruitzien als getallen, true/false, null of JSON worden als JSON verzonden; al het andere wordt als tekst verzonden."
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -366,7 +421,19 @@
                     "text_generation_webui_chat_mode": "Chatmodus"
                 },
                 "description": "Geef de verbindingsgegevens op van de API waarop het model draait.",
-                "title": "Verbinding configureren"
+                "title": "Verbinding configureren",
+                "sections": {
+                    "advanced": {
+                        "name": "Geavanceerde opties",
+                        "description": "Optionele instellingen die de meeste gebruikers niet nodig hebben. Vouw deze sectie uit om wijzigingen aan te brengen.",
+                        "data": {
+                            "extra_headers": "Extra HTTP-headers"
+                        },
+                        "data_description": {
+                            "extra_headers": "Extra HTTP-headers die met elk verzoek naar de API worden verzonden. Voeg elke header toe als naam-waardepaar."
+                        }
+                    }
+                }
             },
             "reinstall": {
                 "data": {
@@ -381,10 +448,11 @@
             "failed_to_connect": "Verbinden met de externe API is mislukt: {exception}",
             "invalid_hostname": "De opgegeven hostnaam is ongeldig. Geef alleen het domein of IP-adres op, niet het volledige API-endpoint.",
             "unknown": "Onverwachte fout",
-            "pip_wheel_error": "Pip gaf een fout bij het installeren van de wheel! Bekijk de logs van Home Assistant voor meer details."
+            "pip_wheel_error": "Pip gaf een fout bij het installeren van de wheel! Bekijk de logs van Home Assistant voor meer details.",
+            "invalid_extra_headers": "Elke headerinvoer heeft een niet-lege naam nodig. Headerwaarden worden als tekst verzonden."
         },
         "progress": {
-            "install_local_wheels": "Even geduld, Llama.cpp wordt geïnstalleerd..."
+            "install_local_wheels": "Even geduld, Llama.cpp wordt ge\u00efnstalleerd..."
         }
     },
     "selector": {
@@ -413,6 +481,26 @@
                 "fr": "Frans",
                 "es": "Spaans",
                 "pl": "Pools"
+            }
+        },
+        "extra_headers": {
+            "fields": {
+                "key": {
+                    "name": "Headernaam"
+                },
+                "value": {
+                    "name": "Waarde"
+                }
+            }
+        },
+        "extra_body": {
+            "fields": {
+                "key": {
+                    "name": "Parameternaam"
+                },
+                "value": {
+                    "name": "Waarde"
+                }
             }
         }
     }

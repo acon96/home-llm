@@ -99,22 +99,13 @@
                         "request_timeout": "Limit czasu \u017c\u0105dania zdalnego (sekundy)",
                         "enable_streaming": "W\u0142\u0105cz strumieniowanie",
                         "ollama_keep_alive": "(ollama) Czas utrzymania w pami\u0119ci/Limit nieaktywno\u015bci (minuty)",
-                        "ollama_json_mode": "(ollama) Tryb wyj\u015bcia JSON",
                         "extra_attributes_to_expose": "Dodatkowy atrybut udost\u0119pniany w kontek\u015bcie",
-                        "enable_flash_attention": "W\u0142\u0105cz Flash Attention",
-                        "gbnf_grammar": "Gramatyka GBNF",
                         "openai_api_key": "Klucz API",
                         "service_call_regex": "Wyra\u017cenie regularne wywo\u0142ania us\u0142ugi",
                         "in_context_examples": "W\u0142\u0105cz przyk\u0142ady nauki w kontek\u015bcie (ICL)",
-                        "in_context_examples_file": "Nazwa pliku CSV z przyk\u0142adami nauki w kontek\u015bcie",
-                        "num_in_context_examples": "Liczba przyk\u0142ad\u00f3w ICL do wygenerowania",
                         "prompt_caching": "W\u0142\u0105cz buforowanie prompt\u00f3w",
                         "prompt_caching_interval": "Minimalny interwa\u0142 od\u015bwie\u017cania bufora prompt\u00f3w (sekundy)",
                         "context_length": "D\u0142ugo\u015b\u0107 kontekstu",
-                        "batch_size": "(llama.cpp) Rozmiar partii",
-                        "n_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w",
-                        "n_batch_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w partii",
-                        "llama_cpp_cache_size_mb": "(llama.cpp) Rozmiar dyskowego bufora KV (MB)",
                         "thinking_prefix": "Prefiks tre\u015bci rozumowania",
                         "thinking_suffix": "Sufiks tre\u015bci rozumowania",
                         "tool_call_prefix": "Prefiks wywo\u0142ania narz\u0119dzia",
@@ -128,7 +119,6 @@
                         "prompt": "Wi\u0119cej informacji o promptach modelu znajdziesz [tutaj](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md).",
                         "in_context_examples": "W\u0142\u0105cz t\u0119 opcj\u0119, je\u015bli u\u017cywasz modelu, kt\u00f3ry nie zosta\u0142 specjalnie dostrojony do tej integracji.",
                         "extra_attributes_to_expose": "To lista 'atrybut\u00f3w' Home Assistant udost\u0119pnianych modelowi. Ogranicza informacje, kt\u00f3re model mo\u017ce zobaczy\u0107 i na temat kt\u00f3rych mo\u017ce odpowiada\u0107 na pytania.",
-                        "gbnf_grammar": "Ogranicza odpowiedzi llama.cpp do gramatyki zapisanej w GBNF. Pozostaw pole puste, aby model m\u00f3g\u0142 odpowiada\u0107 swobodnie.",
                         "prompt_caching": "Buforowanie prompt\u00f3w pr\u00f3buje wst\u0119pnie przetworzy\u0107 prompt (stan domu) i zapisa\u0107 przetwarzanie potrzebne do jego zrozumienia. Po w\u0142\u0105czeniu tej opcji model ponownie przetwarza prompt przy zmianie stanu encji w domu, z ograniczeniem wynikaj\u0105cym z poni\u017cszego interwa\u0142u.",
                         "enable_legacy_tool_calling": "Preferuje lokalne przetwarzanie wywo\u0142a\u0144 narz\u0119dzi zamiast polegania na obs\u0142udze ich formatu przez zaplecze. Mo\u017ce to by\u0107 bardziej niezawodne, ale wymaga poprawnego ustawienia prefiksu i sufiksu wywo\u0142ania narz\u0119dzia.",
                         "tool_response_as_string": "Niekt\u00f3re szablony prompt\u00f3w wymagaj\u0105 odpowiedzi narz\u0119dzia w postaci ci\u0105gu znak\u00f3w zserializowanego do JSON zamiast surowego obiektu.",
@@ -143,10 +133,20 @@
                             "name": "Opcje zaawansowane",
                             "description": "Ustawienia opcjonalne, kt\u00f3rych wi\u0119kszo\u015b\u0107 u\u017cytkownik\u00f3w nie potrzebuje. Rozwi\u0144 t\u0119 sekcj\u0119, aby wprowadzi\u0107 zmiany.",
                             "data": {
-                                "extra_body": "Dodatkowe parametry zapytania"
+                                "extra_body": "Dodatkowe parametry zapytania",
+                                "in_context_examples_file": "Nazwa pliku CSV z przyk\u0142adami nauki w kontek\u015bcie",
+                                "num_in_context_examples": "Liczba przyk\u0142ad\u00f3w ICL do wygenerowania",
+                                "batch_size": "(llama.cpp) Rozmiar partii",
+                                "n_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w",
+                                "n_batch_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w partii",
+                                "enable_flash_attention": "W\u0142\u0105cz Flash Attention",
+                                "llama_cpp_cache_size_mb": "(llama.cpp) Rozmiar dyskowego bufora KV (MB)",
+                                "ollama_json_mode": "(ollama) Tryb wyj\u015bcia JSON",
+                                "gbnf_grammar_text": "Gramatyka GBNF"
                             },
                             "data_description": {
-                                "extra_body": "Dodatkowe parametry dodawane do tre\u015bci zapytania. Warto\u015bci rozpoznane jako liczba, true/false, null lub JSON s\u0105 wysy\u0142ane jako JSON; pozosta\u0142e s\u0105 wysy\u0142ane jako tekst."
+                                "extra_body": "Dodatkowe parametry dodawane do tre\u015bci zapytania. Warto\u015bci rozpoznane jako liczba, true/false, null lub JSON s\u0105 wysy\u0142ane jako JSON; pozosta\u0142e s\u0105 wysy\u0142ane jako tekst.",
+                                "gbnf_grammar_text": "Ogranicza odpowiedzi llama.cpp do gramatyki zapisanej w GBNF. Pozostaw pole puste, aby model m\u00f3g\u0142 odpowiada\u0107 swobodnie."
                             }
                         }
                     }
@@ -164,22 +164,13 @@
                         "request_timeout": "Limit czasu \u017c\u0105dania zdalnego (sekundy)",
                         "enable_streaming": "W\u0142\u0105cz strumieniowanie",
                         "ollama_keep_alive": "(ollama) Czas utrzymania w pami\u0119ci/Limit nieaktywno\u015bci (minuty)",
-                        "ollama_json_mode": "(ollama) Tryb wyj\u015bcia JSON",
                         "extra_attributes_to_expose": "Dodatkowy atrybut udost\u0119pniany w kontek\u015bcie",
-                        "enable_flash_attention": "W\u0142\u0105cz Flash Attention",
-                        "gbnf_grammar": "Gramatyka GBNF",
                         "openai_api_key": "Klucz API",
                         "service_call_regex": "Wyra\u017cenie regularne wywo\u0142ania us\u0142ugi",
                         "in_context_examples": "W\u0142\u0105cz przyk\u0142ady nauki w kontek\u015bcie (ICL)",
-                        "in_context_examples_file": "Nazwa pliku CSV z przyk\u0142adami nauki w kontek\u015bcie",
-                        "num_in_context_examples": "Liczba przyk\u0142ad\u00f3w ICL do wygenerowania",
                         "prompt_caching": "W\u0142\u0105cz buforowanie prompt\u00f3w",
                         "prompt_caching_interval": "Minimalny interwa\u0142 od\u015bwie\u017cania bufora prompt\u00f3w (sekundy)",
                         "context_length": "D\u0142ugo\u015b\u0107 kontekstu",
-                        "batch_size": "(llama.cpp) Rozmiar partii",
-                        "n_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w",
-                        "n_batch_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w partii",
-                        "llama_cpp_cache_size_mb": "(llama.cpp) Rozmiar dyskowego bufora KV (MB)",
                         "thinking_prefix": "Prefiks tre\u015bci rozumowania",
                         "thinking_suffix": "Sufiks tre\u015bci rozumowania",
                         "tool_call_prefix": "Prefiks wywo\u0142ania narz\u0119dzia",
@@ -193,7 +184,6 @@
                         "prompt": "Wi\u0119cej informacji o promptach modelu znajdziesz [tutaj](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md).",
                         "in_context_examples": "W\u0142\u0105cz t\u0119 opcj\u0119, je\u015bli u\u017cywasz modelu, kt\u00f3ry nie zosta\u0142 specjalnie dostrojony do tej integracji.",
                         "extra_attributes_to_expose": "To lista 'atrybut\u00f3w' Home Assistant udost\u0119pnianych modelowi. Ogranicza informacje, kt\u00f3re model mo\u017ce zobaczy\u0107 i na temat kt\u00f3rych mo\u017ce odpowiada\u0107 na pytania.",
-                        "gbnf_grammar": "Ogranicza odpowiedzi llama.cpp do gramatyki zapisanej w GBNF. Pozostaw pole puste, aby model m\u00f3g\u0142 odpowiada\u0107 swobodnie.",
                         "prompt_caching": "Buforowanie prompt\u00f3w pr\u00f3buje wst\u0119pnie przetworzy\u0107 prompt (stan domu) i zapisa\u0107 przetwarzanie potrzebne do jego zrozumienia. Po w\u0142\u0105czeniu tej opcji model ponownie przetwarza prompt przy zmianie stanu encji w domu, z ograniczeniem wynikaj\u0105cym z poni\u017cszego interwa\u0142u.",
                         "enable_legacy_tool_calling": "Preferuje lokalne przetwarzanie wywo\u0142a\u0144 narz\u0119dzi zamiast polegania na obs\u0142udze ich formatu przez zaplecze. Mo\u017ce to by\u0107 bardziej niezawodne, ale wymaga poprawnego ustawienia prefiksu i sufiksu wywo\u0142ania narz\u0119dzia.",
                         "tool_response_as_string": "Niekt\u00f3re szablony prompt\u00f3w wymagaj\u0105 odpowiedzi narz\u0119dzia w postaci ci\u0105gu znak\u00f3w zserializowanego do JSON zamiast surowego obiektu.",
@@ -208,10 +198,20 @@
                             "name": "Opcje zaawansowane",
                             "description": "Ustawienia opcjonalne, kt\u00f3rych wi\u0119kszo\u015b\u0107 u\u017cytkownik\u00f3w nie potrzebuje. Rozwi\u0144 t\u0119 sekcj\u0119, aby wprowadzi\u0107 zmiany.",
                             "data": {
-                                "extra_body": "Dodatkowe parametry zapytania"
+                                "extra_body": "Dodatkowe parametry zapytania",
+                                "in_context_examples_file": "Nazwa pliku CSV z przyk\u0142adami nauki w kontek\u015bcie",
+                                "num_in_context_examples": "Liczba przyk\u0142ad\u00f3w ICL do wygenerowania",
+                                "batch_size": "(llama.cpp) Rozmiar partii",
+                                "n_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w",
+                                "n_batch_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w partii",
+                                "enable_flash_attention": "W\u0142\u0105cz Flash Attention",
+                                "llama_cpp_cache_size_mb": "(llama.cpp) Rozmiar dyskowego bufora KV (MB)",
+                                "ollama_json_mode": "(ollama) Tryb wyj\u015bcia JSON",
+                                "gbnf_grammar_text": "Gramatyka GBNF"
                             },
                             "data_description": {
-                                "extra_body": "Dodatkowe parametry dodawane do tre\u015bci zapytania. Warto\u015bci rozpoznane jako liczba, true/false, null lub JSON s\u0105 wysy\u0142ane jako JSON; pozosta\u0142e s\u0105 wysy\u0142ane jako tekst."
+                                "extra_body": "Dodatkowe parametry dodawane do tre\u015bci zapytania. Warto\u015bci rozpoznane jako liczba, true/false, null lub JSON s\u0105 wysy\u0142ane jako JSON; pozosta\u0142e s\u0105 wysy\u0142ane jako tekst.",
+                                "gbnf_grammar_text": "Ogranicza odpowiedzi llama.cpp do gramatyki zapisanej w GBNF. Pozostaw pole puste, aby model m\u00f3g\u0142 odpowiada\u0107 swobodnie."
                             }
                         }
                     }
@@ -266,22 +266,13 @@
                         "request_timeout": "Limit czasu \u017c\u0105dania zdalnego (sekundy)",
                         "enable_streaming": "W\u0142\u0105cz strumieniowanie",
                         "ollama_keep_alive": "(ollama) Czas utrzymania w pami\u0119ci/Limit nieaktywno\u015bci (minuty)",
-                        "ollama_json_mode": "(ollama) Tryb wyj\u015bcia JSON",
                         "extra_attributes_to_expose": "Dodatkowy atrybut udost\u0119pniany w kontek\u015bcie",
-                        "enable_flash_attention": "W\u0142\u0105cz Flash Attention",
-                        "gbnf_grammar": "Gramatyka GBNF",
                         "openai_api_key": "Klucz API",
                         "service_call_regex": "Wyra\u017cenie regularne wywo\u0142ania us\u0142ugi",
                         "in_context_examples": "W\u0142\u0105cz przyk\u0142ady nauki w kontek\u015bcie (ICL)",
-                        "in_context_examples_file": "Nazwa pliku CSV z przyk\u0142adami nauki w kontek\u015bcie",
-                        "num_in_context_examples": "Liczba przyk\u0142ad\u00f3w ICL do wygenerowania",
                         "prompt_caching": "W\u0142\u0105cz buforowanie prompt\u00f3w",
                         "prompt_caching_interval": "Minimalny interwa\u0142 od\u015bwie\u017cania bufora prompt\u00f3w (sekundy)",
                         "context_length": "D\u0142ugo\u015b\u0107 kontekstu",
-                        "batch_size": "(llama.cpp) Rozmiar partii",
-                        "n_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w",
-                        "n_batch_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w partii",
-                        "llama_cpp_cache_size_mb": "(llama.cpp) Rozmiar dyskowego bufora KV (MB)",
                         "thinking_prefix": "Prefiks tre\u015bci rozumowania",
                         "thinking_suffix": "Sufiks tre\u015bci rozumowania",
                         "tool_call_prefix": "Prefiks wywo\u0142ania narz\u0119dzia",
@@ -296,7 +287,6 @@
                         "prompt": "Wi\u0119cej informacji o promptach modelu znajdziesz [tutaj](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md).",
                         "in_context_examples": "W\u0142\u0105cz t\u0119 opcj\u0119, je\u015bli u\u017cywasz modelu, kt\u00f3ry nie zosta\u0142 specjalnie dostrojony do tej integracji.",
                         "extra_attributes_to_expose": "To lista 'atrybut\u00f3w' Home Assistant udost\u0119pnianych modelowi. Ogranicza informacje, kt\u00f3re model mo\u017ce zobaczy\u0107 i na temat kt\u00f3rych mo\u017ce odpowiada\u0107 na pytania.",
-                        "gbnf_grammar": "Ogranicza odpowiedzi llama.cpp do gramatyki zapisanej w GBNF. Pozostaw pole puste, aby model m\u00f3g\u0142 odpowiada\u0107 swobodnie.",
                         "prompt_caching": "Buforowanie prompt\u00f3w pr\u00f3buje wst\u0119pnie przetworzy\u0107 prompt (stan domu) i zapisa\u0107 przetwarzanie potrzebne do jego zrozumienia. Po w\u0142\u0105czeniu tej opcji model ponownie przetwarza prompt przy zmianie stanu encji w domu, z ograniczeniem wynikaj\u0105cym z poni\u017cszego interwa\u0142u.",
                         "enable_legacy_tool_calling": "Preferuje lokalne przetwarzanie wywo\u0142a\u0144 narz\u0119dzi zamiast polegania na obs\u0142udze ich formatu przez zaplecze. Mo\u017ce to by\u0107 bardziej niezawodne, ale wymaga poprawnego ustawienia prefiksu i sufiksu wywo\u0142ania narz\u0119dzia.",
                         "tool_response_as_string": "Niekt\u00f3re szablony prompt\u00f3w wymagaj\u0105 odpowiedzi narz\u0119dzia w postaci ci\u0105gu znak\u00f3w zserializowanego do JSON zamiast surowego obiektu.",
@@ -312,10 +302,20 @@
                             "name": "Opcje zaawansowane",
                             "description": "Ustawienia opcjonalne, kt\u00f3rych wi\u0119kszo\u015b\u0107 u\u017cytkownik\u00f3w nie potrzebuje. Rozwi\u0144 t\u0119 sekcj\u0119, aby wprowadzi\u0107 zmiany.",
                             "data": {
-                                "extra_body": "Dodatkowe parametry zapytania"
+                                "extra_body": "Dodatkowe parametry zapytania",
+                                "in_context_examples_file": "Nazwa pliku CSV z przyk\u0142adami nauki w kontek\u015bcie",
+                                "num_in_context_examples": "Liczba przyk\u0142ad\u00f3w ICL do wygenerowania",
+                                "batch_size": "(llama.cpp) Rozmiar partii",
+                                "n_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w",
+                                "n_batch_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w partii",
+                                "enable_flash_attention": "W\u0142\u0105cz Flash Attention",
+                                "llama_cpp_cache_size_mb": "(llama.cpp) Rozmiar dyskowego bufora KV (MB)",
+                                "ollama_json_mode": "(ollama) Tryb wyj\u015bcia JSON",
+                                "gbnf_grammar_text": "Gramatyka GBNF"
                             },
                             "data_description": {
-                                "extra_body": "Dodatkowe parametry dodawane do tre\u015bci zapytania. Warto\u015bci rozpoznane jako liczba, true/false, null lub JSON s\u0105 wysy\u0142ane jako JSON; pozosta\u0142e s\u0105 wysy\u0142ane jako tekst."
+                                "extra_body": "Dodatkowe parametry dodawane do tre\u015bci zapytania. Warto\u015bci rozpoznane jako liczba, true/false, null lub JSON s\u0105 wysy\u0142ane jako JSON; pozosta\u0142e s\u0105 wysy\u0142ane jako tekst.",
+                                "gbnf_grammar_text": "Ogranicza odpowiedzi llama.cpp do gramatyki zapisanej w GBNF. Pozostaw pole puste, aby model m\u00f3g\u0142 odpowiada\u0107 swobodnie."
                             }
                         }
                     }
@@ -333,22 +333,13 @@
                         "request_timeout": "Limit czasu \u017c\u0105dania zdalnego (sekundy)",
                         "enable_streaming": "W\u0142\u0105cz strumieniowanie",
                         "ollama_keep_alive": "(ollama) Czas utrzymania w pami\u0119ci/Limit nieaktywno\u015bci (minuty)",
-                        "ollama_json_mode": "(ollama) Tryb wyj\u015bcia JSON",
                         "extra_attributes_to_expose": "Dodatkowy atrybut udost\u0119pniany w kontek\u015bcie",
-                        "enable_flash_attention": "W\u0142\u0105cz Flash Attention",
-                        "gbnf_grammar": "Gramatyka GBNF",
                         "openai_api_key": "Klucz API",
                         "service_call_regex": "Wyra\u017cenie regularne wywo\u0142ania us\u0142ugi",
                         "in_context_examples": "W\u0142\u0105cz przyk\u0142ady nauki w kontek\u015bcie (ICL)",
-                        "in_context_examples_file": "Nazwa pliku CSV z przyk\u0142adami nauki w kontek\u015bcie",
-                        "num_in_context_examples": "Liczba przyk\u0142ad\u00f3w ICL do wygenerowania",
                         "prompt_caching": "W\u0142\u0105cz buforowanie prompt\u00f3w",
                         "prompt_caching_interval": "Minimalny interwa\u0142 od\u015bwie\u017cania bufora prompt\u00f3w (sekundy)",
                         "context_length": "D\u0142ugo\u015b\u0107 kontekstu",
-                        "batch_size": "(llama.cpp) Rozmiar partii",
-                        "n_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w",
-                        "n_batch_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w partii",
-                        "llama_cpp_cache_size_mb": "(llama.cpp) Rozmiar dyskowego bufora KV (MB)",
                         "thinking_prefix": "Prefiks tre\u015bci rozumowania",
                         "thinking_suffix": "Sufiks tre\u015bci rozumowania",
                         "tool_call_prefix": "Prefiks wywo\u0142ania narz\u0119dzia",
@@ -362,7 +353,6 @@
                         "prompt": "Wi\u0119cej informacji o promptach modelu znajdziesz [tutaj](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md).",
                         "in_context_examples": "W\u0142\u0105cz t\u0119 opcj\u0119, je\u015bli u\u017cywasz modelu, kt\u00f3ry nie zosta\u0142 specjalnie dostrojony do tej integracji.",
                         "extra_attributes_to_expose": "To lista 'atrybut\u00f3w' Home Assistant udost\u0119pnianych modelowi. Ogranicza informacje, kt\u00f3re model mo\u017ce zobaczy\u0107 i na temat kt\u00f3rych mo\u017ce odpowiada\u0107 na pytania.",
-                        "gbnf_grammar": "Ogranicza odpowiedzi llama.cpp do gramatyki zapisanej w GBNF. Pozostaw pole puste, aby model m\u00f3g\u0142 odpowiada\u0107 swobodnie.",
                         "prompt_caching": "Buforowanie prompt\u00f3w pr\u00f3buje wst\u0119pnie przetworzy\u0107 prompt (stan domu) i zapisa\u0107 przetwarzanie potrzebne do jego zrozumienia. Po w\u0142\u0105czeniu tej opcji model ponownie przetwarza prompt przy zmianie stanu encji w domu, z ograniczeniem wynikaj\u0105cym z poni\u017cszego interwa\u0142u.",
                         "enable_legacy_tool_calling": "Preferuje lokalne przetwarzanie wywo\u0142a\u0144 narz\u0119dzi zamiast polegania na obs\u0142udze ich formatu przez zaplecze. Mo\u017ce to by\u0107 bardziej niezawodne, ale wymaga poprawnego ustawienia prefiksu i sufiksu wywo\u0142ania narz\u0119dzia.",
                         "tool_response_as_string": "Niekt\u00f3re szablony prompt\u00f3w wymagaj\u0105 odpowiedzi narz\u0119dzia w postaci ci\u0105gu znak\u00f3w zserializowanego do JSON zamiast surowego obiektu.",
@@ -377,10 +367,20 @@
                             "name": "Opcje zaawansowane",
                             "description": "Ustawienia opcjonalne, kt\u00f3rych wi\u0119kszo\u015b\u0107 u\u017cytkownik\u00f3w nie potrzebuje. Rozwi\u0144 t\u0119 sekcj\u0119, aby wprowadzi\u0107 zmiany.",
                             "data": {
-                                "extra_body": "Dodatkowe parametry zapytania"
+                                "extra_body": "Dodatkowe parametry zapytania",
+                                "in_context_examples_file": "Nazwa pliku CSV z przyk\u0142adami nauki w kontek\u015bcie",
+                                "num_in_context_examples": "Liczba przyk\u0142ad\u00f3w ICL do wygenerowania",
+                                "batch_size": "(llama.cpp) Rozmiar partii",
+                                "n_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w",
+                                "n_batch_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w partii",
+                                "enable_flash_attention": "W\u0142\u0105cz Flash Attention",
+                                "llama_cpp_cache_size_mb": "(llama.cpp) Rozmiar dyskowego bufora KV (MB)",
+                                "ollama_json_mode": "(ollama) Tryb wyj\u015bcia JSON",
+                                "gbnf_grammar_text": "Gramatyka GBNF"
                             },
                             "data_description": {
-                                "extra_body": "Dodatkowe parametry dodawane do tre\u015bci zapytania. Warto\u015bci rozpoznane jako liczba, true/false, null lub JSON s\u0105 wysy\u0142ane jako JSON; pozosta\u0142e s\u0105 wysy\u0142ane jako tekst."
+                                "extra_body": "Dodatkowe parametry dodawane do tre\u015bci zapytania. Warto\u015bci rozpoznane jako liczba, true/false, null lub JSON s\u0105 wysy\u0142ane jako JSON; pozosta\u0142e s\u0105 wysy\u0142ane jako tekst.",
+                                "gbnf_grammar_text": "Ogranicza odpowiedzi llama.cpp do gramatyki zapisanej w GBNF. Pozostaw pole puste, aby model m\u00f3g\u0142 odpowiada\u0107 swobodnie."
                             }
                         }
                     }
