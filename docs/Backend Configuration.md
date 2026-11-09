@@ -164,11 +164,28 @@ For what the sampling parameters mean, see the documentation of the server hosti
 | API Key     | The API key for authentication (if required by your server)                  |                 |
 | API Path    | The path prefix for API requests (e.g., `/v1` for OpenAI-compatible servers) | v1              |
 
+### Advanced Options
+The connection settings for both Generic OpenAI backends hide an "Advanced Options" section that stays collapsed
+until you expand it. It is also available when editing the backend entry's options later.
+
+| Option Name            | Description                                                                                                                             | Suggested Value |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| Extra HTTP headers     | Additional HTTP headers sent with every request to the API. Add each header as a name and value pair (for example proxies or session ids) |                 |
+
 ## Sampling & Output
 | Option Name                                 | Description                                                                                                   | Suggested Value                                 |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
 | Top P                                       | Sampling parameter; see above note                                                                            | 1.0                                             |
+| Max tokens                                  | Limits the number of tokens that can be produced by each model response                                       | 512                                             |
 | Request Timeout                             | The maximum time in seconds that the integration will wait for a response from the remote server              | 90 (higher if running on low resource hardware) |
+
+### Advanced Options
+The per-model settings for both Generic OpenAI backends also hide an "Advanced Options" section, collapsed until
+you expand it.
+
+| Option Name              | Description                                                                                                                              | Suggested Value |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| Extra request parameters | Additional parameters added to the request body (for example `reasoning_effort`). Values that look like numbers, true/false, null, or JSON are sent as JSON; anything else is sent as text |                 |
 
 # Generic OpenAI Responses
 The Responses backend keeps the conversation on the server it talks to, so Home LLM does not resend it: while a
@@ -184,6 +201,9 @@ connection - the whole exchange is sent again, system prompt included.
 | SSL         | Whether to use HTTPS for the connection                              | false           |
 | API Key     | The API key for authentication (if required by your server)          |                 |
 | API Path    | The path prefix for API requests                                     | v1              |
+
+See the "Advanced Options" sections under the Generic OpenAI API (Chat Completions) backend above for the extra
+HTTP headers and extra request parameters options, which both Generic OpenAI backends share.
 
 ## Sampling & Output
 | Option Name                                 | Description                                                                                                   | Suggested Value                                 |

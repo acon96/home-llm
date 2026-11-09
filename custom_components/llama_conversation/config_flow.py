@@ -13,6 +13,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_LLM_HASS_AP
 from homeassistant.components import conversation, ai_task
 from homeassistant.data_entry_flow import (
     AbortFlow,
+    section,
 )
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -39,11 +40,13 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
     BooleanSelector,
     BooleanSelectorConfig,
+    ObjectSelector,
+    ObjectSelectorConfig,
 )
 from homeassistant.util.network import is_host_valid
 
 from .utils import download_model_from_hf, get_llama_cpp_python_version, install_llama_cpp_python, \
-    get_available_llama_cpp_versions, MissingQuantizationException
+    get_available_llama_cpp_versions, MissingQuantizationException, parse_extra_headers, parse_extra_body
 from .const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -87,6 +90,7 @@ from .const import (
     CONF_API_PATH,
     CONF_EXTRA_HEADERS,
     CONF_EXTRA_BODY,
+    CONF_ADVANCED_SECTION,
     CONF_CONTEXT_LENGTH,
     CONF_GBNF_GRAMMAR,
     CONF_LLAMACPP_BATCH_SIZE,
@@ -121,7 +125,6 @@ from .const import (
     DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
     DEFAULT_OLLAMA_JSON_MODE,
     DEFAULT_API_PATH,
-    DEFAULT_EXTRA_BODY,
     DEFAULT_CONTEXT_LENGTH,
     DEFAULT_GBNF_GRAMMAR,
     DEFAULT_LLAMACPP_BATCH_SIZE,
@@ -153,6 +156,38 @@ def _coerce_int(val, default=0):
     except (TypeError, ValueError):
         return default
 
+def _kv_pairs(values: Any) -> list[dict[str, Any]]:
+    """Convert a stored key/value dict into the object selector's list format."""
+    if isinstance(values, dict):
+        return [{"key": key, "value": value} for key, value in values.items()]
+    return values if isinstance(values, list) else []
+
+def _key_value_selector(translation_key: str) -> ObjectSelector:
+    """An object selector for entering an arbitrary number of key/value entries."""
+    return ObjectSelector(ObjectSelectorConfig(
+        fields={
+            "key": {"selector": TextSelector(TextSelectorConfig())},
+            "value": {"selector": TextSelector(TextSelectorConfig())},
+        },
+        multiple=True,
+        translation_key=translation_key,
+    ))
+
+def flatten_advanced_section(user_input: dict[str, Any] | None) -> dict[str, Any]:
+    """Flatten the collapsed advanced section into the top level of the form input
+    and convert its key/value entries to storage format. Raises ValueError when
+    the entries are malformed."""
+    if not user_input:
+        return {}
+    result = dict(user_input)
+    advanced = result.pop(CONF_ADVANCED_SECTION, None)
+    if isinstance(advanced, dict):
+        if CONF_EXTRA_HEADERS in advanced:
+            result[CONF_EXTRA_HEADERS] = parse_extra_headers(advanced[CONF_EXTRA_HEADERS])
+        if CONF_EXTRA_BODY in advanced:
+            result[CONF_EXTRA_BODY] = parse_extra_body(advanced[CONF_EXTRA_BODY])
+    return result
+
 def pick_backend_schema(backend_type=None, selected_language=None):
     return vol.Schema(
         {
@@ -181,7 +216,7 @@ def pick_backend_schema(backend_type=None, selected_language=None):
         }
     )
 
-def remote_connection_schema(backend_type: str, *, host=None, port=None, ssl=None, selected_path=None, api_key=None, base_url=None):
+def remote_connection_schema(backend_type: str, *, host=None, port=None, ssl=None, selected_path=None, api_key=None, base_url=None, extra_headers=None):
 
     extra = {}
     default_port = DEFAULT_PORT
@@ -205,11 +240,17 @@ def remote_connection_schema(backend_type: str, *, host=None, port=None, ssl=Non
         default_path = ""
     elif backend_type in [BACKEND_TYPE_GENERIC_OPENAI, BACKEND_TYPE_GENERIC_OPENAI_RESPONSES]:
         default_port = ""
+        header_pairs = _kv_pairs(extra_headers)
         extra = {
-            vol.Optional(
-                CONF_EXTRA_HEADERS,
-                default="",
-            ): TextSelector(TextSelectorConfig(multiline=True)),
+            vol.Optional(CONF_ADVANCED_SECTION): section(
+                vol.Schema({
+                    vol.Optional(
+                        CONF_EXTRA_HEADERS,
+                        description={"suggested_value": header_pairs} if header_pairs else {},
+                    ): _key_value_selector("extra_headers"),
+                }),
+                {"collapsed": True},
+            )
         }
 
     return vol.Schema(
@@ -337,6 +378,12 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
         elif self.internal_step == "configure_connection":
             backend = self.client_config[CONF_BACKEND_TYPE]
             if user_input:
+                try:
+                    user_input = flatten_advanced_section(user_input)
+                except ValueError:
+                    errors["base"] = "invalid_extra_headers"
+                    user_input = None
+            if user_input:
                 self.client_config.update(user_input)
 
                 # Anthropic doesn't use hostname - skip hostname validation
@@ -370,6 +417,7 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
                 selected_path=self.client_config.get(CONF_API_PATH),
                 api_key=self.client_config.get(CONF_API_KEY),
                 base_url=self.client_config.get(CONF_BASE_URL),
+                extra_headers=self.client_config.get(CONF_EXTRA_HEADERS),
             )
 
             return self.async_show_form(
@@ -472,16 +520,22 @@ class OptionsFlow(BaseOptionsFlow):
         else:
 
             if user_input is not None:
-                client_config.update(user_input)
+                try:
+                    user_input = flatten_advanced_section(user_input)
+                except ValueError:
+                    errors["base"] = "invalid_extra_headers"
+                    user_input = None
+                if user_input is not None:
+                    client_config.update(user_input)
 
-                # validate remote connections
-                connect_err = await BACKEND_TO_CLS[backend_type].async_validate_connection(self.hass, client_config)
+                    # validate remote connections
+                    connect_err = await BACKEND_TO_CLS[backend_type].async_validate_connection(self.hass, client_config)
 
-                if not connect_err:
-                    return self.async_create_entry(data=client_config)
-                else:
-                    errors["base"] = "failed_to_connect"
-                    description_placeholders["exception"] = str(connect_err)
+                    if not connect_err:
+                        return self.async_create_entry(data=client_config)
+                    else:
+                        errors["base"] = "failed_to_connect"
+                        description_placeholders["exception"] = str(connect_err)
 
             schema = remote_connection_schema(
                 backend_type=backend_type,
@@ -491,6 +545,7 @@ class OptionsFlow(BaseOptionsFlow):
                 selected_path=client_config.get(CONF_API_PATH),
                 api_key=client_config.get(CONF_API_KEY),
                 base_url=client_config.get(CONF_BASE_URL),
+                extra_headers=client_config.get(CONF_EXTRA_HEADERS),
             )
 
             return self.async_show_form(
@@ -784,12 +839,17 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options.get(CONF_MAX_TOKENS)},
                 default=DEFAULT_MAX_TOKENS,
             ): NumberSelector(NumberSelectorConfig(min=1, max=8192, step=1)),
-            vol.Optional(
-                CONF_EXTRA_BODY,
-                description={"suggested_value": options.get(CONF_EXTRA_BODY)},
-                default=DEFAULT_EXTRA_BODY,
-            ): TextSelector(TextSelectorConfig(multiline=True)),
         })
+        body_pairs = _kv_pairs(options.get(CONF_EXTRA_BODY))
+        result[vol.Optional(CONF_ADVANCED_SECTION)] = section(
+            vol.Schema({
+                vol.Optional(
+                    CONF_EXTRA_BODY,
+                    description={"suggested_value": body_pairs} if body_pairs else {},
+                ): _key_value_selector("extra_body"),
+            }),
+            {"collapsed": True},
+        )
     elif backend_type == BACKEND_TYPE_LLAMA_CPP_SERVER:
         result.update({
                 vol.Required(
@@ -1131,14 +1191,18 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
             
             if len(errors) == 0:
                 try:
-                    # validate input
+                    # validate input (the collapsed advanced section arrives nested)
                     schema(user_input)
+                    user_input = flatten_advanced_section(user_input)
                     for key in (CONF_TEMPERATURE, CONF_TOP_K, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P):
                         if key not in user_input:
                             self.model_config.pop(key, None)
                     self.model_config.update(user_input)
                     
                     return await self.async_step_finish()
+                except ValueError as err:
+                    _LOGGER.debug("Invalid extra request settings: %s", err)
+                    errors["base"] = "invalid_extra_body"
                 except Exception:
                     _LOGGER.exception("An unknown error has occurred!")
                     errors["base"] = "unknown"

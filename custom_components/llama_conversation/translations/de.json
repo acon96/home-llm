@@ -4,7 +4,8 @@
             "failed_to_connect": "Verbindung zur entfernten API fehlgeschlagen: {exception}",
             "invalid_hostname": "Der angegebene Hostname ist ung\u00fcltig. Geben Sie nur die Domain oder IP-Adresse an, nicht den vollst\u00e4ndigen API-Endpunkt.",
             "unknown": "Unerwarteter Fehler",
-            "pip_wheel_error": "Pip hat bei der Installation der Wheel-Datei einen Fehler zur\u00fcckgegeben! Weitere Informationen finden Sie in den Home Assistant-Protokollen."
+            "pip_wheel_error": "Pip hat bei der Installation der Wheel-Datei einen Fehler zur\u00fcckgegeben! Weitere Informationen finden Sie in den Home Assistant-Protokollen.",
+            "invalid_extra_headers": "Jeder Header-Eintrag ben\u00f6tigt einen nicht leeren Namen. Header-Werte werden als Text gesendet."
         },
         "progress": {
             "download": "Bitte warten Sie, w\u00e4hrend das Modell von HuggingFace heruntergeladen wird. Dies kann einige Minuten dauern.",
@@ -23,7 +24,19 @@
                     "anthropic_base_url": "Basis-URL der Anthropic-kompatiblen API"
                 },
                 "description": "W\u00e4hlen Sie das Backend aus und/oder geben Sie die Verbindungsdaten f\u00fcr die API an, die das Modell bereitstellt.",
-                "title": "Backend konfigurieren"
+                "title": "Backend konfigurieren",
+                "sections": {
+                    "advanced": {
+                        "name": "Erweiterte Optionen",
+                        "description": "Optionale Einstellungen, die die meisten Benutzer nicht ben\u00f6tigen. Klappen Sie diesen Bereich auf, um \u00c4nderungen vorzunehmen.",
+                        "data": {
+                            "extra_headers": "Zus\u00e4tzliche HTTP-Header"
+                        },
+                        "data_description": {
+                            "extra_headers": "Zus\u00e4tzliche HTTP-Header, die mit jeder Anfrage an die API gesendet werden. F\u00fcgen Sie jeden Header als Name-Wert-Paar hinzu."
+                        }
+                    }
+                }
             }
         },
         "abort": {
@@ -54,7 +67,8 @@
                 "sys_refresh_caching_enabled": "Die Aktualisierung des System-Prompts muss aktiviert sein, damit das Prompt-Caching funktioniert!",
                 "missing_gbnf_file": "Die GBNF-Datei wurde nicht gefunden: {filename}",
                 "missing_icl_file": "Die CSV-Datei mit Beispielen f\u00fcr In-Context Learning wurde nicht gefunden: {filename}",
-                "legacy_tool_calling_with_iterations": "Der Legacy-/Einmal-Modus (Legacy-Werkzeugaufrufe aktivieren) ist mit einer maximalen Anzahl von Werkzeugaufruf-Iterationen gr\u00f6\u00dfer als 0 nicht kompatibel. Setzen Sie die maximale Anzahl von Werkzeugaufruf-Iterationen f\u00fcr Legacy-/Einmal-Modelle auf 0 oder deaktivieren Sie Legacy-Werkzeugaufrufe, um den agentischen Modus zu verwenden."
+                "legacy_tool_calling_with_iterations": "Der Legacy-/Einmal-Modus (Legacy-Werkzeugaufrufe aktivieren) ist mit einer maximalen Anzahl von Werkzeugaufruf-Iterationen gr\u00f6\u00dfer als 0 nicht kompatibel. Setzen Sie die maximale Anzahl von Werkzeugaufruf-Iterationen f\u00fcr Legacy-/Einmal-Modelle auf 0 oder deaktivieren Sie Legacy-Werkzeugaufrufe, um den agentischen Modus zu verwenden.",
+                "invalid_extra_body": "Jeder Parameter-Eintrag ben\u00f6tigt einen nicht leeren Namen. Werte, die wie JSON aussehen (Zahlen, true/false, null, Arrays, Objekte), werden als JSON gesendet."
             },
             "progress": {
                 "download": "Bitte warten Sie, w\u00e4hrend das Modell von HuggingFace heruntergeladen wird. Dies kann einige Minuten dauern."
@@ -123,7 +137,19 @@
                         "context_length": "Das Modell kann f\u00fcr das Gespr\u00e4ch und seine Antwort zusammen h\u00f6chstens diese Anzahl von Tokens verwenden. Home LLM entfernt die \u00e4ltesten Nachrichten, die nicht mehr hineinpassen, damit lange Gespr\u00e4che innerhalb des Limits bleiben, anstatt einen Fehler auszul\u00f6sen."
                     },
                     "description": "Konfigurieren Sie das Modell entsprechend dem ben\u00f6tigten Prompt-Format. Es gibt viele Optionen, und die richtige Auswahl ist f\u00fcr eine optimale Leistung entscheidend. Weitere Informationen zu den Optionen auf dieser Seite finden Sie [hier](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md).\n\n**Einige Vorgaben wurden m\u00f6glicherweise anhand des ausgew\u00e4hlten Modellnamens oder Dateinamens festgelegt.** Wenn Sie eine Datei umbenannt haben oder eine feinabgestimmte Variante eines unterst\u00fctzten Modells verwenden, wurden die Vorgaben m\u00f6glicherweise nicht erkannt.",
-                    "title": "Ausgew\u00e4hltes Modell konfigurieren"
+                    "title": "Ausgew\u00e4hltes Modell konfigurieren",
+                    "sections": {
+                        "advanced": {
+                            "name": "Erweiterte Optionen",
+                            "description": "Optionale Einstellungen, die die meisten Benutzer nicht ben\u00f6tigen. Klappen Sie diesen Bereich auf, um \u00c4nderungen vorzunehmen.",
+                            "data": {
+                                "extra_body": "Zus\u00e4tzliche Anfrageparameter"
+                            },
+                            "data_description": {
+                                "extra_body": "Zus\u00e4tzliche Parameter, die dem Anfragek\u00f6rper hinzugef\u00fcgt werden. Werte, die wie Zahlen, true/false, null oder JSON aussehen, werden als JSON gesendet; alles andere wird als Text gesendet."
+                            }
+                        }
+                    }
                 },
                 "reconfigure": {
                     "data": {
@@ -176,7 +202,19 @@
                         "context_length": "Das Modell kann f\u00fcr das Gespr\u00e4ch und seine Antwort zusammen h\u00f6chstens diese Anzahl von Tokens verwenden. Home LLM entfernt die \u00e4ltesten Nachrichten, die nicht mehr hineinpassen, damit lange Gespr\u00e4che innerhalb des Limits bleiben, anstatt einen Fehler auszul\u00f6sen."
                     },
                     "description": "Konfigurieren Sie das Modell entsprechend dem ben\u00f6tigten Prompt-Format. Es gibt viele Optionen, und die richtige Auswahl ist f\u00fcr eine optimale Leistung entscheidend. Weitere Informationen zu den Optionen auf dieser Seite finden Sie [hier](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md).\n\n**Einige Vorgaben wurden m\u00f6glicherweise anhand des ausgew\u00e4hlten Modellnamens oder Dateinamens festgelegt.** Wenn Sie eine Datei umbenannt haben oder eine feinabgestimmte Variante eines unterst\u00fctzten Modells verwenden, wurden die Vorgaben m\u00f6glicherweise nicht erkannt.",
-                    "title": "Ausgew\u00e4hltes Modell konfigurieren"
+                    "title": "Ausgew\u00e4hltes Modell konfigurieren",
+                    "sections": {
+                        "advanced": {
+                            "name": "Erweiterte Optionen",
+                            "description": "Optionale Einstellungen, die die meisten Benutzer nicht ben\u00f6tigen. Klappen Sie diesen Bereich auf, um \u00c4nderungen vorzunehmen.",
+                            "data": {
+                                "extra_body": "Zus\u00e4tzliche Anfrageparameter"
+                            },
+                            "data_description": {
+                                "extra_body": "Zus\u00e4tzliche Parameter, die dem Anfragek\u00f6rper hinzugef\u00fcgt werden. Werte, die wie Zahlen, true/false, null oder JSON aussehen, werden als JSON gesendet; alles andere wird als Text gesendet."
+                            }
+                        }
+                    }
                 }
             }
         },
@@ -197,7 +235,8 @@
                 "sys_refresh_caching_enabled": "Die Aktualisierung des System-Prompts muss aktiviert sein, damit das Prompt-Caching funktioniert!",
                 "missing_gbnf_file": "Die GBNF-Datei wurde nicht gefunden: {filename}",
                 "missing_icl_file": "Die CSV-Datei mit Beispielen f\u00fcr In-Context Learning wurde nicht gefunden: {filename}",
-                "legacy_tool_calling_with_iterations": "Der Legacy-/Einmal-Modus (Legacy-Werkzeugaufrufe aktivieren) ist mit einer maximalen Anzahl von Werkzeugaufruf-Iterationen gr\u00f6\u00dfer als 0 nicht kompatibel. Setzen Sie die maximale Anzahl von Werkzeugaufruf-Iterationen f\u00fcr Legacy-/Einmal-Modelle auf 0 oder deaktivieren Sie Legacy-Werkzeugaufrufe, um den agentischen Modus zu verwenden."
+                "legacy_tool_calling_with_iterations": "Der Legacy-/Einmal-Modus (Legacy-Werkzeugaufrufe aktivieren) ist mit einer maximalen Anzahl von Werkzeugaufruf-Iterationen gr\u00f6\u00dfer als 0 nicht kompatibel. Setzen Sie die maximale Anzahl von Werkzeugaufruf-Iterationen f\u00fcr Legacy-/Einmal-Modelle auf 0 oder deaktivieren Sie Legacy-Werkzeugaufrufe, um den agentischen Modus zu verwenden.",
+                "invalid_extra_body": "Jeder Parameter-Eintrag ben\u00f6tigt einen nicht leeren Namen. Werte, die wie JSON aussehen (Zahlen, true/false, null, Arrays, Objekte), werden als JSON gesendet."
             },
             "progress": {
                 "download": "Bitte warten Sie, w\u00e4hrend das Modell von HuggingFace heruntergeladen wird. Dies kann einige Minuten dauern."
@@ -267,7 +306,19 @@
                         "context_length": "Das Modell kann f\u00fcr das Gespr\u00e4ch und seine Antwort zusammen h\u00f6chstens diese Anzahl von Tokens verwenden. Home LLM entfernt die \u00e4ltesten Nachrichten, die nicht mehr hineinpassen, damit lange Gespr\u00e4che innerhalb des Limits bleiben, anstatt einen Fehler auszul\u00f6sen."
                     },
                     "description": "Konfigurieren Sie das Modell entsprechend dem ben\u00f6tigten Prompt-Format. Es gibt viele Optionen, und die richtige Auswahl ist f\u00fcr eine optimale Leistung entscheidend. Weitere Informationen zu den Optionen auf dieser Seite finden Sie [hier](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md).\n\n**Einige Vorgaben wurden m\u00f6glicherweise anhand des ausgew\u00e4hlten Modellnamens oder Dateinamens festgelegt.** Wenn Sie eine Datei umbenannt haben oder eine feinabgestimmte Variante eines unterst\u00fctzten Modells verwenden, wurden die Vorgaben m\u00f6glicherweise nicht erkannt.",
-                    "title": "Ausgew\u00e4hltes Modell konfigurieren"
+                    "title": "Ausgew\u00e4hltes Modell konfigurieren",
+                    "sections": {
+                        "advanced": {
+                            "name": "Erweiterte Optionen",
+                            "description": "Optionale Einstellungen, die die meisten Benutzer nicht ben\u00f6tigen. Klappen Sie diesen Bereich auf, um \u00c4nderungen vorzunehmen.",
+                            "data": {
+                                "extra_body": "Zus\u00e4tzliche Anfrageparameter"
+                            },
+                            "data_description": {
+                                "extra_body": "Zus\u00e4tzliche Parameter, die dem Anfragek\u00f6rper hinzugef\u00fcgt werden. Werte, die wie Zahlen, true/false, null oder JSON aussehen, werden als JSON gesendet; alles andere wird als Text gesendet."
+                            }
+                        }
+                    }
                 },
                 "reconfigure": {
                     "data": {
@@ -320,7 +371,19 @@
                         "context_length": "Das Modell kann f\u00fcr das Gespr\u00e4ch und seine Antwort zusammen h\u00f6chstens diese Anzahl von Tokens verwenden. Home LLM entfernt die \u00e4ltesten Nachrichten, die nicht mehr hineinpassen, damit lange Gespr\u00e4che innerhalb des Limits bleiben, anstatt einen Fehler auszul\u00f6sen."
                     },
                     "description": "Konfigurieren Sie das Modell entsprechend dem ben\u00f6tigten Prompt-Format. Es gibt viele Optionen, und die richtige Auswahl ist f\u00fcr eine optimale Leistung entscheidend. Weitere Informationen zu den Optionen auf dieser Seite finden Sie [hier](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md).\n\n**Einige Vorgaben wurden m\u00f6glicherweise anhand des ausgew\u00e4hlten Modellnamens oder Dateinamens festgelegt.** Wenn Sie eine Datei umbenannt haben oder eine feinabgestimmte Variante eines unterst\u00fctzten Modells verwenden, wurden die Vorgaben m\u00f6glicherweise nicht erkannt.",
-                    "title": "Ausgew\u00e4hltes Modell konfigurieren"
+                    "title": "Ausgew\u00e4hltes Modell konfigurieren",
+                    "sections": {
+                        "advanced": {
+                            "name": "Erweiterte Optionen",
+                            "description": "Optionale Einstellungen, die die meisten Benutzer nicht ben\u00f6tigen. Klappen Sie diesen Bereich auf, um \u00c4nderungen vorzunehmen.",
+                            "data": {
+                                "extra_body": "Zus\u00e4tzliche Anfrageparameter"
+                            },
+                            "data_description": {
+                                "extra_body": "Zus\u00e4tzliche Parameter, die dem Anfragek\u00f6rper hinzugef\u00fcgt werden. Werte, die wie Zahlen, true/false, null oder JSON aussehen, werden als JSON gesendet; alles andere wird als Text gesendet."
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -337,7 +400,19 @@
                     "openai_path": "API-Pfad"
                 },
                 "description": "Geben Sie die Verbindungsdaten f\u00fcr die API an, die das Modell bereitstellt.",
-                "title": "Verbindung konfigurieren"
+                "title": "Verbindung konfigurieren",
+                "sections": {
+                    "advanced": {
+                        "name": "Erweiterte Optionen",
+                        "description": "Optionale Einstellungen, die die meisten Benutzer nicht ben\u00f6tigen. Klappen Sie diesen Bereich auf, um \u00c4nderungen vorzunehmen.",
+                        "data": {
+                            "extra_headers": "Zus\u00e4tzliche HTTP-Header"
+                        },
+                        "data_description": {
+                            "extra_headers": "Zus\u00e4tzliche HTTP-Header, die mit jeder Anfrage an die API gesendet werden. F\u00fcgen Sie jeden Header als Name-Wert-Paar hinzu."
+                        }
+                    }
+                }
             },
             "reinstall": {
                 "data": {
@@ -352,7 +427,8 @@
             "failed_to_connect": "Verbindung zur entfernten API fehlgeschlagen: {exception}",
             "invalid_hostname": "Der angegebene Hostname ist ung\u00fcltig. Geben Sie nur die Domain oder IP-Adresse an, nicht den vollst\u00e4ndigen API-Endpunkt.",
             "unknown": "Unerwarteter Fehler",
-            "pip_wheel_error": "Pip hat bei der Installation der Wheel-Datei einen Fehler zur\u00fcckgegeben! Weitere Informationen finden Sie in den Home Assistant-Protokollen."
+            "pip_wheel_error": "Pip hat bei der Installation der Wheel-Datei einen Fehler zur\u00fcckgegeben! Weitere Informationen finden Sie in den Home Assistant-Protokollen.",
+            "invalid_extra_headers": "Jeder Header-Eintrag ben\u00f6tigt einen nicht leeren Namen. Header-Werte werden als Text gesendet."
         },
         "progress": {
             "install_local_wheels": "Bitte warten Sie, w\u00e4hrend Llama.cpp installiert wird..."
@@ -376,6 +452,26 @@
                 "fr": "Franz\u00f6sisch",
                 "es": "Spanisch",
                 "pl": "Polnisch"
+            }
+        },
+        "extra_headers": {
+            "fields": {
+                "key": {
+                    "name": "Header-Name"
+                },
+                "value": {
+                    "name": "Wert"
+                }
+            }
+        },
+        "extra_body": {
+            "fields": {
+                "key": {
+                    "name": "Parametername"
+                },
+                "value": {
+                    "name": "Wert"
+                }
             }
         }
     }

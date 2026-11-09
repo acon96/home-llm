@@ -10,9 +10,15 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from homeassistant.const import CONF_HOST, CONF_LLM_HASS_API, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
+from homeassistant import data_entry_flow
 from homeassistant.data_entry_flow import FlowResultType
 
-from custom_components.llama_conversation.config_flow import ConfigFlow, local_llama_config_option_schema
+from custom_components.llama_conversation.config_flow import (
+    ConfigFlow,
+    local_llama_config_option_schema,
+    remote_connection_schema,
+    flatten_advanced_section,
+)
 from custom_components.llama_conversation.const import (
     BACKEND_TYPE_LLAMA_CPP,
     BACKEND_TYPE_GENERIC_OPENAI,
@@ -26,6 +32,8 @@ from custom_components.llama_conversation.const import (
     CONF_ENABLE_STREAMING,
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
     CONF_EXTRA_BODY,
+    CONF_EXTRA_HEADERS,
+    CONF_ADVANCED_SECTION,
     CONF_GBNF_GRAMMAR,
     CONF_LLAMACPP_BATCH_SIZE,
     CONF_LLAMACPP_BATCH_THREAD_COUNT,
@@ -49,7 +57,6 @@ from custom_components.llama_conversation.const import (
     DEFAULT_CONTEXT_LENGTH,
     DEFAULT_GBNF_GRAMMAR,
     DEFAULT_ENABLE_STREAMING,
-    DEFAULT_EXTRA_BODY,
     DEFAULT_MAX_TOKENS,
     DEFAULT_LLAMACPP_BATCH_SIZE,
     DEFAULT_LLAMACPP_BATCH_THREAD_COUNT,
@@ -83,6 +90,14 @@ def _schema(hass: HomeAssistant, backend: str, options: dict | None = None):
         backend_type=backend,
         subentry_type="conversation",
     )
+
+
+def _find_marker(schema_dict, key_name: str):
+    """Return the schema marker for a key name from a compiled voluptuous schema."""
+    for key in schema_dict:
+        if getattr(key, "schema", None) == key_name:
+            return key
+    raise AssertionError(f"Key {key_name} not found in schema")
 
 
 def _get_default(schema: dict, key_name: str):
@@ -194,15 +209,22 @@ def test_schema_generic_openai_options_preserved(hass: HomeAssistant):
 
 
 def test_schema_generic_openai_backends_include_max_tokens_and_extra_body(hass: HomeAssistant):
-    """Both Generic OpenAI backends expose max_tokens and extra request parameters."""
+    """Both Generic OpenAI backends expose max_tokens and an extra request parameters
+    section that is collapsed by default."""
     for backend in (BACKEND_TYPE_GENERIC_OPENAI, BACKEND_TYPE_GENERIC_OPENAI_RESPONSES):
         schema = _schema(hass, backend)
         keys = {getattr(k, "schema", None) for k in schema}
 
         assert CONF_MAX_TOKENS in keys, backend
-        assert CONF_EXTRA_BODY in keys, backend
+        assert CONF_ADVANCED_SECTION in keys, backend
         assert _get_default(schema, CONF_MAX_TOKENS) == DEFAULT_MAX_TOKENS
-        assert _get_default(schema, CONF_EXTRA_BODY) == DEFAULT_EXTRA_BODY
+
+        section_marker = _find_marker(schema, CONF_ADVANCED_SECTION)
+        section_obj = schema[section_marker]
+        assert isinstance(section_obj, data_entry_flow.section)
+        assert section_obj.options["collapsed"] is True
+        section_keys = {getattr(k, "schema", None) for k in section_obj.schema.schema}
+        assert CONF_EXTRA_BODY in section_keys, backend
 
 
 def test_schema_llama_cpp_server_includes_gbnf(hass: HomeAssistant):
@@ -388,3 +410,124 @@ async def test_async_step_finish_rejects_duplicate_llama_cpp_entry(hass: HomeAss
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "duplicate_client"
+
+
+def _fake_backend(monkeypatch, backend: str, validate_error=None):
+    """Register a fake backend class for flow tests."""
+
+    async def fake_validate_connection(_hass, _config):
+        return validate_error
+
+    monkeypatch.setattr(
+        "custom_components.llama_conversation.config_flow.BACKEND_TO_CLS",
+        {
+            backend: type(
+                "Backend",
+                (),
+                {
+                    "async_validate_connection": staticmethod(fake_validate_connection),
+                    "get_name": staticmethod(lambda _config: "Generic OpenAI"),
+                },
+            )
+        },
+    )
+
+
+@pytest.mark.asyncio
+async def test_connection_step_flattens_advanced_header_pairs(monkeypatch, hass: HomeAssistant):
+    """Header key/value pairs entered in the collapsed section are stored as a dict."""
+    flow = _build_flow(hass)
+    flow.internal_step = "configure_connection"
+    flow.client_config = {
+        CONF_BACKEND_TYPE: BACKEND_TYPE_GENERIC_OPENAI,
+        CONF_SELECTED_LANGUAGE: "en",
+    }
+    _fake_backend(monkeypatch, BACKEND_TYPE_GENERIC_OPENAI)
+
+    result = await flow.async_step_user(
+        {
+            CONF_HOST: "localhost",
+            CONF_PORT: "8080",
+            CONF_SSL: False,
+            CONF_ADVANCED_SECTION: {
+                CONF_EXTRA_HEADERS: [
+                    {"key": "x-session", "value": "abc"},
+                    {"key": "x-org", "value": "123"},
+                ]
+            },
+        }
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["options"][CONF_EXTRA_HEADERS] == {"x-session": "abc", "x-org": "123"}
+    assert CONF_ADVANCED_SECTION not in result["options"]
+
+
+@pytest.mark.asyncio
+async def test_connection_step_rejects_empty_header_keys(monkeypatch, hass: HomeAssistant):
+    """A key/value entry without a usable key surfaces as invalid_extra_headers."""
+    flow = _build_flow(hass)
+    flow.internal_step = "configure_connection"
+    flow.client_config = {
+        CONF_BACKEND_TYPE: BACKEND_TYPE_GENERIC_OPENAI,
+        CONF_SELECTED_LANGUAGE: "en",
+    }
+    _fake_backend(monkeypatch, BACKEND_TYPE_GENERIC_OPENAI)
+
+    result = await flow.async_step_user(
+        {
+            CONF_HOST: "localhost",
+            CONF_PORT: "8080",
+            CONF_SSL: False,
+            CONF_ADVANCED_SECTION: {
+                CONF_EXTRA_HEADERS: [{"key": "", "value": "abc"}]
+            },
+        }
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"]["base"] == "invalid_extra_headers"
+
+
+def test_remote_connection_schema_has_collapsed_advanced_section():
+    """Generic OpenAI connection forms hide extra headers in a collapsed section."""
+    compiled = remote_connection_schema(BACKEND_TYPE_GENERIC_OPENAI).schema
+    marker = _find_marker(compiled, CONF_ADVANCED_SECTION)
+    section_obj = compiled[marker]
+    assert isinstance(section_obj, data_entry_flow.section)
+    assert section_obj.options["collapsed"] is True
+    section_keys = {getattr(k, "schema", None) for k in section_obj.schema.schema}
+    assert CONF_EXTRA_HEADERS in section_keys
+
+    # Backends without header support have no advanced section
+    other_schema = remote_connection_schema(BACKEND_TYPE_OLLAMA)
+    assert CONF_ADVANCED_SECTION not in {getattr(k, "schema", None) for k in other_schema.schema}
+
+
+def test_flatten_advanced_section_coerces_body_values():
+    """Extra body values entered as JSON strings are coerced to real JSON values."""
+
+    flat = flatten_advanced_section(
+        {
+            CONF_PROMPT: "Hello",
+            CONF_ADVANCED_SECTION: {
+                CONF_EXTRA_BODY: [
+                    {"key": "reasoning_effort", "value": "high"},
+                    {"key": "max_retries", "value": "3"},
+                    {"key": "verbose", "value": "true"},
+                    {"key": "stop", "value": '["END", "STOP"]'},
+                    {"key": "note", "value": "keep me"},
+                ]
+            },
+        }
+    )
+
+    assert flat[CONF_PROMPT] == "Hello"
+    assert flat[CONF_EXTRA_BODY] == {
+        "reasoning_effort": "high",
+        "max_retries": 3,
+        "verbose": True,
+        "stop": ["END", "STOP"],
+        "note": "keep me",
+    }
+    assert CONF_ADVANCED_SECTION not in flat

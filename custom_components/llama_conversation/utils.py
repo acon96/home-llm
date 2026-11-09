@@ -603,27 +603,67 @@ def install_llama_cpp_python(
 def format_url(*, hostname: str, port: str, ssl: bool, path: str):
     return f"{'https' if ssl else 'http'}://{hostname}{ ':' + port if port else ''}{path}"
 
-def parse_extra_headers(raw: str) -> Dict[str, str]:
+def _pairs_to_dict(items: Any) -> Dict[str, Any]:
+    """Convert a list of {"key": ..., "value": ...} objects (the format of the object
+    selector UI) into a dictionary. Later entries win on duplicate keys."""
+    if not isinstance(items, list):
+        raise ValueError("Expected a list of key/value entries.")
+    result: Dict[str, Any] = {}
+    for item in items:
+        if not isinstance(item, dict) or "key" not in item:
+            raise ValueError("Each entry must be an object with 'key' and 'value' fields.")
+        key = item["key"]
+        if not isinstance(key, str) or not key.strip():
+            raise ValueError("Each entry must have a non-empty 'key'.")
+        result[key.strip()] = item.get("value", "")
+    return result
+
+def _coerce_json_value(value: Any) -> Any:
+    """Coerce a string entered in the key/value UI into a JSON value when it looks
+    like one, so numbers, booleans, null, arrays and objects survive. Anything
+    that does not parse as JSON is kept as the plain string the user typed."""
+    if not isinstance(value, str):
+        return value
+    stripped = value.strip()
+    if not stripped:
+        return value
+    looks_like_json = stripped[0] in "[{\"" or stripped in ("true", "false", "null") or re.match(r"^-?\d", stripped)
+    if not looks_like_json:
+        return value
+    try:
+        return json.loads(stripped)
+    except ValueError:
+        return value
+
+def parse_extra_headers(raw: Any) -> Dict[str, str]:
     """Parse user-supplied extra HTTP headers into a dictionary.
 
-    Accepts either a JSON object ({"X-Header": "value"}) or one header per line
-    in "Key: Value" or "Key=Value" form. Raises ValueError with a short
-    explanation when the input cannot be parsed.
+    Accepts a dictionary, a list of {"key", "value"} entries (the object selector
+    UI format), a JSON object string, or one header per line in "Key: Value" or
+    "Key=Value" form. Raises ValueError with a short explanation when the input
+    cannot be parsed.
     """
-    raw = (raw or "").strip()
-    if not raw:
+    if raw is None or raw == "" or raw == []:
         return {}
 
-    try:
-        parsed = json.loads(raw)
-    except (ValueError, TypeError):
-        parsed = None
+    if isinstance(raw, dict):
+        parsed = raw
+    elif isinstance(raw, list):
+        parsed = _pairs_to_dict(raw)
+    else:
+        try:
+            parsed = json.loads(str(raw))
+        except (ValueError, TypeError):
+            parsed = None
+        if not isinstance(parsed, dict):
+            return _parse_header_lines(str(raw))
 
-    if isinstance(parsed, dict):
-        if not all(isinstance(k, str) and isinstance(v, str) for k, v in parsed.items()):
-            raise ValueError("Extra headers JSON must map header names to string values.")
-        return parsed
+    if not all(isinstance(k, str) and isinstance(v, str) for k, v in parsed.items()):
+        raise ValueError("Extra headers must map header names to string values.")
+    return dict(parsed)
 
+def _parse_header_lines(raw: str) -> Dict[str, str]:
+    """Parse one header per line in "Key: Value" or "Key=Value" form."""
     headers: Dict[str, str] = {}
     for line in raw.splitlines():
         line = line.strip()
@@ -639,18 +679,29 @@ def parse_extra_headers(raw: str) -> Dict[str, str]:
         headers[key] = value
     return headers
 
-def parse_extra_body(raw: str) -> Dict[str, Any]:
-    """Parse user-supplied extra request body parameters from a JSON object."""
-    raw = (raw or "").strip()
-    if not raw:
+def parse_extra_body(raw: Any) -> Dict[str, Any]:
+    """Parse user-supplied extra request body parameters into a dictionary.
+
+    Accepts a dictionary, a list of {"key", "value"} entries (the object selector
+    UI format, with values coerced from JSON strings), or a JSON object string.
+    Raises ValueError with a short explanation when the input cannot be parsed.
+    """
+    if raw is None or raw == "" or raw == []:
         return {}
-    try:
-        parsed = json.loads(raw)
-    except (ValueError, TypeError) as err:
-        raise ValueError(f"Extra request parameters must be a JSON object: {err}") from err
+
+    if isinstance(raw, dict):
+        parsed = raw
+    elif isinstance(raw, list):
+        parsed = _pairs_to_dict(raw)
+    else:
+        try:
+            parsed = json.loads(str(raw))
+        except (ValueError, TypeError) as err:
+            raise ValueError(f"Extra request parameters must be a JSON object: {err}") from err
+
     if not isinstance(parsed, dict):
         raise ValueError("Extra request parameters must be a JSON object.")
-    return parsed
+    return {k: _coerce_json_value(v) for k, v in parsed.items()}
 
 
 def get_oai_formatted_tools(llm_api: llm.APIInstance, domains: list[str]) -> List[ChatCompletionTool]:    

@@ -4,7 +4,8 @@
             "failed_to_connect": "Impossible de se connecter \u00e0 l'API distante : {exception}",
             "invalid_hostname": "Le nom d'h\u00f4te fourni est invalide. Saisissez uniquement le domaine ou l'adresse IP, et non l'URL compl\u00e8te du point de terminaison de l'API.",
             "unknown": "Erreur inattendue",
-            "pip_wheel_error": "Pip a renvoy\u00e9 une erreur lors de l'installation du fichier wheel ! Consultez les journaux de Home Assistant pour plus de d\u00e9tails."
+            "pip_wheel_error": "Pip a renvoy\u00e9 une erreur lors de l'installation du fichier wheel ! Consultez les journaux de Home Assistant pour plus de d\u00e9tails.",
+            "invalid_extra_headers": "Chaque entr\u00e9e d'en-t\u00eate doit avoir un nom non vide. Les valeurs d'en-t\u00eate sont envoy\u00e9es sous forme de texte."
         },
         "progress": {
             "download": "Veuillez patienter pendant le t\u00e9l\u00e9chargement du mod\u00e8le depuis HuggingFace. Cela peut prendre quelques minutes.",
@@ -20,11 +21,22 @@
                     "ssl": "Utiliser HTTPS",
                     "openai_api_key": "Cl\u00e9 d'API",
                     "openai_path": "Chemin de l'API",
-                    "anthropic_base_url": "URL de base de l'API compatible avec Anthropic",
-                    "extra_headers": "En-t\u00eates HTTP suppl\u00e9mentaires"
+                    "anthropic_base_url": "URL de base de l'API compatible avec Anthropic"
                 },
                 "description": "S\u00e9lectionnez le backend et/ou fournissez les param\u00e8tres de connexion \u00e0 l'API qui h\u00e9berge le mod\u00e8le.",
-                "title": "Configurer le backend"
+                "title": "Configurer le backend",
+                "sections": {
+                    "advanced": {
+                        "name": "Options avanc\u00e9es",
+                        "description": "Param\u00e8tres optionnels dont la plupart des utilisateurs n'ont pas besoin. D\u00e9roulez cette section pour les modifier.",
+                        "data": {
+                            "extra_headers": "En-t\u00eates HTTP suppl\u00e9mentaires"
+                        },
+                        "data_description": {
+                            "extra_headers": "En-t\u00eates HTTP suppl\u00e9mentaires envoy\u00e9s avec chaque requ\u00eate \u00e0 l'API. Saisissez chaque en-t\u00eate sous forme de paire nom/valeur."
+                        }
+                    }
+                }
             }
         },
         "abort": {
@@ -55,7 +67,8 @@
                 "sys_refresh_caching_enabled": "L'actualisation du prompt syst\u00e8me doit \u00eatre activ\u00e9e pour que la mise en cache des prompts fonctionne !",
                 "missing_gbnf_file": "Le fichier GBNF est introuvable : {filename}",
                 "missing_icl_file": "Le fichier CSV d'exemples d'apprentissage en contexte est introuvable : {filename}",
-                "legacy_tool_calling_with_iterations": "Le mode ancien/\u00e0 tentative unique (Activer les appels d'outils h\u00e9rit\u00e9s) est incompatible avec un nombre maximal d'it\u00e9rations d'appels d'outils sup\u00e9rieur \u00e0 0. R\u00e9glez ce nombre sur 0 pour les mod\u00e8les anciens/\u00e0 tentative unique, ou d\u00e9sactivez les appels d'outils h\u00e9rit\u00e9s pour utiliser le mode agentique."
+                "legacy_tool_calling_with_iterations": "Le mode ancien/\u00e0 tentative unique (Activer les appels d'outils h\u00e9rit\u00e9s) est incompatible avec un nombre maximal d'it\u00e9rations d'appels d'outils sup\u00e9rieur \u00e0 0. R\u00e9glez ce nombre sur 0 pour les mod\u00e8les anciens/\u00e0 tentative unique, ou d\u00e9sactivez les appels d'outils h\u00e9rit\u00e9s pour utiliser le mode agentique.",
+                "invalid_extra_body": "Chaque entr\u00e9e de param\u00e8tre doit avoir un nom non vide. Les valeurs qui ressemblent \u00e0 du JSON (nombres, true/false, null, tableaux, objets) sont envoy\u00e9es en JSON."
             },
             "progress": {
                 "download": "Veuillez patienter pendant le t\u00e9l\u00e9chargement du mod\u00e8le depuis HuggingFace. Cela peut prendre quelques minutes."
@@ -109,8 +122,7 @@
                         "enable_legacy_tool_calling": "Activer les appels d'outils h\u00e9rit\u00e9s",
                         "tool_response_as_string": "R\u00e9ponse de l'outil sous forme de cha\u00eene",
                         "max_tool_call_iterations": "Nombre maximal de tentatives d'appels d'outils",
-                        "max_tokens": "Tokens maximum",
-                        "extra_body": "Param\u00e8tres de requ\u00eate suppl\u00e9mentaires (JSON)"
+                        "max_tokens": "Tokens maximum"
                     },
                     "data_description": {
                         "llm_hass_api": "S\u00e9lectionnez 'Assist' pour permettre au mod\u00e8le de contr\u00f4ler les appareils. Si vous utilisez un mod\u00e8le Home-LLM (v1-3), s\u00e9lectionnez 'Home Assistant Services'.",
@@ -126,7 +138,19 @@
                         "context_length": "Le mod\u00e8le ne peut pas utiliser plus de ce nombre de tokens pour la conversation et sa r\u00e9ponse r\u00e9unies. Home LLM supprime les messages les plus anciens qui ne tiennent plus dans le contexte, afin de maintenir les longues conversations dans la limite au lieu de provoquer une erreur."
                     },
                     "description": "Configurez le mod\u00e8le selon le format de prompts dont il a besoin. De nombreuses options sont disponibles et choisir celles adapt\u00e9es \u00e0 votre mod\u00e8le est essentiel pour obtenir des performances optimales. Consultez [cette page](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) pour en savoir plus sur les options de cette page.\n\n**Certains param\u00e8tres par d\u00e9faut ont peut-\u00eatre \u00e9t\u00e9 choisis selon le nom du mod\u00e8le ou du fichier s\u00e9lectionn\u00e9.** Si vous avez renomm\u00e9 un fichier ou utilisez une version ajust\u00e9e d'un mod\u00e8le pris en charge, les param\u00e8tres par d\u00e9faut n'ont peut-\u00eatre pas \u00e9t\u00e9 d\u00e9tect\u00e9s.",
-                    "title": "Configurer le mod\u00e8le s\u00e9lectionn\u00e9"
+                    "title": "Configurer le mod\u00e8le s\u00e9lectionn\u00e9",
+                    "sections": {
+                        "advanced": {
+                            "name": "Options avanc\u00e9es",
+                            "description": "Param\u00e8tres optionnels dont la plupart des utilisateurs n'ont pas besoin. D\u00e9roulez cette section pour les modifier.",
+                            "data": {
+                                "extra_body": "Param\u00e8tres de requ\u00eate suppl\u00e9mentaires"
+                            },
+                            "data_description": {
+                                "extra_body": "Param\u00e8tres suppl\u00e9mentaires ajout\u00e9s au corps de la requ\u00eate. Les valeurs reconnues comme nombre, true/false, null ou JSON sont envoy\u00e9es en JSON ; le reste est envoy\u00e9 comme texte."
+                            }
+                        }
+                    }
                 },
                 "reconfigure": {
                     "data": {
@@ -164,8 +188,7 @@
                         "enable_legacy_tool_calling": "Activer les appels d'outils h\u00e9rit\u00e9s",
                         "tool_response_as_string": "R\u00e9ponse de l'outil sous forme de cha\u00eene",
                         "max_tool_call_iterations": "Nombre maximal de tentatives d'appels d'outils",
-                        "max_tokens": "Tokens maximum",
-                        "extra_body": "Param\u00e8tres de requ\u00eate suppl\u00e9mentaires (JSON)"
+                        "max_tokens": "Tokens maximum"
                     },
                     "data_description": {
                         "llm_hass_api": "S\u00e9lectionnez 'Assist' pour permettre au mod\u00e8le de contr\u00f4ler les appareils. Si vous utilisez un mod\u00e8le Home-LLM (v1-3), s\u00e9lectionnez 'Home Assistant Services'.",
@@ -181,7 +204,19 @@
                         "context_length": "Le mod\u00e8le ne peut pas utiliser plus de ce nombre de tokens pour la conversation et sa r\u00e9ponse r\u00e9unies. Home LLM supprime les messages les plus anciens qui ne tiennent plus dans le contexte, afin de maintenir les longues conversations dans la limite au lieu de provoquer une erreur."
                     },
                     "description": "Configurez le mod\u00e8le selon le format de prompts dont il a besoin. De nombreuses options sont disponibles et choisir celles adapt\u00e9es \u00e0 votre mod\u00e8le est essentiel pour obtenir des performances optimales. Consultez [cette page](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) pour en savoir plus sur les options de cette page.\n\n**Certains param\u00e8tres par d\u00e9faut ont peut-\u00eatre \u00e9t\u00e9 choisis selon le nom du mod\u00e8le ou du fichier s\u00e9lectionn\u00e9.** Si vous avez renomm\u00e9 un fichier ou utilisez une version ajust\u00e9e d'un mod\u00e8le pris en charge, les param\u00e8tres par d\u00e9faut n'ont peut-\u00eatre pas \u00e9t\u00e9 d\u00e9tect\u00e9s.",
-                    "title": "Configurer le mod\u00e8le s\u00e9lectionn\u00e9"
+                    "title": "Configurer le mod\u00e8le s\u00e9lectionn\u00e9",
+                    "sections": {
+                        "advanced": {
+                            "name": "Options avanc\u00e9es",
+                            "description": "Param\u00e8tres optionnels dont la plupart des utilisateurs n'ont pas besoin. D\u00e9roulez cette section pour les modifier.",
+                            "data": {
+                                "extra_body": "Param\u00e8tres de requ\u00eate suppl\u00e9mentaires"
+                            },
+                            "data_description": {
+                                "extra_body": "Param\u00e8tres suppl\u00e9mentaires ajout\u00e9s au corps de la requ\u00eate. Les valeurs reconnues comme nombre, true/false, null ou JSON sont envoy\u00e9es en JSON ; le reste est envoy\u00e9 comme texte."
+                            }
+                        }
+                    }
                 }
             }
         },
@@ -202,7 +237,8 @@
                 "sys_refresh_caching_enabled": "L'actualisation du prompt syst\u00e8me doit \u00eatre activ\u00e9e pour que la mise en cache des prompts fonctionne !",
                 "missing_gbnf_file": "Le fichier GBNF est introuvable : {filename}",
                 "missing_icl_file": "Le fichier CSV d'exemples d'apprentissage en contexte est introuvable : {filename}",
-                "legacy_tool_calling_with_iterations": "Le mode ancien/\u00e0 tentative unique (Activer les appels d'outils h\u00e9rit\u00e9s) est incompatible avec un nombre maximal d'it\u00e9rations d'appels d'outils sup\u00e9rieur \u00e0 0. R\u00e9glez ce nombre sur 0 pour les mod\u00e8les anciens/\u00e0 tentative unique, ou d\u00e9sactivez les appels d'outils h\u00e9rit\u00e9s pour utiliser le mode agentique."
+                "legacy_tool_calling_with_iterations": "Le mode ancien/\u00e0 tentative unique (Activer les appels d'outils h\u00e9rit\u00e9s) est incompatible avec un nombre maximal d'it\u00e9rations d'appels d'outils sup\u00e9rieur \u00e0 0. R\u00e9glez ce nombre sur 0 pour les mod\u00e8les anciens/\u00e0 tentative unique, ou d\u00e9sactivez les appels d'outils h\u00e9rit\u00e9s pour utiliser le mode agentique.",
+                "invalid_extra_body": "Chaque entr\u00e9e de param\u00e8tre doit avoir un nom non vide. Les valeurs qui ressemblent \u00e0 du JSON (nombres, true/false, null, tableaux, objets) sont envoy\u00e9es en JSON."
             },
             "progress": {
                 "download": "Veuillez patienter pendant le t\u00e9l\u00e9chargement du mod\u00e8le depuis HuggingFace. Cela peut prendre quelques minutes."
@@ -257,8 +293,7 @@
                         "max_tool_call_iterations": "Nombre maximal de tentatives d'appels d'outils",
                         "ai_task_extraction_method": "M\u00e9thode d'extraction des donn\u00e9es structur\u00e9es",
                         "ai_task_retries": "Nombre de nouvelles tentatives d'extraction des donn\u00e9es structur\u00e9es",
-                        "max_tokens": "Tokens maximum",
-                        "extra_body": "Param\u00e8tres de requ\u00eate suppl\u00e9mentaires (JSON)"
+                        "max_tokens": "Tokens maximum"
                     },
                     "data_description": {
                         "prompt": "Consultez [cette page](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) pour en savoir plus sur les prompts du mod\u00e8le.",
@@ -274,7 +309,19 @@
                         "context_length": "Le mod\u00e8le ne peut pas utiliser plus de ce nombre de tokens pour la conversation et sa r\u00e9ponse r\u00e9unies. Home LLM supprime les messages les plus anciens qui ne tiennent plus dans le contexte, afin de maintenir les longues conversations dans la limite au lieu de provoquer une erreur."
                     },
                     "description": "Configurez le mod\u00e8le selon le format de prompts dont il a besoin. De nombreuses options sont disponibles et choisir celles adapt\u00e9es \u00e0 votre mod\u00e8le est essentiel pour obtenir des performances optimales. Consultez [cette page](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) pour en savoir plus sur les options de cette page.\n\n**Certains param\u00e8tres par d\u00e9faut ont peut-\u00eatre \u00e9t\u00e9 choisis selon le nom du mod\u00e8le ou du fichier s\u00e9lectionn\u00e9.** Si vous avez renomm\u00e9 un fichier ou utilisez une version ajust\u00e9e d'un mod\u00e8le pris en charge, les param\u00e8tres par d\u00e9faut n'ont peut-\u00eatre pas \u00e9t\u00e9 d\u00e9tect\u00e9s.",
-                    "title": "Configurer le mod\u00e8le s\u00e9lectionn\u00e9"
+                    "title": "Configurer le mod\u00e8le s\u00e9lectionn\u00e9",
+                    "sections": {
+                        "advanced": {
+                            "name": "Options avanc\u00e9es",
+                            "description": "Param\u00e8tres optionnels dont la plupart des utilisateurs n'ont pas besoin. D\u00e9roulez cette section pour les modifier.",
+                            "data": {
+                                "extra_body": "Param\u00e8tres de requ\u00eate suppl\u00e9mentaires"
+                            },
+                            "data_description": {
+                                "extra_body": "Param\u00e8tres suppl\u00e9mentaires ajout\u00e9s au corps de la requ\u00eate. Les valeurs reconnues comme nombre, true/false, null ou JSON sont envoy\u00e9es en JSON ; le reste est envoy\u00e9 comme texte."
+                            }
+                        }
+                    }
                 },
                 "reconfigure": {
                     "data": {
@@ -312,8 +359,7 @@
                         "enable_legacy_tool_calling": "Activer les appels d'outils h\u00e9rit\u00e9s",
                         "tool_response_as_string": "R\u00e9ponse de l'outil sous forme de cha\u00eene",
                         "max_tool_call_iterations": "Nombre maximal de tentatives d'appels d'outils",
-                        "max_tokens": "Tokens maximum",
-                        "extra_body": "Param\u00e8tres de requ\u00eate suppl\u00e9mentaires (JSON)"
+                        "max_tokens": "Tokens maximum"
                     },
                     "data_description": {
                         "llm_hass_api": "S\u00e9lectionnez 'Assist' pour permettre au mod\u00e8le de contr\u00f4ler les appareils. Si vous utilisez un mod\u00e8le Home-LLM v1, v2 ou v3, s\u00e9lectionnez 'Home-LLM (v1-3)'.",
@@ -329,7 +375,19 @@
                         "context_length": "Le mod\u00e8le ne peut pas utiliser plus de ce nombre de tokens pour la conversation et sa r\u00e9ponse r\u00e9unies. Home LLM supprime les messages les plus anciens qui ne tiennent plus dans le contexte, afin de maintenir les longues conversations dans la limite au lieu de provoquer une erreur."
                     },
                     "description": "Configurez le mod\u00e8le selon le format de prompts dont il a besoin. De nombreuses options sont disponibles et choisir celles adapt\u00e9es \u00e0 votre mod\u00e8le est essentiel pour obtenir des performances optimales. Consultez [cette page](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md) pour en savoir plus sur les options de cette page.\n\n**Certains param\u00e8tres par d\u00e9faut ont peut-\u00eatre \u00e9t\u00e9 choisis selon le nom du mod\u00e8le ou du fichier s\u00e9lectionn\u00e9.** Si vous avez renomm\u00e9 un fichier ou utilisez une version ajust\u00e9e d'un mod\u00e8le pris en charge, les param\u00e8tres par d\u00e9faut n'ont peut-\u00eatre pas \u00e9t\u00e9 d\u00e9tect\u00e9s.",
-                    "title": "Configurer le mod\u00e8le s\u00e9lectionn\u00e9"
+                    "title": "Configurer le mod\u00e8le s\u00e9lectionn\u00e9",
+                    "sections": {
+                        "advanced": {
+                            "name": "Options avanc\u00e9es",
+                            "description": "Param\u00e8tres optionnels dont la plupart des utilisateurs n'ont pas besoin. D\u00e9roulez cette section pour les modifier.",
+                            "data": {
+                                "extra_body": "Param\u00e8tres de requ\u00eate suppl\u00e9mentaires"
+                            },
+                            "data_description": {
+                                "extra_body": "Param\u00e8tres suppl\u00e9mentaires ajout\u00e9s au corps de la requ\u00eate. Les valeurs reconnues comme nombre, true/false, null ou JSON sont envoy\u00e9es en JSON ; le reste est envoy\u00e9 comme texte."
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -346,7 +404,19 @@
                     "openai_path": "Chemin de l'API"
                 },
                 "description": "Fournissez les param\u00e8tres de connexion \u00e0 l'API qui h\u00e9berge le mod\u00e8le.",
-                "title": "Configurer la connexion"
+                "title": "Configurer la connexion",
+                "sections": {
+                    "advanced": {
+                        "name": "Options avanc\u00e9es",
+                        "description": "Param\u00e8tres optionnels dont la plupart des utilisateurs n'ont pas besoin. D\u00e9roulez cette section pour les modifier.",
+                        "data": {
+                            "extra_headers": "En-t\u00eates HTTP suppl\u00e9mentaires"
+                        },
+                        "data_description": {
+                            "extra_headers": "En-t\u00eates HTTP suppl\u00e9mentaires envoy\u00e9s avec chaque requ\u00eate \u00e0 l'API. Saisissez chaque en-t\u00eate sous forme de paire nom/valeur."
+                        }
+                    }
+                }
             },
             "reinstall": {
                 "data": {
@@ -361,7 +431,8 @@
             "failed_to_connect": "Impossible de se connecter \u00e0 l'API distante : {exception}",
             "invalid_hostname": "Le nom d'h\u00f4te fourni est invalide. Saisissez uniquement le domaine ou l'adresse IP, et non l'URL compl\u00e8te du point de terminaison de l'API.",
             "unknown": "Erreur inattendue",
-            "pip_wheel_error": "Pip a renvoy\u00e9 une erreur lors de l'installation du fichier wheel ! Consultez les journaux de Home Assistant pour plus de d\u00e9tails."
+            "pip_wheel_error": "Pip a renvoy\u00e9 une erreur lors de l'installation du fichier wheel ! Consultez les journaux de Home Assistant pour plus de d\u00e9tails.",
+            "invalid_extra_headers": "Chaque entr\u00e9e d'en-t\u00eate doit avoir un nom non vide. Les valeurs d'en-t\u00eate sont envoy\u00e9es sous forme de texte."
         },
         "progress": {
             "install_local_wheels": "Veuillez patienter pendant l'installation de Llama.cpp..."
@@ -385,6 +456,26 @@
                 "fr": "Fran\u00e7ais",
                 "es": "Espagnol",
                 "pl": "Polonais"
+            }
+        },
+        "extra_headers": {
+            "fields": {
+                "key": {
+                    "name": "Nom de l'en-t\u00eate"
+                },
+                "value": {
+                    "name": "Valeur"
+                }
+            }
+        },
+        "extra_body": {
+            "fields": {
+                "key": {
+                    "name": "Nom du param\u00e8tre"
+                },
+                "value": {
+                    "name": "Valeur"
+                }
             }
         }
     }

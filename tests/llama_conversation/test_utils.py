@@ -408,3 +408,49 @@ def test_pip_install_kwargs_across_home_assistant_versions(monkeypatch):
 
     monkeypatch.setattr(utils, "pip_kwargs", new_pip_kwargs)
     assert pip_install_kwargs("/config") == {"timeout": 60}
+
+
+def test_parse_extra_headers_accepts_all_input_shapes():
+    from custom_components.llama_conversation.utils import parse_extra_headers
+
+    # dict passthrough
+    assert parse_extra_headers({"X-A": "1"}) == {"X-A": "1"}
+    # object selector key/value entries
+    assert parse_extra_headers([{"key": "X-A", "value": "1"}, {"key": "X-B", "value": "2"}]) == {"X-A": "1", "X-B": "2"}
+    # JSON object string (legacy)
+    assert parse_extra_headers('{"X-A": "1"}') == {"X-A": "1"}
+    # header lines (legacy)
+    assert parse_extra_headers("X-A: 1\nX-B=2") == {"X-A": "1", "X-B": "2"}
+    # empty inputs
+    assert parse_extra_headers(None) == {}
+    assert parse_extra_headers("") == {}
+    assert parse_extra_headers([]) == {}
+
+    with pytest.raises(ValueError):
+        parse_extra_headers([{"key": "", "value": "1"}])
+    with pytest.raises(ValueError):
+        parse_extra_headers({"X-A": 1})
+    with pytest.raises(ValueError):
+        parse_extra_headers("no separator here")
+
+
+def test_parse_extra_body_accepts_all_input_shapes():
+    from custom_components.llama_conversation.utils import parse_extra_body
+
+    # object selector entries with JSON string values coerced
+    assert parse_extra_body([{"key": "n", "value": "3"}, {"key": "flag", "value": "false"}]) == {"n": 3, "flag": False}
+    # dict with string values coerced
+    assert parse_extra_body({"list": "[1, 2]", "text": "hello"}) == {"list": [1, 2], "text": "hello"}
+    # JSON object string (legacy)
+    assert parse_extra_body('{"n": 3}') == {"n": 3}
+    # empty inputs
+    assert parse_extra_body(None) == {}
+    assert parse_extra_body("") == {}
+    assert parse_extra_body([]) == {}
+
+    with pytest.raises(ValueError):
+        parse_extra_body([{"key": "", "value": "1"}])
+    with pytest.raises(ValueError):
+        parse_extra_body("[1, 2]")
+    with pytest.raises(ValueError):
+        parse_extra_body("not json")
