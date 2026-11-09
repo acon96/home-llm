@@ -390,3 +390,21 @@ def test_get_oai_formatted_messages_serializes_tool_results():
     correction = MalformedToolCallException("agent", "id3", "unknown", "{bad", "bad json").as_tool_messages()
     messages = get_oai_formatted_messages(list(correction), tool_result_to_str=True)
     assert json.loads(messages[-1]["content"])["error"].startswith("Error occurred calling tool")
+
+def test_pip_install_kwargs_across_home_assistant_versions(monkeypatch):
+    # Home Assistant 2026.11 dropped the config_dir parameter from pip_kwargs when it
+    # stopped installing dependencies into the config dir (issue #419). The parameter
+    # must be detected from the signature instead of comparing version numbers.
+    from custom_components.llama_conversation.utils import pip_install_kwargs
+
+    def old_pip_kwargs(config_dir):
+        return {"target": os.path.join(config_dir, "deps"), "timeout": 60}
+
+    def new_pip_kwargs():
+        return {"timeout": 60}
+
+    monkeypatch.setattr(utils, "pip_kwargs", old_pip_kwargs)
+    assert pip_install_kwargs("/config") == {"target": "/config/deps", "timeout": 60}
+
+    monkeypatch.setattr(utils, "pip_kwargs", new_pip_kwargs)
+    assert pip_install_kwargs("/config") == {"timeout": 60}

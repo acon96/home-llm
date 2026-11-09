@@ -12,6 +12,7 @@ import traceback
 import site
 import voluptuous as vol
 import base64
+import inspect
 import fuzzy_json
 from subprocess import PIPE, Popen
 from pathlib import Path
@@ -503,6 +504,19 @@ def _install_package_with_stderr(
         return process.returncode == 0, stderr_text
 
 
+def pip_install_kwargs(config_dir: str) -> dict[str, Any]:
+    """Return keyword arguments for pip installs across Home Assistant versions.
+
+    Home Assistant 2026.11 removed the config_dir parameter from
+    requirements.pip_kwargs together with support for installing dependencies into
+    the config deps directory (home-assistant/core#168155). Detect the parameter
+    instead of comparing version numbers so this works on any release, pre-release
+    or fork.
+    """
+    if "config_dir" in inspect.signature(pip_kwargs).parameters:
+        return pip_kwargs(config_dir)
+    return pip_kwargs()
+
 def install_llama_cpp_python(
     config_dir: str,
     force_reinstall: bool = False,
@@ -553,7 +567,7 @@ def install_llama_cpp_python(
             # when falling back to a second candidate (unknown libc), make sure uv
             # replaces whatever a previous candidate may have installed
             reinstall=force_reinstall or index > 0,
-            **pip_kwargs(config_dir),
+            **pip_install_kwargs(config_dir),
         )
         if install_success:
             installed_from = wheel_location
