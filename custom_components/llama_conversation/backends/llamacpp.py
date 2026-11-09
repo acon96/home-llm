@@ -13,10 +13,10 @@ from homeassistant.components import conversation as conversation
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LLM_HASS_API
-from homeassistant.core import callback, HomeAssistant
+from homeassistant.core import callback, HomeAssistant, Event, EventStateChangedData
 from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers import llm
-from homeassistant.helpers.event import async_track_state_change, async_call_later
+from homeassistant.helpers.event import async_track_state_change_event, async_call_later
 
 from custom_components.llama_conversation.utils import LlamaCppPythonInstallError, install_llama_cpp_python, validate_llama_cpp_python_installation, get_oai_formatted_messages, get_oai_formatted_tools
 from custom_components.llama_conversation.const import (
@@ -345,13 +345,16 @@ class LlamaCppClient(LocalLLMClient):
 
             _LOGGER.debug(f"watching entities: {entity_ids}")
 
-            self.remove_prompt_caching_listener = async_track_state_change(self.hass, entity_ids, lambda x, y, z: self._async_cache_prompt(x, y, z, entity_options))
+            async def _on_state_change(event: Event[EventStateChangedData]) -> None:
+                self._async_cache_prompt(event.data["entity_id"], event.data.get("old_state"), event.data.get("new_state"), entity_options)
+
+            self.remove_prompt_caching_listener = async_track_state_change_event(self.hass, entity_ids, _on_state_change)
 
         elif not enabled and self.remove_prompt_caching_listener:
             _LOGGER.info("disabling prompt caching...")
             self.remove_prompt_caching_listener()
+            self.remove_prompt_caching_listener = None
 
-    @callback
     async def _async_cache_prompt(self, entity, old_state, new_state, entity_options: dict[str, Any]):
         refresh_start = time.time()
 

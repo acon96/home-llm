@@ -37,7 +37,7 @@ from custom_components.llama_conversation.const import (
 )
 
 from custom_components.llama_conversation.entity import LocalLLMClient, TextGenerationResult
-from custom_components.llama_conversation.utils import get_file_contents_base64, parse_tool_arguments_with_repair_fallback
+from custom_components.llama_conversation.utils import get_file_contents_base64, parse_tool_arguments_with_repair_fallback, tool_result_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,7 +112,7 @@ def _convert_to_anthropic_messages(
                 messages.append({"role": "assistant", "content": content})
         elif message.role == "tool_result":
             # Anthropic expects tool results in user messages with tool_result content
-            tool_result = message.tool_result if hasattr(message, 'tool_result') else {}
+            tool_result = tool_result_data(message)
             if tool_result_to_str:
                 result_content = ha_json.json_dumps(tool_result) if isinstance(tool_result, dict) else str(tool_result)
             else:

@@ -39,9 +39,10 @@ class TaskAPI(llm.API):
             name = "caller_tool"
             description = "A tool the caller provided"
             parameters = vol.Schema({})
+            integration = "test"
 
             async def async_call(self, hass, tool_input, llm_context):
-                return {"result": "ok"}
+                return llm.ToolResult(data={"result": "ok"})
 
         return llm.APIInstance(api=self, api_prompt="", llm_context=llm_context, tools=[CallerTool()])
 
@@ -236,7 +237,7 @@ async def test_tool_extraction_success(hass: HomeAssistant):
     assert roles(chat_log) == [
         "SystemContent", "UserContent", "AssistantContent", "ToolResultContent",
     ]
-    assert chat_log.content[-1].tool_result == {"value": 42}
+    assert chat_log.content[-1].result.data == {"value": 42}
 
 
 @pytest.mark.asyncio

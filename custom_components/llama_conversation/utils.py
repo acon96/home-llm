@@ -105,6 +105,31 @@ def prompt_as_literal(text: str) -> str:
             text = text.replace(opener, f"{opener[0]} {opener[1:]}")
     return text
 
+def wrap_tool_result(data: Any) -> Any:
+    """Wrap tool result data in llm.ToolResult on Home Assistant versions that require it.
+
+    Home Assistant 2026.10 changed ToolResultContent.result from a plain JSON object to an
+    llm.ToolResult. Older versions expect the raw data instead, so this returns data
+    unchanged when llm.ToolResult is not available.
+    """
+    tool_result_cls = getattr(llm, "ToolResult", None)
+    if tool_result_cls is not None:
+        return tool_result_cls(data=data)
+    return data
+
+def tool_result_data(message: conversation.ToolResultContent) -> Any:
+    """Return the payload data of a tool result content across Home Assistant versions.
+
+    Reading the deprecated ToolResultContent.tool_result property logs a deprecation
+    warning on Home Assistant 2026.10+ and fails with an AttributeError when result is a
+    plain dict, so this unwraps result.data when present and falls back to the raw
+    tool_result field on older versions.
+    """
+    result = getattr(message, "result", None)
+    if result is not None:
+        return getattr(result, "data", result)
+    return getattr(message, "tool_result", None)
+
 class MalformedToolCallException(Exception):
     def __init__(self, agent_id: str, tool_call_id: str, tool_name: str, tool_args: str, error_msg: str):
         super().__init__(agent_id, tool_call_id, tool_name, tool_args, error_msg)
@@ -121,7 +146,7 @@ class MalformedToolCallException(Exception):
             ),
             conversation.ToolResultContent(
             self.agent_id, self.tool_call_id, self.tool_name, 
-            {"error": f"Error occurred calling tool with args='{self.tool_args}': {self.error_msg}" }
+            wrap_tool_result({"error": f"Error occurred calling tool with args='{self.tool_args}': {self.error_msg}" })
         )]
 
 def closest_color(requested_color: tuple[int, int, int]) -> str:
@@ -702,12 +727,13 @@ def get_oai_formatted_messages(
                     ]
                 })
         elif message.role == "tool_result":
+            tool_result = tool_result_data(message)
             if tool_result_to_str:
-                content = json_helper.json_dumps(message.tool_result)
+                content = json_helper.json_dumps(tool_result)
             else:
                 content = [{
                     "name": message.tool_name,
-                    "response": { "result": message.tool_result },
+                    "response": { "result": tool_result },
                     }
                 ]
             messages.append({

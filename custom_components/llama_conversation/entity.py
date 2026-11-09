@@ -19,7 +19,7 @@ from homeassistant.helpers import template, entity_registry as er, llm, \
     area_registry as ar, device_registry as dr, entity
 from homeassistant.util import color
 
-from .utils import closest_color, parse_raw_tool_call, flatten_vol_schema
+from .utils import closest_color, parse_raw_tool_call, flatten_vol_schema, tool_result_data
 from .const import (
     CONF_CHAT_MODEL,
     ESTIMATED_CHARS_PER_TOKEN,
@@ -224,9 +224,8 @@ class LocalLLMClient:
                 parts.append(tool_call.tool_name)
                 parts.append(str(tool_call.tool_args))
 
-            tool_result = getattr(item, "tool_result", None)
-            if tool_result is not None:
-                parts.append(str(tool_result))
+            if isinstance(item, conversation.ToolResultContent):
+                parts.append(str(tool_result_data(item)))
 
         return "".join(parts)
 
