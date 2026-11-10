@@ -131,6 +131,7 @@ def _sampling_subschema(schema: dict) -> dict:
     """Return the inner schema dict of the sampling parameters section."""
     section_obj = schema[_find_marker(schema, CONF_SAMPLING_SECTION)]
     assert isinstance(section_obj, data_entry_flow.section)
+    assert section_obj.options["collapsed"] is True
     return section_obj.schema.schema
 
 

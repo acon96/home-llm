@@ -149,7 +149,7 @@
                         },
                         "sampling": {
                             "name": "Samplingparameters",
-                            "description": "Leeg gelaten samplingparameters worden beslist door de server die het model host. Vul er een alleen in om deze voor dit model te overschrijven.",
+                            "description": "Leeg gelaten samplingparameters worden beslist door de backend die het model host. Vul er een alleen in om deze voor dit model te overschrijven.",
                             "data": {
                                 "temperature": "Temperatuur",
                                 "top_k": "Top K",
@@ -227,7 +227,7 @@
                         },
                         "sampling": {
                             "name": "Samplingparameters",
-                            "description": "Leeg gelaten samplingparameters worden beslist door de server die het model host. Vul er een alleen in om deze voor dit model te overschrijven.",
+                            "description": "Leeg gelaten samplingparameters worden beslist door de backend die het model host. Vul er een alleen in om deze voor dit model te overschrijven.",
                             "data": {
                                 "temperature": "Temperatuur",
                                 "top_k": "Top K",
@@ -341,7 +341,7 @@
                         },
                         "sampling": {
                             "name": "Samplingparameters",
-                            "description": "Leeg gelaten samplingparameters worden beslist door de server die het model host. Vul er een alleen in om deze voor dit model te overschrijven.",
+                            "description": "Leeg gelaten samplingparameters worden beslist door de backend die het model host. Vul er een alleen in om deze voor dit model te overschrijven.",
                             "data": {
                                 "temperature": "Temperatuur",
                                 "top_k": "Top K",
@@ -419,7 +419,7 @@
                         },
                         "sampling": {
                             "name": "Samplingparameters",
-                            "description": "Leeg gelaten samplingparameters worden beslist door de server die het model host. Vul er een alleen in om deze voor dit model te overschrijven.",
+                            "description": "Leeg gelaten samplingparameters worden beslist door de backend die het model host. Vul er een alleen in om deze voor dit model te overschrijven.",
                             "data": {
                                 "temperature": "Temperatuur",
                                 "top_k": "Top K",

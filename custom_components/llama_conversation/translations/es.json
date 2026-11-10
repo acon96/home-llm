@@ -146,7 +146,7 @@
                         },
                         "sampling": {
                             "name": "Par\u00e1metros de muestreo",
-                            "description": "Los par\u00e1metros de muestreo que se dejan vac\u00edos los decide el servidor que aloja el modelo. Rellene alguno solo para sobrescribirlo en este modelo.",
+                            "description": "Los par\u00e1metros de muestreo que se dejan vac\u00edos los decide el backend que aloja el modelo. Rellene alguno solo para sobrescribirlo en este modelo.",
                             "data": {
                                 "temperature": "Temperatura",
                                 "top_k": "Top K",
@@ -218,7 +218,7 @@
                         },
                         "sampling": {
                             "name": "Par\u00e1metros de muestreo",
-                            "description": "Los par\u00e1metros de muestreo que se dejan vac\u00edos los decide el servidor que aloja el modelo. Rellene alguno solo para sobrescribirlo en este modelo.",
+                            "description": "Los par\u00e1metros de muestreo que se dejan vac\u00edos los decide el backend que aloja el modelo. Rellene alguno solo para sobrescribirlo en este modelo.",
                             "data": {
                                 "temperature": "Temperatura",
                                 "top_k": "Top K",
@@ -329,7 +329,7 @@
                         },
                         "sampling": {
                             "name": "Par\u00e1metros de muestreo",
-                            "description": "Los par\u00e1metros de muestreo que se dejan vac\u00edos los decide el servidor que aloja el modelo. Rellene alguno solo para sobrescribirlo en este modelo.",
+                            "description": "Los par\u00e1metros de muestreo que se dejan vac\u00edos los decide el backend que aloja el modelo. Rellene alguno solo para sobrescribirlo en este modelo.",
                             "data": {
                                 "temperature": "Temperatura",
                                 "top_k": "Top K",
@@ -401,7 +401,7 @@
                         },
                         "sampling": {
                             "name": "Par\u00e1metros de muestreo",
-                            "description": "Los par\u00e1metros de muestreo que se dejan vac\u00edos los decide el servidor que aloja el modelo. Rellene alguno solo para sobrescribirlo en este modelo.",
+                            "description": "Los par\u00e1metros de muestreo que se dejan vac\u00edos los decide el backend que aloja el modelo. Rellene alguno solo para sobrescribirlo en este modelo.",
                             "data": {
                                 "temperature": "Temperatura",
                                 "top_k": "Top K",

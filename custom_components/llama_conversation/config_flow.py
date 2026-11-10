@@ -677,7 +677,7 @@ def local_llama_config_option_schema(
 
     # options that are hidden in the collapsed 'Advanced Options' section
     advanced: dict = {}
-    # sampling parameters, grouped in their own (expanded) 'Sampling Parameters' section
+    # sampling parameters, grouped in their own collapsed 'Sampling Parameters' section
     sampling: dict = {
         vol.Optional(
             CONF_TEMPERATURE,
@@ -972,7 +972,7 @@ def local_llama_config_option_schema(
 
     # group the sampling parameters in their own section, positioned where they used to sit
     if sampling:
-        result[vol.Optional(CONF_SAMPLING_SECTION)] = section(vol.Schema(sampling))
+        result[vol.Optional(CONF_SAMPLING_SECTION)] = section(vol.Schema(sampling), {"collapsed": True})
 
     # sort the options
     global_order = [
@@ -1010,6 +1010,7 @@ def local_llama_config_option_schema(
         CONF_LLAMACPP_ENABLE_FLASH_ATTENTION,
         CONF_OLLAMA_KEEP_ALIVE_MIN,
         CONF_OLLAMA_JSON_MODE,
+        CONF_REQUEST_TIMEOUT,
         CONF_ADVANCED_SECTION,
     ]
 

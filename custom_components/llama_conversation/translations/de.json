@@ -146,7 +146,7 @@
                         },
                         "sampling": {
                             "name": "Sampling-Parameter",
-                            "description": "Leer gelassene Sampling-Parameter werden vom Server entschieden, der das Modell hostet. Geben Sie einen nur an, um ihn f\u00fcr dieses Modell zu \u00fcberschreiben.",
+                            "description": "Leer gelassene Sampling-Parameter werden vom Backend entschieden, das das Modell hostet. Geben Sie einen nur an, um ihn f\u00fcr dieses Modell zu \u00fcberschreiben.",
                             "data": {
                                 "temperature": "Temperatur",
                                 "top_k": "Top K",
@@ -218,7 +218,7 @@
                         },
                         "sampling": {
                             "name": "Sampling-Parameter",
-                            "description": "Leer gelassene Sampling-Parameter werden vom Server entschieden, der das Modell hostet. Geben Sie einen nur an, um ihn f\u00fcr dieses Modell zu \u00fcberschreiben.",
+                            "description": "Leer gelassene Sampling-Parameter werden vom Backend entschieden, das das Modell hostet. Geben Sie einen nur an, um ihn f\u00fcr dieses Modell zu \u00fcberschreiben.",
                             "data": {
                                 "temperature": "Temperatur",
                                 "top_k": "Top K",
@@ -329,7 +329,7 @@
                         },
                         "sampling": {
                             "name": "Sampling-Parameter",
-                            "description": "Leer gelassene Sampling-Parameter werden vom Server entschieden, der das Modell hostet. Geben Sie einen nur an, um ihn f\u00fcr dieses Modell zu \u00fcberschreiben.",
+                            "description": "Leer gelassene Sampling-Parameter werden vom Backend entschieden, das das Modell hostet. Geben Sie einen nur an, um ihn f\u00fcr dieses Modell zu \u00fcberschreiben.",
                             "data": {
                                 "temperature": "Temperatur",
                                 "top_k": "Top K",
@@ -401,7 +401,7 @@
                         },
                         "sampling": {
                             "name": "Sampling-Parameter",
-                            "description": "Leer gelassene Sampling-Parameter werden vom Server entschieden, der das Modell hostet. Geben Sie einen nur an, um ihn f\u00fcr dieses Modell zu \u00fcberschreiben.",
+                            "description": "Leer gelassene Sampling-Parameter werden vom Backend entschieden, das das Modell hostet. Geben Sie einen nur an, um ihn f\u00fcr dieses Modell zu \u00fcberschreiben.",
                             "data": {
                                 "temperature": "Temperatur",
                                 "top_k": "Top K",

@@ -147,7 +147,7 @@
                         },
                         "sampling": {
                             "name": "Param\u00e8tres d'\u00e9chantillonnage",
-                            "description": "Les param\u00e8tres d'\u00e9chantillonnage laiss\u00e9s vides sont d\u00e9cid\u00e9s par le serveur qui h\u00e9berge le mod\u00e8le. Renseignez-en un uniquement pour le remplacer pour ce mod\u00e8le.",
+                            "description": "Les param\u00e8tres d'\u00e9chantillonnage laiss\u00e9s vides sont d\u00e9cid\u00e9s par le backend qui h\u00e9berge le mod\u00e8le. Renseignez-en un uniquement pour le remplacer pour ce mod\u00e8le.",
                             "data": {
                                 "temperature": "Temp\u00e9rature",
                                 "top_k": "Top K",
@@ -220,7 +220,7 @@
                         },
                         "sampling": {
                             "name": "Param\u00e8tres d'\u00e9chantillonnage",
-                            "description": "Les param\u00e8tres d'\u00e9chantillonnage laiss\u00e9s vides sont d\u00e9cid\u00e9s par le serveur qui h\u00e9berge le mod\u00e8le. Renseignez-en un uniquement pour le remplacer pour ce mod\u00e8le.",
+                            "description": "Les param\u00e8tres d'\u00e9chantillonnage laiss\u00e9s vides sont d\u00e9cid\u00e9s par le backend qui h\u00e9berge le mod\u00e8le. Renseignez-en un uniquement pour le remplacer pour ce mod\u00e8le.",
                             "data": {
                                 "temperature": "Temp\u00e9rature",
                                 "top_k": "Top K",
@@ -332,7 +332,7 @@
                         },
                         "sampling": {
                             "name": "Param\u00e8tres d'\u00e9chantillonnage",
-                            "description": "Les param\u00e8tres d'\u00e9chantillonnage laiss\u00e9s vides sont d\u00e9cid\u00e9s par le serveur qui h\u00e9berge le mod\u00e8le. Renseignez-en un uniquement pour le remplacer pour ce mod\u00e8le.",
+                            "description": "Les param\u00e8tres d'\u00e9chantillonnage laiss\u00e9s vides sont d\u00e9cid\u00e9s par le backend qui h\u00e9berge le mod\u00e8le. Renseignez-en un uniquement pour le remplacer pour ce mod\u00e8le.",
                             "data": {
                                 "temperature": "Temp\u00e9rature",
                                 "top_k": "Top K",
@@ -405,7 +405,7 @@
                         },
                         "sampling": {
                             "name": "Param\u00e8tres d'\u00e9chantillonnage",
-                            "description": "Les param\u00e8tres d'\u00e9chantillonnage laiss\u00e9s vides sont d\u00e9cid\u00e9s par le serveur qui h\u00e9berge le mod\u00e8le. Renseignez-en un uniquement pour le remplacer pour ce mod\u00e8le.",
+                            "description": "Les param\u00e8tres d'\u00e9chantillonnage laiss\u00e9s vides sont d\u00e9cid\u00e9s par le backend qui h\u00e9berge le mod\u00e8le. Renseignez-en un uniquement pour le remplacer pour ce mod\u00e8le.",
                             "data": {
                                 "temperature": "Temp\u00e9rature",
                                 "top_k": "Top K",

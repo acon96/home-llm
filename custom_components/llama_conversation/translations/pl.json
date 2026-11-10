@@ -146,7 +146,7 @@
                         },
                         "sampling": {
                             "name": "Parametry pr\u00f3bkowania",
-                            "description": "Puste parametry pr\u00f3bkowania s\u0105 decyzj\u0105 serwera hostuj\u0105cego model. Wype\u0142nij kt\u00f3ry\u015b tylko aby nadpisa\u0107 go dla tego modelu.",
+                            "description": "Puste parametry pr\u00f3bkowania s\u0105 decyzj\u0105 backendu hostuj\u0105cego model. Wype\u0142nij kt\u00f3ry\u015b tylko aby nadpisa\u0107 go dla tego modelu.",
                             "data": {
                                 "temperature": "Temperatura",
                                 "top_k": "Top K",
@@ -218,7 +218,7 @@
                         },
                         "sampling": {
                             "name": "Parametry pr\u00f3bkowania",
-                            "description": "Puste parametry pr\u00f3bkowania s\u0105 decyzj\u0105 serwera hostuj\u0105cego model. Wype\u0142nij kt\u00f3ry\u015b tylko aby nadpisa\u0107 go dla tego modelu.",
+                            "description": "Puste parametry pr\u00f3bkowania s\u0105 decyzj\u0105 backendu hostuj\u0105cego model. Wype\u0142nij kt\u00f3ry\u015b tylko aby nadpisa\u0107 go dla tego modelu.",
                             "data": {
                                 "temperature": "Temperatura",
                                 "top_k": "Top K",
@@ -329,7 +329,7 @@
                         },
                         "sampling": {
                             "name": "Parametry pr\u00f3bkowania",
-                            "description": "Puste parametry pr\u00f3bkowania s\u0105 decyzj\u0105 serwera hostuj\u0105cego model. Wype\u0142nij kt\u00f3ry\u015b tylko aby nadpisa\u0107 go dla tego modelu.",
+                            "description": "Puste parametry pr\u00f3bkowania s\u0105 decyzj\u0105 backendu hostuj\u0105cego model. Wype\u0142nij kt\u00f3ry\u015b tylko aby nadpisa\u0107 go dla tego modelu.",
                             "data": {
                                 "temperature": "Temperatura",
                                 "top_k": "Top K",
@@ -401,7 +401,7 @@
                         },
                         "sampling": {
                             "name": "Parametry pr\u00f3bkowania",
-                            "description": "Puste parametry pr\u00f3bkowania s\u0105 decyzj\u0105 serwera hostuj\u0105cego model. Wype\u0142nij kt\u00f3ry\u015b tylko aby nadpisa\u0107 go dla tego modelu.",
+                            "description": "Puste parametry pr\u00f3bkowania s\u0105 decyzj\u0105 backendu hostuj\u0105cego model. Wype\u0142nij kt\u00f3ry\u015b tylko aby nadpisa\u0107 go dla tego modelu.",
                             "data": {
                                 "temperature": "Temperatura",
                                 "top_k": "Top K",

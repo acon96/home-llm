@@ -147,7 +147,7 @@
                         },
                         "sampling": {
                             "name": "Sampling Parameters",
-                            "description": "Sampling parameters left empty are decided by the server hosting the model. Fill one in only to override it for this model.",
+                            "description": "Sampling parameters left empty are decided by the backend hosting the model. Fill one in only to override it for this model.",
                             "data": {
                                 "temperature": "Temperature",
                                 "top_k": "Top K",
@@ -220,7 +220,7 @@
                         },
                         "sampling": {
                             "name": "Sampling Parameters",
-                            "description": "Sampling parameters left empty are decided by the server hosting the model. Fill one in only to override it for this model.",
+                            "description": "Sampling parameters left empty are decided by the backend hosting the model. Fill one in only to override it for this model.",
                             "data": {
                                 "temperature": "Temperature",
                                 "top_k": "Top K",
@@ -332,7 +332,7 @@
                         },
                         "sampling": {
                             "name": "Sampling Parameters",
-                            "description": "Sampling parameters left empty are decided by the server hosting the model. Fill one in only to override it for this model.",
+                            "description": "Sampling parameters left empty are decided by the backend hosting the model. Fill one in only to override it for this model.",
                             "data": {
                                 "temperature": "Temperature",
                                 "top_k": "Top K",
@@ -405,7 +405,7 @@
                         },
                         "sampling": {
                             "name": "Sampling Parameters",
-                            "description": "Sampling parameters left empty are decided by the server hosting the model. Fill one in only to override it for this model.",
+                            "description": "Sampling parameters left empty are decided by the backend hosting the model. Fill one in only to override it for this model.",
                             "data": {
                                 "temperature": "Temperature",
                                 "top_k": "Top K",
