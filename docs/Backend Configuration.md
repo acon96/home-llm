@@ -21,11 +21,21 @@ This integration supports two distinct tool calling modes. Choosing the wrong on
 | Selected Language                              | The language to use for prompts and responses. Affects system prompt templates and examples.                                                                                                                                                                                                                                                                                                                                                                | en                      |
 | LLM API                                        | The API(s) to use for tool execution. Options are dynamically populated from installed Home Assistant LLM integrations. Select "Assist" for device control via the built-in Assist API, or leave empty to disable tool execution.                                                                                                                                                                                                                           | Assist                  |
 | System Prompt                                  | [see here](./Model%20Prompting.md)                                                                                                                                                                                                                                                                                                                                                                                                                          |                         |
-| Additional attributes to expose in the context | Extra attributes that will be exposed to the model via the `{{ devices }}` template variable (e.g., rgb_color, brightness, temperature, humidity, fan_mode, volume_level)                                                                                                                                                                                                                                                                                   | See suggestions         |
 | Enable in context learning (ICL) examples      | If enabled, will load examples from the specified file and expose them as the `{{ response_examples }}` variable in the system prompt template                                                                                                                                                                                                                                                                                                              | Enabled                 |
-| In context learning examples CSV filename      | The file to load in context learning examples from. Must be located in the same directory as the custom component                                                                                                                                                                                                                                                                                                                                           | in_context_examples.csv |
-| Number of ICL examples to generate             | The number of examples to select when expanding the `{{ in_context_examples }}` template in the prompt                                                                                                                                                                                                                                                                                                                                                      | 4                       |
 | Max tool call iterations                       | **Agentic mode:** set to 3 or more to allow the model to call tools, receive results, and loop. **Legacy/1-shot mode:** set to 0 — the model produces its response and tool calls in one turn with no follow-up. Must be 0 when Legacy Tool Calling is enabled.                                                                                                                                                                                              | 3                       |
+
+The sampling parameters of every backend are grouped in their own "Sampling Parameters" section of the model
+settings, in the same position where they used to be listed. A sampling parameter left empty is left to the server
+hosting the model. Fill one in only to override it for this model.
+
+The additional attributes to expose in the context, the ICL examples CSV filename, and the number of ICL examples to
+generate are in the collapsed "Advanced Options" section of the model settings:
+
+| Option Name                               | Description                                                                                                       | Suggested Value         |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------- |
+| Additional attributes to expose           | Extra attributes that will be exposed to the model via the `{{ devices }}` template variable (e.g., rgb_color, brightness, temperature, humidity, fan_mode, volume_level) | See suggestions         |
+| In context learning examples CSV filename | The file to load in context learning examples from. Must be located in the same directory as the custom component | in_context_examples.csv |
+| Number of ICL examples to generate        | The number of examples to select when expanding the `{{ in_context_examples }}` template in the prompt             | 4                       |
 
 ### Prompt format options
 
@@ -60,14 +70,19 @@ For what the sampling parameters mean, see the documentation of the server hosti
 | Context Length                                  | Tokens the model has for the conversation and its answer together. Home LLM drops the oldest messages that no longer fit, so a long conversation stays inside the limit instead of failing | 2048          |
 
 ## Performance Optimization
+The llama.cpp performance tuning options live in the collapsed "Advanced Options" section of the model settings.
+
 | Option Name            | Description                                                                                                          | Suggested Value                |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
 | Batch Size             | Number of tokens to process in each batch. Higher values increase speed but consume more memory                      | 512                            |
 | Thread Count           | Number of CPU threads to use for inference                                                                           | (number of physical CPU cores) |
 | Batch Thread Count     | Number of threads to use for batch processing                                                                        | (number of physical CPU cores) |
 | Enable Flash Attention | Use Flash Attention optimization if supported by the model. Can significantly improve performance on compatible GPUs | Disabled                       |
+| Disk KV Cache Size     | Size in megabytes of the on-disk KV cache                                                                            |                                |
 
 ## Advanced Features
+The GBNF grammar lives in the collapsed "Advanced Options" section of the model settings.
+
 | Option Name             | Description                                                                                                                     | Suggested Value                                                    |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
 | GBNF Grammar | Restricts the output of the model to a grammar written in GBNF; eliminates function calling syntax errors. Leave it empty to let the model answer freely | |
@@ -121,6 +136,8 @@ Llama.cpp Server backend is used when running inference via a separate `llama-cp
 | Request Timeout                             | The maximum time in seconds that the integration will wait for a response from the remote server                                                                 | 90 (higher if running on low resource hardware) |
 
 ## Advanced Features
+The GBNF grammar lives in the collapsed "Advanced Options" section of the model settings.
+
 | Option Name           | Description                                                                                                 | Suggested Value |
 | --------------------- | ----------------------------------------------------------------------------------------------------------- | --------------- |
 | GBNF Grammar | Restricts the output of the model to a grammar written in GBNF; eliminates function calling syntax errors. Leave it empty to let the model answer freely | |
@@ -147,6 +164,8 @@ For details about Ollama's sampling parameters, see: https://github.com/ollama/o
 | Request Timeout                             | The maximum time in seconds that the integration will wait for a response from the remote server              | 90 (higher if running on low resource hardware) |
 
 ## Advanced Features
+JSON mode lives in the collapsed "Advanced Options" section of the model settings.
+
 | Option Name                   | Description                                                                                                                     | Suggested Value |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | --------------- |
 | JSON Mode                     | Restricts the model to only output valid JSON objects. Enable this if you are using ICL and are getting invalid JSON responses. | True            |
@@ -164,11 +183,28 @@ For what the sampling parameters mean, see the documentation of the server hosti
 | API Key     | The API key for authentication (if required by your server)                  |                 |
 | API Path    | The path prefix for API requests (e.g., `/v1` for OpenAI-compatible servers) | v1              |
 
+### Advanced Options
+The connection settings for both Generic OpenAI backends hide an "Advanced Options" section that stays collapsed
+until you expand it. It is also available when editing the backend entry's options later.
+
+| Option Name            | Description                                                                                                                             | Suggested Value |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| Extra HTTP headers     | Additional HTTP headers sent with every request to the API. Add each header as a name and value pair (for example proxies or session ids) |                 |
+
 ## Sampling & Output
 | Option Name                                 | Description                                                                                                   | Suggested Value                                 |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
 | Top P                                       | Sampling parameter; see above note                                                                            | 1.0                                             |
+| Max tokens                                  | Limits the number of tokens that can be produced by each model response                                       | 512                                             |
 | Request Timeout                             | The maximum time in seconds that the integration will wait for a response from the remote server              | 90 (higher if running on low resource hardware) |
+
+### Advanced Options
+The per-model settings for both Generic OpenAI backends also hide an "Advanced Options" section, collapsed until
+you expand it.
+
+| Option Name              | Description                                                                                                                              | Suggested Value |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| Extra request parameters | Additional parameters added to the request body (for example `reasoning_effort`). Values that look like numbers, true/false, null, or JSON are sent as JSON; anything else is sent as text |                 |
 
 # Generic OpenAI Responses
 The Responses backend keeps the conversation on the server it talks to, so Home LLM does not resend it: while a
@@ -184,6 +220,9 @@ connection - the whole exchange is sent again, system prompt included.
 | SSL         | Whether to use HTTPS for the connection                              | false           |
 | API Key     | The API key for authentication (if required by your server)          |                 |
 | API Path    | The path prefix for API requests                                     | v1              |
+
+See the "Advanced Options" sections under the Generic OpenAI API (Chat Completions) backend above for the extra
+HTTP headers and extra request parameters options, which both Generic OpenAI backends share.
 
 ## Sampling & Output
 | Option Name                                 | Description                                                                                                   | Suggested Value                                 |

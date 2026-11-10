@@ -3,6 +3,7 @@ from dataclasses import replace
 from functools import partial
 import time
 import logging
+import json
 import os
 import re
 import sys
@@ -12,6 +13,7 @@ import traceback
 import site
 import voluptuous as vol
 import base64
+import inspect
 import fuzzy_json
 from subprocess import PIPE, Popen
 from pathlib import Path
@@ -503,6 +505,19 @@ def _install_package_with_stderr(
         return process.returncode == 0, stderr_text
 
 
+def pip_install_kwargs(config_dir: str) -> dict[str, Any]:
+    """Return keyword arguments for pip installs across Home Assistant versions.
+
+    Home Assistant 2026.11 removed the config_dir parameter from
+    requirements.pip_kwargs together with support for installing dependencies into
+    the config deps directory (home-assistant/core#168155). Detect the parameter
+    instead of comparing version numbers so this works on any release, pre-release
+    or fork.
+    """
+    if "config_dir" in inspect.signature(pip_kwargs).parameters:
+        return pip_kwargs(config_dir)
+    return pip_kwargs()
+
 def install_llama_cpp_python(
     config_dir: str,
     force_reinstall: bool = False,
@@ -553,7 +568,7 @@ def install_llama_cpp_python(
             # when falling back to a second candidate (unknown libc), make sure uv
             # replaces whatever a previous candidate may have installed
             reinstall=force_reinstall or index > 0,
-            **pip_kwargs(config_dir),
+            **pip_install_kwargs(config_dir),
         )
         if install_success:
             installed_from = wheel_location
@@ -587,6 +602,107 @@ def install_llama_cpp_python(
 
 def format_url(*, hostname: str, port: str, ssl: bool, path: str):
     return f"{'https' if ssl else 'http'}://{hostname}{ ':' + port if port else ''}{path}"
+
+def _pairs_to_dict(items: Any) -> Dict[str, Any]:
+    """Convert a list of {"key": ..., "value": ...} objects (the format of the object
+    selector UI) into a dictionary. Later entries win on duplicate keys."""
+    if not isinstance(items, list):
+        raise ValueError("Expected a list of key/value entries.")
+    result: Dict[str, Any] = {}
+    for item in items:
+        if not isinstance(item, dict) or "key" not in item:
+            raise ValueError("Each entry must be an object with 'key' and 'value' fields.")
+        key = item["key"]
+        if not isinstance(key, str) or not key.strip():
+            raise ValueError("Each entry must have a non-empty 'key'.")
+        result[key.strip()] = item.get("value", "")
+    return result
+
+def _coerce_json_value(value: Any) -> Any:
+    """Coerce a string entered in the key/value UI into a JSON value when it looks
+    like one, so numbers, booleans, null, arrays and objects survive. Anything
+    that does not parse as JSON is kept as the plain string the user typed."""
+    if not isinstance(value, str):
+        return value
+    stripped = value.strip()
+    if not stripped:
+        return value
+    looks_like_json = stripped[0] in "[{\"" or stripped in ("true", "false", "null") or re.match(r"^-?\d", stripped)
+    if not looks_like_json:
+        return value
+    try:
+        return json.loads(stripped)
+    except ValueError:
+        return value
+
+def parse_extra_headers(raw: Any) -> Dict[str, str]:
+    """Parse user-supplied extra HTTP headers into a dictionary.
+
+    Accepts a dictionary, a list of {"key", "value"} entries (the object selector
+    UI format), a JSON object string, or one header per line in "Key: Value" or
+    "Key=Value" form. Raises ValueError with a short explanation when the input
+    cannot be parsed.
+    """
+    if raw is None or raw == "" or raw == []:
+        return {}
+
+    if isinstance(raw, dict):
+        parsed = raw
+    elif isinstance(raw, list):
+        parsed = _pairs_to_dict(raw)
+    else:
+        try:
+            parsed = json.loads(str(raw))
+        except (ValueError, TypeError):
+            parsed = None
+        if not isinstance(parsed, dict):
+            return _parse_header_lines(str(raw))
+
+    if not all(isinstance(k, str) and isinstance(v, str) for k, v in parsed.items()):
+        raise ValueError("Extra headers must map header names to string values.")
+    return dict(parsed)
+
+def _parse_header_lines(raw: str) -> Dict[str, str]:
+    """Parse one header per line in "Key: Value" or "Key=Value" form."""
+    headers: Dict[str, str] = {}
+    for line in raw.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        separator = line.find(":") if (":" in line and (line.find("=") == -1 or line.find(":") < line.find("="))) else line.find("=")
+        if separator == -1:
+            raise ValueError(f"Extra headers must be 'Key: Value' per line or a JSON object. Invalid line: {line!r}")
+        key = line[:separator].strip()
+        value = line[separator + 1:].strip()
+        if not key or not value:
+            raise ValueError(f"Extra headers must be 'Key: Value' per line or a JSON object. Invalid line: {line!r}")
+        headers[key] = value
+    return headers
+
+def parse_extra_body(raw: Any) -> Dict[str, Any]:
+    """Parse user-supplied extra request body parameters into a dictionary.
+
+    Accepts a dictionary, a list of {"key", "value"} entries (the object selector
+    UI format, with values coerced from JSON strings), or a JSON object string.
+    Raises ValueError with a short explanation when the input cannot be parsed.
+    """
+    if raw is None or raw == "" or raw == []:
+        return {}
+
+    if isinstance(raw, dict):
+        parsed = raw
+    elif isinstance(raw, list):
+        parsed = _pairs_to_dict(raw)
+    else:
+        try:
+            parsed = json.loads(str(raw))
+        except (ValueError, TypeError) as err:
+            raise ValueError(f"Extra request parameters must be a JSON object: {err}") from err
+
+    if not isinstance(parsed, dict):
+        raise ValueError("Extra request parameters must be a JSON object.")
+    return {k: _coerce_json_value(v) for k, v in parsed.items()}
+
 
 def get_oai_formatted_tools(llm_api: llm.APIInstance, domains: list[str]) -> List[ChatCompletionTool]:    
     result: List[ChatCompletionTool] = []

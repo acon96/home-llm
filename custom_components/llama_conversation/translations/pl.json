@@ -4,7 +4,8 @@
             "failed_to_connect": "Nie uda\u0142o si\u0119 po\u0142\u0105czy\u0107 ze zdalnym API: {exception}",
             "invalid_hostname": "Podana nazwa hosta jest nieprawid\u0142owa. Podaj tylko domen\u0119 lub adres IP, a nie pe\u0142ny adres punktu ko\u0144cowego API.",
             "unknown": "Nieoczekiwany b\u0142\u0105d",
-            "pip_wheel_error": "Pip zwr\u00f3ci\u0142 b\u0142\u0105d podczas instalacji pliku wheel! Sprawd\u017a logi Home Assistant, aby uzyska\u0107 wi\u0119cej szczeg\u00f3\u0142\u00f3w."
+            "pip_wheel_error": "Pip zwr\u00f3ci\u0142 b\u0142\u0105d podczas instalacji pliku wheel! Sprawd\u017a logi Home Assistant, aby uzyska\u0107 wi\u0119cej szczeg\u00f3\u0142\u00f3w.",
+            "invalid_extra_headers": "Ka\u017cdy wpis nag\u0142\u00f3wka wymaga niepustej nazwy. Warto\u015bci nag\u0142\u00f3wk\u00f3w s\u0105 wysy\u0142ane jako tekst."
         },
         "progress": {
             "download": "Prosz\u0119 czeka\u0107, trwa pobieranie modelu z HuggingFace. Mo\u017ce to zaj\u0105\u0107 kilka minut.",
@@ -23,7 +24,19 @@
                     "anthropic_base_url": "Bazowy adres URL API kompatybilnego z Anthropic"
                 },
                 "description": "Wybierz zaplecze i/lub podaj dane po\u0142\u0105czenia z API, kt\u00f3re udost\u0119pnia model.",
-                "title": "Skonfiguruj zaplecze"
+                "title": "Skonfiguruj zaplecze",
+                "sections": {
+                    "advanced": {
+                        "name": "Opcje zaawansowane",
+                        "description": "Ustawienia opcjonalne, kt\u00f3rych wi\u0119kszo\u015b\u0107 u\u017cytkownik\u00f3w nie potrzebuje. Rozwi\u0144 t\u0119 sekcj\u0119, aby wprowadzi\u0107 zmiany.",
+                        "data": {
+                            "extra_headers": "Dodatkowe nag\u0142\u00f3wki HTTP"
+                        },
+                        "data_description": {
+                            "extra_headers": "Dodatkowe nag\u0142\u00f3wki HTTP wysy\u0142ane z ka\u017cdym zapytaniem do API. Podaj ka\u017cdy nag\u0142\u00f3wek jako par\u0119 nazwa-warto\u015b\u0107."
+                        }
+                    }
+                }
             }
         },
         "abort": {
@@ -54,7 +67,8 @@
                 "sys_refresh_caching_enabled": "Od\u015bwie\u017canie promptu systemowego musi by\u0107 w\u0142\u0105czone, aby buforowanie prompt\u00f3w dzia\u0142a\u0142o!",
                 "missing_gbnf_file": "Nie znaleziono pliku GBNF: {filename}",
                 "missing_icl_file": "Nie znaleziono pliku CSV z przyk\u0142adami nauki w kontek\u015bcie: {filename}",
-                "legacy_tool_calling_with_iterations": "Tryb starszy/jednorazowy (W\u0142\u0105cz starszy tryb wywo\u0142ywania narz\u0119dzi) jest niezgodny z maksymaln\u0105 liczb\u0105 iteracji wywo\u0142a\u0144 narz\u0119dzi wi\u0119ksz\u0105 ni\u017c 0. Ustaw maksymaln\u0105 liczb\u0119 iteracji wywo\u0142a\u0144 narz\u0119dzi na 0 dla modeli starszych/jednorazowych lub wy\u0142\u0105cz starszy tryb wywo\u0142ywania narz\u0119dzi, aby u\u017cywa\u0107 trybu agentowego."
+                "legacy_tool_calling_with_iterations": "Tryb starszy/jednorazowy (W\u0142\u0105cz starszy tryb wywo\u0142ywania narz\u0119dzi) jest niezgodny z maksymaln\u0105 liczb\u0105 iteracji wywo\u0142a\u0144 narz\u0119dzi wi\u0119ksz\u0105 ni\u017c 0. Ustaw maksymaln\u0105 liczb\u0119 iteracji wywo\u0142a\u0144 narz\u0119dzi na 0 dla modeli starszych/jednorazowych lub wy\u0142\u0105cz starszy tryb wywo\u0142ywania narz\u0119dzi, aby u\u017cywa\u0107 trybu agentowego.",
+                "invalid_extra_body": "Ka\u017cdy wpis parametru wymaga niepustej nazwy. Warto\u015bci przypominaj\u0105ce JSON (liczby, true/false, null, tablice, obiekty) s\u0105 wysy\u0142ane jako JSON."
             },
             "progress": {
                 "download": "Prosz\u0119 czeka\u0107, trwa pobieranie modelu z HuggingFace. Mo\u017ce to zaj\u0105\u0107 kilka minut."
@@ -77,30 +91,15 @@
                         "max_new_tokens": "Maksymalna liczba token\u00f3w w odpowiedzi",
                         "llm_hass_api": "Wybrane API LLM",
                         "prompt": "Prompt systemowy",
-                        "temperature": "Temperatura",
-                        "top_k": "Top K",
-                        "top_p": "Top P",
-                        "min_p": "Min P",
-                        "typical_p": "Typical P",
                         "request_timeout": "Limit czasu \u017c\u0105dania zdalnego (sekundy)",
                         "enable_streaming": "W\u0142\u0105cz strumieniowanie",
                         "ollama_keep_alive": "(ollama) Czas utrzymania w pami\u0119ci/Limit nieaktywno\u015bci (minuty)",
-                        "ollama_json_mode": "(ollama) Tryb wyj\u015bcia JSON",
-                        "extra_attributes_to_expose": "Dodatkowy atrybut udost\u0119pniany w kontek\u015bcie",
-                        "enable_flash_attention": "W\u0142\u0105cz Flash Attention",
-                        "gbnf_grammar": "Gramatyka GBNF",
                         "openai_api_key": "Klucz API",
                         "service_call_regex": "Wyra\u017cenie regularne wywo\u0142ania us\u0142ugi",
                         "in_context_examples": "W\u0142\u0105cz przyk\u0142ady nauki w kontek\u015bcie (ICL)",
-                        "in_context_examples_file": "Nazwa pliku CSV z przyk\u0142adami nauki w kontek\u015bcie",
-                        "num_in_context_examples": "Liczba przyk\u0142ad\u00f3w ICL do wygenerowania",
                         "prompt_caching": "W\u0142\u0105cz buforowanie prompt\u00f3w",
                         "prompt_caching_interval": "Minimalny interwa\u0142 od\u015bwie\u017cania bufora prompt\u00f3w (sekundy)",
                         "context_length": "D\u0142ugo\u015b\u0107 kontekstu",
-                        "batch_size": "(llama.cpp) Rozmiar partii",
-                        "n_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w",
-                        "n_batch_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w partii",
-                        "llama_cpp_cache_size_mb": "(llama.cpp) Rozmiar dyskowego bufora KV (MB)",
                         "thinking_prefix": "Prefiks tre\u015bci rozumowania",
                         "thinking_suffix": "Sufiks tre\u015bci rozumowania",
                         "tool_call_prefix": "Prefiks wywo\u0142ania narz\u0119dzia",
@@ -113,8 +112,6 @@
                         "llm_hass_api": "Wybierz 'Assist', je\u015bli model ma sterowa\u0107 urz\u0105dzeniami. Je\u015bli u\u017cywasz modelu Home-LLM (v1-3), wybierz 'Home Assistant Services'.",
                         "prompt": "Wi\u0119cej informacji o promptach modelu znajdziesz [tutaj](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md).",
                         "in_context_examples": "W\u0142\u0105cz t\u0119 opcj\u0119, je\u015bli u\u017cywasz modelu, kt\u00f3ry nie zosta\u0142 specjalnie dostrojony do tej integracji.",
-                        "extra_attributes_to_expose": "To lista 'atrybut\u00f3w' Home Assistant udost\u0119pnianych modelowi. Ogranicza informacje, kt\u00f3re model mo\u017ce zobaczy\u0107 i na temat kt\u00f3rych mo\u017ce odpowiada\u0107 na pytania.",
-                        "gbnf_grammar": "Ogranicza odpowiedzi llama.cpp do gramatyki zapisanej w GBNF. Pozostaw pole puste, aby model m\u00f3g\u0142 odpowiada\u0107 swobodnie.",
                         "prompt_caching": "Buforowanie prompt\u00f3w pr\u00f3buje wst\u0119pnie przetworzy\u0107 prompt (stan domu) i zapisa\u0107 przetwarzanie potrzebne do jego zrozumienia. Po w\u0142\u0105czeniu tej opcji model ponownie przetwarza prompt przy zmianie stanu encji w domu, z ograniczeniem wynikaj\u0105cym z poni\u017cszego interwa\u0142u.",
                         "enable_legacy_tool_calling": "Preferuje lokalne przetwarzanie wywo\u0142a\u0144 narz\u0119dzi zamiast polegania na obs\u0142udze ich formatu przez zaplecze. Mo\u017ce to by\u0107 bardziej niezawodne, ale wymaga poprawnego ustawienia prefiksu i sufiksu wywo\u0142ania narz\u0119dzia.",
                         "tool_response_as_string": "Niekt\u00f3re szablony prompt\u00f3w wymagaj\u0105 odpowiedzi narz\u0119dzia w postaci ci\u0105gu znak\u00f3w zserializowanego do JSON zamiast surowego obiektu.",
@@ -123,37 +120,58 @@
                         "context_length": "Model nie mo\u017ce u\u017cy\u0107 wi\u0119cej ni\u017c podana liczba token\u00f3w \u0142\u0105cznie na rozmow\u0119 i odpowied\u017a. Home LLM usuwa najstarsze wiadomo\u015bci, kt\u00f3re ju\u017c si\u0119 nie mieszcz\u0105, dzi\u0119ki czemu d\u0142uga rozmowa pozostaje w limicie zamiast powodowa\u0107 b\u0142\u0105d."
                     },
                     "description": "Skonfiguruj model zgodnie z wymaganym formatem prompt\u00f3w. Dost\u0119pnych jest wiele opcji, a wyb\u00f3r odpowiednich jest kluczowy dla optymalnej wydajno\u015bci. Wi\u0119cej informacji o opcjach na tej stronie znajdziesz [tutaj](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md).\n\n**Niekt\u00f3re ustawienia domy\u015blne mog\u0142y zosta\u0107 wybrane na podstawie nazwy modelu lub pliku.** Je\u015bli zmieniono nazw\u0119 pliku lub u\u017cywana jest dostrojona wersja obs\u0142ugiwanego modelu, ustawienia domy\u015blne mog\u0142y nie zosta\u0107 wykryte.",
-                    "title": "Skonfiguruj wybrany model"
+                    "title": "Skonfiguruj wybrany model",
+                    "sections": {
+                        "advanced": {
+                            "name": "Opcje zaawansowane",
+                            "description": "Ustawienia opcjonalne, kt\u00f3rych wi\u0119kszo\u015b\u0107 u\u017cytkownik\u00f3w nie potrzebuje. Rozwi\u0144 t\u0119 sekcj\u0119, aby wprowadzi\u0107 zmiany.",
+                            "data": {
+                                "extra_body": "Dodatkowe parametry zapytania",
+                                "in_context_examples_file": "Nazwa pliku CSV z przyk\u0142adami nauki w kontek\u015bcie",
+                                "num_in_context_examples": "Liczba przyk\u0142ad\u00f3w ICL do wygenerowania",
+                                "batch_size": "(llama.cpp) Rozmiar partii",
+                                "n_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w",
+                                "n_batch_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w partii",
+                                "enable_flash_attention": "W\u0142\u0105cz Flash Attention",
+                                "llama_cpp_cache_size_mb": "(llama.cpp) Rozmiar dyskowego bufora KV (MB)",
+                                "ollama_json_mode": "(ollama) Tryb wyj\u015bcia JSON",
+                                "gbnf_grammar_text": "Gramatyka GBNF",
+                                "extra_attributes_to_expose": "Dodatkowy atrybut udost\u0119pniany w kontek\u015bcie"
+                            },
+                            "data_description": {
+                                "extra_body": "Dodatkowe parametry dodawane do tre\u015bci zapytania. Warto\u015bci rozpoznane jako liczba, true/false, null lub JSON s\u0105 wysy\u0142ane jako JSON; pozosta\u0142e s\u0105 wysy\u0142ane jako tekst.",
+                                "gbnf_grammar_text": "Ogranicza odpowiedzi llama.cpp do gramatyki zapisanej w GBNF. Pozostaw pole puste, aby model m\u00f3g\u0142 odpowiada\u0107 swobodnie.",
+                                "extra_attributes_to_expose": "To lista 'atrybut\u00f3w' Home Assistant udost\u0119pnianych modelowi. Ogranicza informacje, kt\u00f3re model mo\u017ce zobaczy\u0107 i na temat kt\u00f3rych mo\u017ce odpowiada\u0107 na pytania."
+                            }
+                        },
+                        "sampling": {
+                            "name": "Parametry pr\u00f3bkowania",
+                            "description": "Puste parametry pr\u00f3bkowania s\u0105 decyzj\u0105 backendu hostuj\u0105cego model. Wype\u0142nij kt\u00f3ry\u015b tylko aby nadpisa\u0107 go dla tego modelu.",
+                            "data": {
+                                "temperature": "Temperatura",
+                                "top_k": "Top K",
+                                "top_p": "Top P",
+                                "min_p": "Min P",
+                                "typical_p": "Typical P"
+                            },
+                            "data_description": {}
+                        }
+                    }
                 },
                 "reconfigure": {
                     "data": {
                         "max_new_tokens": "Maksymalna liczba token\u00f3w w odpowiedzi",
                         "llm_hass_api": "Wybrane API LLM",
                         "prompt": "Prompt systemowy",
-                        "temperature": "Temperatura",
-                        "top_k": "Top K",
-                        "top_p": "Top P",
-                        "min_p": "Min P",
-                        "typical_p": "Typical P",
                         "request_timeout": "Limit czasu \u017c\u0105dania zdalnego (sekundy)",
                         "enable_streaming": "W\u0142\u0105cz strumieniowanie",
                         "ollama_keep_alive": "(ollama) Czas utrzymania w pami\u0119ci/Limit nieaktywno\u015bci (minuty)",
-                        "ollama_json_mode": "(ollama) Tryb wyj\u015bcia JSON",
-                        "extra_attributes_to_expose": "Dodatkowy atrybut udost\u0119pniany w kontek\u015bcie",
-                        "enable_flash_attention": "W\u0142\u0105cz Flash Attention",
-                        "gbnf_grammar": "Gramatyka GBNF",
                         "openai_api_key": "Klucz API",
                         "service_call_regex": "Wyra\u017cenie regularne wywo\u0142ania us\u0142ugi",
                         "in_context_examples": "W\u0142\u0105cz przyk\u0142ady nauki w kontek\u015bcie (ICL)",
-                        "in_context_examples_file": "Nazwa pliku CSV z przyk\u0142adami nauki w kontek\u015bcie",
-                        "num_in_context_examples": "Liczba przyk\u0142ad\u00f3w ICL do wygenerowania",
                         "prompt_caching": "W\u0142\u0105cz buforowanie prompt\u00f3w",
                         "prompt_caching_interval": "Minimalny interwa\u0142 od\u015bwie\u017cania bufora prompt\u00f3w (sekundy)",
                         "context_length": "D\u0142ugo\u015b\u0107 kontekstu",
-                        "batch_size": "(llama.cpp) Rozmiar partii",
-                        "n_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w",
-                        "n_batch_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w partii",
-                        "llama_cpp_cache_size_mb": "(llama.cpp) Rozmiar dyskowego bufora KV (MB)",
                         "thinking_prefix": "Prefiks tre\u015bci rozumowania",
                         "thinking_suffix": "Sufiks tre\u015bci rozumowania",
                         "tool_call_prefix": "Prefiks wywo\u0142ania narz\u0119dzia",
@@ -166,8 +184,6 @@
                         "llm_hass_api": "Wybierz 'Assist', je\u015bli model ma sterowa\u0107 urz\u0105dzeniami. Je\u015bli u\u017cywasz modelu Home-LLM (v1-3), wybierz 'Home Assistant Services'.",
                         "prompt": "Wi\u0119cej informacji o promptach modelu znajdziesz [tutaj](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md).",
                         "in_context_examples": "W\u0142\u0105cz t\u0119 opcj\u0119, je\u015bli u\u017cywasz modelu, kt\u00f3ry nie zosta\u0142 specjalnie dostrojony do tej integracji.",
-                        "extra_attributes_to_expose": "To lista 'atrybut\u00f3w' Home Assistant udost\u0119pnianych modelowi. Ogranicza informacje, kt\u00f3re model mo\u017ce zobaczy\u0107 i na temat kt\u00f3rych mo\u017ce odpowiada\u0107 na pytania.",
-                        "gbnf_grammar": "Ogranicza odpowiedzi llama.cpp do gramatyki zapisanej w GBNF. Pozostaw pole puste, aby model m\u00f3g\u0142 odpowiada\u0107 swobodnie.",
                         "prompt_caching": "Buforowanie prompt\u00f3w pr\u00f3buje wst\u0119pnie przetworzy\u0107 prompt (stan domu) i zapisa\u0107 przetwarzanie potrzebne do jego zrozumienia. Po w\u0142\u0105czeniu tej opcji model ponownie przetwarza prompt przy zmianie stanu encji w domu, z ograniczeniem wynikaj\u0105cym z poni\u017cszego interwa\u0142u.",
                         "enable_legacy_tool_calling": "Preferuje lokalne przetwarzanie wywo\u0142a\u0144 narz\u0119dzi zamiast polegania na obs\u0142udze ich formatu przez zaplecze. Mo\u017ce to by\u0107 bardziej niezawodne, ale wymaga poprawnego ustawienia prefiksu i sufiksu wywo\u0142ania narz\u0119dzia.",
                         "tool_response_as_string": "Niekt\u00f3re szablony prompt\u00f3w wymagaj\u0105 odpowiedzi narz\u0119dzia w postaci ci\u0105gu znak\u00f3w zserializowanego do JSON zamiast surowego obiektu.",
@@ -176,7 +192,43 @@
                         "context_length": "Model nie mo\u017ce u\u017cy\u0107 wi\u0119cej ni\u017c podana liczba token\u00f3w \u0142\u0105cznie na rozmow\u0119 i odpowied\u017a. Home LLM usuwa najstarsze wiadomo\u015bci, kt\u00f3re ju\u017c si\u0119 nie mieszcz\u0105, dzi\u0119ki czemu d\u0142uga rozmowa pozostaje w limicie zamiast powodowa\u0107 b\u0142\u0105d."
                     },
                     "description": "Skonfiguruj model zgodnie z wymaganym formatem prompt\u00f3w. Dost\u0119pnych jest wiele opcji, a wyb\u00f3r odpowiednich jest kluczowy dla optymalnej wydajno\u015bci. Wi\u0119cej informacji o opcjach na tej stronie znajdziesz [tutaj](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md).\n\n**Niekt\u00f3re ustawienia domy\u015blne mog\u0142y zosta\u0107 wybrane na podstawie nazwy modelu lub pliku.** Je\u015bli zmieniono nazw\u0119 pliku lub u\u017cywana jest dostrojona wersja obs\u0142ugiwanego modelu, ustawienia domy\u015blne mog\u0142y nie zosta\u0107 wykryte.",
-                    "title": "Skonfiguruj wybrany model"
+                    "title": "Skonfiguruj wybrany model",
+                    "sections": {
+                        "advanced": {
+                            "name": "Opcje zaawansowane",
+                            "description": "Ustawienia opcjonalne, kt\u00f3rych wi\u0119kszo\u015b\u0107 u\u017cytkownik\u00f3w nie potrzebuje. Rozwi\u0144 t\u0119 sekcj\u0119, aby wprowadzi\u0107 zmiany.",
+                            "data": {
+                                "extra_body": "Dodatkowe parametry zapytania",
+                                "in_context_examples_file": "Nazwa pliku CSV z przyk\u0142adami nauki w kontek\u015bcie",
+                                "num_in_context_examples": "Liczba przyk\u0142ad\u00f3w ICL do wygenerowania",
+                                "batch_size": "(llama.cpp) Rozmiar partii",
+                                "n_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w",
+                                "n_batch_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w partii",
+                                "enable_flash_attention": "W\u0142\u0105cz Flash Attention",
+                                "llama_cpp_cache_size_mb": "(llama.cpp) Rozmiar dyskowego bufora KV (MB)",
+                                "ollama_json_mode": "(ollama) Tryb wyj\u015bcia JSON",
+                                "gbnf_grammar_text": "Gramatyka GBNF",
+                                "extra_attributes_to_expose": "Dodatkowy atrybut udost\u0119pniany w kontek\u015bcie"
+                            },
+                            "data_description": {
+                                "extra_body": "Dodatkowe parametry dodawane do tre\u015bci zapytania. Warto\u015bci rozpoznane jako liczba, true/false, null lub JSON s\u0105 wysy\u0142ane jako JSON; pozosta\u0142e s\u0105 wysy\u0142ane jako tekst.",
+                                "gbnf_grammar_text": "Ogranicza odpowiedzi llama.cpp do gramatyki zapisanej w GBNF. Pozostaw pole puste, aby model m\u00f3g\u0142 odpowiada\u0107 swobodnie.",
+                                "extra_attributes_to_expose": "To lista 'atrybut\u00f3w' Home Assistant udost\u0119pnianych modelowi. Ogranicza informacje, kt\u00f3re model mo\u017ce zobaczy\u0107 i na temat kt\u00f3rych mo\u017ce odpowiada\u0107 na pytania."
+                            }
+                        },
+                        "sampling": {
+                            "name": "Parametry pr\u00f3bkowania",
+                            "description": "Puste parametry pr\u00f3bkowania s\u0105 decyzj\u0105 backendu hostuj\u0105cego model. Wype\u0142nij kt\u00f3ry\u015b tylko aby nadpisa\u0107 go dla tego modelu.",
+                            "data": {
+                                "temperature": "Temperatura",
+                                "top_k": "Top K",
+                                "top_p": "Top P",
+                                "min_p": "Min P",
+                                "typical_p": "Typical P"
+                            },
+                            "data_description": {}
+                        }
+                    }
                 }
             }
         },
@@ -197,7 +249,8 @@
                 "sys_refresh_caching_enabled": "Od\u015bwie\u017canie promptu systemowego musi by\u0107 w\u0142\u0105czone, aby buforowanie prompt\u00f3w dzia\u0142a\u0142o!",
                 "missing_gbnf_file": "Nie znaleziono pliku GBNF: {filename}",
                 "missing_icl_file": "Nie znaleziono pliku CSV z przyk\u0142adami nauki w kontek\u015bcie: {filename}",
-                "legacy_tool_calling_with_iterations": "Tryb starszy/jednorazowy (W\u0142\u0105cz starszy tryb wywo\u0142ywania narz\u0119dzi) jest niezgodny z maksymaln\u0105 liczb\u0105 iteracji wywo\u0142a\u0144 narz\u0119dzi wi\u0119ksz\u0105 ni\u017c 0. Ustaw maksymaln\u0105 liczb\u0119 iteracji wywo\u0142a\u0144 narz\u0119dzi na 0 dla modeli starszych/jednorazowych lub wy\u0142\u0105cz starszy tryb wywo\u0142ywania narz\u0119dzi, aby u\u017cywa\u0107 trybu agentowego."
+                "legacy_tool_calling_with_iterations": "Tryb starszy/jednorazowy (W\u0142\u0105cz starszy tryb wywo\u0142ywania narz\u0119dzi) jest niezgodny z maksymaln\u0105 liczb\u0105 iteracji wywo\u0142a\u0144 narz\u0119dzi wi\u0119ksz\u0105 ni\u017c 0. Ustaw maksymaln\u0105 liczb\u0119 iteracji wywo\u0142a\u0144 narz\u0119dzi na 0 dla modeli starszych/jednorazowych lub wy\u0142\u0105cz starszy tryb wywo\u0142ywania narz\u0119dzi, aby u\u017cywa\u0107 trybu agentowego.",
+                "invalid_extra_body": "Ka\u017cdy wpis parametru wymaga niepustej nazwy. Warto\u015bci przypominaj\u0105ce JSON (liczby, true/false, null, tablice, obiekty) s\u0105 wysy\u0142ane jako JSON."
             },
             "progress": {
                 "download": "Prosz\u0119 czeka\u0107, trwa pobieranie modelu z HuggingFace. Mo\u017ce to zaj\u0105\u0107 kilka minut."
@@ -219,30 +272,15 @@
                     "data": {
                         "max_new_tokens": "Maksymalna liczba token\u00f3w w odpowiedzi",
                         "prompt": "Prompt systemowy",
-                        "temperature": "Temperatura",
-                        "top_k": "Top K",
-                        "top_p": "Top P",
-                        "min_p": "Min P",
-                        "typical_p": "Typical P",
                         "request_timeout": "Limit czasu \u017c\u0105dania zdalnego (sekundy)",
                         "enable_streaming": "W\u0142\u0105cz strumieniowanie",
                         "ollama_keep_alive": "(ollama) Czas utrzymania w pami\u0119ci/Limit nieaktywno\u015bci (minuty)",
-                        "ollama_json_mode": "(ollama) Tryb wyj\u015bcia JSON",
-                        "extra_attributes_to_expose": "Dodatkowy atrybut udost\u0119pniany w kontek\u015bcie",
-                        "enable_flash_attention": "W\u0142\u0105cz Flash Attention",
-                        "gbnf_grammar": "Gramatyka GBNF",
                         "openai_api_key": "Klucz API",
                         "service_call_regex": "Wyra\u017cenie regularne wywo\u0142ania us\u0142ugi",
                         "in_context_examples": "W\u0142\u0105cz przyk\u0142ady nauki w kontek\u015bcie (ICL)",
-                        "in_context_examples_file": "Nazwa pliku CSV z przyk\u0142adami nauki w kontek\u015bcie",
-                        "num_in_context_examples": "Liczba przyk\u0142ad\u00f3w ICL do wygenerowania",
                         "prompt_caching": "W\u0142\u0105cz buforowanie prompt\u00f3w",
                         "prompt_caching_interval": "Minimalny interwa\u0142 od\u015bwie\u017cania bufora prompt\u00f3w (sekundy)",
                         "context_length": "D\u0142ugo\u015b\u0107 kontekstu",
-                        "batch_size": "(llama.cpp) Rozmiar partii",
-                        "n_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w",
-                        "n_batch_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w partii",
-                        "llama_cpp_cache_size_mb": "(llama.cpp) Rozmiar dyskowego bufora KV (MB)",
                         "thinking_prefix": "Prefiks tre\u015bci rozumowania",
                         "thinking_suffix": "Sufiks tre\u015bci rozumowania",
                         "tool_call_prefix": "Prefiks wywo\u0142ania narz\u0119dzia",
@@ -256,8 +294,6 @@
                     "data_description": {
                         "prompt": "Wi\u0119cej informacji o promptach modelu znajdziesz [tutaj](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md).",
                         "in_context_examples": "W\u0142\u0105cz t\u0119 opcj\u0119, je\u015bli u\u017cywasz modelu, kt\u00f3ry nie zosta\u0142 specjalnie dostrojony do tej integracji.",
-                        "extra_attributes_to_expose": "To lista 'atrybut\u00f3w' Home Assistant udost\u0119pnianych modelowi. Ogranicza informacje, kt\u00f3re model mo\u017ce zobaczy\u0107 i na temat kt\u00f3rych mo\u017ce odpowiada\u0107 na pytania.",
-                        "gbnf_grammar": "Ogranicza odpowiedzi llama.cpp do gramatyki zapisanej w GBNF. Pozostaw pole puste, aby model m\u00f3g\u0142 odpowiada\u0107 swobodnie.",
                         "prompt_caching": "Buforowanie prompt\u00f3w pr\u00f3buje wst\u0119pnie przetworzy\u0107 prompt (stan domu) i zapisa\u0107 przetwarzanie potrzebne do jego zrozumienia. Po w\u0142\u0105czeniu tej opcji model ponownie przetwarza prompt przy zmianie stanu encji w domu, z ograniczeniem wynikaj\u0105cym z poni\u017cszego interwa\u0142u.",
                         "enable_legacy_tool_calling": "Preferuje lokalne przetwarzanie wywo\u0142a\u0144 narz\u0119dzi zamiast polegania na obs\u0142udze ich formatu przez zaplecze. Mo\u017ce to by\u0107 bardziej niezawodne, ale wymaga poprawnego ustawienia prefiksu i sufiksu wywo\u0142ania narz\u0119dzia.",
                         "tool_response_as_string": "Niekt\u00f3re szablony prompt\u00f3w wymagaj\u0105 odpowiedzi narz\u0119dzia w postaci ci\u0105gu znak\u00f3w zserializowanego do JSON zamiast surowego obiektu.",
@@ -267,37 +303,58 @@
                         "context_length": "Model nie mo\u017ce u\u017cy\u0107 wi\u0119cej ni\u017c podana liczba token\u00f3w \u0142\u0105cznie na rozmow\u0119 i odpowied\u017a. Home LLM usuwa najstarsze wiadomo\u015bci, kt\u00f3re ju\u017c si\u0119 nie mieszcz\u0105, dzi\u0119ki czemu d\u0142uga rozmowa pozostaje w limicie zamiast powodowa\u0107 b\u0142\u0105d."
                     },
                     "description": "Skonfiguruj model zgodnie z wymaganym formatem prompt\u00f3w. Dost\u0119pnych jest wiele opcji, a wyb\u00f3r odpowiednich jest kluczowy dla optymalnej wydajno\u015bci. Wi\u0119cej informacji o opcjach na tej stronie znajdziesz [tutaj](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md).\n\n**Niekt\u00f3re ustawienia domy\u015blne mog\u0142y zosta\u0107 wybrane na podstawie nazwy modelu lub pliku.** Je\u015bli zmieniono nazw\u0119 pliku lub u\u017cywana jest dostrojona wersja obs\u0142ugiwanego modelu, ustawienia domy\u015blne mog\u0142y nie zosta\u0107 wykryte.",
-                    "title": "Skonfiguruj wybrany model"
+                    "title": "Skonfiguruj wybrany model",
+                    "sections": {
+                        "advanced": {
+                            "name": "Opcje zaawansowane",
+                            "description": "Ustawienia opcjonalne, kt\u00f3rych wi\u0119kszo\u015b\u0107 u\u017cytkownik\u00f3w nie potrzebuje. Rozwi\u0144 t\u0119 sekcj\u0119, aby wprowadzi\u0107 zmiany.",
+                            "data": {
+                                "extra_body": "Dodatkowe parametry zapytania",
+                                "in_context_examples_file": "Nazwa pliku CSV z przyk\u0142adami nauki w kontek\u015bcie",
+                                "num_in_context_examples": "Liczba przyk\u0142ad\u00f3w ICL do wygenerowania",
+                                "batch_size": "(llama.cpp) Rozmiar partii",
+                                "n_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w",
+                                "n_batch_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w partii",
+                                "enable_flash_attention": "W\u0142\u0105cz Flash Attention",
+                                "llama_cpp_cache_size_mb": "(llama.cpp) Rozmiar dyskowego bufora KV (MB)",
+                                "ollama_json_mode": "(ollama) Tryb wyj\u015bcia JSON",
+                                "gbnf_grammar_text": "Gramatyka GBNF",
+                                "extra_attributes_to_expose": "Dodatkowy atrybut udost\u0119pniany w kontek\u015bcie"
+                            },
+                            "data_description": {
+                                "extra_body": "Dodatkowe parametry dodawane do tre\u015bci zapytania. Warto\u015bci rozpoznane jako liczba, true/false, null lub JSON s\u0105 wysy\u0142ane jako JSON; pozosta\u0142e s\u0105 wysy\u0142ane jako tekst.",
+                                "gbnf_grammar_text": "Ogranicza odpowiedzi llama.cpp do gramatyki zapisanej w GBNF. Pozostaw pole puste, aby model m\u00f3g\u0142 odpowiada\u0107 swobodnie.",
+                                "extra_attributes_to_expose": "To lista 'atrybut\u00f3w' Home Assistant udost\u0119pnianych modelowi. Ogranicza informacje, kt\u00f3re model mo\u017ce zobaczy\u0107 i na temat kt\u00f3rych mo\u017ce odpowiada\u0107 na pytania."
+                            }
+                        },
+                        "sampling": {
+                            "name": "Parametry pr\u00f3bkowania",
+                            "description": "Puste parametry pr\u00f3bkowania s\u0105 decyzj\u0105 backendu hostuj\u0105cego model. Wype\u0142nij kt\u00f3ry\u015b tylko aby nadpisa\u0107 go dla tego modelu.",
+                            "data": {
+                                "temperature": "Temperatura",
+                                "top_k": "Top K",
+                                "top_p": "Top P",
+                                "min_p": "Min P",
+                                "typical_p": "Typical P"
+                            },
+                            "data_description": {}
+                        }
+                    }
                 },
                 "reconfigure": {
                     "data": {
                         "max_new_tokens": "Maksymalna liczba token\u00f3w w odpowiedzi",
                         "llm_hass_api": "Wybrane API LLM",
                         "prompt": "Prompt systemowy",
-                        "temperature": "Temperatura",
-                        "top_k": "Top K",
-                        "top_p": "Top P",
-                        "min_p": "Min P",
-                        "typical_p": "Typical P",
                         "request_timeout": "Limit czasu \u017c\u0105dania zdalnego (sekundy)",
                         "enable_streaming": "W\u0142\u0105cz strumieniowanie",
                         "ollama_keep_alive": "(ollama) Czas utrzymania w pami\u0119ci/Limit nieaktywno\u015bci (minuty)",
-                        "ollama_json_mode": "(ollama) Tryb wyj\u015bcia JSON",
-                        "extra_attributes_to_expose": "Dodatkowy atrybut udost\u0119pniany w kontek\u015bcie",
-                        "enable_flash_attention": "W\u0142\u0105cz Flash Attention",
-                        "gbnf_grammar": "Gramatyka GBNF",
                         "openai_api_key": "Klucz API",
                         "service_call_regex": "Wyra\u017cenie regularne wywo\u0142ania us\u0142ugi",
                         "in_context_examples": "W\u0142\u0105cz przyk\u0142ady nauki w kontek\u015bcie (ICL)",
-                        "in_context_examples_file": "Nazwa pliku CSV z przyk\u0142adami nauki w kontek\u015bcie",
-                        "num_in_context_examples": "Liczba przyk\u0142ad\u00f3w ICL do wygenerowania",
                         "prompt_caching": "W\u0142\u0105cz buforowanie prompt\u00f3w",
                         "prompt_caching_interval": "Minimalny interwa\u0142 od\u015bwie\u017cania bufora prompt\u00f3w (sekundy)",
                         "context_length": "D\u0142ugo\u015b\u0107 kontekstu",
-                        "batch_size": "(llama.cpp) Rozmiar partii",
-                        "n_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w",
-                        "n_batch_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w partii",
-                        "llama_cpp_cache_size_mb": "(llama.cpp) Rozmiar dyskowego bufora KV (MB)",
                         "thinking_prefix": "Prefiks tre\u015bci rozumowania",
                         "thinking_suffix": "Sufiks tre\u015bci rozumowania",
                         "tool_call_prefix": "Prefiks wywo\u0142ania narz\u0119dzia",
@@ -310,8 +367,6 @@
                         "llm_hass_api": "Wybierz 'Assist', je\u015bli model ma sterowa\u0107 urz\u0105dzeniami. Je\u015bli u\u017cywasz modelu Home-LLM v1, v2 lub v3, wybierz 'Home-LLM (v1-3)'.",
                         "prompt": "Wi\u0119cej informacji o promptach modelu znajdziesz [tutaj](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md).",
                         "in_context_examples": "W\u0142\u0105cz t\u0119 opcj\u0119, je\u015bli u\u017cywasz modelu, kt\u00f3ry nie zosta\u0142 specjalnie dostrojony do tej integracji.",
-                        "extra_attributes_to_expose": "To lista 'atrybut\u00f3w' Home Assistant udost\u0119pnianych modelowi. Ogranicza informacje, kt\u00f3re model mo\u017ce zobaczy\u0107 i na temat kt\u00f3rych mo\u017ce odpowiada\u0107 na pytania.",
-                        "gbnf_grammar": "Ogranicza odpowiedzi llama.cpp do gramatyki zapisanej w GBNF. Pozostaw pole puste, aby model m\u00f3g\u0142 odpowiada\u0107 swobodnie.",
                         "prompt_caching": "Buforowanie prompt\u00f3w pr\u00f3buje wst\u0119pnie przetworzy\u0107 prompt (stan domu) i zapisa\u0107 przetwarzanie potrzebne do jego zrozumienia. Po w\u0142\u0105czeniu tej opcji model ponownie przetwarza prompt przy zmianie stanu encji w domu, z ograniczeniem wynikaj\u0105cym z poni\u017cszego interwa\u0142u.",
                         "enable_legacy_tool_calling": "Preferuje lokalne przetwarzanie wywo\u0142a\u0144 narz\u0119dzi zamiast polegania na obs\u0142udze ich formatu przez zaplecze. Mo\u017ce to by\u0107 bardziej niezawodne, ale wymaga poprawnego ustawienia prefiksu i sufiksu wywo\u0142ania narz\u0119dzia.",
                         "tool_response_as_string": "Niekt\u00f3re szablony prompt\u00f3w wymagaj\u0105 odpowiedzi narz\u0119dzia w postaci ci\u0105gu znak\u00f3w zserializowanego do JSON zamiast surowego obiektu.",
@@ -320,7 +375,43 @@
                         "context_length": "Model nie mo\u017ce u\u017cy\u0107 wi\u0119cej ni\u017c podana liczba token\u00f3w \u0142\u0105cznie na rozmow\u0119 i odpowied\u017a. Home LLM usuwa najstarsze wiadomo\u015bci, kt\u00f3re ju\u017c si\u0119 nie mieszcz\u0105, dzi\u0119ki czemu d\u0142uga rozmowa pozostaje w limicie zamiast powodowa\u0107 b\u0142\u0105d."
                     },
                     "description": "Skonfiguruj model zgodnie z wymaganym formatem prompt\u00f3w. Dost\u0119pnych jest wiele opcji, a wyb\u00f3r odpowiednich jest kluczowy dla optymalnej wydajno\u015bci. Wi\u0119cej informacji o opcjach na tej stronie znajdziesz [tutaj](https://github.com/acon96/home-llm/blob/develop/docs/Backend%20Configuration.md).\n\n**Niekt\u00f3re ustawienia domy\u015blne mog\u0142y zosta\u0107 wybrane na podstawie nazwy modelu lub pliku.** Je\u015bli zmieniono nazw\u0119 pliku lub u\u017cywana jest dostrojona wersja obs\u0142ugiwanego modelu, ustawienia domy\u015blne mog\u0142y nie zosta\u0107 wykryte.",
-                    "title": "Skonfiguruj wybrany model"
+                    "title": "Skonfiguruj wybrany model",
+                    "sections": {
+                        "advanced": {
+                            "name": "Opcje zaawansowane",
+                            "description": "Ustawienia opcjonalne, kt\u00f3rych wi\u0119kszo\u015b\u0107 u\u017cytkownik\u00f3w nie potrzebuje. Rozwi\u0144 t\u0119 sekcj\u0119, aby wprowadzi\u0107 zmiany.",
+                            "data": {
+                                "extra_body": "Dodatkowe parametry zapytania",
+                                "in_context_examples_file": "Nazwa pliku CSV z przyk\u0142adami nauki w kontek\u015bcie",
+                                "num_in_context_examples": "Liczba przyk\u0142ad\u00f3w ICL do wygenerowania",
+                                "batch_size": "(llama.cpp) Rozmiar partii",
+                                "n_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w",
+                                "n_batch_threads": "(llama.cpp) Liczba w\u0105tk\u00f3w partii",
+                                "enable_flash_attention": "W\u0142\u0105cz Flash Attention",
+                                "llama_cpp_cache_size_mb": "(llama.cpp) Rozmiar dyskowego bufora KV (MB)",
+                                "ollama_json_mode": "(ollama) Tryb wyj\u015bcia JSON",
+                                "gbnf_grammar_text": "Gramatyka GBNF",
+                                "extra_attributes_to_expose": "Dodatkowy atrybut udost\u0119pniany w kontek\u015bcie"
+                            },
+                            "data_description": {
+                                "extra_body": "Dodatkowe parametry dodawane do tre\u015bci zapytania. Warto\u015bci rozpoznane jako liczba, true/false, null lub JSON s\u0105 wysy\u0142ane jako JSON; pozosta\u0142e s\u0105 wysy\u0142ane jako tekst.",
+                                "gbnf_grammar_text": "Ogranicza odpowiedzi llama.cpp do gramatyki zapisanej w GBNF. Pozostaw pole puste, aby model m\u00f3g\u0142 odpowiada\u0107 swobodnie.",
+                                "extra_attributes_to_expose": "To lista 'atrybut\u00f3w' Home Assistant udost\u0119pnianych modelowi. Ogranicza informacje, kt\u00f3re model mo\u017ce zobaczy\u0107 i na temat kt\u00f3rych mo\u017ce odpowiada\u0107 na pytania."
+                            }
+                        },
+                        "sampling": {
+                            "name": "Parametry pr\u00f3bkowania",
+                            "description": "Puste parametry pr\u00f3bkowania s\u0105 decyzj\u0105 backendu hostuj\u0105cego model. Wype\u0142nij kt\u00f3ry\u015b tylko aby nadpisa\u0107 go dla tego modelu.",
+                            "data": {
+                                "temperature": "Temperatura",
+                                "top_k": "Top K",
+                                "top_p": "Top P",
+                                "min_p": "Min P",
+                                "typical_p": "Typical P"
+                            },
+                            "data_description": {}
+                        }
+                    }
                 }
             }
         }
@@ -337,7 +428,19 @@
                     "openai_path": "\u015acie\u017cka API"
                 },
                 "description": "Podaj dane po\u0142\u0105czenia z API, kt\u00f3re udost\u0119pnia model.",
-                "title": "Skonfiguruj po\u0142\u0105czenie"
+                "title": "Skonfiguruj po\u0142\u0105czenie",
+                "sections": {
+                    "advanced": {
+                        "name": "Opcje zaawansowane",
+                        "description": "Ustawienia opcjonalne, kt\u00f3rych wi\u0119kszo\u015b\u0107 u\u017cytkownik\u00f3w nie potrzebuje. Rozwi\u0144 t\u0119 sekcj\u0119, aby wprowadzi\u0107 zmiany.",
+                        "data": {
+                            "extra_headers": "Dodatkowe nag\u0142\u00f3wki HTTP"
+                        },
+                        "data_description": {
+                            "extra_headers": "Dodatkowe nag\u0142\u00f3wki HTTP wysy\u0142ane z ka\u017cdym zapytaniem do API. Podaj ka\u017cdy nag\u0142\u00f3wek jako par\u0119 nazwa-warto\u015b\u0107."
+                        }
+                    }
+                }
             },
             "reinstall": {
                 "data": {
@@ -352,7 +455,8 @@
             "failed_to_connect": "Nie uda\u0142o si\u0119 po\u0142\u0105czy\u0107 ze zdalnym API: {exception}",
             "invalid_hostname": "Podana nazwa hosta jest nieprawid\u0142owa. Podaj tylko domen\u0119 lub adres IP, a nie pe\u0142ny adres punktu ko\u0144cowego API.",
             "unknown": "Nieoczekiwany b\u0142\u0105d",
-            "pip_wheel_error": "Pip zwr\u00f3ci\u0142 b\u0142\u0105d podczas instalacji pliku wheel! Sprawd\u017a logi Home Assistant, aby uzyska\u0107 wi\u0119cej szczeg\u00f3\u0142\u00f3w."
+            "pip_wheel_error": "Pip zwr\u00f3ci\u0142 b\u0142\u0105d podczas instalacji pliku wheel! Sprawd\u017a logi Home Assistant, aby uzyska\u0107 wi\u0119cej szczeg\u00f3\u0142\u00f3w.",
+            "invalid_extra_headers": "Ka\u017cdy wpis nag\u0142\u00f3wka wymaga niepustej nazwy. Warto\u015bci nag\u0142\u00f3wk\u00f3w s\u0105 wysy\u0142ane jako tekst."
         },
         "progress": {
             "install_local_wheels": "Prosz\u0119 czeka\u0107, trwa instalacja Llama.cpp..."
@@ -376,6 +480,26 @@
                 "fr": "Francuski",
                 "es": "Hiszpa\u0144ski",
                 "pl": "Polski"
+            }
+        },
+        "extra_headers": {
+            "fields": {
+                "key": {
+                    "name": "Nazwa nag\u0142\u00f3wka"
+                },
+                "value": {
+                    "name": "Warto\u015b\u0107"
+                }
+            }
+        },
+        "extra_body": {
+            "fields": {
+                "key": {
+                    "name": "Nazwa parametru"
+                },
+                "value": {
+                    "name": "Warto\u015b\u0107"
+                }
             }
         }
     }

@@ -17,18 +17,26 @@ from custom_components.llama_conversation.config_flow import LocalLLMSubentryFlo
 from custom_components.llama_conversation.const import (
     BACKEND_TYPE_GENERIC_OPENAI,
     BACKEND_TYPE_LLAMA_CPP,
+    CONF_ADVANCED_SECTION,
     CONF_AI_TASK_RETRIES,
     CONF_BACKEND_TYPE,
     CONF_CHAT_MODEL,
     CONF_DOWNLOADED_MODEL_FILE,
     CONF_DOWNLOADED_MODEL_QUANTIZATION,
+    CONF_GBNF_GRAMMAR,
+    CONF_IN_CONTEXT_EXAMPLES_FILE,
     CONF_INSTALLED_LLAMACPP_VERSION,
+    CONF_LLAMACPP_BATCH_SIZE,
     CONF_LLAMACPP_REINSTALL,
     CONF_MAX_TOOL_CALL_ITERATIONS,
+    CONF_NUM_IN_CONTEXT_EXAMPLES,
     CONF_PROMPT,
     CONF_REQUEST_TIMEOUT,
+    CONF_SAMPLING_SECTION,
     CONF_SELECTED_LANGUAGE,
+    CONF_TEMPERATURE,
     CONF_THINKING_PREFIX,
+    CONF_TOP_P,
     DOMAIN,
 )
 
@@ -282,6 +290,71 @@ async def test_subentry_flow_model_parameters_normalizes_int_fields(hass):
 
     assert result["data"][CONF_MAX_TOOL_CALL_ITERATIONS] == 2
     assert result["data"][CONF_REQUEST_TIMEOUT] == 45
+
+
+@pytest.mark.asyncio
+async def test_subentry_flow_model_parameters_flattens_advanced_section(hass):
+    """GBNF grammar, llama.cpp tuning and ICL counts submitted inside the collapsed
+    section land flat in the subentry data."""
+    entry = SimpleNamespace(
+        state=ConfigEntryState.LOADED,
+        data={CONF_BACKEND_TYPE: BACKEND_TYPE_LLAMA_CPP},
+        options={CONF_SELECTED_LANGUAGE: "en"},
+        runtime_data=DummyRuntimeData(["model-a"]),
+    )
+    flow = _build_subentry_flow(hass, entry)
+    flow.model_config = {CONF_CHAT_MODEL: "model-a"}
+
+    result = await flow.async_step_model_parameters(
+        {
+            CONF_LLM_HASS_API: [],
+            CONF_MAX_TOOL_CALL_ITERATIONS: "2",
+            CONF_ADVANCED_SECTION: {
+                CONF_GBNF_GRAMMAR: "root ::= \"done\"",
+                CONF_LLAMACPP_BATCH_SIZE: "256",
+                CONF_NUM_IN_CONTEXT_EXAMPLES: "6",
+                CONF_IN_CONTEXT_EXAMPLES_FILE: "in_context_examples.csv",
+            },
+        }
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    data = result["data"]
+    assert data[CONF_GBNF_GRAMMAR] == "root ::= \"done\""
+    assert data[CONF_LLAMACPP_BATCH_SIZE] == 256
+    assert data[CONF_NUM_IN_CONTEXT_EXAMPLES] == 6
+    assert data[CONF_IN_CONTEXT_EXAMPLES_FILE] == "in_context_examples.csv"
+    assert CONF_ADVANCED_SECTION not in data
+
+
+@pytest.mark.asyncio
+async def test_subentry_flow_model_parameters_sampling_section(hass):
+    """Sampling parameters arrive grouped in their own section; empty values mean
+    the setting stays unset so the server keeps its default."""
+    entry = SimpleNamespace(
+        state=ConfigEntryState.LOADED,
+        data={CONF_BACKEND_TYPE: BACKEND_TYPE_GENERIC_OPENAI},
+        options={CONF_SELECTED_LANGUAGE: "en"},
+        runtime_data=DummyRuntimeData(["model-a"]),
+    )
+    flow = _build_subentry_flow(hass, entry)
+    flow.model_config = {CONF_CHAT_MODEL: "model-a"}
+
+    result = await flow.async_step_model_parameters(
+        {
+            CONF_LLM_HASS_API: [],
+            CONF_SAMPLING_SECTION: {
+                CONF_TEMPERATURE: "",
+                CONF_TOP_P: "0.5",
+            },
+        }
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    data = result["data"]
+    assert data[CONF_TOP_P] == 0.5
+    assert CONF_TEMPERATURE not in data
+    assert CONF_SAMPLING_SECTION not in data
 
 
 @pytest.mark.asyncio

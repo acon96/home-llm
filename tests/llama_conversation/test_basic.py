@@ -32,6 +32,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_GBNF_GRAMMAR,
     DEFAULT_PROMPT_CACHING_ENABLED,
     CONF_API_PATH,
+    CONF_EXTRA_HEADERS,
     CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES,
     RECOMMENDED_CHAT_MODELS,
 )
@@ -331,7 +332,7 @@ async def test_generic_openai_validate_connection_uses_formatted_base_url(monkey
             return FakeListResult()
 
     class FakeClient:
-        def __init__(self, *, api_key, base_url, timeout=None):
+        def __init__(self, *, api_key, base_url, timeout=None, **_kwargs):
             captured["api_key"] = api_key
             captured["base_url"] = base_url
             captured["timeout"] = timeout
@@ -410,3 +411,141 @@ def test_ollama_client_supports_streaming():
 def test_generic_openai_client_supports_streaming():
     """GenericOpenAIAPIClient must declare streaming support."""
     assert getattr(GenericOpenAIAPIClient, '_attr_supports_streaming', False) is True
+
+
+@pytest.mark.asyncio
+async def test_generic_openai_validate_connection_parses_extra_headers(monkeypatch, hass_defaults):
+    """Validation must parse extra headers from user input and send them as default_headers."""
+    captured = {}
+
+    class FakeModels:
+        async def list(self):
+            return []
+
+    class FakeClient:
+        def __init__(self, *, api_key, base_url, timeout=None, default_headers=None, **_kwargs):
+            captured["default_headers"] = default_headers
+            self.models = FakeModels()
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+    monkeypatch.setattr(
+        "custom_components.llama_conversation.backends.generic_openai.AsyncOpenAI",
+        FakeClient,
+    )
+
+    err = await GenericOpenAIAPIClient.async_validate_connection(
+        hass_defaults,
+        {
+            CONF_HOST: "opencode.ai",
+            CONF_PORT: "",
+            CONF_SSL: True,
+            CONF_API_PATH: "inference/go/openai/v1",
+            CONF_API_KEY: "token",
+            CONF_EXTRA_HEADERS: "x-opencode-session: ha-session-1234",
+        },
+    )
+
+    assert err is None
+    assert captured["default_headers"] == {"x-opencode-session": "ha-session-1234"}
+
+
+@pytest.mark.asyncio
+async def test_generic_openai_validate_connection_reports_header_parse_error(monkeypatch, hass_defaults):
+    """A malformed extra headers value surfaces as a connection error string."""
+
+    class FakeClient:
+        def __init__(self, **_kwargs):
+            raise AssertionError("client must not be constructed when header parsing fails")
+
+    monkeypatch.setattr(
+        "custom_components.llama_conversation.backends.generic_openai.AsyncOpenAI",
+        FakeClient,
+    )
+
+    err = await GenericOpenAIAPIClient.async_validate_connection(
+        hass_defaults,
+        {
+            CONF_HOST: "opencode.ai",
+            CONF_PORT: "",
+            CONF_SSL: True,
+            CONF_API_PATH: "v1",
+            CONF_API_KEY: "token",
+            CONF_EXTRA_HEADERS: "no separator here",
+        },
+    )
+
+    assert err is not None
+    assert "Extra headers" in err
+
+
+@pytest.mark.asyncio
+async def test_generic_openai_client_passes_extra_headers_to_generation(monkeypatch, hass_defaults):
+    """The client parses extra headers once and passes them to every API call."""
+    captured = {}
+
+    class FakeModels:
+        def list(self):
+            return self
+
+        def __aiter__(self):
+            return self
+
+        async def __anext__(self):
+            raise StopAsyncIteration
+
+    class FakeClient:
+        def __init__(self, *, api_key, base_url, timeout=None, default_headers=None, **_kwargs):
+            captured.setdefault("default_headers", default_headers)
+            self.models = FakeModels()
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+    monkeypatch.setattr(
+        "custom_components.llama_conversation.backends.generic_openai.AsyncOpenAI",
+        FakeClient,
+    )
+
+    client = GenericOpenAIAPIClient(
+        hass_defaults,
+        {
+            CONF_HOST: "opencode.ai",
+            CONF_PORT: "",
+            CONF_SSL: True,
+            CONF_API_PATH: "v1",
+            CONF_CHAT_MODEL: "demo",
+            CONF_EXTRA_HEADERS: "x-opencode-session: ha-session-1234",
+        },
+    )
+
+    assert client.extra_headers == {"x-opencode-session": "ha-session-1234"}
+
+    await client.async_get_available_models()
+
+    assert captured["default_headers"] == {"x-opencode-session": "ha-session-1234"}
+
+
+def test_generic_openai_client_ignores_malformed_extra_headers(hass_defaults):
+    """Malformed extra headers are ignored at init instead of breaking the client."""
+
+    client = GenericOpenAIAPIClient(
+        hass_defaults,
+        {
+            CONF_HOST: "localhost",
+            CONF_PORT: "11434",
+            CONF_SSL: False,
+            CONF_API_PATH: "v1",
+            CONF_CHAT_MODEL: "demo",
+            CONF_EXTRA_HEADERS: "not json at all",
+        },
+    )
+
+    assert client.extra_headers == {}
