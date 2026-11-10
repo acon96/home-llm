@@ -20,7 +20,8 @@
                     "ssl": "Utiliser HTTPS",
                     "openai_api_key": "Cl\u00e9 d'API",
                     "openai_path": "Chemin de l'API",
-                    "anthropic_base_url": "URL de base de l'API compatible avec Anthropic"
+                    "anthropic_base_url": "URL de base de l'API compatible avec Anthropic",
+                    "extra_headers": "En-t\u00eates HTTP suppl\u00e9mentaires"
                 },
                 "description": "S\u00e9lectionnez le backend et/ou fournissez les param\u00e8tres de connexion \u00e0 l'API qui h\u00e9berge le mod\u00e8le.",
                 "title": "Configurer le backend"
@@ -107,7 +108,9 @@
                         "tool_call_suffix": "Suffixe des appels d'outils",
                         "enable_legacy_tool_calling": "Activer les appels d'outils h\u00e9rit\u00e9s",
                         "tool_response_as_string": "R\u00e9ponse de l'outil sous forme de cha\u00eene",
-                        "max_tool_call_iterations": "Nombre maximal de tentatives d'appels d'outils"
+                        "max_tool_call_iterations": "Nombre maximal de tentatives d'appels d'outils",
+                        "max_tokens": "Tokens maximum",
+                        "extra_body": "Param\u00e8tres de requ\u00eate suppl\u00e9mentaires (JSON)"
                     },
                     "data_description": {
                         "llm_hass_api": "S\u00e9lectionnez 'Assist' pour permettre au mod\u00e8le de contr\u00f4ler les appareils. Si vous utilisez un mod\u00e8le Home-LLM (v1-3), s\u00e9lectionnez 'Home Assistant Services'.",
@@ -160,7 +163,9 @@
                         "tool_call_suffix": "Suffixe des appels d'outils",
                         "enable_legacy_tool_calling": "Activer les appels d'outils h\u00e9rit\u00e9s",
                         "tool_response_as_string": "R\u00e9ponse de l'outil sous forme de cha\u00eene",
-                        "max_tool_call_iterations": "Nombre maximal de tentatives d'appels d'outils"
+                        "max_tool_call_iterations": "Nombre maximal de tentatives d'appels d'outils",
+                        "max_tokens": "Tokens maximum",
+                        "extra_body": "Param\u00e8tres de requ\u00eate suppl\u00e9mentaires (JSON)"
                     },
                     "data_description": {
                         "llm_hass_api": "S\u00e9lectionnez 'Assist' pour permettre au mod\u00e8le de contr\u00f4ler les appareils. Si vous utilisez un mod\u00e8le Home-LLM (v1-3), s\u00e9lectionnez 'Home Assistant Services'.",
@@ -251,7 +256,9 @@
                         "tool_response_as_string": "R\u00e9ponse de l'outil sous forme de cha\u00eene",
                         "max_tool_call_iterations": "Nombre maximal de tentatives d'appels d'outils",
                         "ai_task_extraction_method": "M\u00e9thode d'extraction des donn\u00e9es structur\u00e9es",
-                        "ai_task_retries": "Nombre de nouvelles tentatives d'extraction des donn\u00e9es structur\u00e9es"
+                        "ai_task_retries": "Nombre de nouvelles tentatives d'extraction des donn\u00e9es structur\u00e9es",
+                        "max_tokens": "Tokens maximum",
+                        "extra_body": "Param\u00e8tres de requ\u00eate suppl\u00e9mentaires (JSON)"
                     },
                     "data_description": {
                         "prompt": "Consultez [cette page](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) pour en savoir plus sur les prompts du mod\u00e8le.",
@@ -304,7 +311,9 @@
                         "tool_call_suffix": "Suffixe des appels d'outils",
                         "enable_legacy_tool_calling": "Activer les appels d'outils h\u00e9rit\u00e9s",
                         "tool_response_as_string": "R\u00e9ponse de l'outil sous forme de cha\u00eene",
-                        "max_tool_call_iterations": "Nombre maximal de tentatives d'appels d'outils"
+                        "max_tool_call_iterations": "Nombre maximal de tentatives d'appels d'outils",
+                        "max_tokens": "Tokens maximum",
+                        "extra_body": "Param\u00e8tres de requ\u00eate suppl\u00e9mentaires (JSON)"
                     },
                     "data_description": {
                         "llm_hass_api": "S\u00e9lectionnez 'Assist' pour permettre au mod\u00e8le de contr\u00f4ler les appareils. Si vous utilisez un mod\u00e8le Home-LLM v1, v2 ou v3, s\u00e9lectionnez 'Home-LLM (v1-3)'.",

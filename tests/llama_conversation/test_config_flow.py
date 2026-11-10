@@ -25,6 +25,7 @@ from custom_components.llama_conversation.const import (
     CONF_CONTEXT_LENGTH,
     CONF_ENABLE_STREAMING,
     CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
+    CONF_EXTRA_BODY,
     CONF_GBNF_GRAMMAR,
     CONF_LLAMACPP_BATCH_SIZE,
     CONF_LLAMACPP_BATCH_THREAD_COUNT,
@@ -48,6 +49,8 @@ from custom_components.llama_conversation.const import (
     DEFAULT_CONTEXT_LENGTH,
     DEFAULT_GBNF_GRAMMAR,
     DEFAULT_ENABLE_STREAMING,
+    DEFAULT_EXTRA_BODY,
+    DEFAULT_MAX_TOKENS,
     DEFAULT_LLAMACPP_BATCH_SIZE,
     DEFAULT_LLAMACPP_BATCH_THREAD_COUNT,
     DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION,
@@ -188,6 +191,18 @@ def test_schema_generic_openai_options_preserved(hass: HomeAssistant):
     prompt_default = _get_default(schema, CONF_PROMPT)
     assert prompt_default is not None and "You are 'Al'" in prompt_default
     assert _get_default(schema, CONF_NUM_IN_CONTEXT_EXAMPLES) == DEFAULT_NUM_IN_CONTEXT_EXAMPLES
+
+
+def test_schema_generic_openai_backends_include_max_tokens_and_extra_body(hass: HomeAssistant):
+    """Both Generic OpenAI backends expose max_tokens and extra request parameters."""
+    for backend in (BACKEND_TYPE_GENERIC_OPENAI, BACKEND_TYPE_GENERIC_OPENAI_RESPONSES):
+        schema = _schema(hass, backend)
+        keys = {getattr(k, "schema", None) for k in schema}
+
+        assert CONF_MAX_TOKENS in keys, backend
+        assert CONF_EXTRA_BODY in keys, backend
+        assert _get_default(schema, CONF_MAX_TOKENS) == DEFAULT_MAX_TOKENS
+        assert _get_default(schema, CONF_EXTRA_BODY) == DEFAULT_EXTRA_BODY
 
 
 def test_schema_llama_cpp_server_includes_gbnf(hass: HomeAssistant):

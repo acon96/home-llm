@@ -85,6 +85,8 @@ from .const import (
     CONF_OLLAMA_KEEP_ALIVE_MIN,
     CONF_OLLAMA_JSON_MODE,
     CONF_API_PATH,
+    CONF_EXTRA_HEADERS,
+    CONF_EXTRA_BODY,
     CONF_CONTEXT_LENGTH,
     CONF_GBNF_GRAMMAR,
     CONF_LLAMACPP_BATCH_SIZE,
@@ -119,6 +121,7 @@ from .const import (
     DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
     DEFAULT_OLLAMA_JSON_MODE,
     DEFAULT_API_PATH,
+    DEFAULT_EXTRA_BODY,
     DEFAULT_CONTEXT_LENGTH,
     DEFAULT_GBNF_GRAMMAR,
     DEFAULT_LLAMACPP_BATCH_SIZE,
@@ -202,6 +205,12 @@ def remote_connection_schema(backend_type: str, *, host=None, port=None, ssl=Non
         default_path = ""
     elif backend_type in [BACKEND_TYPE_GENERIC_OPENAI, BACKEND_TYPE_GENERIC_OPENAI_RESPONSES]:
         default_port = ""
+        extra = {
+            vol.Optional(
+                CONF_EXTRA_HEADERS,
+                default="",
+            ): TextSelector(TextSelectorConfig(multiline=True)),
+        }
 
     return vol.Schema(
         {
@@ -755,7 +764,7 @@ def local_llama_config_option_schema(
                 default=options.get(CONF_GBNF_GRAMMAR, DEFAULT_GBNF_GRAMMAR),
             ): TextSelector(TextSelectorConfig(multiline=True))
         })
-    elif backend_type in BACKEND_TYPE_GENERIC_OPENAI_RESPONSES:
+    elif backend_type in [BACKEND_TYPE_GENERIC_OPENAI, BACKEND_TYPE_GENERIC_OPENAI_RESPONSES]:
         result.update({
             vol.Optional(
                 CONF_TEMPERATURE,
@@ -770,6 +779,16 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
                 default=DEFAULT_REQUEST_TIMEOUT,
             ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
+            vol.Optional(
+                CONF_MAX_TOKENS,
+                description={"suggested_value": options.get(CONF_MAX_TOKENS)},
+                default=DEFAULT_MAX_TOKENS,
+            ): NumberSelector(NumberSelectorConfig(min=1, max=8192, step=1)),
+            vol.Optional(
+                CONF_EXTRA_BODY,
+                description={"suggested_value": options.get(CONF_EXTRA_BODY)},
+                default=DEFAULT_EXTRA_BODY,
+            ): TextSelector(TextSelectorConfig(multiline=True)),
         })
     elif backend_type == BACKEND_TYPE_LLAMA_CPP_SERVER:
         result.update({
