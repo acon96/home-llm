@@ -91,6 +91,7 @@ from .const import (
     CONF_EXTRA_HEADERS,
     CONF_EXTRA_BODY,
     CONF_ADVANCED_SECTION,
+    CONF_SAMPLING_SECTION,
     CONF_CONTEXT_LENGTH,
     CONF_GBNF_GRAMMAR,
     CONF_LLAMACPP_BATCH_SIZE,
@@ -174,20 +175,22 @@ def _key_value_selector(translation_key: str) -> ObjectSelector:
     ))
 
 def flatten_advanced_section(user_input: dict[str, Any] | None) -> dict[str, Any]:
-    """Flatten the collapsed advanced section into the top level of the form input
-    and convert its key/value entries to storage format. Raises ValueError when
-    the entries are malformed."""
+    """Flatten every form section (advanced options and sampling parameters) into
+    the top level of the form input and convert the key/value entries to storage
+    format. Raises ValueError when the entries are malformed."""
     if not user_input:
         return {}
     result = dict(user_input)
-    advanced = result.pop(CONF_ADVANCED_SECTION, None)
-    if isinstance(advanced, dict):
-        advanced = dict(advanced)
-        if CONF_EXTRA_HEADERS in advanced:
-            advanced[CONF_EXTRA_HEADERS] = parse_extra_headers(advanced[CONF_EXTRA_HEADERS])
-        if CONF_EXTRA_BODY in advanced:
-            advanced[CONF_EXTRA_BODY] = parse_extra_body(advanced[CONF_EXTRA_BODY])
-        result.update(advanced)
+    for section_key in (CONF_ADVANCED_SECTION, CONF_SAMPLING_SECTION):
+        section_input = result.pop(section_key, None)
+        if isinstance(section_input, dict):
+            section_input = dict(section_input)
+            if section_key == CONF_ADVANCED_SECTION:
+                if CONF_EXTRA_HEADERS in section_input:
+                    section_input[CONF_EXTRA_HEADERS] = parse_extra_headers(section_input[CONF_EXTRA_HEADERS])
+                if CONF_EXTRA_BODY in section_input:
+                    section_input[CONF_EXTRA_BODY] = parse_extra_body(section_input[CONF_EXTRA_BODY])
+            result.update(section_input)
     return result
 
 def pick_backend_schema(backend_type=None, selected_language=None):
@@ -665,10 +668,6 @@ def local_llama_config_option_schema(
 ) -> dict:
     
     result: dict = {
-        vol.Optional(
-            CONF_TEMPERATURE,
-            description={"suggested_value": options[CONF_TEMPERATURE]} if CONF_TEMPERATURE in options else {},
-        ): NumberSelector(NumberSelectorConfig(min=0.0, max=2.0, step=0.05, mode=NumberSelectorMode.BOX)),
         vol.Required(
             CONF_ENABLE_STREAMING,
             description={"suggested_value": options.get(CONF_ENABLE_STREAMING, DEFAULT_ENABLE_STREAMING)},
@@ -678,6 +677,13 @@ def local_llama_config_option_schema(
 
     # options that are hidden in the collapsed 'Advanced Options' section
     advanced: dict = {}
+    # sampling parameters, grouped in their own (expanded) 'Sampling Parameters' section
+    sampling: dict = {
+        vol.Optional(
+            CONF_TEMPERATURE,
+            description={"suggested_value": options[CONF_TEMPERATURE]} if CONF_TEMPERATURE in options else {},
+        ): NumberSelector(NumberSelectorConfig(min=0.0, max=2.0, step=0.05, mode=NumberSelectorMode.BOX)),
+    }
 
     if subentry_type == ai_task.DOMAIN:
         result.update({
@@ -724,11 +730,6 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options.get(CONF_USE_IN_CONTEXT_LEARNING_EXAMPLES)},
                 default=DEFAULT_USE_IN_CONTEXT_LEARNING_EXAMPLES,
             ): BooleanSelector(BooleanSelectorConfig()),
-            vol.Required(
-                CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
-                description={"suggested_value": options.get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE)},
-                default=DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
-            ): TextSelector(TextSelectorConfig(multiple=True)),
             vol.Optional(
                 CONF_LLM_HASS_API,
                 description={"suggested_value": options.get(CONF_LLM_HASS_API)},
@@ -751,6 +752,11 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options.get(CONF_NUM_IN_CONTEXT_EXAMPLES)},
                 default=DEFAULT_NUM_IN_CONTEXT_EXAMPLES,
             ): NumberSelector(NumberSelectorConfig(min=1, max=16, step=1)),
+            vol.Required(
+                CONF_EXTRA_ATTRIBUTES_TO_EXPOSE,
+                description={"suggested_value": options.get(CONF_EXTRA_ATTRIBUTES_TO_EXPOSE)},
+                default=DEFAULT_EXTRA_ATTRIBUTES_TO_EXPOSE,
+            ): TextSelector(TextSelectorConfig(multiple=True)),
         })
 
     if backend_type == BACKEND_TYPE_LLAMA_CPP:
@@ -773,6 +779,8 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options.get(CONF_MAX_TOKENS)},
                 default=DEFAULT_MAX_TOKENS,
             ): NumberSelector(NumberSelectorConfig(min=1, max=8192, step=1)),
+        })
+        sampling.update({
             vol.Optional(
                 CONF_TOP_K,
                 description={"suggested_value": options[CONF_TOP_K]} if CONF_TOP_K in options else {},
@@ -789,7 +797,9 @@ def local_llama_config_option_schema(
                 CONF_TYPICAL_P,
                 description={"suggested_value": options[CONF_TYPICAL_P]} if CONF_TYPICAL_P in options else {},
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            # TODO: add rope_scaling_type
+        })
+        # TODO: add rope_scaling_type
+        result.update({
             vol.Required(
                 CONF_CONTEXT_LENGTH,
                 description={"suggested_value": options.get(CONF_CONTEXT_LENGTH)},
@@ -830,14 +840,6 @@ def local_llama_config_option_schema(
         })
     elif backend_type in [BACKEND_TYPE_GENERIC_OPENAI, BACKEND_TYPE_GENERIC_OPENAI_RESPONSES]:
         result.update({
-            vol.Optional(
-                CONF_TEMPERATURE,
-                description={"suggested_value": options[CONF_TEMPERATURE]} if CONF_TEMPERATURE in options else {},
-            ): NumberSelector(NumberSelectorConfig(min=0, max=3, step=0.05)),
-            vol.Optional(
-                CONF_TOP_P,
-                description={"suggested_value": options[CONF_TOP_P]} if CONF_TOP_P in options else {},
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
             vol.Required(
                 CONF_REQUEST_TIMEOUT,
                 description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
@@ -848,6 +850,16 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options.get(CONF_MAX_TOKENS)},
                 default=DEFAULT_MAX_TOKENS,
             ): NumberSelector(NumberSelectorConfig(min=1, max=8192, step=1)),
+        })
+        sampling.update({
+            vol.Optional(
+                CONF_TEMPERATURE,
+                description={"suggested_value": options[CONF_TEMPERATURE]} if CONF_TEMPERATURE in options else {},
+            ): NumberSelector(NumberSelectorConfig(min=0, max=3, step=0.05)),
+            vol.Optional(
+                CONF_TOP_P,
+                description={"suggested_value": options[CONF_TOP_P]} if CONF_TOP_P in options else {},
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
         })
         body_pairs = _kv_pairs(options.get(CONF_EXTRA_BODY))
         advanced.update({
@@ -863,6 +875,13 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options.get(CONF_MAX_TOKENS)},
                 default=DEFAULT_MAX_TOKENS,
             ): NumberSelector(NumberSelectorConfig(min=1, max=8192, step=1)),
+            vol.Required(
+                CONF_REQUEST_TIMEOUT,
+                description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
+                default=DEFAULT_REQUEST_TIMEOUT,
+            ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
+        })
+        sampling.update({
             vol.Optional(
                 CONF_TOP_K,
                 description={"suggested_value": options[CONF_TOP_K]} if CONF_TOP_K in options else {},
@@ -871,11 +890,6 @@ def local_llama_config_option_schema(
                 CONF_TOP_P,
                 description={"suggested_value": options[CONF_TOP_P]} if CONF_TOP_P in options else {},
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Required(
-                CONF_REQUEST_TIMEOUT,
-                description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
-                default=DEFAULT_REQUEST_TIMEOUT,
-            ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
         })
         advanced.update({
             vol.Required(
@@ -896,6 +910,18 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options.get(CONF_CONTEXT_LENGTH)},
                 default=DEFAULT_CONTEXT_LENGTH,
             ): NumberSelector(NumberSelectorConfig(min=512, max=1_048_576, step=512)),
+            vol.Required(
+                CONF_REQUEST_TIMEOUT,
+                description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
+                default=DEFAULT_REQUEST_TIMEOUT,
+            ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
+            vol.Required(
+                CONF_OLLAMA_KEEP_ALIVE_MIN,
+                description={"suggested_value": options.get(CONF_OLLAMA_KEEP_ALIVE_MIN)},
+                default=DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
+            ): NumberSelector(NumberSelectorConfig(min=-1, max=1440, step=1, unit_of_measurement=UnitOfTime.MINUTES, mode=NumberSelectorMode.BOX)),
+        })
+        sampling.update({
             vol.Optional(
                 CONF_TOP_K,
                 description={"suggested_value": options[CONF_TOP_K]} if CONF_TOP_K in options else {},
@@ -908,16 +934,6 @@ def local_llama_config_option_schema(
                 CONF_TYPICAL_P,
                 description={"suggested_value": options[CONF_TYPICAL_P]} if CONF_TYPICAL_P in options else {},
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Required(
-                CONF_REQUEST_TIMEOUT,
-                description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
-                default=DEFAULT_REQUEST_TIMEOUT,
-            ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
-            vol.Required(
-                CONF_OLLAMA_KEEP_ALIVE_MIN,
-                description={"suggested_value": options.get(CONF_OLLAMA_KEEP_ALIVE_MIN)},
-                default=DEFAULT_OLLAMA_KEEP_ALIVE_MIN,
-            ): NumberSelector(NumberSelectorConfig(min=-1, max=1440, step=1, unit_of_measurement=UnitOfTime.MINUTES, mode=NumberSelectorMode.BOX)),
         })
         advanced.update({
             vol.Required(
@@ -933,6 +949,13 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options.get(CONF_MAX_TOKENS)},
                 default=DEFAULT_MAX_TOKENS,
             ): NumberSelector(NumberSelectorConfig(min=1, max=8192, step=1)),
+            vol.Required(
+                CONF_REQUEST_TIMEOUT,
+                description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
+                default=DEFAULT_REQUEST_TIMEOUT,
+            ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
+        })
+        sampling.update({
             vol.Optional(
                 CONF_TOP_K,
                 description={"suggested_value": options[CONF_TOP_K]} if CONF_TOP_K in options else {},
@@ -941,16 +964,15 @@ def local_llama_config_option_schema(
                 CONF_TOP_P,
                 description={"suggested_value": options[CONF_TOP_P]} if CONF_TOP_P in options else {},
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Required(
-                CONF_REQUEST_TIMEOUT,
-                description={"suggested_value": options.get(CONF_REQUEST_TIMEOUT)},
-                default=DEFAULT_REQUEST_TIMEOUT,
-            ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
         })
 
     # attach the collapsed 'Advanced Options' section with the rarely used options
     if advanced:
         result[vol.Optional(CONF_ADVANCED_SECTION)] = section(vol.Schema(advanced), {"collapsed": True})
+
+    # group the sampling parameters in their own section, positioned where they used to sit
+    if sampling:
+        result[vol.Optional(CONF_SAMPLING_SECTION)] = section(vol.Schema(sampling))
 
     # sort the options
     global_order = [
@@ -962,12 +984,8 @@ def local_llama_config_option_schema(
         CONF_CONTEXT_LENGTH,
         CONF_MAX_TOKENS,
         CONF_ENABLE_STREAMING,
-        # sampling parameters
-        CONF_TEMPERATURE,
-        CONF_TOP_P,
-        CONF_MIN_P,
-        CONF_TYPICAL_P,
-        CONF_TOP_K,
+        # sampling parameters, grouped in their own section
+        CONF_SAMPLING_SECTION,
         # tool calling/reasoning
         CONF_THINKING_PREFIX,
         CONF_THINKING_SUFFIX,
@@ -992,6 +1010,7 @@ def local_llama_config_option_schema(
         CONF_LLAMACPP_ENABLE_FLASH_ATTENTION,
         CONF_OLLAMA_KEEP_ALIVE_MIN,
         CONF_OLLAMA_JSON_MODE,
+        CONF_ADVANCED_SECTION,
     ]
 
     result = { k: v for k, v in sorted(result.items(), key=lambda item: global_order.index(item[0]) if item[0] in global_order else 9999) }
@@ -1185,6 +1204,14 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
         )
 
         if user_input:
+            # the frontend only strips empty values at the top level, so drop them from
+            # the section data to keep the 'leave empty for the default/server' behavior
+            for section_key in (CONF_ADVANCED_SECTION, CONF_SAMPLING_SECTION):
+                section_input = user_input.get(section_key)
+                if isinstance(section_input, dict):
+                    for key in [k for k, v in section_input.items() if v is None or v == ""]:
+                        del section_input[key]
+
             # --- Normalize numeric fields to ints to avoid slice/type errors later. This
             # happens before validation, and the collapsed advanced section arrives nested. ---
             advanced_input = user_input.get(CONF_ADVANCED_SECTION)

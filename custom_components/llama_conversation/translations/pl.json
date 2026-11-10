@@ -91,15 +91,9 @@
                         "max_new_tokens": "Maksymalna liczba token\u00f3w w odpowiedzi",
                         "llm_hass_api": "Wybrane API LLM",
                         "prompt": "Prompt systemowy",
-                        "temperature": "Temperatura",
-                        "top_k": "Top K",
-                        "top_p": "Top P",
-                        "min_p": "Min P",
-                        "typical_p": "Typical P",
                         "request_timeout": "Limit czasu \u017c\u0105dania zdalnego (sekundy)",
                         "enable_streaming": "W\u0142\u0105cz strumieniowanie",
                         "ollama_keep_alive": "(ollama) Czas utrzymania w pami\u0119ci/Limit nieaktywno\u015bci (minuty)",
-                        "extra_attributes_to_expose": "Dodatkowy atrybut udost\u0119pniany w kontek\u015bcie",
                         "openai_api_key": "Klucz API",
                         "service_call_regex": "Wyra\u017cenie regularne wywo\u0142ania us\u0142ugi",
                         "in_context_examples": "W\u0142\u0105cz przyk\u0142ady nauki w kontek\u015bcie (ICL)",
@@ -118,7 +112,6 @@
                         "llm_hass_api": "Wybierz 'Assist', je\u015bli model ma sterowa\u0107 urz\u0105dzeniami. Je\u015bli u\u017cywasz modelu Home-LLM (v1-3), wybierz 'Home Assistant Services'.",
                         "prompt": "Wi\u0119cej informacji o promptach modelu znajdziesz [tutaj](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md).",
                         "in_context_examples": "W\u0142\u0105cz t\u0119 opcj\u0119, je\u015bli u\u017cywasz modelu, kt\u00f3ry nie zosta\u0142 specjalnie dostrojony do tej integracji.",
-                        "extra_attributes_to_expose": "To lista 'atrybut\u00f3w' Home Assistant udost\u0119pnianych modelowi. Ogranicza informacje, kt\u00f3re model mo\u017ce zobaczy\u0107 i na temat kt\u00f3rych mo\u017ce odpowiada\u0107 na pytania.",
                         "prompt_caching": "Buforowanie prompt\u00f3w pr\u00f3buje wst\u0119pnie przetworzy\u0107 prompt (stan domu) i zapisa\u0107 przetwarzanie potrzebne do jego zrozumienia. Po w\u0142\u0105czeniu tej opcji model ponownie przetwarza prompt przy zmianie stanu encji w domu, z ograniczeniem wynikaj\u0105cym z poni\u017cszego interwa\u0142u.",
                         "enable_legacy_tool_calling": "Preferuje lokalne przetwarzanie wywo\u0142a\u0144 narz\u0119dzi zamiast polegania na obs\u0142udze ich formatu przez zaplecze. Mo\u017ce to by\u0107 bardziej niezawodne, ale wymaga poprawnego ustawienia prefiksu i sufiksu wywo\u0142ania narz\u0119dzia.",
                         "tool_response_as_string": "Niekt\u00f3re szablony prompt\u00f3w wymagaj\u0105 odpowiedzi narz\u0119dzia w postaci ci\u0105gu znak\u00f3w zserializowanego do JSON zamiast surowego obiektu.",
@@ -142,12 +135,26 @@
                                 "enable_flash_attention": "W\u0142\u0105cz Flash Attention",
                                 "llama_cpp_cache_size_mb": "(llama.cpp) Rozmiar dyskowego bufora KV (MB)",
                                 "ollama_json_mode": "(ollama) Tryb wyj\u015bcia JSON",
-                                "gbnf_grammar_text": "Gramatyka GBNF"
+                                "gbnf_grammar_text": "Gramatyka GBNF",
+                                "extra_attributes_to_expose": "Dodatkowy atrybut udost\u0119pniany w kontek\u015bcie"
                             },
                             "data_description": {
                                 "extra_body": "Dodatkowe parametry dodawane do tre\u015bci zapytania. Warto\u015bci rozpoznane jako liczba, true/false, null lub JSON s\u0105 wysy\u0142ane jako JSON; pozosta\u0142e s\u0105 wysy\u0142ane jako tekst.",
-                                "gbnf_grammar_text": "Ogranicza odpowiedzi llama.cpp do gramatyki zapisanej w GBNF. Pozostaw pole puste, aby model m\u00f3g\u0142 odpowiada\u0107 swobodnie."
+                                "gbnf_grammar_text": "Ogranicza odpowiedzi llama.cpp do gramatyki zapisanej w GBNF. Pozostaw pole puste, aby model m\u00f3g\u0142 odpowiada\u0107 swobodnie.",
+                                "extra_attributes_to_expose": "To lista 'atrybut\u00f3w' Home Assistant udost\u0119pnianych modelowi. Ogranicza informacje, kt\u00f3re model mo\u017ce zobaczy\u0107 i na temat kt\u00f3rych mo\u017ce odpowiada\u0107 na pytania."
                             }
+                        },
+                        "sampling": {
+                            "name": "Parametry pr\u00f3bkowania",
+                            "description": "Puste parametry pr\u00f3bkowania s\u0105 decyzj\u0105 serwera hostuj\u0105cego model. Wype\u0142nij kt\u00f3ry\u015b tylko aby nadpisa\u0107 go dla tego modelu.",
+                            "data": {
+                                "temperature": "Temperatura",
+                                "top_k": "Top K",
+                                "top_p": "Top P",
+                                "min_p": "Min P",
+                                "typical_p": "Typical P"
+                            },
+                            "data_description": {}
                         }
                     }
                 },
@@ -156,15 +163,9 @@
                         "max_new_tokens": "Maksymalna liczba token\u00f3w w odpowiedzi",
                         "llm_hass_api": "Wybrane API LLM",
                         "prompt": "Prompt systemowy",
-                        "temperature": "Temperatura",
-                        "top_k": "Top K",
-                        "top_p": "Top P",
-                        "min_p": "Min P",
-                        "typical_p": "Typical P",
                         "request_timeout": "Limit czasu \u017c\u0105dania zdalnego (sekundy)",
                         "enable_streaming": "W\u0142\u0105cz strumieniowanie",
                         "ollama_keep_alive": "(ollama) Czas utrzymania w pami\u0119ci/Limit nieaktywno\u015bci (minuty)",
-                        "extra_attributes_to_expose": "Dodatkowy atrybut udost\u0119pniany w kontek\u015bcie",
                         "openai_api_key": "Klucz API",
                         "service_call_regex": "Wyra\u017cenie regularne wywo\u0142ania us\u0142ugi",
                         "in_context_examples": "W\u0142\u0105cz przyk\u0142ady nauki w kontek\u015bcie (ICL)",
@@ -183,7 +184,6 @@
                         "llm_hass_api": "Wybierz 'Assist', je\u015bli model ma sterowa\u0107 urz\u0105dzeniami. Je\u015bli u\u017cywasz modelu Home-LLM (v1-3), wybierz 'Home Assistant Services'.",
                         "prompt": "Wi\u0119cej informacji o promptach modelu znajdziesz [tutaj](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md).",
                         "in_context_examples": "W\u0142\u0105cz t\u0119 opcj\u0119, je\u015bli u\u017cywasz modelu, kt\u00f3ry nie zosta\u0142 specjalnie dostrojony do tej integracji.",
-                        "extra_attributes_to_expose": "To lista 'atrybut\u00f3w' Home Assistant udost\u0119pnianych modelowi. Ogranicza informacje, kt\u00f3re model mo\u017ce zobaczy\u0107 i na temat kt\u00f3rych mo\u017ce odpowiada\u0107 na pytania.",
                         "prompt_caching": "Buforowanie prompt\u00f3w pr\u00f3buje wst\u0119pnie przetworzy\u0107 prompt (stan domu) i zapisa\u0107 przetwarzanie potrzebne do jego zrozumienia. Po w\u0142\u0105czeniu tej opcji model ponownie przetwarza prompt przy zmianie stanu encji w domu, z ograniczeniem wynikaj\u0105cym z poni\u017cszego interwa\u0142u.",
                         "enable_legacy_tool_calling": "Preferuje lokalne przetwarzanie wywo\u0142a\u0144 narz\u0119dzi zamiast polegania na obs\u0142udze ich formatu przez zaplecze. Mo\u017ce to by\u0107 bardziej niezawodne, ale wymaga poprawnego ustawienia prefiksu i sufiksu wywo\u0142ania narz\u0119dzia.",
                         "tool_response_as_string": "Niekt\u00f3re szablony prompt\u00f3w wymagaj\u0105 odpowiedzi narz\u0119dzia w postaci ci\u0105gu znak\u00f3w zserializowanego do JSON zamiast surowego obiektu.",
@@ -207,12 +207,26 @@
                                 "enable_flash_attention": "W\u0142\u0105cz Flash Attention",
                                 "llama_cpp_cache_size_mb": "(llama.cpp) Rozmiar dyskowego bufora KV (MB)",
                                 "ollama_json_mode": "(ollama) Tryb wyj\u015bcia JSON",
-                                "gbnf_grammar_text": "Gramatyka GBNF"
+                                "gbnf_grammar_text": "Gramatyka GBNF",
+                                "extra_attributes_to_expose": "Dodatkowy atrybut udost\u0119pniany w kontek\u015bcie"
                             },
                             "data_description": {
                                 "extra_body": "Dodatkowe parametry dodawane do tre\u015bci zapytania. Warto\u015bci rozpoznane jako liczba, true/false, null lub JSON s\u0105 wysy\u0142ane jako JSON; pozosta\u0142e s\u0105 wysy\u0142ane jako tekst.",
-                                "gbnf_grammar_text": "Ogranicza odpowiedzi llama.cpp do gramatyki zapisanej w GBNF. Pozostaw pole puste, aby model m\u00f3g\u0142 odpowiada\u0107 swobodnie."
+                                "gbnf_grammar_text": "Ogranicza odpowiedzi llama.cpp do gramatyki zapisanej w GBNF. Pozostaw pole puste, aby model m\u00f3g\u0142 odpowiada\u0107 swobodnie.",
+                                "extra_attributes_to_expose": "To lista 'atrybut\u00f3w' Home Assistant udost\u0119pnianych modelowi. Ogranicza informacje, kt\u00f3re model mo\u017ce zobaczy\u0107 i na temat kt\u00f3rych mo\u017ce odpowiada\u0107 na pytania."
                             }
+                        },
+                        "sampling": {
+                            "name": "Parametry pr\u00f3bkowania",
+                            "description": "Puste parametry pr\u00f3bkowania s\u0105 decyzj\u0105 serwera hostuj\u0105cego model. Wype\u0142nij kt\u00f3ry\u015b tylko aby nadpisa\u0107 go dla tego modelu.",
+                            "data": {
+                                "temperature": "Temperatura",
+                                "top_k": "Top K",
+                                "top_p": "Top P",
+                                "min_p": "Min P",
+                                "typical_p": "Typical P"
+                            },
+                            "data_description": {}
                         }
                     }
                 }
@@ -258,15 +272,9 @@
                     "data": {
                         "max_new_tokens": "Maksymalna liczba token\u00f3w w odpowiedzi",
                         "prompt": "Prompt systemowy",
-                        "temperature": "Temperatura",
-                        "top_k": "Top K",
-                        "top_p": "Top P",
-                        "min_p": "Min P",
-                        "typical_p": "Typical P",
                         "request_timeout": "Limit czasu \u017c\u0105dania zdalnego (sekundy)",
                         "enable_streaming": "W\u0142\u0105cz strumieniowanie",
                         "ollama_keep_alive": "(ollama) Czas utrzymania w pami\u0119ci/Limit nieaktywno\u015bci (minuty)",
-                        "extra_attributes_to_expose": "Dodatkowy atrybut udost\u0119pniany w kontek\u015bcie",
                         "openai_api_key": "Klucz API",
                         "service_call_regex": "Wyra\u017cenie regularne wywo\u0142ania us\u0142ugi",
                         "in_context_examples": "W\u0142\u0105cz przyk\u0142ady nauki w kontek\u015bcie (ICL)",
@@ -286,7 +294,6 @@
                     "data_description": {
                         "prompt": "Wi\u0119cej informacji o promptach modelu znajdziesz [tutaj](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md).",
                         "in_context_examples": "W\u0142\u0105cz t\u0119 opcj\u0119, je\u015bli u\u017cywasz modelu, kt\u00f3ry nie zosta\u0142 specjalnie dostrojony do tej integracji.",
-                        "extra_attributes_to_expose": "To lista 'atrybut\u00f3w' Home Assistant udost\u0119pnianych modelowi. Ogranicza informacje, kt\u00f3re model mo\u017ce zobaczy\u0107 i na temat kt\u00f3rych mo\u017ce odpowiada\u0107 na pytania.",
                         "prompt_caching": "Buforowanie prompt\u00f3w pr\u00f3buje wst\u0119pnie przetworzy\u0107 prompt (stan domu) i zapisa\u0107 przetwarzanie potrzebne do jego zrozumienia. Po w\u0142\u0105czeniu tej opcji model ponownie przetwarza prompt przy zmianie stanu encji w domu, z ograniczeniem wynikaj\u0105cym z poni\u017cszego interwa\u0142u.",
                         "enable_legacy_tool_calling": "Preferuje lokalne przetwarzanie wywo\u0142a\u0144 narz\u0119dzi zamiast polegania na obs\u0142udze ich formatu przez zaplecze. Mo\u017ce to by\u0107 bardziej niezawodne, ale wymaga poprawnego ustawienia prefiksu i sufiksu wywo\u0142ania narz\u0119dzia.",
                         "tool_response_as_string": "Niekt\u00f3re szablony prompt\u00f3w wymagaj\u0105 odpowiedzi narz\u0119dzia w postaci ci\u0105gu znak\u00f3w zserializowanego do JSON zamiast surowego obiektu.",
@@ -311,12 +318,26 @@
                                 "enable_flash_attention": "W\u0142\u0105cz Flash Attention",
                                 "llama_cpp_cache_size_mb": "(llama.cpp) Rozmiar dyskowego bufora KV (MB)",
                                 "ollama_json_mode": "(ollama) Tryb wyj\u015bcia JSON",
-                                "gbnf_grammar_text": "Gramatyka GBNF"
+                                "gbnf_grammar_text": "Gramatyka GBNF",
+                                "extra_attributes_to_expose": "Dodatkowy atrybut udost\u0119pniany w kontek\u015bcie"
                             },
                             "data_description": {
                                 "extra_body": "Dodatkowe parametry dodawane do tre\u015bci zapytania. Warto\u015bci rozpoznane jako liczba, true/false, null lub JSON s\u0105 wysy\u0142ane jako JSON; pozosta\u0142e s\u0105 wysy\u0142ane jako tekst.",
-                                "gbnf_grammar_text": "Ogranicza odpowiedzi llama.cpp do gramatyki zapisanej w GBNF. Pozostaw pole puste, aby model m\u00f3g\u0142 odpowiada\u0107 swobodnie."
+                                "gbnf_grammar_text": "Ogranicza odpowiedzi llama.cpp do gramatyki zapisanej w GBNF. Pozostaw pole puste, aby model m\u00f3g\u0142 odpowiada\u0107 swobodnie.",
+                                "extra_attributes_to_expose": "To lista 'atrybut\u00f3w' Home Assistant udost\u0119pnianych modelowi. Ogranicza informacje, kt\u00f3re model mo\u017ce zobaczy\u0107 i na temat kt\u00f3rych mo\u017ce odpowiada\u0107 na pytania."
                             }
+                        },
+                        "sampling": {
+                            "name": "Parametry pr\u00f3bkowania",
+                            "description": "Puste parametry pr\u00f3bkowania s\u0105 decyzj\u0105 serwera hostuj\u0105cego model. Wype\u0142nij kt\u00f3ry\u015b tylko aby nadpisa\u0107 go dla tego modelu.",
+                            "data": {
+                                "temperature": "Temperatura",
+                                "top_k": "Top K",
+                                "top_p": "Top P",
+                                "min_p": "Min P",
+                                "typical_p": "Typical P"
+                            },
+                            "data_description": {}
                         }
                     }
                 },
@@ -325,15 +346,9 @@
                         "max_new_tokens": "Maksymalna liczba token\u00f3w w odpowiedzi",
                         "llm_hass_api": "Wybrane API LLM",
                         "prompt": "Prompt systemowy",
-                        "temperature": "Temperatura",
-                        "top_k": "Top K",
-                        "top_p": "Top P",
-                        "min_p": "Min P",
-                        "typical_p": "Typical P",
                         "request_timeout": "Limit czasu \u017c\u0105dania zdalnego (sekundy)",
                         "enable_streaming": "W\u0142\u0105cz strumieniowanie",
                         "ollama_keep_alive": "(ollama) Czas utrzymania w pami\u0119ci/Limit nieaktywno\u015bci (minuty)",
-                        "extra_attributes_to_expose": "Dodatkowy atrybut udost\u0119pniany w kontek\u015bcie",
                         "openai_api_key": "Klucz API",
                         "service_call_regex": "Wyra\u017cenie regularne wywo\u0142ania us\u0142ugi",
                         "in_context_examples": "W\u0142\u0105cz przyk\u0142ady nauki w kontek\u015bcie (ICL)",
@@ -352,7 +367,6 @@
                         "llm_hass_api": "Wybierz 'Assist', je\u015bli model ma sterowa\u0107 urz\u0105dzeniami. Je\u015bli u\u017cywasz modelu Home-LLM v1, v2 lub v3, wybierz 'Home-LLM (v1-3)'.",
                         "prompt": "Wi\u0119cej informacji o promptach modelu znajdziesz [tutaj](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md).",
                         "in_context_examples": "W\u0142\u0105cz t\u0119 opcj\u0119, je\u015bli u\u017cywasz modelu, kt\u00f3ry nie zosta\u0142 specjalnie dostrojony do tej integracji.",
-                        "extra_attributes_to_expose": "To lista 'atrybut\u00f3w' Home Assistant udost\u0119pnianych modelowi. Ogranicza informacje, kt\u00f3re model mo\u017ce zobaczy\u0107 i na temat kt\u00f3rych mo\u017ce odpowiada\u0107 na pytania.",
                         "prompt_caching": "Buforowanie prompt\u00f3w pr\u00f3buje wst\u0119pnie przetworzy\u0107 prompt (stan domu) i zapisa\u0107 przetwarzanie potrzebne do jego zrozumienia. Po w\u0142\u0105czeniu tej opcji model ponownie przetwarza prompt przy zmianie stanu encji w domu, z ograniczeniem wynikaj\u0105cym z poni\u017cszego interwa\u0142u.",
                         "enable_legacy_tool_calling": "Preferuje lokalne przetwarzanie wywo\u0142a\u0144 narz\u0119dzi zamiast polegania na obs\u0142udze ich formatu przez zaplecze. Mo\u017ce to by\u0107 bardziej niezawodne, ale wymaga poprawnego ustawienia prefiksu i sufiksu wywo\u0142ania narz\u0119dzia.",
                         "tool_response_as_string": "Niekt\u00f3re szablony prompt\u00f3w wymagaj\u0105 odpowiedzi narz\u0119dzia w postaci ci\u0105gu znak\u00f3w zserializowanego do JSON zamiast surowego obiektu.",
@@ -376,12 +390,26 @@
                                 "enable_flash_attention": "W\u0142\u0105cz Flash Attention",
                                 "llama_cpp_cache_size_mb": "(llama.cpp) Rozmiar dyskowego bufora KV (MB)",
                                 "ollama_json_mode": "(ollama) Tryb wyj\u015bcia JSON",
-                                "gbnf_grammar_text": "Gramatyka GBNF"
+                                "gbnf_grammar_text": "Gramatyka GBNF",
+                                "extra_attributes_to_expose": "Dodatkowy atrybut udost\u0119pniany w kontek\u015bcie"
                             },
                             "data_description": {
                                 "extra_body": "Dodatkowe parametry dodawane do tre\u015bci zapytania. Warto\u015bci rozpoznane jako liczba, true/false, null lub JSON s\u0105 wysy\u0142ane jako JSON; pozosta\u0142e s\u0105 wysy\u0142ane jako tekst.",
-                                "gbnf_grammar_text": "Ogranicza odpowiedzi llama.cpp do gramatyki zapisanej w GBNF. Pozostaw pole puste, aby model m\u00f3g\u0142 odpowiada\u0107 swobodnie."
+                                "gbnf_grammar_text": "Ogranicza odpowiedzi llama.cpp do gramatyki zapisanej w GBNF. Pozostaw pole puste, aby model m\u00f3g\u0142 odpowiada\u0107 swobodnie.",
+                                "extra_attributes_to_expose": "To lista 'atrybut\u00f3w' Home Assistant udost\u0119pnianych modelowi. Ogranicza informacje, kt\u00f3re model mo\u017ce zobaczy\u0107 i na temat kt\u00f3rych mo\u017ce odpowiada\u0107 na pytania."
                             }
+                        },
+                        "sampling": {
+                            "name": "Parametry pr\u00f3bkowania",
+                            "description": "Puste parametry pr\u00f3bkowania s\u0105 decyzj\u0105 serwera hostuj\u0105cego model. Wype\u0142nij kt\u00f3ry\u015b tylko aby nadpisa\u0107 go dla tego modelu.",
+                            "data": {
+                                "temperature": "Temperatura",
+                                "top_k": "Top K",
+                                "top_p": "Top P",
+                                "min_p": "Min P",
+                                "typical_p": "Typical P"
+                            },
+                            "data_description": {}
                         }
                     }
                 }

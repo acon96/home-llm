@@ -88,16 +88,10 @@
                         "max_new_tokens": "Maximaal aantal tokens in het antwoord",
                         "llm_hass_api": "Geselecteerde LLM-API('s)",
                         "prompt": "Systeemprompt",
-                        "temperature": "Temperatuur",
-                        "top_k": "Top K",
-                        "top_p": "Top P",
-                        "min_p": "Min P",
-                        "typical_p": "Typical P",
                         "request_timeout": "Time-out voor externe verzoeken (seconden)",
                         "enable_streaming": "Streaming inschakelen",
                         "use_server_sampling_defaults": "Standaardwaarden van de server gebruiken voor samplingparameters",
                         "ollama_keep_alive": "(ollama) Keep-alive/inactiviteitstime-out (minuten)",
-                        "extra_attributes_to_expose": "Extra attribuut om in de context te tonen",
                         "openai_api_key": "API-sleutel",
                         "text_generation_webui_admin_key": "(text-generation-webui) Beheerderssleutel",
                         "service_call_regex": "Regex voor serviceaanroepen",
@@ -123,7 +117,6 @@
                         "llm_hass_api": "Kies 'Assist' als het model apparaten moet kunnen bedienen. Gebruik je het Home-LLM-model (v1-3), kies dan 'Home Assistant Services'",
                         "prompt": "Zie [hier](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) voor meer informatie over het prompten van modellen.",
                         "in_context_examples": "Schakel dit in als je een model gebruikt dat niet specifiek voor deze integratie is gefinetuned",
-                        "extra_attributes_to_expose": "Dit is de lijst met 'attributen' van Home Assistant die aan het model worden getoond. Dit bepaalt hoeveel informatie het model kan zien en over welke vragen het kan antwoorden.",
                         "prompt_caching": "Promptcaching probeert de prompt (de toestand van het huis) vooraf te verwerken en die verwerking in de cache op te slaan. Als je dit inschakelt, verwerkt het model de prompt opnieuw telkens als de status van een entiteit in huis verandert, beperkt door het interval hieronder.",
                         "enable_legacy_tool_calling": "Verwerk tool calls liever lokaal in plaats van de backend het tool call-formaat te laten afhandelen. Dit kan betrouwbaarder zijn, maar dan moeten de prefix en suffix voor tool calls goed zijn ingesteld.",
                         "tool_response_as_string": "Sommige prompttemplates verwachten het toolantwoord als JSON-geserialiseerde string in plaats van als ruw object.",
@@ -145,12 +138,26 @@
                                 "enable_flash_attention": "Flash Attention inschakelen",
                                 "llama_cpp_cache_size_mb": "(llama.cpp) Grootte KV-cache op schijf (MB)",
                                 "ollama_json_mode": "(ollama) JSON-uitvoermodus",
-                                "extra_body": "Extra verzoekparameters"
+                                "extra_body": "Extra verzoekparameters",
+                                "extra_attributes_to_expose": "Extra attribuut om in de context te tonen"
                             },
                             "data_description": {
                                 "gbnf_grammar_text": "Dwingt het model om correct opgemaakte antwoorden te geven. Zorg dat het hieronder opgegeven bestand in de map van de integratie staat.",
-                                "extra_body": "Extra parameters die aan de aanvraagbody worden toegevoegd. Waarden die eruitzien als getallen, true/false, null of JSON worden als JSON verzonden; al het andere wordt als tekst verzonden."
+                                "extra_body": "Extra parameters die aan de aanvraagbody worden toegevoegd. Waarden die eruitzien als getallen, true/false, null of JSON worden als JSON verzonden; al het andere wordt als tekst verzonden.",
+                                "extra_attributes_to_expose": "Dit is de lijst met 'attributen' van Home Assistant die aan het model worden getoond. Dit bepaalt hoeveel informatie het model kan zien en over welke vragen het kan antwoorden."
                             }
+                        },
+                        "sampling": {
+                            "name": "Samplingparameters",
+                            "description": "Leeg gelaten samplingparameters worden beslist door de server die het model host. Vul er een alleen in om deze voor dit model te overschrijven.",
+                            "data": {
+                                "temperature": "Temperatuur",
+                                "top_k": "Top K",
+                                "top_p": "Top P",
+                                "min_p": "Min P",
+                                "typical_p": "Typical P"
+                            },
+                            "data_description": {}
                         }
                     }
                 },
@@ -159,16 +166,10 @@
                         "max_new_tokens": "Maximaal aantal tokens in het antwoord",
                         "llm_hass_api": "Geselecteerde LLM-API('s)",
                         "prompt": "Systeemprompt",
-                        "temperature": "Temperatuur",
-                        "top_k": "Top K",
-                        "top_p": "Top P",
-                        "min_p": "Min P",
-                        "typical_p": "Typical P",
                         "request_timeout": "Time-out voor externe verzoeken (seconden)",
                         "enable_streaming": "Streaming inschakelen",
                         "use_server_sampling_defaults": "Standaardwaarden van de server gebruiken voor samplingparameters",
                         "ollama_keep_alive": "(ollama) Keep-alive/inactiviteitstime-out (minuten)",
-                        "extra_attributes_to_expose": "Extra attribuut om in de context te tonen",
                         "openai_api_key": "API-sleutel",
                         "text_generation_webui_admin_key": "(text-generation-webui) Beheerderssleutel",
                         "service_call_regex": "Regex voor serviceaanroepen",
@@ -194,7 +195,6 @@
                         "llm_hass_api": "Kies 'Assist' als het model apparaten moet kunnen bedienen. Gebruik je het Home-LLM-model (v1-3), kies dan 'Home Assistant Services'",
                         "prompt": "Zie [hier](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) voor meer informatie over het prompten van modellen.",
                         "in_context_examples": "Schakel dit in als je een model gebruikt dat niet specifiek voor deze integratie is gefinetuned",
-                        "extra_attributes_to_expose": "Dit is de lijst met 'attributen' van Home Assistant die aan het model worden getoond. Dit bepaalt hoeveel informatie het model kan zien en over welke vragen het kan antwoorden.",
                         "prompt_caching": "Promptcaching probeert de prompt (de toestand van het huis) vooraf te verwerken en die verwerking in de cache op te slaan. Als je dit inschakelt, verwerkt het model de prompt opnieuw telkens als de status van een entiteit in huis verandert, beperkt door het interval hieronder.",
                         "enable_legacy_tool_calling": "Verwerk tool calls liever lokaal in plaats van de backend het tool call-formaat te laten afhandelen. Dit kan betrouwbaarder zijn, maar dan moeten de prefix en suffix voor tool calls goed zijn ingesteld.",
                         "tool_response_as_string": "Sommige prompttemplates verwachten het toolantwoord als JSON-geserialiseerde string in plaats van als ruw object.",
@@ -216,12 +216,26 @@
                                 "enable_flash_attention": "Flash Attention inschakelen",
                                 "llama_cpp_cache_size_mb": "(llama.cpp) Grootte KV-cache op schijf (MB)",
                                 "ollama_json_mode": "(ollama) JSON-uitvoermodus",
-                                "extra_body": "Extra verzoekparameters"
+                                "extra_body": "Extra verzoekparameters",
+                                "extra_attributes_to_expose": "Extra attribuut om in de context te tonen"
                             },
                             "data_description": {
                                 "gbnf_grammar_text": "Dwingt het model om correct opgemaakte antwoorden te geven. Zorg dat het hieronder opgegeven bestand in de map van de integratie staat.",
-                                "extra_body": "Extra parameters die aan de aanvraagbody worden toegevoegd. Waarden die eruitzien als getallen, true/false, null of JSON worden als JSON verzonden; al het andere wordt als tekst verzonden."
+                                "extra_body": "Extra parameters die aan de aanvraagbody worden toegevoegd. Waarden die eruitzien als getallen, true/false, null of JSON worden als JSON verzonden; al het andere wordt als tekst verzonden.",
+                                "extra_attributes_to_expose": "Dit is de lijst met 'attributen' van Home Assistant die aan het model worden getoond. Dit bepaalt hoeveel informatie het model kan zien en over welke vragen het kan antwoorden."
                             }
+                        },
+                        "sampling": {
+                            "name": "Samplingparameters",
+                            "description": "Leeg gelaten samplingparameters worden beslist door de server die het model host. Vul er een alleen in om deze voor dit model te overschrijven.",
+                            "data": {
+                                "temperature": "Temperatuur",
+                                "top_k": "Top K",
+                                "top_p": "Top P",
+                                "min_p": "Min P",
+                                "typical_p": "Typical P"
+                            },
+                            "data_description": {}
                         }
                     }
                 }
@@ -267,16 +281,10 @@
                     "data": {
                         "max_new_tokens": "Maximaal aantal tokens in het antwoord",
                         "prompt": "Systeemprompt",
-                        "temperature": "Temperatuur",
-                        "top_k": "Top K",
-                        "top_p": "Top P",
-                        "min_p": "Min P",
-                        "typical_p": "Typical P",
                         "request_timeout": "Time-out voor externe verzoeken (seconden)",
                         "enable_streaming": "Streaming inschakelen",
                         "use_server_sampling_defaults": "Standaardwaarden van de server gebruiken voor samplingparameters",
                         "ollama_keep_alive": "(ollama) Keep-alive/inactiviteitstime-out (minuten)",
-                        "extra_attributes_to_expose": "Extra attribuut om in de context te tonen",
                         "openai_api_key": "API-sleutel",
                         "text_generation_webui_admin_key": "(text-generation-webui) Beheerderssleutel",
                         "service_call_regex": "Regex voor serviceaanroepen",
@@ -300,7 +308,6 @@
                     "data_description": {
                         "prompt": "Zie [hier](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) voor meer informatie over het prompten van modellen.",
                         "in_context_examples": "Schakel dit in als je een model gebruikt dat niet specifiek voor deze integratie is gefinetuned",
-                        "extra_attributes_to_expose": "Dit is de lijst met 'attributen' van Home Assistant die aan het model worden getoond. Dit bepaalt hoeveel informatie het model kan zien en over welke vragen het kan antwoorden.",
                         "prompt_caching": "Promptcaching probeert de prompt (de toestand van het huis) vooraf te verwerken en die verwerking in de cache op te slaan. Als je dit inschakelt, verwerkt het model de prompt opnieuw telkens als de status van een entiteit in huis verandert, beperkt door het interval hieronder.",
                         "enable_legacy_tool_calling": "Verwerk tool calls liever lokaal in plaats van de backend het tool call-formaat te laten afhandelen. Dit kan betrouwbaarder zijn, maar dan moeten de prefix en suffix voor tool calls goed zijn ingesteld.",
                         "tool_response_as_string": "Sommige prompttemplates verwachten het toolantwoord als JSON-geserialiseerde string in plaats van als ruw object.",
@@ -323,12 +330,26 @@
                                 "enable_flash_attention": "Flash Attention inschakelen",
                                 "llama_cpp_cache_size_mb": "(llama.cpp) Grootte KV-cache op schijf (MB)",
                                 "ollama_json_mode": "(ollama) JSON-uitvoermodus",
-                                "extra_body": "Extra verzoekparameters"
+                                "extra_body": "Extra verzoekparameters",
+                                "extra_attributes_to_expose": "Extra attribuut om in de context te tonen"
                             },
                             "data_description": {
                                 "gbnf_grammar_text": "Dwingt het model om correct opgemaakte antwoorden te geven. Zorg dat het hieronder opgegeven bestand in de map van de integratie staat.",
-                                "extra_body": "Extra parameters die aan de aanvraagbody worden toegevoegd. Waarden die eruitzien als getallen, true/false, null of JSON worden als JSON verzonden; al het andere wordt als tekst verzonden."
+                                "extra_body": "Extra parameters die aan de aanvraagbody worden toegevoegd. Waarden die eruitzien als getallen, true/false, null of JSON worden als JSON verzonden; al het andere wordt als tekst verzonden.",
+                                "extra_attributes_to_expose": "Dit is de lijst met 'attributen' van Home Assistant die aan het model worden getoond. Dit bepaalt hoeveel informatie het model kan zien en over welke vragen het kan antwoorden."
                             }
+                        },
+                        "sampling": {
+                            "name": "Samplingparameters",
+                            "description": "Leeg gelaten samplingparameters worden beslist door de server die het model host. Vul er een alleen in om deze voor dit model te overschrijven.",
+                            "data": {
+                                "temperature": "Temperatuur",
+                                "top_k": "Top K",
+                                "top_p": "Top P",
+                                "min_p": "Min P",
+                                "typical_p": "Typical P"
+                            },
+                            "data_description": {}
                         }
                     }
                 },
@@ -337,16 +358,10 @@
                         "max_new_tokens": "Maximaal aantal tokens in het antwoord",
                         "llm_hass_api": "Geselecteerde LLM-API('s)",
                         "prompt": "Systeemprompt",
-                        "temperature": "Temperatuur",
-                        "top_k": "Top K",
-                        "top_p": "Top P",
-                        "min_p": "Min P",
-                        "typical_p": "Typical P",
                         "request_timeout": "Time-out voor externe verzoeken (seconden)",
                         "enable_streaming": "Streaming inschakelen",
                         "use_server_sampling_defaults": "Standaardwaarden van de server gebruiken voor samplingparameters",
                         "ollama_keep_alive": "(ollama) Keep-alive/inactiviteitstime-out (minuten)",
-                        "extra_attributes_to_expose": "Extra attribuut om in de context te tonen",
                         "openai_api_key": "API-sleutel",
                         "text_generation_webui_admin_key": "(text-generation-webui) Beheerderssleutel",
                         "service_call_regex": "Regex voor serviceaanroepen",
@@ -372,7 +387,6 @@
                         "llm_hass_api": "Kies 'Assist' als het model apparaten moet kunnen bedienen. Gebruik je het Home-LLM-model v1, v2 of v3, kies dan 'Home-LLM (v1-3)'",
                         "prompt": "Zie [hier](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) voor meer informatie over het prompten van modellen.",
                         "in_context_examples": "Schakel dit in als je een model gebruikt dat niet specifiek voor deze integratie is gefinetuned",
-                        "extra_attributes_to_expose": "Dit is de lijst met 'attributen' van Home Assistant die aan het model worden getoond. Dit bepaalt hoeveel informatie het model kan zien en over welke vragen het kan antwoorden.",
                         "prompt_caching": "Promptcaching probeert de prompt (de toestand van het huis) vooraf te verwerken en die verwerking in de cache op te slaan. Als je dit inschakelt, verwerkt het model de prompt opnieuw telkens als de status van een entiteit in huis verandert, beperkt door het interval hieronder.",
                         "enable_legacy_tool_calling": "Verwerk tool calls liever lokaal in plaats van de backend het tool call-formaat te laten afhandelen. Dit kan betrouwbaarder zijn, maar dan moeten de prefix en suffix voor tool calls goed zijn ingesteld.",
                         "tool_response_as_string": "Sommige prompttemplates verwachten het toolantwoord als JSON-geserialiseerde string in plaats van als ruw object.",
@@ -394,12 +408,26 @@
                                 "enable_flash_attention": "Flash Attention inschakelen",
                                 "llama_cpp_cache_size_mb": "(llama.cpp) Grootte KV-cache op schijf (MB)",
                                 "ollama_json_mode": "(ollama) JSON-uitvoermodus",
-                                "extra_body": "Extra verzoekparameters"
+                                "extra_body": "Extra verzoekparameters",
+                                "extra_attributes_to_expose": "Extra attribuut om in de context te tonen"
                             },
                             "data_description": {
                                 "gbnf_grammar_text": "Dwingt het model om correct opgemaakte antwoorden te geven. Zorg dat het hieronder opgegeven bestand in de map van de integratie staat.",
-                                "extra_body": "Extra parameters die aan de aanvraagbody worden toegevoegd. Waarden die eruitzien als getallen, true/false, null of JSON worden als JSON verzonden; al het andere wordt als tekst verzonden."
+                                "extra_body": "Extra parameters die aan de aanvraagbody worden toegevoegd. Waarden die eruitzien als getallen, true/false, null of JSON worden als JSON verzonden; al het andere wordt als tekst verzonden.",
+                                "extra_attributes_to_expose": "Dit is de lijst met 'attributen' van Home Assistant die aan het model worden getoond. Dit bepaalt hoeveel informatie het model kan zien en over welke vragen het kan antwoorden."
                             }
+                        },
+                        "sampling": {
+                            "name": "Samplingparameters",
+                            "description": "Leeg gelaten samplingparameters worden beslist door de server die het model host. Vul er een alleen in om deze voor dit model te overschrijven.",
+                            "data": {
+                                "temperature": "Temperatuur",
+                                "top_k": "Top K",
+                                "top_p": "Top P",
+                                "min_p": "Min P",
+                                "typical_p": "Typical P"
+                            },
+                            "data_description": {}
                         }
                     }
                 }

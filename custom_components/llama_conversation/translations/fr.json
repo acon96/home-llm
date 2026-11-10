@@ -91,15 +91,9 @@
                         "max_new_tokens": "Nombre maximal de tokens dans la r\u00e9ponse",
                         "llm_hass_api": "API LLM s\u00e9lectionn\u00e9es",
                         "prompt": "Prompt syst\u00e8me",
-                        "temperature": "Temp\u00e9rature",
-                        "top_k": "Top K",
-                        "top_p": "Top P",
-                        "min_p": "Min P",
-                        "typical_p": "Typical P",
                         "request_timeout": "D\u00e9lai des requ\u00eates distantes (secondes)",
                         "enable_streaming": "Activer les r\u00e9ponses en streaming",
                         "ollama_keep_alive": "(ollama) D\u00e9lai de maintien en m\u00e9moire/d'inactivit\u00e9 (minutes)",
-                        "extra_attributes_to_expose": "Attribut suppl\u00e9mentaire \u00e0 exposer dans le contexte",
                         "openai_api_key": "Cl\u00e9 d'API",
                         "service_call_regex": "Expression r\u00e9guli\u00e8re des appels de service",
                         "in_context_examples": "Activer les exemples d'apprentissage en contexte (ICL)",
@@ -119,7 +113,6 @@
                         "llm_hass_api": "S\u00e9lectionnez 'Assist' pour permettre au mod\u00e8le de contr\u00f4ler les appareils. Si vous utilisez un mod\u00e8le Home-LLM (v1-3), s\u00e9lectionnez 'Home Assistant Services'.",
                         "prompt": "Consultez [cette page](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) pour en savoir plus sur les prompts du mod\u00e8le.",
                         "in_context_examples": "Activez cette option si vous utilisez un mod\u00e8le qui n'a pas \u00e9t\u00e9 sp\u00e9cifiquement ajust\u00e9 pour cette int\u00e9gration.",
-                        "extra_attributes_to_expose": "Il s'agit de la liste des 'attributs' Home Assistant expos\u00e9s au mod\u00e8le. Elle limite les informations que le mod\u00e8le peut consulter et sur lesquelles il peut r\u00e9pondre aux questions.",
                         "prompt_caching": "La mise en cache des prompts tente de pr\u00e9traiter le prompt (\u00e9tat de la maison) et de mettre en cache le traitement n\u00e9cessaire \u00e0 sa compr\u00e9hension. Lorsque cette option est activ\u00e9e, le mod\u00e8le retraite le prompt \u00e0 chaque changement d'\u00e9tat d'une entit\u00e9 de la maison, dans la limite de l'intervalle ci-dessous.",
                         "enable_legacy_tool_calling": "Privil\u00e9gie le traitement local des appels d'outils plut\u00f4t que de confier leur format au backend. Cela peut \u00eatre plus fiable, mais n\u00e9cessite de d\u00e9finir correctement le pr\u00e9fixe et le suffixe des appels d'outils.",
                         "tool_response_as_string": "Certains mod\u00e8les de prompts attendent une r\u00e9ponse d'outil sous forme de cha\u00eene s\u00e9rialis\u00e9e en JSON, plut\u00f4t que l'objet brut.",
@@ -143,12 +136,26 @@
                                 "enable_flash_attention": "Activer Flash Attention",
                                 "llama_cpp_cache_size_mb": "(llama.cpp) Taille du cache KV sur disque (Mo)",
                                 "ollama_json_mode": "(ollama) Mode de sortie JSON",
-                                "gbnf_grammar_text": "Grammaire GBNF"
+                                "gbnf_grammar_text": "Grammaire GBNF",
+                                "extra_attributes_to_expose": "Attribut suppl\u00e9mentaire \u00e0 exposer dans le contexte"
                             },
                             "data_description": {
                                 "extra_body": "Param\u00e8tres suppl\u00e9mentaires ajout\u00e9s au corps de la requ\u00eate. Les valeurs reconnues comme nombre, true/false, null ou JSON sont envoy\u00e9es en JSON ; le reste est envoy\u00e9 comme texte.",
-                                "gbnf_grammar_text": "Contraint la sortie de llama.cpp \u00e0 une grammaire \u00e9crite en GBNF. Laissez ce champ vide pour permettre au mod\u00e8le de r\u00e9pondre librement."
+                                "gbnf_grammar_text": "Contraint la sortie de llama.cpp \u00e0 une grammaire \u00e9crite en GBNF. Laissez ce champ vide pour permettre au mod\u00e8le de r\u00e9pondre librement.",
+                                "extra_attributes_to_expose": "Il s'agit de la liste des 'attributs' Home Assistant expos\u00e9s au mod\u00e8le. Elle limite les informations que le mod\u00e8le peut consulter et sur lesquelles il peut r\u00e9pondre aux questions."
                             }
+                        },
+                        "sampling": {
+                            "name": "Param\u00e8tres d'\u00e9chantillonnage",
+                            "description": "Les param\u00e8tres d'\u00e9chantillonnage laiss\u00e9s vides sont d\u00e9cid\u00e9s par le serveur qui h\u00e9berge le mod\u00e8le. Renseignez-en un uniquement pour le remplacer pour ce mod\u00e8le.",
+                            "data": {
+                                "temperature": "Temp\u00e9rature",
+                                "top_k": "Top K",
+                                "top_p": "Top P",
+                                "min_p": "Min P",
+                                "typical_p": "Typical P"
+                            },
+                            "data_description": {}
                         }
                     }
                 },
@@ -157,15 +164,9 @@
                         "max_new_tokens": "Nombre maximal de tokens dans la r\u00e9ponse",
                         "llm_hass_api": "API LLM s\u00e9lectionn\u00e9es",
                         "prompt": "Prompt syst\u00e8me",
-                        "temperature": "Temp\u00e9rature",
-                        "top_k": "Top K",
-                        "top_p": "Top P",
-                        "min_p": "Min P",
-                        "typical_p": "Typical P",
                         "request_timeout": "D\u00e9lai des requ\u00eates distantes (secondes)",
                         "enable_streaming": "Activer les r\u00e9ponses en streaming",
                         "ollama_keep_alive": "(ollama) D\u00e9lai de maintien en m\u00e9moire/d'inactivit\u00e9 (minutes)",
-                        "extra_attributes_to_expose": "Attribut suppl\u00e9mentaire \u00e0 exposer dans le contexte",
                         "openai_api_key": "Cl\u00e9 d'API",
                         "service_call_regex": "Expression r\u00e9guli\u00e8re des appels de service",
                         "in_context_examples": "Activer les exemples d'apprentissage en contexte (ICL)",
@@ -185,7 +186,6 @@
                         "llm_hass_api": "S\u00e9lectionnez 'Assist' pour permettre au mod\u00e8le de contr\u00f4ler les appareils. Si vous utilisez un mod\u00e8le Home-LLM (v1-3), s\u00e9lectionnez 'Home Assistant Services'.",
                         "prompt": "Consultez [cette page](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) pour en savoir plus sur les prompts du mod\u00e8le.",
                         "in_context_examples": "Activez cette option si vous utilisez un mod\u00e8le qui n'a pas \u00e9t\u00e9 sp\u00e9cifiquement ajust\u00e9 pour cette int\u00e9gration.",
-                        "extra_attributes_to_expose": "Il s'agit de la liste des 'attributs' Home Assistant expos\u00e9s au mod\u00e8le. Elle limite les informations que le mod\u00e8le peut consulter et sur lesquelles il peut r\u00e9pondre aux questions.",
                         "prompt_caching": "La mise en cache des prompts tente de pr\u00e9traiter le prompt (\u00e9tat de la maison) et de mettre en cache le traitement n\u00e9cessaire \u00e0 sa compr\u00e9hension. Lorsque cette option est activ\u00e9e, le mod\u00e8le retraite le prompt \u00e0 chaque changement d'\u00e9tat d'une entit\u00e9 de la maison, dans la limite de l'intervalle ci-dessous.",
                         "enable_legacy_tool_calling": "Privil\u00e9gie le traitement local des appels d'outils plut\u00f4t que de confier leur format au backend. Cela peut \u00eatre plus fiable, mais n\u00e9cessite de d\u00e9finir correctement le pr\u00e9fixe et le suffixe des appels d'outils.",
                         "tool_response_as_string": "Certains mod\u00e8les de prompts attendent une r\u00e9ponse d'outil sous forme de cha\u00eene s\u00e9rialis\u00e9e en JSON, plut\u00f4t que l'objet brut.",
@@ -209,12 +209,26 @@
                                 "enable_flash_attention": "Activer Flash Attention",
                                 "llama_cpp_cache_size_mb": "(llama.cpp) Taille du cache KV sur disque (Mo)",
                                 "ollama_json_mode": "(ollama) Mode de sortie JSON",
-                                "gbnf_grammar_text": "Grammaire GBNF"
+                                "gbnf_grammar_text": "Grammaire GBNF",
+                                "extra_attributes_to_expose": "Attribut suppl\u00e9mentaire \u00e0 exposer dans le contexte"
                             },
                             "data_description": {
                                 "extra_body": "Param\u00e8tres suppl\u00e9mentaires ajout\u00e9s au corps de la requ\u00eate. Les valeurs reconnues comme nombre, true/false, null ou JSON sont envoy\u00e9es en JSON ; le reste est envoy\u00e9 comme texte.",
-                                "gbnf_grammar_text": "Contraint la sortie de llama.cpp \u00e0 une grammaire \u00e9crite en GBNF. Laissez ce champ vide pour permettre au mod\u00e8le de r\u00e9pondre librement."
+                                "gbnf_grammar_text": "Contraint la sortie de llama.cpp \u00e0 une grammaire \u00e9crite en GBNF. Laissez ce champ vide pour permettre au mod\u00e8le de r\u00e9pondre librement.",
+                                "extra_attributes_to_expose": "Il s'agit de la liste des 'attributs' Home Assistant expos\u00e9s au mod\u00e8le. Elle limite les informations que le mod\u00e8le peut consulter et sur lesquelles il peut r\u00e9pondre aux questions."
                             }
+                        },
+                        "sampling": {
+                            "name": "Param\u00e8tres d'\u00e9chantillonnage",
+                            "description": "Les param\u00e8tres d'\u00e9chantillonnage laiss\u00e9s vides sont d\u00e9cid\u00e9s par le serveur qui h\u00e9berge le mod\u00e8le. Renseignez-en un uniquement pour le remplacer pour ce mod\u00e8le.",
+                            "data": {
+                                "temperature": "Temp\u00e9rature",
+                                "top_k": "Top K",
+                                "top_p": "Top P",
+                                "min_p": "Min P",
+                                "typical_p": "Typical P"
+                            },
+                            "data_description": {}
                         }
                     }
                 }
@@ -260,15 +274,9 @@
                     "data": {
                         "max_new_tokens": "Nombre maximal de tokens dans la r\u00e9ponse",
                         "prompt": "Prompt syst\u00e8me",
-                        "temperature": "Temp\u00e9rature",
-                        "top_k": "Top K",
-                        "top_p": "Top P",
-                        "min_p": "Min P",
-                        "typical_p": "Typical P",
                         "request_timeout": "D\u00e9lai des requ\u00eates distantes (secondes)",
                         "enable_streaming": "Activer les r\u00e9ponses en streaming",
                         "ollama_keep_alive": "(ollama) D\u00e9lai de maintien en m\u00e9moire/d'inactivit\u00e9 (minutes)",
-                        "extra_attributes_to_expose": "Attribut suppl\u00e9mentaire \u00e0 exposer dans le contexte",
                         "openai_api_key": "Cl\u00e9 d'API",
                         "service_call_regex": "Expression r\u00e9guli\u00e8re des appels de service",
                         "in_context_examples": "Activer les exemples d'apprentissage en contexte (ICL)",
@@ -289,7 +297,6 @@
                     "data_description": {
                         "prompt": "Consultez [cette page](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) pour en savoir plus sur les prompts du mod\u00e8le.",
                         "in_context_examples": "Activez cette option si vous utilisez un mod\u00e8le qui n'a pas \u00e9t\u00e9 sp\u00e9cifiquement ajust\u00e9 pour cette int\u00e9gration.",
-                        "extra_attributes_to_expose": "Il s'agit de la liste des 'attributs' Home Assistant expos\u00e9s au mod\u00e8le. Elle limite les informations que le mod\u00e8le peut consulter et sur lesquelles il peut r\u00e9pondre aux questions.",
                         "prompt_caching": "La mise en cache des prompts tente de pr\u00e9traiter le prompt (\u00e9tat de la maison) et de mettre en cache le traitement n\u00e9cessaire \u00e0 sa compr\u00e9hension. Lorsque cette option est activ\u00e9e, le mod\u00e8le retraite le prompt \u00e0 chaque changement d'\u00e9tat d'une entit\u00e9 de la maison, dans la limite de l'intervalle ci-dessous.",
                         "enable_legacy_tool_calling": "Privil\u00e9gie le traitement local des appels d'outils plut\u00f4t que de confier leur format au backend. Cela peut \u00eatre plus fiable, mais n\u00e9cessite de d\u00e9finir correctement le pr\u00e9fixe et le suffixe des appels d'outils.",
                         "tool_response_as_string": "Certains mod\u00e8les de prompts attendent une r\u00e9ponse d'outil sous forme de cha\u00eene s\u00e9rialis\u00e9e en JSON, plut\u00f4t que l'objet brut.",
@@ -314,12 +321,26 @@
                                 "enable_flash_attention": "Activer Flash Attention",
                                 "llama_cpp_cache_size_mb": "(llama.cpp) Taille du cache KV sur disque (Mo)",
                                 "ollama_json_mode": "(ollama) Mode de sortie JSON",
-                                "gbnf_grammar_text": "Grammaire GBNF"
+                                "gbnf_grammar_text": "Grammaire GBNF",
+                                "extra_attributes_to_expose": "Attribut suppl\u00e9mentaire \u00e0 exposer dans le contexte"
                             },
                             "data_description": {
                                 "extra_body": "Param\u00e8tres suppl\u00e9mentaires ajout\u00e9s au corps de la requ\u00eate. Les valeurs reconnues comme nombre, true/false, null ou JSON sont envoy\u00e9es en JSON ; le reste est envoy\u00e9 comme texte.",
-                                "gbnf_grammar_text": "Contraint la sortie de llama.cpp \u00e0 une grammaire \u00e9crite en GBNF. Laissez ce champ vide pour permettre au mod\u00e8le de r\u00e9pondre librement."
+                                "gbnf_grammar_text": "Contraint la sortie de llama.cpp \u00e0 une grammaire \u00e9crite en GBNF. Laissez ce champ vide pour permettre au mod\u00e8le de r\u00e9pondre librement.",
+                                "extra_attributes_to_expose": "Il s'agit de la liste des 'attributs' Home Assistant expos\u00e9s au mod\u00e8le. Elle limite les informations que le mod\u00e8le peut consulter et sur lesquelles il peut r\u00e9pondre aux questions."
                             }
+                        },
+                        "sampling": {
+                            "name": "Param\u00e8tres d'\u00e9chantillonnage",
+                            "description": "Les param\u00e8tres d'\u00e9chantillonnage laiss\u00e9s vides sont d\u00e9cid\u00e9s par le serveur qui h\u00e9berge le mod\u00e8le. Renseignez-en un uniquement pour le remplacer pour ce mod\u00e8le.",
+                            "data": {
+                                "temperature": "Temp\u00e9rature",
+                                "top_k": "Top K",
+                                "top_p": "Top P",
+                                "min_p": "Min P",
+                                "typical_p": "Typical P"
+                            },
+                            "data_description": {}
                         }
                     }
                 },
@@ -328,15 +349,9 @@
                         "max_new_tokens": "Nombre maximal de tokens dans la r\u00e9ponse",
                         "llm_hass_api": "API LLM s\u00e9lectionn\u00e9es",
                         "prompt": "Prompt syst\u00e8me",
-                        "temperature": "Temp\u00e9rature",
-                        "top_k": "Top K",
-                        "top_p": "Top P",
-                        "min_p": "Min P",
-                        "typical_p": "Typical P",
                         "request_timeout": "D\u00e9lai des requ\u00eates distantes (secondes)",
                         "enable_streaming": "Activer les r\u00e9ponses en streaming",
                         "ollama_keep_alive": "(ollama) D\u00e9lai de maintien en m\u00e9moire/d'inactivit\u00e9 (minutes)",
-                        "extra_attributes_to_expose": "Attribut suppl\u00e9mentaire \u00e0 exposer dans le contexte",
                         "openai_api_key": "Cl\u00e9 d'API",
                         "service_call_regex": "Expression r\u00e9guli\u00e8re des appels de service",
                         "in_context_examples": "Activer les exemples d'apprentissage en contexte (ICL)",
@@ -356,7 +371,6 @@
                         "llm_hass_api": "S\u00e9lectionnez 'Assist' pour permettre au mod\u00e8le de contr\u00f4ler les appareils. Si vous utilisez un mod\u00e8le Home-LLM v1, v2 ou v3, s\u00e9lectionnez 'Home-LLM (v1-3)'.",
                         "prompt": "Consultez [cette page](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) pour en savoir plus sur les prompts du mod\u00e8le.",
                         "in_context_examples": "Activez cette option si vous utilisez un mod\u00e8le qui n'a pas \u00e9t\u00e9 sp\u00e9cifiquement ajust\u00e9 pour cette int\u00e9gration.",
-                        "extra_attributes_to_expose": "Il s'agit de la liste des 'attributs' Home Assistant expos\u00e9s au mod\u00e8le. Elle limite les informations que le mod\u00e8le peut consulter et sur lesquelles il peut r\u00e9pondre aux questions.",
                         "prompt_caching": "La mise en cache des prompts tente de pr\u00e9traiter le prompt (\u00e9tat de la maison) et de mettre en cache le traitement n\u00e9cessaire \u00e0 sa compr\u00e9hension. Lorsque cette option est activ\u00e9e, le mod\u00e8le retraite le prompt \u00e0 chaque changement d'\u00e9tat d'une entit\u00e9 de la maison, dans la limite de l'intervalle ci-dessous.",
                         "enable_legacy_tool_calling": "Privil\u00e9gie le traitement local des appels d'outils plut\u00f4t que de confier leur format au backend. Cela peut \u00eatre plus fiable, mais n\u00e9cessite de d\u00e9finir correctement le pr\u00e9fixe et le suffixe des appels d'outils.",
                         "tool_response_as_string": "Certains mod\u00e8les de prompts attendent une r\u00e9ponse d'outil sous forme de cha\u00eene s\u00e9rialis\u00e9e en JSON, plut\u00f4t que l'objet brut.",
@@ -380,12 +394,26 @@
                                 "enable_flash_attention": "Activer Flash Attention",
                                 "llama_cpp_cache_size_mb": "(llama.cpp) Taille du cache KV sur disque (Mo)",
                                 "ollama_json_mode": "(ollama) Mode de sortie JSON",
-                                "gbnf_grammar_text": "Grammaire GBNF"
+                                "gbnf_grammar_text": "Grammaire GBNF",
+                                "extra_attributes_to_expose": "Attribut suppl\u00e9mentaire \u00e0 exposer dans le contexte"
                             },
                             "data_description": {
                                 "extra_body": "Param\u00e8tres suppl\u00e9mentaires ajout\u00e9s au corps de la requ\u00eate. Les valeurs reconnues comme nombre, true/false, null ou JSON sont envoy\u00e9es en JSON ; le reste est envoy\u00e9 comme texte.",
-                                "gbnf_grammar_text": "Contraint la sortie de llama.cpp \u00e0 une grammaire \u00e9crite en GBNF. Laissez ce champ vide pour permettre au mod\u00e8le de r\u00e9pondre librement."
+                                "gbnf_grammar_text": "Contraint la sortie de llama.cpp \u00e0 une grammaire \u00e9crite en GBNF. Laissez ce champ vide pour permettre au mod\u00e8le de r\u00e9pondre librement.",
+                                "extra_attributes_to_expose": "Il s'agit de la liste des 'attributs' Home Assistant expos\u00e9s au mod\u00e8le. Elle limite les informations que le mod\u00e8le peut consulter et sur lesquelles il peut r\u00e9pondre aux questions."
                             }
+                        },
+                        "sampling": {
+                            "name": "Param\u00e8tres d'\u00e9chantillonnage",
+                            "description": "Les param\u00e8tres d'\u00e9chantillonnage laiss\u00e9s vides sont d\u00e9cid\u00e9s par le serveur qui h\u00e9berge le mod\u00e8le. Renseignez-en un uniquement pour le remplacer pour ce mod\u00e8le.",
+                            "data": {
+                                "temperature": "Temp\u00e9rature",
+                                "top_k": "Top K",
+                                "top_p": "Top P",
+                                "min_p": "Min P",
+                                "typical_p": "Typical P"
+                            },
+                            "data_description": {}
                         }
                     }
                 }

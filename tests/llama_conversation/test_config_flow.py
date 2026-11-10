@@ -34,6 +34,7 @@ from custom_components.llama_conversation.const import (
     CONF_EXTRA_BODY,
     CONF_EXTRA_HEADERS,
     CONF_ADVANCED_SECTION,
+    CONF_SAMPLING_SECTION,
     CONF_GBNF_GRAMMAR,
     CONF_LLAMACPP_BATCH_SIZE,
     CONF_LLAMACPP_BATCH_THREAD_COUNT,
@@ -126,6 +127,13 @@ def _get_suggested(schema: dict, key_name: str):
     raise AssertionError(f"Key {key_name} not found in schema")
 
 
+def _sampling_subschema(schema: dict) -> dict:
+    """Return the inner schema dict of the sampling parameters section."""
+    section_obj = schema[_find_marker(schema, CONF_SAMPLING_SECTION)]
+    assert isinstance(section_obj, data_entry_flow.section)
+    return section_obj.schema.schema
+
+
 def test_schema_llama_cpp_defaults_and_overrides(hass: HomeAssistant):
     overrides = {
         CONF_CONTEXT_LENGTH: 4096,
@@ -143,14 +151,15 @@ def test_schema_llama_cpp_defaults_and_overrides(hass: HomeAssistant):
     expected_keys = {
         CONF_MAX_TOKENS,
         CONF_CONTEXT_LENGTH,
-        CONF_TOP_K,
-        CONF_TOP_P,
-        CONF_MIN_P,
-        CONF_TYPICAL_P,
         CONF_PROMPT_CACHING_ENABLED,
         CONF_PROMPT_CACHING_INTERVAL,
     }
     assert expected_keys.issubset({getattr(k, "schema", None) for k in schema})
+
+    sampling = _sampling_subschema(schema)
+    assert {CONF_TEMPERATURE, CONF_TOP_K, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P}.issubset(
+        {getattr(k, "schema", None) for k in sampling}
+    )
 
     advanced = _advanced_subschema(schema)
     advanced_keys = {getattr(k, "schema", None) for k in advanced}
@@ -176,7 +185,7 @@ def test_schema_llama_cpp_defaults_and_overrides(hass: HomeAssistant):
     assert _get_suggested(advanced, CONF_LLAMACPP_BATCH_THREAD_COUNT) == 3
     assert _get_suggested(advanced, CONF_LLAMACPP_ENABLE_FLASH_ATTENTION) is True
     assert _get_suggested(schema, CONF_PROMPT_CACHING_INTERVAL) == 15
-    assert _get_suggested(schema, CONF_TOP_K) == 12
+    assert _get_suggested(sampling, CONF_TOP_K) == 12
     # the prompt format comes from the model family, it is not offered any more
     assert CONF_TOOL_CALL_PREFIX not in {getattr(k, "schema", None) for k in schema}
     assert CONF_TOOL_CALL_PREFIX not in {getattr(k, "schema", None) for k in advanced}
@@ -192,9 +201,10 @@ def test_sampling_parameters_are_optional_and_unset_by_default(hass: HomeAssista
         BACKEND_TYPE_ANTHROPIC,
     ):
         schema = _schema(hass, backend)
+        sampling_section = _sampling_subschema(schema)
         sampling_keys = {
             getattr(key, "schema", None): key
-            for key in schema
+            for key in sampling_section
             if getattr(key, "schema", None)
             in {CONF_TEMPERATURE, CONF_TOP_K, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P}
         }
@@ -214,11 +224,12 @@ def test_schema_generic_openai_options_preserved(hass: HomeAssistant):
 
     schema = _schema(hass, BACKEND_TYPE_GENERIC_OPENAI, overrides)
 
-    assert {CONF_TOP_P, CONF_REQUEST_TIMEOUT}.issubset({getattr(k, "schema", None) for k in schema})
-    assert _get_default(schema, CONF_TOP_P) is vol.UNDEFINED
+    assert CONF_REQUEST_TIMEOUT in {getattr(k, "schema", None) for k in schema}
+    sampling = _sampling_subschema(schema)
+    assert _get_default(sampling, CONF_TOP_P) is vol.UNDEFINED
     assert _get_default(schema, CONF_REQUEST_TIMEOUT) == DEFAULT_REQUEST_TIMEOUT
     assert _get_default(schema, CONF_ENABLE_STREAMING) is DEFAULT_ENABLE_STREAMING
-    assert _get_suggested(schema, CONF_TOP_P) == 0.25
+    assert _get_suggested(sampling, CONF_TOP_P) == 0.25
     assert _get_suggested(schema, CONF_REQUEST_TIMEOUT) == 321
     # Base prompt options still present
     prompt_default = _get_default(schema, CONF_PROMPT)
@@ -252,7 +263,9 @@ def test_schema_llama_cpp_server_includes_gbnf(hass: HomeAssistant):
     schema = _schema(hass, BACKEND_TYPE_LLAMA_CPP_SERVER)
     keys = {getattr(k, "schema", None) for k in schema}
 
-    assert {CONF_MAX_TOKENS, CONF_TOP_K}.issubset(keys)
+    assert CONF_MAX_TOKENS in keys
+    sampling = _sampling_subschema(schema)
+    assert CONF_TOP_K in {getattr(k, "schema", None) for k in sampling}
     advanced = _advanced_subschema(schema)
     assert CONF_GBNF_GRAMMAR in {getattr(k, "schema", None) for k in advanced}
     assert _get_default(advanced, CONF_GBNF_GRAMMAR) == DEFAULT_GBNF_GRAMMAR
@@ -270,10 +283,11 @@ def test_schema_ollama_defaults_and_overrides(hass: HomeAssistant):
     assert _get_default(schema, CONF_OLLAMA_KEEP_ALIVE_MIN) == DEFAULT_OLLAMA_KEEP_ALIVE_MIN
     assert _get_default(advanced, CONF_OLLAMA_JSON_MODE) is DEFAULT_OLLAMA_JSON_MODE
     assert _get_default(schema, CONF_CONTEXT_LENGTH) == DEFAULT_CONTEXT_LENGTH
-    assert _get_default(schema, CONF_TOP_K) is vol.UNDEFINED
+    sampling = _sampling_subschema(schema)
+    assert _get_default(sampling, CONF_TOP_K) is vol.UNDEFINED
     assert _get_suggested(schema, CONF_OLLAMA_KEEP_ALIVE_MIN) == 5
     assert _get_suggested(schema, CONF_CONTEXT_LENGTH) == 1024
-    assert _get_suggested(schema, CONF_TOP_K) == 7
+    assert _get_suggested(sampling, CONF_TOP_K) == 7
 
 
 def test_schema_includes_llm_api_selector(monkeypatch, hass: HomeAssistant):

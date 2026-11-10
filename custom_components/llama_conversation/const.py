@@ -168,6 +168,7 @@ DEFAULT_EXTRA_HEADERS: dict[str, str] = {}
 CONF_EXTRA_BODY = "extra_body"
 DEFAULT_EXTRA_BODY: dict[str, Any] = {}
 CONF_ADVANCED_SECTION = "advanced"
+CONF_SAMPLING_SECTION = "sampling"
 CONF_TOOL_RESPONSE_AS_STRING = "tool_response_as_string"
 DEFAULT_TOOL_RESPONSE_AS_STRING = True
 CONF_LLAMACPP_ENABLE_FLASH_ATTENTION = "enable_flash_attention"

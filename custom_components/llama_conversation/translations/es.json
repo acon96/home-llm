@@ -91,15 +91,9 @@
                         "max_new_tokens": "N\u00famero m\u00e1ximo de tokens en la respuesta",
                         "llm_hass_api": "API de LLM seleccionadas",
                         "prompt": "Prompt del sistema",
-                        "temperature": "Temperatura",
-                        "top_k": "Top K",
-                        "top_p": "Top P",
-                        "min_p": "Min P",
-                        "typical_p": "Typical P",
                         "request_timeout": "Tiempo de espera de solicitudes remotas (segundos)",
                         "enable_streaming": "Activar respuestas en streaming",
                         "ollama_keep_alive": "(ollama) Tiempo de mantenimiento en memoria/inactividad (minutos)",
-                        "extra_attributes_to_expose": "Atributo adicional que se expone en el contexto",
                         "openai_api_key": "Clave de API",
                         "service_call_regex": "Expresi\u00f3n regular para llamadas a servicios",
                         "in_context_examples": "Activar ejemplos de aprendizaje en contexto (ICL)",
@@ -118,7 +112,6 @@
                         "llm_hass_api": "Seleccione 'Assist' para que el modelo pueda controlar dispositivos. Si usa un modelo Home-LLM (v1-3), seleccione 'Home Assistant Services'.",
                         "prompt": "Consulte [aqu\u00ed](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) para obtener m\u00e1s informaci\u00f3n sobre los prompts del modelo.",
                         "in_context_examples": "Active esta opci\u00f3n si usa un modelo que no se ha ajustado espec\u00edficamente para esta integraci\u00f3n.",
-                        "extra_attributes_to_expose": "Esta es la lista de 'atributos' de Home Assistant que se exponen al modelo. Limita la informaci\u00f3n que el modelo puede ver y sobre la que puede responder preguntas.",
                         "prompt_caching": "La cach\u00e9 de prompts intenta procesar previamente el prompt (estado de la casa) y almacenar el procesamiento necesario para comprenderlo. Al activar esta opci\u00f3n, el modelo vuelve a procesar el prompt cuando cambia el estado de una entidad de la casa, respetando el intervalo indicado a continuaci\u00f3n.",
                         "enable_legacy_tool_calling": "Procesa preferentemente las llamadas a herramientas de forma local, en lugar de depender del backend para gestionar su formato. Puede ser m\u00e1s fiable, pero requiere configurar correctamente el prefijo y el sufijo de las llamadas a herramientas.",
                         "tool_response_as_string": "Algunas plantillas de prompts requieren que la respuesta de la herramienta se proporcione como una cadena serializada en JSON, en lugar del objeto sin procesar.",
@@ -142,12 +135,26 @@
                                 "enable_flash_attention": "Activar Flash Attention",
                                 "llama_cpp_cache_size_mb": "(llama.cpp) Tama\u00f1o de la cach\u00e9 KV en disco (MB)",
                                 "ollama_json_mode": "(ollama) Modo de salida JSON",
-                                "gbnf_grammar_text": "Gram\u00e1tica GBNF"
+                                "gbnf_grammar_text": "Gram\u00e1tica GBNF",
+                                "extra_attributes_to_expose": "Atributo adicional que se expone en el contexto"
                             },
                             "data_description": {
                                 "extra_body": "Par\u00e1metros adicionales que se a\u00f1aden al cuerpo de la petici\u00f3n. Los valores que parecen n\u00fameros, true/false, null o JSON se env\u00edan como JSON; cualquier otro se env\u00eda como texto.",
-                                "gbnf_grammar_text": "Restringe la salida de llama.cpp a una gram\u00e1tica escrita en GBNF. D\u00e9jelo vac\u00edo para que el modelo responda libremente."
+                                "gbnf_grammar_text": "Restringe la salida de llama.cpp a una gram\u00e1tica escrita en GBNF. D\u00e9jelo vac\u00edo para que el modelo responda libremente.",
+                                "extra_attributes_to_expose": "Esta es la lista de 'atributos' de Home Assistant que se exponen al modelo. Limita la informaci\u00f3n que el modelo puede ver y sobre la que puede responder preguntas."
                             }
+                        },
+                        "sampling": {
+                            "name": "Par\u00e1metros de muestreo",
+                            "description": "Los par\u00e1metros de muestreo que se dejan vac\u00edos los decide el servidor que aloja el modelo. Rellene alguno solo para sobrescribirlo en este modelo.",
+                            "data": {
+                                "temperature": "Temperatura",
+                                "top_k": "Top K",
+                                "top_p": "Top P",
+                                "min_p": "Min P",
+                                "typical_p": "Typical P"
+                            },
+                            "data_description": {}
                         }
                     }
                 },
@@ -156,15 +163,9 @@
                         "max_new_tokens": "N\u00famero m\u00e1ximo de tokens en la respuesta",
                         "llm_hass_api": "API de LLM seleccionadas",
                         "prompt": "Prompt del sistema",
-                        "temperature": "Temperatura",
-                        "top_k": "Top K",
-                        "top_p": "Top P",
-                        "min_p": "Min P",
-                        "typical_p": "Typical P",
                         "request_timeout": "Tiempo de espera de solicitudes remotas (segundos)",
                         "enable_streaming": "Activar respuestas en streaming",
                         "ollama_keep_alive": "(ollama) Tiempo de mantenimiento en memoria/inactividad (minutos)",
-                        "extra_attributes_to_expose": "Atributo adicional que se expone en el contexto",
                         "openai_api_key": "Clave de API",
                         "service_call_regex": "Expresi\u00f3n regular para llamadas a servicios",
                         "in_context_examples": "Activar ejemplos de aprendizaje en contexto (ICL)",
@@ -183,7 +184,6 @@
                         "llm_hass_api": "Seleccione 'Assist' para que el modelo pueda controlar dispositivos. Si usa un modelo Home-LLM (v1-3), seleccione 'Home Assistant Services'.",
                         "prompt": "Consulte [aqu\u00ed](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) para obtener m\u00e1s informaci\u00f3n sobre los prompts del modelo.",
                         "in_context_examples": "Active esta opci\u00f3n si usa un modelo que no se ha ajustado espec\u00edficamente para esta integraci\u00f3n.",
-                        "extra_attributes_to_expose": "Esta es la lista de 'atributos' de Home Assistant que se exponen al modelo. Limita la informaci\u00f3n que el modelo puede ver y sobre la que puede responder preguntas.",
                         "prompt_caching": "La cach\u00e9 de prompts intenta procesar previamente el prompt (estado de la casa) y almacenar el procesamiento necesario para comprenderlo. Al activar esta opci\u00f3n, el modelo vuelve a procesar el prompt cuando cambia el estado de una entidad de la casa, respetando el intervalo indicado a continuaci\u00f3n.",
                         "enable_legacy_tool_calling": "Procesa preferentemente las llamadas a herramientas de forma local, en lugar de depender del backend para gestionar su formato. Puede ser m\u00e1s fiable, pero requiere configurar correctamente el prefijo y el sufijo de las llamadas a herramientas.",
                         "tool_response_as_string": "Algunas plantillas de prompts requieren que la respuesta de la herramienta se proporcione como una cadena serializada en JSON, en lugar del objeto sin procesar.",
@@ -207,12 +207,26 @@
                                 "enable_flash_attention": "Activar Flash Attention",
                                 "llama_cpp_cache_size_mb": "(llama.cpp) Tama\u00f1o de la cach\u00e9 KV en disco (MB)",
                                 "ollama_json_mode": "(ollama) Modo de salida JSON",
-                                "gbnf_grammar_text": "Gram\u00e1tica GBNF"
+                                "gbnf_grammar_text": "Gram\u00e1tica GBNF",
+                                "extra_attributes_to_expose": "Atributo adicional que se expone en el contexto"
                             },
                             "data_description": {
                                 "extra_body": "Par\u00e1metros adicionales que se a\u00f1aden al cuerpo de la petici\u00f3n. Los valores que parecen n\u00fameros, true/false, null o JSON se env\u00edan como JSON; cualquier otro se env\u00eda como texto.",
-                                "gbnf_grammar_text": "Restringe la salida de llama.cpp a una gram\u00e1tica escrita en GBNF. D\u00e9jelo vac\u00edo para que el modelo responda libremente."
+                                "gbnf_grammar_text": "Restringe la salida de llama.cpp a una gram\u00e1tica escrita en GBNF. D\u00e9jelo vac\u00edo para que el modelo responda libremente.",
+                                "extra_attributes_to_expose": "Esta es la lista de 'atributos' de Home Assistant que se exponen al modelo. Limita la informaci\u00f3n que el modelo puede ver y sobre la que puede responder preguntas."
                             }
+                        },
+                        "sampling": {
+                            "name": "Par\u00e1metros de muestreo",
+                            "description": "Los par\u00e1metros de muestreo que se dejan vac\u00edos los decide el servidor que aloja el modelo. Rellene alguno solo para sobrescribirlo en este modelo.",
+                            "data": {
+                                "temperature": "Temperatura",
+                                "top_k": "Top K",
+                                "top_p": "Top P",
+                                "min_p": "Min P",
+                                "typical_p": "Typical P"
+                            },
+                            "data_description": {}
                         }
                     }
                 }
@@ -258,15 +272,9 @@
                     "data": {
                         "max_new_tokens": "N\u00famero m\u00e1ximo de tokens en la respuesta",
                         "prompt": "Prompt del sistema",
-                        "temperature": "Temperatura",
-                        "top_k": "Top K",
-                        "top_p": "Top P",
-                        "min_p": "Min P",
-                        "typical_p": "Typical P",
                         "request_timeout": "Tiempo de espera de solicitudes remotas (segundos)",
                         "enable_streaming": "Activar respuestas en streaming",
                         "ollama_keep_alive": "(ollama) Tiempo de mantenimiento en memoria/inactividad (minutos)",
-                        "extra_attributes_to_expose": "Atributo adicional que se expone en el contexto",
                         "openai_api_key": "Clave de API",
                         "service_call_regex": "Expresi\u00f3n regular para llamadas a servicios",
                         "in_context_examples": "Activar ejemplos de aprendizaje en contexto (ICL)",
@@ -286,7 +294,6 @@
                     "data_description": {
                         "prompt": "Consulte [aqu\u00ed](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) para obtener m\u00e1s informaci\u00f3n sobre los prompts del modelo.",
                         "in_context_examples": "Active esta opci\u00f3n si usa un modelo que no se ha ajustado espec\u00edficamente para esta integraci\u00f3n.",
-                        "extra_attributes_to_expose": "Esta es la lista de 'atributos' de Home Assistant que se exponen al modelo. Limita la informaci\u00f3n que el modelo puede ver y sobre la que puede responder preguntas.",
                         "prompt_caching": "La cach\u00e9 de prompts intenta procesar previamente el prompt (estado de la casa) y almacenar el procesamiento necesario para comprenderlo. Al activar esta opci\u00f3n, el modelo vuelve a procesar el prompt cuando cambia el estado de una entidad de la casa, respetando el intervalo indicado a continuaci\u00f3n.",
                         "enable_legacy_tool_calling": "Procesa preferentemente las llamadas a herramientas de forma local, en lugar de depender del backend para gestionar su formato. Puede ser m\u00e1s fiable, pero requiere configurar correctamente el prefijo y el sufijo de las llamadas a herramientas.",
                         "tool_response_as_string": "Algunas plantillas de prompts requieren que la respuesta de la herramienta se proporcione como una cadena serializada en JSON, en lugar del objeto sin procesar.",
@@ -311,12 +318,26 @@
                                 "enable_flash_attention": "Activar Flash Attention",
                                 "llama_cpp_cache_size_mb": "(llama.cpp) Tama\u00f1o de la cach\u00e9 KV en disco (MB)",
                                 "ollama_json_mode": "(ollama) Modo de salida JSON",
-                                "gbnf_grammar_text": "Gram\u00e1tica GBNF"
+                                "gbnf_grammar_text": "Gram\u00e1tica GBNF",
+                                "extra_attributes_to_expose": "Atributo adicional que se expone en el contexto"
                             },
                             "data_description": {
                                 "extra_body": "Par\u00e1metros adicionales que se a\u00f1aden al cuerpo de la petici\u00f3n. Los valores que parecen n\u00fameros, true/false, null o JSON se env\u00edan como JSON; cualquier otro se env\u00eda como texto.",
-                                "gbnf_grammar_text": "Restringe la salida de llama.cpp a una gram\u00e1tica escrita en GBNF. D\u00e9jelo vac\u00edo para que el modelo responda libremente."
+                                "gbnf_grammar_text": "Restringe la salida de llama.cpp a una gram\u00e1tica escrita en GBNF. D\u00e9jelo vac\u00edo para que el modelo responda libremente.",
+                                "extra_attributes_to_expose": "Esta es la lista de 'atributos' de Home Assistant que se exponen al modelo. Limita la informaci\u00f3n que el modelo puede ver y sobre la que puede responder preguntas."
                             }
+                        },
+                        "sampling": {
+                            "name": "Par\u00e1metros de muestreo",
+                            "description": "Los par\u00e1metros de muestreo que se dejan vac\u00edos los decide el servidor que aloja el modelo. Rellene alguno solo para sobrescribirlo en este modelo.",
+                            "data": {
+                                "temperature": "Temperatura",
+                                "top_k": "Top K",
+                                "top_p": "Top P",
+                                "min_p": "Min P",
+                                "typical_p": "Typical P"
+                            },
+                            "data_description": {}
                         }
                     }
                 },
@@ -325,15 +346,9 @@
                         "max_new_tokens": "N\u00famero m\u00e1ximo de tokens en la respuesta",
                         "llm_hass_api": "API de LLM seleccionadas",
                         "prompt": "Prompt del sistema",
-                        "temperature": "Temperatura",
-                        "top_k": "Top K",
-                        "top_p": "Top P",
-                        "min_p": "Min P",
-                        "typical_p": "Typical P",
                         "request_timeout": "Tiempo de espera de solicitudes remotas (segundos)",
                         "enable_streaming": "Activar respuestas en streaming",
                         "ollama_keep_alive": "(ollama) Tiempo de mantenimiento en memoria/inactividad (minutos)",
-                        "extra_attributes_to_expose": "Atributo adicional que se expone en el contexto",
                         "openai_api_key": "Clave de API",
                         "service_call_regex": "Expresi\u00f3n regular para llamadas a servicios",
                         "in_context_examples": "Activar ejemplos de aprendizaje en contexto (ICL)",
@@ -352,7 +367,6 @@
                         "llm_hass_api": "Seleccione 'Assist' para que el modelo pueda controlar dispositivos. Si usa un modelo Home-LLM v1, v2 o v3, seleccione 'Home-LLM (v1-3)'.",
                         "prompt": "Consulte [aqu\u00ed](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) para obtener m\u00e1s informaci\u00f3n sobre los prompts del modelo.",
                         "in_context_examples": "Active esta opci\u00f3n si usa un modelo que no se ha ajustado espec\u00edficamente para esta integraci\u00f3n.",
-                        "extra_attributes_to_expose": "Esta es la lista de 'atributos' de Home Assistant que se exponen al modelo. Limita la informaci\u00f3n que el modelo puede ver y sobre la que puede responder preguntas.",
                         "prompt_caching": "La cach\u00e9 de prompts intenta procesar previamente el prompt (estado de la casa) y almacenar el procesamiento necesario para comprenderlo. Al activar esta opci\u00f3n, el modelo vuelve a procesar el prompt cuando cambia el estado de una entidad de la casa, respetando el intervalo indicado a continuaci\u00f3n.",
                         "enable_legacy_tool_calling": "Procesa preferentemente las llamadas a herramientas de forma local, en lugar de depender del backend para gestionar su formato. Puede ser m\u00e1s fiable, pero requiere configurar correctamente el prefijo y el sufijo de las llamadas a herramientas.",
                         "tool_response_as_string": "Algunas plantillas de prompts requieren que la respuesta de la herramienta se proporcione como una cadena serializada en JSON, en lugar del objeto sin procesar.",
@@ -376,12 +390,26 @@
                                 "enable_flash_attention": "Activar Flash Attention",
                                 "llama_cpp_cache_size_mb": "(llama.cpp) Tama\u00f1o de la cach\u00e9 KV en disco (MB)",
                                 "ollama_json_mode": "(ollama) Modo de salida JSON",
-                                "gbnf_grammar_text": "Gram\u00e1tica GBNF"
+                                "gbnf_grammar_text": "Gram\u00e1tica GBNF",
+                                "extra_attributes_to_expose": "Atributo adicional que se expone en el contexto"
                             },
                             "data_description": {
                                 "extra_body": "Par\u00e1metros adicionales que se a\u00f1aden al cuerpo de la petici\u00f3n. Los valores que parecen n\u00fameros, true/false, null o JSON se env\u00edan como JSON; cualquier otro se env\u00eda como texto.",
-                                "gbnf_grammar_text": "Restringe la salida de llama.cpp a una gram\u00e1tica escrita en GBNF. D\u00e9jelo vac\u00edo para que el modelo responda libremente."
+                                "gbnf_grammar_text": "Restringe la salida de llama.cpp a una gram\u00e1tica escrita en GBNF. D\u00e9jelo vac\u00edo para que el modelo responda libremente.",
+                                "extra_attributes_to_expose": "Esta es la lista de 'atributos' de Home Assistant que se exponen al modelo. Limita la informaci\u00f3n que el modelo puede ver y sobre la que puede responder preguntas."
                             }
+                        },
+                        "sampling": {
+                            "name": "Par\u00e1metros de muestreo",
+                            "description": "Los par\u00e1metros de muestreo que se dejan vac\u00edos los decide el servidor que aloja el modelo. Rellene alguno solo para sobrescribirlo en este modelo.",
+                            "data": {
+                                "temperature": "Temperatura",
+                                "top_k": "Top K",
+                                "top_p": "Top P",
+                                "min_p": "Min P",
+                                "typical_p": "Typical P"
+                            },
+                            "data_description": {}
                         }
                     }
                 }
