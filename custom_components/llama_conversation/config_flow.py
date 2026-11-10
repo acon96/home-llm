@@ -1211,6 +1211,14 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
                 if isinstance(section_input, dict):
                     for key in [k for k, v in section_input.items() if v is None or v == ""]:
                         del section_input[key]
+                    if section_key == CONF_SAMPLING_SECTION:
+                        # sampling values may arrive as numeric strings (e.g. from the API)
+                        for key, value in list(section_input.items()):
+                            if isinstance(value, str):
+                                try:
+                                    section_input[key] = float(value)
+                                except ValueError:
+                                    pass
 
             # --- Normalize numeric fields to ints to avoid slice/type errors later. This
             # happens before validation, and the collapsed advanced section arrives nested. ---
