@@ -10,7 +10,6 @@ from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import ATTR_ENTITY_ID, Platform, CONF_HOST, CONF_PORT, CONF_SSL, CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, llm, device_registry as dr, entity_registry as er, issue_registry as ir
-from homeassistant.util.json import JsonObjectType
 from types import MappingProxyType
 
 import voluptuous as vol
@@ -52,7 +51,7 @@ from .backends.generic_openai import GenericOpenAIAPIClient, GenericOpenAIRespon
 from .backends.tailored_openai import LlamaCppServerClient
 from .backends.ollama import OllamaAPIClient
 from .backends.anthropic import AnthropicAPIClient
-from .utils import get_llama_cpp_python_version, download_model_from_hf
+from .utils import get_llama_cpp_python_version, download_model_from_hf, wrap_tool_result
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -349,22 +348,24 @@ class HassServiceTool(llm.Tool):
     ALLOWED_SERVICES: Final[list[str]] = SERVICE_TOOL_ALLOWED_SERVICES
     ALLOWED_DOMAINS: Final[list[str]] = SERVICE_TOOL_ALLOWED_DOMAINS
 
+    integration: Final[str] = DOMAIN
+
     async def async_call(
         self, hass: HomeAssistant, tool_input: llm.ToolInput, llm_context: llm.LLMContext
-    ) -> JsonObjectType:
+    ) -> llm.ToolResult:
         """Call the tool."""
         try:
             domain, service = tuple(tool_input.tool_args["service"].split("."))
         except ValueError:
-            return { "result": "unknown service" }
+            return wrap_tool_result({ "result": "unknown service" })
 
         target_device = tool_input.tool_args["target_device"]
 
         if domain not in self.ALLOWED_DOMAINS or service not in self.ALLOWED_SERVICES:
-            return { "result": "unknown service" }
+            return wrap_tool_result({ "result": "unknown service" })
 
         if domain == "script" and service not in ["reload", "turn_on", "turn_off", "toggle"]:
-            return { "result": "unknown service" }
+            return wrap_tool_result({ "result": "unknown service" })
 
         service_data = {ATTR_ENTITY_ID: target_device}
         for attr in ALLOWED_SERVICE_CALL_ARGUMENTS:
@@ -379,9 +380,9 @@ class HassServiceTool(llm.Tool):
             )
         except Exception:
             _LOGGER.exception("Failed to execute service for model")
-            return { "result": "failed" }
+            return wrap_tool_result({ "result": "failed" })
 
-        return { "result": "success" }
+        return wrap_tool_result({ "result": "success" })
 
 class HomeLLMAPI(llm.API):
     """

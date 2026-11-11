@@ -175,3 +175,33 @@ async def test_async_unload_entry_leaves_data_when_platform_unload_fails(monkeyp
 
     assert result is False
     assert hass.data[DOMAIN][entry.entry_id] is sentinel
+
+@pytest.mark.asyncio
+async def test_hass_service_tool_returns_tool_result_and_declares_integration(hass):
+    from homeassistant.helpers import llm
+    from pytest_homeassistant_custom_component.common import async_mock_service
+
+    from custom_components.llama_conversation import HassServiceTool
+
+    tool = HassServiceTool()
+    assert tool.integration == DOMAIN
+
+    llm_context = SimpleNamespace()
+
+    unknown = await tool.async_call(
+        hass, llm.ToolInput("HassCallService", {"service": "light.bogus", "target_device": "light.x"}), llm_context
+    )
+    assert isinstance(unknown, llm.ToolResult)
+    assert unknown.data == {"result": "unknown service"}
+
+    calls = async_mock_service(hass, "light", "turn_on")
+
+    success = await tool.async_call(
+        hass,
+        llm.ToolInput("HassCallService", {"service": "light.turn_on", "target_device": "light.office"}),
+        llm_context,
+    )
+    assert isinstance(success, llm.ToolResult)
+    assert success.data == {"result": "success"}
+    assert len(calls) == 1
+    assert calls[0].data == {"entity_id": "light.office"}

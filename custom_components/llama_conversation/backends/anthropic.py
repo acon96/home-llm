@@ -7,6 +7,15 @@ from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
 
 from anthropic import AsyncAnthropic, APIError, APIConnectionError, APITimeoutError, AuthenticationError
 
+# The anthropic SDK resolves resource classes through module level __getattr__ hooks
+# that call importlib.import_module the first time a resource is touched (same generated
+# codegen pattern as openai 3.x), and Home Assistant reports that as a blocking call
+# when it happens inside the event loop. Preload the classes this integration uses at
+# module import time, which the Home Assistant integration loader executes off the
+# event loop.
+from anthropic.resources.messages import AsyncMessages  # noqa: F401
+from anthropic.resources.models import AsyncModels  # noqa: F401
+
 from homeassistant.components import conversation as conversation
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError

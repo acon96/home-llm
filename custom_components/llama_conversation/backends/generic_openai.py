@@ -12,6 +12,14 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.helpers import llm
 from openai import AsyncOpenAI, OpenAIError
 
+# openai 3.x resolves resource classes through module level __getattr__ hooks that
+# call importlib.import_module the first time a resource is touched, and Home
+# Assistant reports that as a blocking call when it happens inside the event loop.
+# Preload the classes this integration uses at module import time, which the Home
+# Assistant integration loader executes off the event loop.
+from openai.resources.chat import AsyncChat  # noqa: F401
+from openai.resources.responses import AsyncResponses  # noqa: F401
+
 from custom_components.llama_conversation.utils import format_url, get_oai_formatted_messages, get_oai_formatted_tools, parse_extra_headers, parse_extra_body
 from custom_components.llama_conversation.const import (
     CONF_CHAT_MODEL,
