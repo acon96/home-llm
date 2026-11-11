@@ -36,6 +36,14 @@ from custom_components.llama_conversation.entity import TextGenerationResult, Lo
 
 _LOGGER = logging.getLogger(__name__)
 
+# The OpenAI SDK (3.x+) refuses to build a client without credentials, so servers that
+# do not need an API key are given a placeholder instead of an empty string
+NO_API_KEY_PLACEHOLDER = "sk-none"
+
+def _api_key_from_options(client_options: dict[str, Any]) -> str:
+    """Return the configured API key or the placeholder when the server needs no key."""
+    return client_options.get(CONF_API_KEY) or NO_API_KEY_PLACEHOLDER
+
 def _extra_headers_from_options(client_options: dict[str, Any]) -> dict[str, str]:
     try:
         return parse_extra_headers(client_options.get(CONF_EXTRA_HEADERS, ""))
@@ -60,7 +68,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
             path="/" + client_options.get(CONF_API_PATH, DEFAULT_API_PATH)
         )
 
-        self.api_key = client_options.get(CONF_API_KEY, "")
+        self.api_key = _api_key_from_options(client_options)
         self.extra_headers = _extra_headers_from_options(client_options)
 
     @staticmethod
@@ -73,7 +81,7 @@ class GenericOpenAIAPIClient(LocalLLMClient):
 
     @staticmethod
     async def async_validate_connection(hass: HomeAssistant, user_input: Dict[str, Any]) -> str | None:
-        api_key = user_input.get(CONF_API_KEY)
+        api_key = user_input.get(CONF_API_KEY) or NO_API_KEY_PLACEHOLDER
         api_base_path = user_input.get(CONF_API_PATH, DEFAULT_API_PATH)
         try:
             extra_headers = parse_extra_headers(user_input.get(CONF_EXTRA_HEADERS, ""))
@@ -287,7 +295,7 @@ class GenericOpenAIResponsesAPIClient(LocalLLMClient):
             ssl=client_options[CONF_SSL],
             path="/" + client_options.get(CONF_API_PATH, DEFAULT_API_PATH)
         )
-        self.api_key = client_options.get(CONF_API_KEY, "")
+        self.api_key = _api_key_from_options(client_options)
         self.extra_headers = _extra_headers_from_options(client_options)
 
     @staticmethod

@@ -110,7 +110,7 @@
                         "max_tokens": "Max tokens"
                     },
                     "data_description": {
-                        "llm_hass_api": "Select 'Assist' if you want the model to be able to control devices. If you are using the Home-LLM (v1-3) model then select 'Home Assistant Services'",
+                        "llm_hass_api": "Select 'Assist' if you want the model to be able to control devices. If you are using the Home-LLM (v1-3) model then select 'Device Control (legacy)'",
                         "prompt": "See [here](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) for more information on model prompting.",
                         "in_context_examples": "If you are using a model that is not specifically fine-tuned for use with this integration: enable this",
                         "prompt_caching": "Prompt caching attempts to pre-process the prompt (house state) and cache the processing that needs to be done to understand the prompt. Enabling this will cause the model to re-process the prompt any time an entity state changes in the house, restricted by the interval below.",
@@ -183,7 +183,7 @@
                         "max_tokens": "Max tokens"
                     },
                     "data_description": {
-                        "llm_hass_api": "Select 'Assist' if you want the model to be able to control devices. If you are using the Home-LLM (v1-3) model then select 'Home Assistant Services'",
+                        "llm_hass_api": "Select 'Assist' if you want the model to be able to control devices. If you are using the Home-LLM (v1-3) model then select 'Device Control (legacy)'",
                         "prompt": "See [here](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) for more information on model prompting.",
                         "in_context_examples": "If you are using a model that is not specifically fine-tuned for use with this integration: enable this",
                         "prompt_caching": "Prompt caching attempts to pre-process the prompt (house state) and cache the processing that needs to be done to understand the prompt. Enabling this will cause the model to re-process the prompt any time an entity state changes in the house, restricted by the interval below.",

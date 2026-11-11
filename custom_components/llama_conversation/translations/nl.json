@@ -114,7 +114,7 @@
                         "max_tokens": "Maximale tokens"
                     },
                     "data_description": {
-                        "llm_hass_api": "Kies 'Assist' als het model apparaten moet kunnen bedienen. Gebruik je het Home-LLM-model (v1-3), kies dan 'Home Assistant Services'",
+                        "llm_hass_api": "Kies 'Assist' als het model apparaten moet kunnen bedienen. Gebruik je het Home-LLM-model (v1-3), kies dan 'Device Control (legacy)'",
                         "prompt": "Zie [hier](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) voor meer informatie over het prompten van modellen.",
                         "in_context_examples": "Schakel dit in als je een model gebruikt dat niet specifiek voor deze integratie is gefinetuned",
                         "prompt_caching": "Promptcaching probeert de prompt (de toestand van het huis) vooraf te verwerken en die verwerking in de cache op te slaan. Als je dit inschakelt, verwerkt het model de prompt opnieuw telkens als de status van een entiteit in huis verandert, beperkt door het interval hieronder.",
@@ -192,7 +192,7 @@
                         "max_tokens": "Maximale tokens"
                     },
                     "data_description": {
-                        "llm_hass_api": "Kies 'Assist' als het model apparaten moet kunnen bedienen. Gebruik je het Home-LLM-model (v1-3), kies dan 'Home Assistant Services'",
+                        "llm_hass_api": "Kies 'Assist' als het model apparaten moet kunnen bedienen. Gebruik je het Home-LLM-model (v1-3), kies dan 'Device Control (legacy)'",
                         "prompt": "Zie [hier](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) voor meer informatie over het prompten van modellen.",
                         "in_context_examples": "Schakel dit in als je een model gebruikt dat niet specifiek voor deze integratie is gefinetuned",
                         "prompt_caching": "Promptcaching probeert de prompt (de toestand van het huis) vooraf te verwerken en die verwerking in de cache op te slaan. Als je dit inschakelt, verwerkt het model de prompt opnieuw telkens als de status van een entiteit in huis verandert, beperkt door het interval hieronder.",

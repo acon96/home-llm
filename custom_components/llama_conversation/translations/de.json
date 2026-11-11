@@ -109,7 +109,7 @@
                         "max_tool_call_iterations": "Maximale Anzahl von Werkzeugaufrufversuchen"
                     },
                     "data_description": {
-                        "llm_hass_api": "W\u00e4hlen Sie 'Assist', wenn das Modell Ger\u00e4te steuern soll. Wenn Sie ein Home-LLM-Modell (v1-3) verwenden, w\u00e4hlen Sie 'Home Assistant Services'.",
+                        "llm_hass_api": "W\u00e4hlen Sie 'Assist', wenn das Modell Ger\u00e4te steuern soll. Wenn Sie ein Home-LLM-Modell (v1-3) verwenden, w\u00e4hlen Sie 'Device Control (legacy)'.",
                         "prompt": "Weitere Informationen zu Modell-Prompts finden Sie [hier](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md).",
                         "in_context_examples": "Aktivieren Sie diese Option, wenn Sie ein Modell verwenden, das nicht speziell f\u00fcr diese Integration feinabgestimmt wurde.",
                         "prompt_caching": "Prompt-Caching versucht, den Prompt (Hauszustand) vorzuverarbeiten und die zum Verst\u00e4ndnis erforderliche Verarbeitung zwischenzuspeichern. Bei aktivierter Option verarbeitet das Modell den Prompt erneut, wenn sich der Zustand einer Entit\u00e4t im Haus \u00e4ndert, begrenzt durch das unten angegebene Intervall.",
@@ -181,7 +181,7 @@
                         "max_tool_call_iterations": "Maximale Anzahl von Werkzeugaufrufversuchen"
                     },
                     "data_description": {
-                        "llm_hass_api": "W\u00e4hlen Sie 'Assist', wenn das Modell Ger\u00e4te steuern soll. Wenn Sie ein Home-LLM-Modell (v1-3) verwenden, w\u00e4hlen Sie 'Home Assistant Services'.",
+                        "llm_hass_api": "W\u00e4hlen Sie 'Assist', wenn das Modell Ger\u00e4te steuern soll. Wenn Sie ein Home-LLM-Modell (v1-3) verwenden, w\u00e4hlen Sie 'Device Control (legacy)'.",
                         "prompt": "Weitere Informationen zu Modell-Prompts finden Sie [hier](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md).",
                         "in_context_examples": "Aktivieren Sie diese Option, wenn Sie ein Modell verwenden, das nicht speziell f\u00fcr diese Integration feinabgestimmt wurde.",
                         "prompt_caching": "Prompt-Caching versucht, den Prompt (Hauszustand) vorzuverarbeiten und die zum Verst\u00e4ndnis erforderliche Verarbeitung zwischenzuspeichern. Bei aktivierter Option verarbeitet das Modell den Prompt erneut, wenn sich der Zustand einer Entit\u00e4t im Haus \u00e4ndert, begrenzt durch das unten angegebene Intervall.",

@@ -394,7 +394,7 @@ class HomeLLMAPI(llm.API):
         super().__init__(
             hass=hass,
             id=HOME_LLM_API_ID,
-            name="Home Assistant Services",
+            name="Device Control (legacy)",
         )
 
     async def async_get_api_instance(self, llm_context: llm.LLMContext) -> llm.APIInstance:

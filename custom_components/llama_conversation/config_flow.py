@@ -832,7 +832,7 @@ def local_llama_config_option_schema(
                 description={"suggested_value": options.get(CONF_LLAMACPP_CACHE_SIZE_MB)},
                 default=DEFAULT_LLAMACPP_CACHE_SIZE_MB,
             ): NumberSelector(NumberSelectorConfig(min=0, max=1024, step=1)),
-            vol.Required(
+            vol.Optional(
                 CONF_GBNF_GRAMMAR,
                 description={"suggested_value": options.get(CONF_GBNF_GRAMMAR, DEFAULT_GBNF_GRAMMAR)},
                 default=options.get(CONF_GBNF_GRAMMAR, DEFAULT_GBNF_GRAMMAR),
@@ -892,7 +892,7 @@ def local_llama_config_option_schema(
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
         })
         advanced.update({
-            vol.Required(
+            vol.Optional(
                 CONF_GBNF_GRAMMAR,
                 description={"suggested_value": options.get(CONF_GBNF_GRAMMAR, DEFAULT_GBNF_GRAMMAR)},
                 default=options.get(CONF_GBNF_GRAMMAR, DEFAULT_GBNF_GRAMMAR),
