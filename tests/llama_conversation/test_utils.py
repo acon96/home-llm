@@ -454,3 +454,18 @@ def test_parse_extra_body_accepts_all_input_shapes():
         parse_extra_body("[1, 2]")
     with pytest.raises(ValueError):
         parse_extra_body("not json")
+
+
+def test_get_oai_formatted_messages_keeps_plain_assistant_replies():
+    # Earlier answers without tool calls must stay in the history, otherwise the model sees
+    # unanswered questions and answers them again (issue #384).
+    from custom_components.llama_conversation.utils import get_oai_formatted_messages
+
+    messages = get_oai_formatted_messages([
+        conversation.UserContent("What is the capital of Finland?"),
+        conversation.AssistantContent("agent", "Helsinki."),
+        conversation.UserContent("Play lo-fi."),
+    ])
+
+    assert [m["role"] for m in messages] == ["user", "assistant", "user"]
+    assert messages[1]["content"] == "Helsinki."

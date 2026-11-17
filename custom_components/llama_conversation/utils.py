@@ -791,6 +791,11 @@ def get_oai_formatted_messages(
                         } for t in message.tool_calls
                     ]
                 })
+            elif message.content:
+                messages.append({
+                    "role": "assistant",
+                    "content": str(message.content)
+                })
         elif message.role == "tool_result":
             tool_result = tool_result_data(message)
             if tool_result_to_str:
