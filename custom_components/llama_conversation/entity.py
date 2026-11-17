@@ -19,7 +19,7 @@ from homeassistant.helpers import template, entity_registry as er, llm, \
     area_registry as ar, device_registry as dr, entity
 from homeassistant.util import color
 
-from .utils import closest_color, parse_raw_tool_call, flatten_vol_schema, tool_result_data
+from .utils import closest_color, parse_raw_tool_call, flatten_vol_schema, tool_result_data, MalformedToolCallException
 from .const import (
     CONF_CHAT_MODEL,
     ESTIMATED_CHARS_PER_TOKEN,
@@ -244,21 +244,38 @@ class LocalLLMClient:
         agent_id: str,
         chat_log: conversation.chat_log.ChatLog,
     ):
+        malformed_calls: list[MalformedToolCallException] = []
+
         async def async_iterator():
             yield conversation.AssistantContentDeltaDict(role="assistant")
-            async for input_chunk in result:
-                _LOGGER.debug("Received chunk: %s", input_chunk)
+            try:
+                async for input_chunk in result:
+                    _LOGGER.debug("Received chunk: %s", input_chunk)
 
-                tool_calls = input_chunk.tool_calls
-                if tool_calls and not chat_log.llm_api:
-                    raise HomeAssistantError("Model attempted to call a tool but no LLM API was provided")
+                    tool_calls = input_chunk.tool_calls
+                    if tool_calls and not chat_log.llm_api:
+                        raise HomeAssistantError("Model attempted to call a tool but no LLM API was provided")
 
-                yield conversation.AssistantContentDeltaDict(
-                    content=input_chunk.response,
-                    tool_calls=tool_calls 
-                )
-        
-        return chat_log.async_add_delta_content_stream(agent_id, stream=async_iterator())
+                    yield conversation.AssistantContentDeltaDict(
+                        content=input_chunk.response,
+                        tool_calls=tool_calls 
+                    )
+            except MalformedToolCallException as err:
+                # A malformed tool call must not abort the stream: valid calls parsed
+                # before it are already running in the chat log, and Home Assistant only
+                # commits the pending assistant message and records the tool results when
+                # the input stream ends. Defer the error until the stream has drained so
+                # the retry loop can ask the model to correct itself with the executed
+                # calls and their results still in the history (issue #423).
+                malformed_calls.append(err)
+
+        async def stream_with_deferred_malformed_calls():
+            async for message in chat_log.async_add_delta_content_stream(agent_id, stream=async_iterator()):
+                yield message
+            if malformed_calls:
+                raise malformed_calls[0]
+
+        return stream_with_deferred_malformed_calls()
         
     async def _async_stream_parse_completion(
             self, 

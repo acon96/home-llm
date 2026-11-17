@@ -141,12 +141,19 @@ class MalformedToolCallException(Exception):
         self.error_msg = error_msg
 
     def as_tool_messages(self) -> Sequence[conversation.Content]:
+        # the assistant call and the tool result must share one non-empty id: strict
+        # OpenAI-compatible servers reject a tool message whose tool_call_id is empty or
+        # does not match the call it answers (issue #424)
+        if self.tool_call_id:
+            tool_input = llm.ToolInput(self.tool_name, {}, id=self.tool_call_id)
+        else:
+            tool_input = llm.ToolInput(self.tool_name, {})
         return [
             conversation.AssistantContent(
-                self.agent_id, tool_calls=[llm.ToolInput(self.tool_name, {})]
+                self.agent_id, tool_calls=[tool_input]
             ),
             conversation.ToolResultContent(
-            self.agent_id, self.tool_call_id, self.tool_name, 
+            self.agent_id, tool_input.id, self.tool_name, 
             wrap_tool_result({"error": f"Error occurred calling tool with args='{self.tool_args}': {self.error_msg}" })
         )]
 
