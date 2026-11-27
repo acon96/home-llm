@@ -141,12 +141,19 @@ class MalformedToolCallException(Exception):
         self.error_msg = error_msg
 
     def as_tool_messages(self) -> Sequence[conversation.Content]:
+        # the assistant call and the tool result must share one non-empty id: strict
+        # OpenAI-compatible servers reject a tool message whose tool_call_id is empty or
+        # does not match the call it answers (issue #424)
+        if self.tool_call_id:
+            tool_input = llm.ToolInput(self.tool_name, {}, id=self.tool_call_id)
+        else:
+            tool_input = llm.ToolInput(self.tool_name, {})
         return [
             conversation.AssistantContent(
-                self.agent_id, tool_calls=[llm.ToolInput(self.tool_name, {})]
+                self.agent_id, tool_calls=[tool_input]
             ),
             conversation.ToolResultContent(
-            self.agent_id, self.tool_call_id, self.tool_name, 
+            self.agent_id, tool_input.id, self.tool_name, 
             wrap_tool_result({"error": f"Error occurred calling tool with args='{self.tool_args}': {self.error_msg}" })
         )]
 
@@ -791,6 +798,11 @@ def get_oai_formatted_messages(
                         } for t in message.tool_calls
                     ]
                 })
+            elif message.content:
+                messages.append({
+                    "role": "assistant",
+                    "content": str(message.content)
+                })
         elif message.role == "tool_result":
             tool_result = tool_result_data(message)
             if tool_result_to_str:
@@ -918,9 +930,22 @@ def parse_raw_tool_call(raw_block: str | dict, agent_id: str) -> tuple[llm.ToolI
         args_dict["service"] = tool_name
         tool_name = SERVICE_TOOL_NAME
 
-    # make sure brightness is 0-255 and not a percentage
-    if "brightness" in args_dict and 0.0 < args_dict["brightness"] <= 1.0:
-        args_dict["brightness"] = int(args_dict["brightness"] * 255)
+    # make sure brightness is 0-255 and not a percentage. The value may arrive as a
+    # string (legacy/gemma tool call formats carry every argument as text), possibly
+    # with a trailing percent sign
+    if "brightness" in args_dict:
+        try:
+            brightness = args_dict["brightness"]
+            if isinstance(brightness, str):
+                is_percentage = brightness.strip().endswith("%")
+                brightness = float(brightness.strip().rstrip("%"))
+                if is_percentage:
+                    brightness = brightness / 100.0
+            args_dict["brightness"] = brightness
+            if 0.0 < brightness <= 1.0:
+                args_dict["brightness"] = int(brightness * 255)
+        except (TypeError, ValueError):
+            _LOGGER.warning(f"LLM produced an invalid brightness value: {repr(args_dict['brightness'])}")
 
     # convert string "tuple" to a list for RGB colors
     if "rgb_color" in args_dict and isinstance(args_dict["rgb_color"], str):

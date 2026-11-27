@@ -109,7 +109,7 @@
                         "max_tool_call_iterations": "Maksymalna liczba pr\u00f3b wywo\u0142ania narz\u0119dzi"
                     },
                     "data_description": {
-                        "llm_hass_api": "Wybierz 'Assist', je\u015bli model ma sterowa\u0107 urz\u0105dzeniami. Je\u015bli u\u017cywasz modelu Home-LLM (v1-3), wybierz 'Home Assistant Services'.",
+                        "llm_hass_api": "Wybierz 'Assist', je\u015bli model ma sterowa\u0107 urz\u0105dzeniami. Je\u015bli u\u017cywasz modelu Home-LLM (v1-3), wybierz 'Device Control (legacy)'.",
                         "prompt": "Wi\u0119cej informacji o promptach modelu znajdziesz [tutaj](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md).",
                         "in_context_examples": "W\u0142\u0105cz t\u0119 opcj\u0119, je\u015bli u\u017cywasz modelu, kt\u00f3ry nie zosta\u0142 specjalnie dostrojony do tej integracji.",
                         "prompt_caching": "Buforowanie prompt\u00f3w pr\u00f3buje wst\u0119pnie przetworzy\u0107 prompt (stan domu) i zapisa\u0107 przetwarzanie potrzebne do jego zrozumienia. Po w\u0142\u0105czeniu tej opcji model ponownie przetwarza prompt przy zmianie stanu encji w domu, z ograniczeniem wynikaj\u0105cym z poni\u017cszego interwa\u0142u.",
@@ -181,7 +181,7 @@
                         "max_tool_call_iterations": "Maksymalna liczba pr\u00f3b wywo\u0142ania narz\u0119dzi"
                     },
                     "data_description": {
-                        "llm_hass_api": "Wybierz 'Assist', je\u015bli model ma sterowa\u0107 urz\u0105dzeniami. Je\u015bli u\u017cywasz modelu Home-LLM (v1-3), wybierz 'Home Assistant Services'.",
+                        "llm_hass_api": "Wybierz 'Assist', je\u015bli model ma sterowa\u0107 urz\u0105dzeniami. Je\u015bli u\u017cywasz modelu Home-LLM (v1-3), wybierz 'Device Control (legacy)'.",
                         "prompt": "Wi\u0119cej informacji o promptach modelu znajdziesz [tutaj](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md).",
                         "in_context_examples": "W\u0142\u0105cz t\u0119 opcj\u0119, je\u015bli u\u017cywasz modelu, kt\u00f3ry nie zosta\u0142 specjalnie dostrojony do tej integracji.",
                         "prompt_caching": "Buforowanie prompt\u00f3w pr\u00f3buje wst\u0119pnie przetworzy\u0107 prompt (stan domu) i zapisa\u0107 przetwarzanie potrzebne do jego zrozumienia. Po w\u0142\u0105czeniu tej opcji model ponownie przetwarza prompt przy zmianie stanu encji w domu, z ograniczeniem wynikaj\u0105cym z poni\u017cszego interwa\u0142u.",

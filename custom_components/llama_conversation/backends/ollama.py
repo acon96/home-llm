@@ -35,7 +35,6 @@ from custom_components.llama_conversation.const import (
     CONF_ENABLE_LEGACY_TOOL_CALLING,
     CONF_TOOL_RESPONSE_AS_STRING,
     CONF_RESPONSE_JSON_SCHEMA,
-    DEFAULT_MAX_TOKENS,
     DEFAULT_ENABLE_THINK_MODE,
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_API_PATH,
@@ -179,6 +178,27 @@ class OllamaAPIClient(LocalLLMClient):
         as_text = str(value).strip()
         return 0 if as_text in {"0", "0.0"} else f"{as_text}m"
 
+    @staticmethod
+    def _build_generation_options(entity_options: dict[str, Any]) -> dict[str, Any]:
+        """Build Ollama options with integer token limits and sampling counts."""
+        params: dict[str, Any] = {"num_ctx": int(entity_options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH))}
+
+        def pass_option_if_set(src, dst, *, cast=None):
+            value = entity_options.get(src)
+            if value is None:
+                return
+            if cast is not None:
+                value = cast(value)
+            params[dst] = value
+
+        pass_option_if_set(CONF_MAX_TOKENS, "num_predict", cast=int)
+        pass_option_if_set(CONF_TOP_P, "top_p")
+        pass_option_if_set(CONF_TYPICAL_P, "typical_p")
+        pass_option_if_set(CONF_TEMPERATURE, "temperature")
+        pass_option_if_set(CONF_MIN_P, "min_p")
+        pass_option_if_set(CONF_TOP_K, "top_k", cast=int)
+        return params
+
     def _generate_stream(
         self,
         conversation: List[conversation.Content],
@@ -187,24 +207,13 @@ class OllamaAPIClient(LocalLLMClient):
         entity_options: Dict[str, Any],
     ) -> AsyncGenerator[TextGenerationResult, None]:
         model_name = entity_options.get(CONF_CHAT_MODEL, "")
-        context_length = entity_options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
-        max_tokens = entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
+        options = self._build_generation_options(entity_options)
         timeout = entity_options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
         keep_alive = entity_options.get(CONF_OLLAMA_KEEP_ALIVE_MIN, DEFAULT_OLLAMA_KEEP_ALIVE_MIN)
         enable_legacy_tool_calling = entity_options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
         tool_response_as_string = entity_options.get(CONF_TOOL_RESPONSE_AS_STRING, DEFAULT_TOOL_RESPONSE_AS_STRING)
         think_mode = entity_options.get(CONF_ENABLE_THINK_MODE, DEFAULT_ENABLE_THINK_MODE)
         json_mode = entity_options.get(CONF_OLLAMA_JSON_MODE, DEFAULT_OLLAMA_JSON_MODE)
-        options = {
-            "num_ctx": context_length,
-            "num_predict": max_tokens,
-        }
-
-        # sampling parameters that are not configured are left to the server
-        for key in (CONF_TOP_P, CONF_TOP_K, CONF_TYPICAL_P, CONF_TEMPERATURE, CONF_MIN_P):
-            if entity_options.get(key) is not None:
-                options[key] = entity_options[key]
-
         messages = get_oai_formatted_messages(conversation, tool_args_to_str=False, tool_result_to_str=tool_response_as_string)
         tools = None
         if llm_api and not enable_legacy_tool_calling:
@@ -282,25 +291,13 @@ class OllamaAPIClient(LocalLLMClient):
         entity_options: Dict[str, Any],
     ) -> TextGenerationResult:
         model_name = entity_options.get(CONF_CHAT_MODEL, "")
-        context_length = entity_options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH)
-        max_tokens = entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
+        options = self._build_generation_options(entity_options)
         timeout = entity_options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
         keep_alive = entity_options.get(CONF_OLLAMA_KEEP_ALIVE_MIN, DEFAULT_OLLAMA_KEEP_ALIVE_MIN)
         enable_legacy_tool_calling = entity_options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
         tool_response_as_string = entity_options.get(CONF_TOOL_RESPONSE_AS_STRING, DEFAULT_TOOL_RESPONSE_AS_STRING)
         think_mode = entity_options.get(CONF_ENABLE_THINK_MODE, DEFAULT_ENABLE_THINK_MODE)
         json_mode = entity_options.get(CONF_OLLAMA_JSON_MODE, DEFAULT_OLLAMA_JSON_MODE)
-        options = {
-            "num_ctx": context_length,
-            "num_predict": max_tokens,
-        }
-
-        # sampling parameters that are not configured are left to the server
-        for key in (CONF_TOP_P, CONF_TOP_K, CONF_TYPICAL_P, CONF_TEMPERATURE, CONF_MIN_P):
-            if entity_options.get(key) is not None:
-                options[key] = entity_options[key]
-
-
         messages = get_oai_formatted_messages(conversation, tool_args_to_str=False, tool_result_to_str=tool_response_as_string)
         tools = None
         if llm_api and not enable_legacy_tool_calling:

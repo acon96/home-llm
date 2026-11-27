@@ -7,11 +7,9 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 
 from custom_components.llama_conversation.const import (
-    CONF_MAX_TOKENS,
     CONF_TOP_K,
     CONF_GBNF_GRAMMAR,
     CONF_API_PATH,
-    DEFAULT_MAX_TOKENS,
 )
 from custom_components.llama_conversation.backends.generic_openai import GenericOpenAIAPIClient
 from custom_components.llama_conversation.utils import format_url
@@ -29,13 +27,11 @@ class LlamaCppServerClient(GenericOpenAIAPIClient):
         return f"Llama.cpp Server at '{format_url(hostname=host, port=port, ssl=ssl, path=path)}'"
 
     def _chat_completion_params(self, entity_options: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
-        max_tokens = int(entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS))
         endpoint, request_params = super()._chat_completion_params(entity_options)
 
-        # sampling parameters that are not configured are left to the server
+        # no pass_option_if_set b/c there's only 1 option. add it if this expands
         if entity_options.get(CONF_TOP_K) is not None:
             request_params["top_k"] = int(entity_options[CONF_TOP_K])
-        request_params["max_tokens"] = max_tokens
 
         grammar = (entity_options.get(CONF_GBNF_GRAMMAR) or "").strip()
         if grammar:

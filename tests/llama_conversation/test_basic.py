@@ -11,6 +11,7 @@ from openai import OpenAIError
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.exceptions import ConfigEntryError
 
+from custom_components.llama_conversation.backends.anthropic import AnthropicAPIClient
 from custom_components.llama_conversation.backends.llamacpp import LlamaCppClient, snapshot_settings
 from custom_components.llama_conversation.backends.ollama import OllamaAPIClient, _normalize_path
 from custom_components.llama_conversation.backends.generic_openai import GenericOpenAIAPIClient
@@ -39,6 +40,124 @@ from custom_components.llama_conversation.const import (
 from custom_components.llama_conversation.utils import LlamaCppPythonInstallError
 from custom_components.llama_conversation.utils import LlamaCppPythonInstallError, strip_thinking_blocks, flatten_vol_schema
 from custom_components.llama_conversation.const import DEFAULT_THINKING_PREFIX, DEFAULT_THINKING_SUFFIX
+
+@pytest.mark.parametrize("backend", [LlamaCppClient, OllamaAPIClient, GenericOpenAIAPIClient, pytest.param("anthropic", id="AnthropicAPIClient")])
+def test_generation_settings_normalize_integer_options(backend):
+    from custom_components.llama_conversation.backends.anthropic import AnthropicAPIClient
+    from custom_components.llama_conversation.const import CONF_MAX_TOKENS, CONF_TOP_K, CONF_TEMPERATURE, CONF_TOP_P, CONF_MIN_P
+
+    if backend == "anthropic":
+        backend = AnthropicAPIClient
+    client = object.__new__(backend)
+    client.grammars = {}
+    options = {
+        CONF_CHAT_MODEL: "test-model",
+        CONF_MAX_TOKENS: 128.0,
+        CONF_CONTEXT_LENGTH: 2048.0,
+        CONF_TOP_K: 40.0,
+        CONF_TEMPERATURE: 0.0,
+        CONF_TOP_P: 0.75,
+        CONF_MIN_P: None,
+    }
+    original_options = dict(options)
+    build = client._build_generation_options if backend is OllamaAPIClient else client._build_generation_kwargs
+    params = build(options)
+    token_key = "num_predict" if backend is OllamaAPIClient else "max_tokens"
+    assert type(params[token_key]) is int
+    assert params[token_key] == 128
+    if backend is not GenericOpenAIAPIClient:
+        assert type(params["top_k"]) is int
+        assert params["top_k"] == 40
+    if backend is OllamaAPIClient:
+        assert type(params["num_ctx"]) is int
+        assert params["num_ctx"] == 2048
+    assert params["temperature"] == 0.0
+    assert params["top_p"] == 0.75
+    assert "min_p" not in params
+    assert options == original_options
+    defaults = build({CONF_CHAT_MODEL: "test-model"})
+    assert token_key not in defaults
+    assert "top_k" not in defaults
+    assert "temperature" not in defaults
+    assert "top_p" not in defaults
+    assert token_key not in build({CONF_CHAT_MODEL: "test-model", CONF_MAX_TOKENS: None})
+
+
+@pytest.mark.parametrize("backend", [LlamaCppClient, OllamaAPIClient, GenericOpenAIAPIClient, AnthropicAPIClient])
+@pytest.mark.parametrize("top_k", [None, 0.0, "0", 0.5])
+def test_generation_settings_filter_after_casting(backend, top_k):
+    from custom_components.llama_conversation.const import CONF_TOP_K, CONF_TEMPERATURE, CONF_TOP_P
+
+    client = object.__new__(backend)
+    client.grammars = {}
+    options = {CONF_CHAT_MODEL: "test-model", CONF_TOP_K: top_k, CONF_TEMPERATURE: 0.0, CONF_TOP_P: 0.0}
+    original_options = dict(options)
+    build = client._build_generation_options if backend is OllamaAPIClient else client._build_generation_kwargs
+    params = build(options)
+
+    if top_k is None or backend in (AnthropicAPIClient, GenericOpenAIAPIClient):
+        assert "top_k" not in params
+    else:
+        assert type(params["top_k"]) is int
+        assert params["top_k"] == 0
+    assert params["temperature"] == 0.0
+    assert params["top_p"] == 0.0
+    assert options == original_options
+
+
+@pytest.mark.parametrize("sampling", [None, 0.0, 0.75])
+def test_responses_generation_settings_are_shared_with_request_builder(sampling):
+    from custom_components.llama_conversation.backends.generic_openai import GenericOpenAIResponsesAPIClient
+    from custom_components.llama_conversation.const import CONF_MAX_TOKENS, CONF_TEMPERATURE, CONF_TOP_P, CONF_RESPONSE_JSON_SCHEMA
+
+    client = object.__new__(GenericOpenAIResponsesAPIClient)
+    schema = {"type": "object", "properties": {"answer": {"type": "string"}}}
+    options = {
+        CONF_CHAT_MODEL: "test-model",
+        CONF_MAX_TOKENS: 8192.0,
+        CONF_TEMPERATURE: sampling,
+        CONF_TOP_P: sampling,
+        CONF_RESPONSE_JSON_SCHEMA: schema,
+    }
+    original = dict(options)
+    params = client._build_generation_kwargs(options)
+    request = client._build_responses_request_params([], options)
+    assert request == {**params, "input": []}
+    assert type(params["max_output_tokens"]) is int
+    assert params["max_output_tokens"] == 8192
+    assert "max_tokens" not in params
+    for key in ("temperature", "top_p"):
+        if sampling is None:
+            assert key not in params
+        else:
+            assert params[key] == sampling
+    assert params["text"] == {"format": {"type": "json_schema", "name": "ha_task", "schema": schema, "strict": True}}
+    assert options == original
+    assert client._build_generation_kwargs({CONF_CHAT_MODEL: "test-model"}) == {"model": "test-model"}
+
+
+@pytest.mark.parametrize("max_tokens", [None, 4096.0])
+def test_optional_token_limits_cover_openai_variants(max_tokens):
+    from custom_components.llama_conversation.backends.generic_openai import GenericOpenAIResponsesAPIClient
+    from custom_components.llama_conversation.backends.tailored_openai import LlamaCppServerClient
+    from custom_components.llama_conversation.const import CONF_MAX_TOKENS
+
+    options = {CONF_CHAT_MODEL: "test-model", CONF_MAX_TOKENS: max_tokens}
+    server = object.__new__(LlamaCppServerClient)
+    params = server._build_generation_kwargs(options)
+    _, extra = server._chat_completion_params(options)
+    assert "max_tokens" not in extra
+
+    responses = object.__new__(GenericOpenAIResponsesAPIClient)
+    response_params = responses._build_responses_request_params([], options)
+    if max_tokens is None:
+        assert "max_tokens" not in params
+        assert "max_output_tokens" not in response_params
+    else:
+        assert params["max_tokens"] == 4096
+        assert type(response_params["max_output_tokens"]) is int
+        assert response_params["max_output_tokens"] == 4096
+
 
 class TestStripThinkingBlocks:
     """Tests for the thinking-block sanitizer that prevents reasoning leakage into TTS speech."""

@@ -5,7 +5,7 @@ import asyncio
 import pytest
 import voluptuous as vol
 
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.const import CONF_HOST, CONF_LLM_HASS_API, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
@@ -220,6 +220,25 @@ def test_sampling_parameters_are_optional_and_unset_by_default(hass: HomeAssista
         assert "use_server_sampling_defaults" not in sampling_keys
 
 
+@pytest.mark.parametrize("backend", [BACKEND_TYPE_LLAMA_CPP, BACKEND_TYPE_GENERIC_OPENAI, BACKEND_TYPE_GENERIC_OPENAI_RESPONSES, BACKEND_TYPE_LLAMA_CPP_SERVER, BACKEND_TYPE_OLLAMA, BACKEND_TYPE_ANTHROPIC])
+def test_max_tokens_default_is_only_required_for_anthropic(hass: HomeAssistant, backend):
+    schema = _schema(hass, backend)
+    marker = _find_marker(schema, CONF_MAX_TOKENS)
+    token_schema = vol.Schema({marker: schema[marker]})
+    if backend == BACKEND_TYPE_ANTHROPIC:
+        assert isinstance(marker, vol.Required)
+        assert token_schema({}) == {CONF_MAX_TOKENS: DEFAULT_MAX_TOKENS}
+        with pytest.raises(vol.Invalid):
+            token_schema({CONF_MAX_TOKENS: None})
+    else:
+        assert not isinstance(marker, vol.Required)
+        assert token_schema({}) == {}
+        assert _get_default(schema, CONF_MAX_TOKENS) is vol.UNDEFINED
+    assert token_schema({CONF_MAX_TOKENS: 4096}) == {CONF_MAX_TOKENS: 4096}
+    saved_schema = _schema(hass, backend, {CONF_MAX_TOKENS: 4096})
+    assert _get_suggested(saved_schema, CONF_MAX_TOKENS) == 4096
+
+
 def test_schema_generic_openai_options_preserved(hass: HomeAssistant):
     overrides = {CONF_TOP_P: 0.25, CONF_REQUEST_TIMEOUT: 321}
 
@@ -250,7 +269,7 @@ def test_schema_generic_openai_backends_include_max_tokens_and_extra_body(hass: 
 
         assert CONF_MAX_TOKENS in keys, backend
         assert CONF_ADVANCED_SECTION in keys, backend
-        assert _get_default(schema, CONF_MAX_TOKENS) == DEFAULT_MAX_TOKENS
+        assert _get_default(schema, CONF_MAX_TOKENS) is vol.UNDEFINED
 
         section_marker = _find_marker(schema, CONF_ADVANCED_SECTION)
         section_obj = schema[section_marker]

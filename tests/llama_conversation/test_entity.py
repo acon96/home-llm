@@ -44,6 +44,32 @@ def test_parse_raw_tool_call_rejects_non_object_arguments():
         parse_raw_tool_call(raw_tool, "agent-id")
 
 
+@pytest.mark.parametrize(
+    ("raw_value", "expected"),
+    [
+        ("0.5", 127),
+        ("50%", 127),
+        ("128", 128),
+        (0.25, 63),
+        ("200", 200),
+    ],
+)
+def test_parse_raw_tool_call_coerces_brightness(raw_value, expected):
+    raw_tool = json.dumps({"name": "HassService", "arguments": {"brightness": raw_value}})
+
+    tool_input, _ = parse_raw_tool_call(raw_tool, "agent-id")
+
+    assert tool_input.tool_args["brightness"] == expected
+
+
+def test_parse_raw_tool_call_leaves_unparseable_brightness_untouched():
+    raw_tool = json.dumps({"name": "HassService", "arguments": {"brightness": "bright"}})
+
+    tool_input, _ = parse_raw_tool_call(raw_tool, "agent-id")
+
+    assert tool_input.tool_args["brightness"] == "bright"
+
+
 def test_parse_tool_arguments_with_repair_fallback_rejects_non_object_json():
     with pytest.raises(MalformedToolCallException):
         parse_tool_arguments_with_repair_fallback("[]", "agent-id", "light.turn_on")

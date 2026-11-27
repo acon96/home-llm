@@ -109,7 +109,7 @@
                         "max_tool_call_iterations": "N\u00famero m\u00e1ximo de intentos de llamadas a herramientas"
                     },
                     "data_description": {
-                        "llm_hass_api": "Seleccione 'Assist' para que el modelo pueda controlar dispositivos. Si usa un modelo Home-LLM (v1-3), seleccione 'Home Assistant Services'.",
+                        "llm_hass_api": "Seleccione 'Assist' para que el modelo pueda controlar dispositivos. Si usa un modelo Home-LLM (v1-3), seleccione 'Device Control (legacy)'.",
                         "prompt": "Consulte [aqu\u00ed](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) para obtener m\u00e1s informaci\u00f3n sobre los prompts del modelo.",
                         "in_context_examples": "Active esta opci\u00f3n si usa un modelo que no se ha ajustado espec\u00edficamente para esta integraci\u00f3n.",
                         "prompt_caching": "La cach\u00e9 de prompts intenta procesar previamente el prompt (estado de la casa) y almacenar el procesamiento necesario para comprenderlo. Al activar esta opci\u00f3n, el modelo vuelve a procesar el prompt cuando cambia el estado de una entidad de la casa, respetando el intervalo indicado a continuaci\u00f3n.",
@@ -181,7 +181,7 @@
                         "max_tool_call_iterations": "N\u00famero m\u00e1ximo de intentos de llamadas a herramientas"
                     },
                     "data_description": {
-                        "llm_hass_api": "Seleccione 'Assist' para que el modelo pueda controlar dispositivos. Si usa un modelo Home-LLM (v1-3), seleccione 'Home Assistant Services'.",
+                        "llm_hass_api": "Seleccione 'Assist' para que el modelo pueda controlar dispositivos. Si usa un modelo Home-LLM (v1-3), seleccione 'Device Control (legacy)'.",
                         "prompt": "Consulte [aqu\u00ed](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) para obtener m\u00e1s informaci\u00f3n sobre los prompts del modelo.",
                         "in_context_examples": "Active esta opci\u00f3n si usa un modelo que no se ha ajustado espec\u00edficamente para esta integraci\u00f3n.",
                         "prompt_caching": "La cach\u00e9 de prompts intenta procesar previamente el prompt (estado de la casa) y almacenar el procesamiento necesario para comprenderlo. Al activar esta opci\u00f3n, el modelo vuelve a procesar el prompt cuando cambia el estado de una entidad de la casa, respetando el intervalo indicado a continuaci\u00f3n.",

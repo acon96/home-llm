@@ -28,6 +28,8 @@ The sampling parameters of every backend are grouped in their own "Sampling Para
 settings, in the same position where they used to be listed. A sampling parameter left empty is left to the server
 hosting the model. Fill one in only to override it for this model.
 
+Maximum response tokens is also optional and has no integration default, except for Anthropic-compatible APIs, which require a value and default to 8192. Existing saved limits remain in effect until changed or, on other backends, cleared.
+
 The additional attributes to expose in the context, the ICL examples CSV filename, and the number of ICL examples to
 generate are in the collapsed "Advanced Options" section of the model settings:
 
@@ -66,7 +68,7 @@ For what the sampling parameters mean, see the documentation of the server hosti
 | Top P                                       | Sampling parameter; see above note                                                                                                        | 1.0             |
 | Min P                                       | Sampling parameter; see above note                                                                                                        | 0.0             |
 | Typical P                                   | Sampling parameter; see above note                                                                                                        | 1.0             |
-| Maximum tokens to return in response        | Limits the number of tokens that can be produced by each model response                                                                   | 512             |
+| Maximum tokens to return in response        | Optional limit on tokens produced by each model response; leave empty for unlimited generation | Unset |
 | Context Length                                  | Tokens the model has for the conversation and its answer together. Home LLM drops the oldest messages that no longer fit, so a long conversation stays inside the limit instead of failing | 2048          |
 
 ## Performance Optimization
@@ -132,7 +134,7 @@ Llama.cpp Server backend is used when running inference via a separate `llama-cp
 | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
 | Top K                                       | Sampling parameter; see your server's documentation | 40                                              |
 | Top P                                       | Sampling parameter; see above note                                                                                                                               | 1.0                                             |
-| Maximum tokens to return in response        | Limits the number of tokens that can be produced by each model response                                                                                          | 512                                             |
+| Maximum tokens to return in response        | Optional limit on tokens produced by each model response; leave empty for unlimited generation | Unset |
 | Request Timeout                             | The maximum time in seconds that the integration will wait for a response from the remote server                                                                 | 90 (higher if running on low resource hardware) |
 
 ## Advanced Features
@@ -159,7 +161,7 @@ For details about Ollama's sampling parameters, see: https://github.com/ollama/o
 | Top K                                       | Sampling parameter; see above note                                                                            | 40                                              |
 | Top P                                       | Sampling parameter; see above note                                                                            | 1.0                                             |
 | Typical P                                   | Sampling parameter; see above note                                                                            | 1.0                                             |
-| Maximum tokens to return in response        | Limits the number of tokens that can be produced by each model response                                       | 512                                             |
+| Maximum tokens to return in response        | Optional limit on tokens produced by each model response; leave empty for unlimited generation | Unset |
 | Context Length                                  | Tokens the model has for the conversation and its answer together. Home LLM drops the oldest messages that no longer fit, so a long conversation stays inside the limit instead of failing | 2048          |
 | Request Timeout                             | The maximum time in seconds that the integration will wait for a response from the remote server              | 90 (higher if running on low resource hardware) |
 
@@ -195,7 +197,7 @@ until you expand it. It is also available when editing the backend entry's optio
 | Option Name                                 | Description                                                                                                   | Suggested Value                                 |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
 | Top P                                       | Sampling parameter; see above note                                                                            | 1.0                                             |
-| Max tokens                                  | Limits the number of tokens that can be produced by each model response                                       | 512                                             |
+| Max tokens                                  | Optional limit on tokens produced by each model response; leave empty for unlimited generation | Unset |
 | Request Timeout                             | The maximum time in seconds that the integration will wait for a response from the remote server              | 90 (higher if running on low resource hardware) |
 
 ### Advanced Options
@@ -251,7 +253,7 @@ Anthropic backend uses the [Anthropic Messages API](https://docs.anthropic.com/e
 | Temperature                                 | Sampling parameter; controls randomness in responses                                                          | 0.1                                             |
 | Top K                                       | Sampling parameter; limits token selection to the top K candidates                                            | 40                                              |
 | Top P                                       | Sampling parameter; nucleus sampling threshold                                                                | 1.0                                             |
-| Maximum tokens to return in response        | Limits the number of tokens that can be produced by each model response                                       | 512                                             |
+| Maximum tokens to return in response        | Required limit on tokens produced by each model response, including reasoning tokens | 8192 |
 | Request Timeout                             | The maximum time in seconds that the integration will wait for a response from the remote server              | 90 (higher if running on low resource hardware) |
 
 ## Features

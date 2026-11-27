@@ -110,7 +110,7 @@
                         "max_tokens": "Tokens maximum"
                     },
                     "data_description": {
-                        "llm_hass_api": "S\u00e9lectionnez 'Assist' pour permettre au mod\u00e8le de contr\u00f4ler les appareils. Si vous utilisez un mod\u00e8le Home-LLM (v1-3), s\u00e9lectionnez 'Home Assistant Services'.",
+                        "llm_hass_api": "S\u00e9lectionnez 'Assist' pour permettre au mod\u00e8le de contr\u00f4ler les appareils. Si vous utilisez un mod\u00e8le Home-LLM (v1-3), s\u00e9lectionnez 'Device Control (legacy)'.",
                         "prompt": "Consultez [cette page](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) pour en savoir plus sur les prompts du mod\u00e8le.",
                         "in_context_examples": "Activez cette option si vous utilisez un mod\u00e8le qui n'a pas \u00e9t\u00e9 sp\u00e9cifiquement ajust\u00e9 pour cette int\u00e9gration.",
                         "prompt_caching": "La mise en cache des prompts tente de pr\u00e9traiter le prompt (\u00e9tat de la maison) et de mettre en cache le traitement n\u00e9cessaire \u00e0 sa compr\u00e9hension. Lorsque cette option est activ\u00e9e, le mod\u00e8le retraite le prompt \u00e0 chaque changement d'\u00e9tat d'une entit\u00e9 de la maison, dans la limite de l'intervalle ci-dessous.",
@@ -183,7 +183,7 @@
                         "max_tokens": "Tokens maximum"
                     },
                     "data_description": {
-                        "llm_hass_api": "S\u00e9lectionnez 'Assist' pour permettre au mod\u00e8le de contr\u00f4ler les appareils. Si vous utilisez un mod\u00e8le Home-LLM (v1-3), s\u00e9lectionnez 'Home Assistant Services'.",
+                        "llm_hass_api": "S\u00e9lectionnez 'Assist' pour permettre au mod\u00e8le de contr\u00f4ler les appareils. Si vous utilisez un mod\u00e8le Home-LLM (v1-3), s\u00e9lectionnez 'Device Control (legacy)'.",
                         "prompt": "Consultez [cette page](https://github.com/acon96/home-llm/blob/develop/docs/Model%20Prompting.md) pour en savoir plus sur les prompts du mod\u00e8le.",
                         "in_context_examples": "Activez cette option si vous utilisez un mod\u00e8le qui n'a pas \u00e9t\u00e9 sp\u00e9cifiquement ajust\u00e9 pour cette int\u00e9gration.",
                         "prompt_caching": "La mise en cache des prompts tente de pr\u00e9traiter le prompt (\u00e9tat de la maison) et de mettre en cache le traitement n\u00e9cessaire \u00e0 sa compr\u00e9hension. Lorsque cette option est activ\u00e9e, le mod\u00e8le retraite le prompt \u00e0 chaque changement d'\u00e9tat d'une entit\u00e9 de la maison, dans la limite de l'intervalle ci-dessous.",

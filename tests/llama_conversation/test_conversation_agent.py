@@ -28,6 +28,7 @@ from homeassistant.helpers import intent, llm, template
 
 from custom_components.llama_conversation.const import (
     CONF_CHAT_MODEL,
+    CONF_ENABLE_STREAMING,
     CONF_MAX_TOOL_CALL_ITERATIONS,
     CONF_PROMPT,
     CONF_CONTEXT_LENGTH,
@@ -35,6 +36,7 @@ from custom_components.llama_conversation.const import (
     DOMAIN,
 )
 from custom_components.llama_conversation.conversation import NO_SPEECH_MESSAGE, LocalLLMAgent
+from custom_components.llama_conversation.entity import LocalLLMClient, TextGenerationResult
 from custom_components.llama_conversation.utils import MalformedToolCallException
 
 API_ID = "test-llm-api"
@@ -110,6 +112,37 @@ async def _replay(messages: list[Any]):
         if isinstance(message, Exception):
             raise message
         yield message
+
+
+class StreamingScriptedClient(ScriptedClient):
+    """Replays TextGenerationResult chunks through the real streaming transform."""
+
+    _attr_supports_streaming = True
+
+    def __init__(self, hass: HomeAssistant, streams: list[list[Any]]) -> None:
+        super().__init__(hass, replies=[])
+        self.streams = streams
+
+    def _generate_stream(self, conv, llm_api, agent_id, entity_options):
+        self.seen_conversations.append(list(conv))
+        script = self.streams.pop(0)
+
+        async def generate():
+            for item in script:
+                if isinstance(item, Exception):
+                    raise item
+                yield item
+
+        return generate()
+
+    async def _async_generate(self, conv, agent_id, chat_log, entity_options):
+        # route through the real streaming transform like the base class streaming branch
+        return await LocalLLMClient._transform_result_stream(
+            self,
+            self._generate_stream(conv, chat_log.llm_api, agent_id, entity_options),
+            agent_id,
+            chat_log,
+        )
 
 
 class DummyEntry:
@@ -260,6 +293,16 @@ async def test_conversation_is_sent_in_full(hass: HomeAssistant):
     assert client.seen_conversations[-1][-1].content == "turn on the lights"
 
 
+@pytest.mark.parametrize("max_tokens", [None, 1024])
+def test_context_budget_only_reserves_configured_output_tokens(max_tokens):
+    from custom_components.llama_conversation.conversation import CONTEXT_BUDGET_MARGIN_TOKENS
+
+    options = {CONF_CONTEXT_LENGTH: 4096}
+    if max_tokens is not None:
+        options[CONF_MAX_TOKENS] = max_tokens
+    assert LocalLLMAgent._context_token_budget(options) == 4096 - (max_tokens or 0) - CONTEXT_BUDGET_MARGIN_TOKENS
+
+
 @pytest.mark.asyncio
 async def test_history_is_trimmed_to_fit_the_model_context(hass: HomeAssistant):
     client = ScriptedClient(hass, replies=[
@@ -370,9 +413,10 @@ async def test_api_instructions_are_left_to_the_prompt_template(hass: HomeAssist
         CONF_LLM_HASS_API: [API_ID],
         CONF_PROMPT: "My prompt with {{ llm_api_instructions }} instructions",
     })
-    await agent.async_process(make_user_input("u2"))
+    result = await agent.async_process(make_user_input("u2", conversation_id=None))
 
-    assert get_log(hass).content[0].content.startswith(f"My prompt with {API_INSTRUCTIONS} instructions")
+    log = hass.data[DATA_CHAT_LOGS][result.conversation_id]
+    assert log.content[0].content.startswith(f"My prompt with {API_INSTRUCTIONS} instructions")
 
 
 @pytest.mark.asyncio
@@ -403,8 +447,9 @@ async def test_home_assistant_only_adds_its_own_date_time_prompt_when_uncovered(
     assert "Current time is" in get_log(hass).content[0].content
 
     api.tools[:] = [DateTimeTool()]
-    await agent.async_process(make_user_input("a date time tool"))
-    assert "Current time is" not in get_log(hass).content[0].content
+    result = await agent.async_process(make_user_input("a date time tool", conversation_id=None))
+    log = hass.data[DATA_CHAT_LOGS][result.conversation_id]
+    assert "Current time is" not in log.content[0].content
 
 
 @pytest.mark.asyncio
@@ -466,6 +511,54 @@ async def test_malformed_tool_call_asks_the_model_to_correct_itself(hass: HomeAs
     correction = client.seen_conversations[-1]
     assert isinstance(correction[-2], AssistantContent)
     assert isinstance(correction[-1], ToolResultContent)
+    # the synthetic call and its error result must share one non-empty id, or strict
+    # OpenAI-compatible servers reject the retry request with a 400 (issue #424)
+    assert correction[-1].tool_call_id == correction[-2].tool_calls[0].id
+    assert correction[-1].tool_call_id
+
+
+@pytest.mark.asyncio
+async def test_malformed_tool_call_after_a_valid_one_keeps_the_executed_call_in_the_retry(hass: HomeAssistant):
+    """A malformed block must not discard the valid call that already ran before it.
+
+    Home Assistant starts tool tasks as soon as their deltas stream in, but only commits
+    the assistant message and records the results when the input stream ends. Raising the
+    malformed call error mid-stream used to throw both away, so the retry ran the same
+    action a second time (issue #423).
+    """
+    tool = RecordingTool()
+    register_api(hass, [tool])
+    client = StreamingScriptedClient(hass, streams=[
+        [
+            TextGenerationResult(response="adding milk"),
+            TextGenerationResult(response=None, tool_calls=[llm.ToolInput("test_tool", {"item": "milk"})]),
+            MalformedToolCallException("agent", "", "unknown", '{"name": "test_tool", "args": {"item": "eggs"}}', "Tool call was not properly formatted JSON"),
+        ],
+        [TextGenerationResult(response="milk is on the list, the eggs call was malformed")],
+    ])
+    agent = make_agent(hass, client, {CONF_LLM_HASS_API: [API_ID], CONF_MAX_TOOL_CALL_ITERATIONS: 2, CONF_ENABLE_STREAMING: True})
+
+    result = await agent.async_process(make_user_input("add milk and eggs to my shopping list"))
+
+    # the valid call ran exactly once, never a second time on the retry
+    assert [(call.tool_name, call.tool_args) for call in tool.calls] == [("test_tool", {"item": "milk"})]
+
+    # the retry request carries the executed call with its result, then the correction pair
+    retry = client.seen_conversations[1]
+    assert roles(retry) == [
+        "SystemContent", "UserContent", "AssistantContent", "ToolResultContent",
+        "AssistantContent", "ToolResultContent",
+    ]
+    assert retry[2].tool_calls[0].tool_args == {"item": "milk"}
+    assert retry[3].tool_call_id == retry[2].tool_calls[0].id
+    assert retry[5].tool_call_id == retry[4].tool_calls[0].id
+    assert retry[5].tool_call_id
+
+    assert result.response.speech["plain"]["speech"] == "milk is on the list, the eggs call was malformed"
+    # the executed call and its result live in the chat log, not just the retry history
+    assert roles(get_log(hass).content) == [
+        "SystemContent", "UserContent", "AssistantContent", "ToolResultContent", "AssistantContent",
+    ]
 
 
 @pytest.mark.asyncio
