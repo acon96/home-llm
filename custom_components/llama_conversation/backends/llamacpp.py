@@ -44,7 +44,6 @@ from custom_components.llama_conversation.const import (
     CONF_INSTALLED_LLAMACPP_VERSION,
     DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
     DEFAULT_TOOL_RESPONSE_AS_STRING,
-    DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_LLAMACPP_ENABLE_FLASH_ATTENTION,
     DEFAULT_GBNF_GRAMMAR,
@@ -414,13 +413,8 @@ class LlamaCppClient(LocalLLMClient):
                 tools = get_oai_formatted_tools(llm_api, self._async_get_all_exposed_domains())
 
             model_name = entity_options.get(CONF_CHAT_MODEL, "")
-            # sampling parameters that are not configured are left to the server
-            sampling_params = {
-                key: entity_options[key]
-                for key in (CONF_TEMPERATURE, CONF_TOP_K, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P)
-                if entity_options.get(key) is not None
-            }
-            grammar = self.grammars.get(model_name)
+            generation_kwargs = self._build_generation_kwargs(entity_options)
+            generation_kwargs["max_tokens"] = 1
 
             _LOGGER.debug("Priming model cache via chat completion API...")
             try:
@@ -429,9 +423,7 @@ class LlamaCppClient(LocalLLMClient):
                 self.models[model_name].create_chat_completion(
                     messages,
                     tools=tools if tools is not None else [],
-                    **sampling_params,
-                    max_tokens=1,
-                    grammar=grammar,
+                    **generation_kwargs,
                     stream=False,
                     # stop=["<end_of_turn>", "<end_function_call>"]
                 )
@@ -460,6 +452,27 @@ class LlamaCppClient(LocalLLMClient):
         refresh_delay = entity_options.get(CONF_PROMPT_CACHING_INTERVAL, DEFAULT_PROMPT_CACHING_INTERVAL)
         async_call_later(self.hass, float(refresh_delay), refresh_if_requested)
 
+    def _build_generation_kwargs(self, entity_options: dict[str, Any]) -> dict[str, Any]:
+        """Build shared completion settings, normalizing integer selector values."""
+        params: dict[str, Any] = {}
+
+        def pass_option_if_set(src, dst, *, cast=None):
+            value = entity_options.get(src)
+            if value is None:
+                return
+            if cast is not None:
+                value = cast(value)
+            params[dst] = value
+
+        pass_option_if_set(CONF_TEMPERATURE, "temperature")
+        pass_option_if_set(CONF_TOP_P, "top_p")
+        pass_option_if_set(CONF_MIN_P, "min_p")
+        pass_option_if_set(CONF_TYPICAL_P, "typical_p")
+        pass_option_if_set(CONF_TOP_K, "top_k", cast=int)
+        pass_option_if_set(CONF_MAX_TOKENS, "max_tokens", cast=int)
+        params["grammar"] = self.grammars.get(entity_options.get(CONF_CHAT_MODEL, ""))
+        return params
+
     def _generate_stream(self, 
                          conversation: List[conversation.Content],
                          llm_api: llm.APIInstance | None,
@@ -468,8 +481,7 @@ class LlamaCppClient(LocalLLMClient):
                         ) -> AsyncGenerator[TextGenerationResult, None]:
         """Async generator that yields TextGenerationResult as tokens are produced."""
         model_name = entity_options.get(CONF_CHAT_MODEL, "")
-        max_tokens = entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
-        grammar = self.grammars.get(model_name)
+        generation_kwargs = self._build_generation_kwargs(entity_options)
         enable_legacy_tool_calling = entity_options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
         tool_response_as_string = entity_options.get(CONF_TOOL_RESPONSE_AS_STRING, DEFAULT_TOOL_RESPONSE_AS_STRING)
 
@@ -490,19 +502,11 @@ class LlamaCppClient(LocalLLMClient):
                 "schema": response_json_schema,
             }
 
-        # sampling parameters that are not configured are left to the server
-        sampling_params = {
-            key: entity_options[key]
-            for key in (CONF_TEMPERATURE, CONF_TOP_K, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P)
-            if entity_options.get(key) is not None
-        }
         try:
             chat_completion = self.models[model_name].create_chat_completion(
                 messages,
                 tools=tools if tools is not None else [],
-                **sampling_params,
-                max_tokens=max_tokens,
-                grammar=grammar,
+                **generation_kwargs,
                 stream=True,
                 response_format=response_format,
                 # stop=["<end_of_turn>", "<end_function_call>"] # FIXME: make configurable (pull from tool end token?)
@@ -511,10 +515,9 @@ class LlamaCppClient(LocalLLMClient):
             _LOGGER.error("Llama.cpp API error during streaming generation: params=%s, error=%s", {
                 "messages": len(messages),
                 "tools": len(tools) if tools else 0,
-                **sampling_params,
-                "max_tokens": max_tokens,
+                **{key: value for key, value in generation_kwargs.items() if key != "grammar"},
                 "response_format": response_format,
-                "has_grammar": bool(grammar),
+                "has_grammar": bool(generation_kwargs["grammar"]),
                 "stream": True,
             }, err)
             raise HomeAssistantError(f"Llama.cpp generation failed: {err}") from err
@@ -546,8 +549,7 @@ class LlamaCppClient(LocalLLMClient):
         entity_options: dict[str, Any],
     ) -> TextGenerationResult:
         model_name = entity_options.get(CONF_CHAT_MODEL, "")
-        max_tokens = entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
-        grammar = self.grammars.get(model_name)
+        generation_kwargs = self._build_generation_kwargs(entity_options)
         enable_legacy_tool_calling = entity_options.get(CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING)
         tool_response_as_string = entity_options.get(CONF_TOOL_RESPONSE_AS_STRING, DEFAULT_TOOL_RESPONSE_AS_STRING)
 
@@ -557,13 +559,6 @@ class LlamaCppClient(LocalLLMClient):
         tools = None
         if llm_api and not enable_legacy_tool_calling:
             tools = get_oai_formatted_tools(llm_api, self._async_get_all_exposed_domains())
-
-        # sampling parameters that are not configured are left to the server
-        sampling_params = {
-            key: entity_options[key]
-            for key in (CONF_TEMPERATURE, CONF_TOP_K, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P)
-            if entity_options.get(key) is not None
-        }
 
         response_json_schema = entity_options.get(CONF_RESPONSE_JSON_SCHEMA)
         response_format: Optional[ChatCompletionRequestResponseFormat] = None
@@ -577,9 +572,7 @@ class LlamaCppClient(LocalLLMClient):
             response = self.models[model_name].create_chat_completion(
                 messages,
                 tools=tools if tools is not None else [],
-                **sampling_params,
-                max_tokens=max_tokens,
-                grammar=grammar,
+                **generation_kwargs,
                 stream=False,
                 response_format=response_format,
             )
@@ -587,10 +580,9 @@ class LlamaCppClient(LocalLLMClient):
             _LOGGER.error("Llama.cpp API error during generation: params=%s, error=%s", {
                 "messages": len(messages),
                 "tools": len(tools) if tools else 0,
-                **sampling_params,
-                "max_tokens": max_tokens,
+                **{key: value for key, value in generation_kwargs.items() if key != "grammar"},
                 "response_format": response_format,
-                "has_grammar": bool(grammar),
+                "has_grammar": bool(generation_kwargs["grammar"]),
                 "stream": False,
             }, err)
             raise HomeAssistantError(f"Llama.cpp generation failed: {err}") from err

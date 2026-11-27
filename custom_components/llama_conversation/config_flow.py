@@ -774,10 +774,9 @@ def local_llama_config_option_schema(
                 ): NumberSelector(NumberSelectorConfig(min=1, max=60, step=1))
             })
         result.update({
-            vol.Required(
+            vol.Optional(
                 CONF_MAX_TOKENS,
-                description={"suggested_value": options.get(CONF_MAX_TOKENS)},
-                default=DEFAULT_MAX_TOKENS,
+                description={"suggested_value": options[CONF_MAX_TOKENS]} if CONF_MAX_TOKENS in options else {},
             ): NumberSelector(NumberSelectorConfig(min=1, max=8192, step=1)),
         })
         sampling.update({
@@ -847,8 +846,7 @@ def local_llama_config_option_schema(
             ): NumberSelector(NumberSelectorConfig(min=5, max=900, step=1, unit_of_measurement=UnitOfTime.SECONDS, mode=NumberSelectorMode.BOX)),
             vol.Optional(
                 CONF_MAX_TOKENS,
-                description={"suggested_value": options.get(CONF_MAX_TOKENS)},
-                default=DEFAULT_MAX_TOKENS,
+                description={"suggested_value": options[CONF_MAX_TOKENS]} if CONF_MAX_TOKENS in options else {},
             ): NumberSelector(NumberSelectorConfig(min=1, max=8192, step=1)),
         })
         sampling.update({
@@ -870,10 +868,9 @@ def local_llama_config_option_schema(
         })
     elif backend_type == BACKEND_TYPE_LLAMA_CPP_SERVER:
         result.update({
-                vol.Required(
+            vol.Optional(
                 CONF_MAX_TOKENS,
-                description={"suggested_value": options.get(CONF_MAX_TOKENS)},
-                default=DEFAULT_MAX_TOKENS,
+                description={"suggested_value": options[CONF_MAX_TOKENS]} if CONF_MAX_TOKENS in options else {},
             ): NumberSelector(NumberSelectorConfig(min=1, max=8192, step=1)),
             vol.Required(
                 CONF_REQUEST_TIMEOUT,
@@ -900,10 +897,9 @@ def local_llama_config_option_schema(
         })
     elif backend_type == BACKEND_TYPE_OLLAMA:
         result.update({
-            vol.Required(
+            vol.Optional(
                 CONF_MAX_TOKENS,
-                description={"suggested_value": options.get(CONF_MAX_TOKENS)},
-                default=DEFAULT_MAX_TOKENS,
+                description={"suggested_value": options[CONF_MAX_TOKENS]} if CONF_MAX_TOKENS in options else {},
             ): NumberSelector(NumberSelectorConfig(min=1, max=8192, step=1)),
             vol.Required(
                 CONF_CONTEXT_LENGTH,
@@ -1265,7 +1261,7 @@ class LocalLLMSubentryFlowHandler(ConfigSubentryFlow):
                             description_placeholders["filename"] = filename
 
             if len(errors) == 0:
-                for key in (CONF_TEMPERATURE, CONF_TOP_K, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P):
+                for key in (CONF_MAX_TOKENS, CONF_TEMPERATURE, CONF_TOP_K, CONF_TOP_P, CONF_MIN_P, CONF_TYPICAL_P):
                     if key not in user_input:
                         self.model_config.pop(key, None)
                 self.model_config.update(user_input)

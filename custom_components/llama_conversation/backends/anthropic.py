@@ -38,7 +38,6 @@ from custom_components.llama_conversation.const import (
     CONF_API_KEY,
     CONF_API_PATH,
     CONF_BASE_URL,
-    DEFAULT_MAX_TOKENS,
     DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_ENABLE_LEGACY_TOOL_CALLING,
     DEFAULT_TOOL_RESPONSE_AS_STRING,
@@ -296,6 +295,27 @@ class AnthropicAPIClient(LocalLLMClient):
         """Anthropic models support vision."""
         return True
 
+    @staticmethod
+    def _build_generation_kwargs(entity_options: dict[str, Any]) -> dict[str, Any]:
+        """Build shared Messages API settings with integer token and top-k limits."""
+        params: dict[str, Any] = {"model": entity_options.get(CONF_CHAT_MODEL, "")}
+
+        def pass_option_if_set(src, dst, *, cast=None, ignore_falsy=False):
+            value = entity_options.get(src)
+            if value is None:
+                return
+            if cast is not None:
+                value = cast(value)
+            if ignore_falsy and not value:
+                return
+            params[dst] = value
+
+        pass_option_if_set(CONF_MAX_TOKENS, "max_tokens", cast=int)
+        pass_option_if_set(CONF_TEMPERATURE, "temperature")
+        pass_option_if_set(CONF_TOP_P, "top_p")
+        pass_option_if_set(CONF_TOP_K, "top_k", cast=int, ignore_falsy=True)
+        return params
+
     def _generate_stream(
         self,
         conversation: List[conversation.Content],
@@ -305,11 +325,7 @@ class AnthropicAPIClient(LocalLLMClient):
     ) -> AsyncGenerator[TextGenerationResult, None]:
         """Generate streaming response using Anthropic's Messages API."""
 
-        model_name = entity_options.get(CONF_CHAT_MODEL, "")
-        max_tokens = int(entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS))
-        temperature = entity_options.get(CONF_TEMPERATURE)
-        top_p = entity_options.get(CONF_TOP_P)
-        top_k = entity_options.get(CONF_TOP_K)
+        request_params = self._build_generation_kwargs(entity_options)
         timeout = entity_options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
         enable_legacy_tool_calling = entity_options.get(
             CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING
@@ -330,7 +346,7 @@ class AnthropicAPIClient(LocalLLMClient):
 
         _LOGGER.debug(
             "Generating completion with model=%s, %d messages, and %d tools...",
-            model_name,
+            request_params["model"],
             len(messages),
             len(tools) if tools else 0,
         )
@@ -338,24 +354,13 @@ class AnthropicAPIClient(LocalLLMClient):
         async def anext_token() -> AsyncGenerator[Tuple[Optional[str], Optional[List[dict]]], None]:
             client = await self._async_build_client(timeout=timeout)
 
-            request_params: Dict[str, Any] = {
-                "model": model_name,
-                "max_tokens": max_tokens,
-                "messages": messages,
-            }
+            request_params["messages"] = messages
 
             # Add optional parameters
             if system_prompt:
                 request_params["system"] = system_prompt
             if tools:
                 request_params["tools"] = tools
-            # sampling parameters that are not configured are left to the provider
-            if temperature is not None:
-                request_params["temperature"] = temperature
-            if top_p is not None:
-                request_params["top_p"] = top_p
-            if top_k is not None and top_k > 0:
-                request_params["top_k"] = top_k
 
             try:
                 current_tool_call: Dict[str, Any] | None = None
@@ -434,11 +439,7 @@ class AnthropicAPIClient(LocalLLMClient):
         agent_id: str,
         entity_options: dict[str, Any],
     ) -> TextGenerationResult:
-        model_name = entity_options.get(CONF_CHAT_MODEL, "")
-        max_tokens = int(entity_options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS))
-        temperature = entity_options.get(CONF_TEMPERATURE)
-        top_p = entity_options.get(CONF_TOP_P)
-        top_k = entity_options.get(CONF_TOP_K)
+        request_params = self._build_generation_kwargs(entity_options)
         timeout = entity_options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT)
         enable_legacy_tool_calling = entity_options.get(
             CONF_ENABLE_LEGACY_TOOL_CALLING, DEFAULT_ENABLE_LEGACY_TOOL_CALLING
@@ -455,22 +456,11 @@ class AnthropicAPIClient(LocalLLMClient):
         if llm_api and not enable_legacy_tool_calling:
             tools = _convert_tools_to_anthropic_format(llm_api)
 
-        request_params: Dict[str, Any] = {
-            "model": model_name,
-            "max_tokens": max_tokens,
-            "messages": messages,
-        }
+        request_params["messages"] = messages
         if system_prompt:
             request_params["system"] = system_prompt
         if tools:
             request_params["tools"] = tools
-        # sampling parameters that are not configured are left to the provider
-        if temperature is not None:
-            request_params["temperature"] = temperature
-        if top_p is not None:
-            request_params["top_p"] = top_p
-        if top_k is not None and top_k > 0:
-            request_params["top_k"] = top_k
 
         try:
             client = await self._async_build_client(timeout=timeout)

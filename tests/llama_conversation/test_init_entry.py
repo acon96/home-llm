@@ -179,7 +179,7 @@ async def test_async_unload_entry_leaves_data_when_platform_unload_fails(monkeyp
 @pytest.mark.asyncio
 async def test_hass_service_tool_returns_tool_result_and_declares_integration(hass):
     from homeassistant.helpers import llm
-    from pytest_homeassistant_custom_component.common import async_mock_service
+    from pytest_homeassistant.common import async_mock_service
 
     from custom_components.llama_conversation import HassServiceTool
 

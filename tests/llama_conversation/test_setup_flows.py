@@ -11,7 +11,7 @@ from homeassistant.components import ai_task, conversation
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_LLM_HASS_API, CONF_PORT, CONF_SSL
 from homeassistant.data_entry_flow import FlowResultType
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.llama_conversation.config_flow import LocalLLMSubentryFlowHandler, OptionsFlow
 from custom_components.llama_conversation.const import (

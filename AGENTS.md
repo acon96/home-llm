@@ -21,7 +21,7 @@ Home Assistant integration `llama_conversation` plus synthetic data, training, a
 ## Testing
 
 - Install development dependencies with `pip install -r custom_components/requirements-dev.txt`; run `pytest tests/` or a focused file under `tests/llama_conversation/`.
-- Tests use pytest, pytest-asyncio (`asyncio_mode = auto`), and pytest-homeassistant-custom-component. Mock backend generation (`_generate()` / `_generate_stream()`); do not make live LLM requests.
+- Tests use pytest, pytest-asyncio (`asyncio_mode = auto`), and the official pytest-homeassistant package, pinned alongside Home Assistant (must keep in sync). Mock backend generation (`_generate()` / `_generate_stream()`); do not make live LLM requests.
 - `tests/conftest.py` installs compatibility shims for newer Home Assistant versions before collection; preserve older-HA compatibility when adjusting dependencies or schema conversion. Prefer existing dependencies over adding unnecessary dev-only packages.
 
 ## References

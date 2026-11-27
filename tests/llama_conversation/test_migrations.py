@@ -7,7 +7,7 @@ import pytest
 from homeassistant.const import CONF_LLM_HASS_API, CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.helpers import issue_registry as ir
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.llama_conversation import async_migrate_entry
 from custom_components.llama_conversation.const import (

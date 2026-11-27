@@ -293,6 +293,16 @@ async def test_conversation_is_sent_in_full(hass: HomeAssistant):
     assert client.seen_conversations[-1][-1].content == "turn on the lights"
 
 
+@pytest.mark.parametrize("max_tokens", [None, 1024])
+def test_context_budget_only_reserves_configured_output_tokens(max_tokens):
+    from custom_components.llama_conversation.conversation import CONTEXT_BUDGET_MARGIN_TOKENS
+
+    options = {CONF_CONTEXT_LENGTH: 4096}
+    if max_tokens is not None:
+        options[CONF_MAX_TOKENS] = max_tokens
+    assert LocalLLMAgent._context_token_budget(options) == 4096 - (max_tokens or 0) - CONTEXT_BUDGET_MARGIN_TOKENS
+
+
 @pytest.mark.asyncio
 async def test_history_is_trimmed_to_fit_the_model_context(hass: HomeAssistant):
     client = ScriptedClient(hass, replies=[
@@ -403,9 +413,10 @@ async def test_api_instructions_are_left_to_the_prompt_template(hass: HomeAssist
         CONF_LLM_HASS_API: [API_ID],
         CONF_PROMPT: "My prompt with {{ llm_api_instructions }} instructions",
     })
-    await agent.async_process(make_user_input("u2"))
+    result = await agent.async_process(make_user_input("u2", conversation_id=None))
 
-    assert get_log(hass).content[0].content.startswith(f"My prompt with {API_INSTRUCTIONS} instructions")
+    log = hass.data[DATA_CHAT_LOGS][result.conversation_id]
+    assert log.content[0].content.startswith(f"My prompt with {API_INSTRUCTIONS} instructions")
 
 
 @pytest.mark.asyncio
@@ -436,8 +447,9 @@ async def test_home_assistant_only_adds_its_own_date_time_prompt_when_uncovered(
     assert "Current time is" in get_log(hass).content[0].content
 
     api.tools[:] = [DateTimeTool()]
-    await agent.async_process(make_user_input("a date time tool"))
-    assert "Current time is" not in get_log(hass).content[0].content
+    result = await agent.async_process(make_user_input("a date time tool", conversation_id=None))
+    log = hass.data[DATA_CHAT_LOGS][result.conversation_id]
+    assert "Current time is" not in log.content[0].content
 
 
 @pytest.mark.asyncio

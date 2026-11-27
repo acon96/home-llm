@@ -28,7 +28,6 @@ from .const import (
     CONTEXT_BUDGET_MARGIN_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_CONTEXT_LENGTH,
-    DEFAULT_MAX_TOKENS,
     DEFAULT_MAX_TOOL_CALL_ITERATIONS,
     DEFAULT_THINKING_PREFIX,
     DEFAULT_THINKING_SUFFIX,
@@ -260,7 +259,7 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent, LocalLLMEntit
     def _context_token_budget(options: Dict[str, Any]) -> int:
         """How much of the model context is left for the conversation itself."""
         context_length = int(options.get(CONF_CONTEXT_LENGTH, DEFAULT_CONTEXT_LENGTH))
-        max_tokens = int(options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS))
+        max_tokens = int(options.get(CONF_MAX_TOKENS) or 0)
         return max(0, context_length - max_tokens - CONTEXT_BUDGET_MARGIN_TOKENS)
 
     @staticmethod
