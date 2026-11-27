@@ -239,29 +239,6 @@ def test_max_tokens_default_is_only_required_for_anthropic(hass: HomeAssistant, 
     assert _get_suggested(saved_schema, CONF_MAX_TOKENS) == 4096
 
 
-@pytest.mark.parametrize("backend", [BACKEND_TYPE_GENERIC_OPENAI, BACKEND_TYPE_ANTHROPIC])
-async def test_model_parameters_clear_optional_limit_or_save_anthropic_default(hass: HomeAssistant, monkeypatch, backend):
-    from unittest.mock import AsyncMock
-    from custom_components.llama_conversation.config_flow import LocalLLMSubentryFlowHandler
-
-    flow = LocalLLMSubentryFlowHandler()
-    flow.hass = hass
-    flow.model_config = {CONF_PROMPT: "Test prompt", CONF_MAX_TOKENS: 512}
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_BACKEND_TYPE: backend})
-    monkeypatch.setattr(flow, "_get_entry", lambda: entry)
-    monkeypatch.setattr(LocalLLMSubentryFlowHandler, "_subentry_type", property(lambda self: "conversation"))
-    finish = AsyncMock(return_value={"type": "test_finish"})
-    monkeypatch.setattr(flow, "async_step_finish", finish)
-
-    await flow.async_step_model_parameters({CONF_PROMPT: "Test prompt", CONF_LLM_HASS_API: []})
-
-    finish.assert_awaited_once()
-    if backend == BACKEND_TYPE_ANTHROPIC:
-        assert flow.model_config[CONF_MAX_TOKENS] == DEFAULT_MAX_TOKENS
-    else:
-        assert CONF_MAX_TOKENS not in flow.model_config
-
-
 def test_schema_generic_openai_options_preserved(hass: HomeAssistant):
     overrides = {CONF_TOP_P: 0.25, CONF_REQUEST_TIMEOUT: 321}
 

@@ -7,6 +7,8 @@ Home Assistant integration `llama_conversation` plus synthetic data, training, a
 1. Never use special characters in your code, documentation, or dataset files. You should always utilize standard ASCII characters. This is to ensure compatibility across different systems and avoid encoding issues. If you need to use a symbol then you should use the corresponding ASCII representation such as '->' for an arrow or '...' for an ellipsis.
 2. Do not unnecessarily wrap lines in code or documentation. It is standard to have larger lines in code and documentation should only use newlines for paragraph boundaries. 
 3. When responding after finishing a turn: be concise and do not list out every individual change from that turn.
+4. Never introduce new test cases that enforce invariants based on the users request. Test cases should ensure system behavior, not that a specific request has been completed. It leaves stale assumptions that break future workflows.
+5. Follow the YAGNI and DRY principals where it makes sense. Avoid adding features or code that is not currently needed, and avoid duplicating code that can be reused. Do NOT overly combine or optimize code to the point of making it unreadable or difficult to maintain.
 
 ## Integration layout and conventions
 
